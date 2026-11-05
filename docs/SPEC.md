@@ -59,6 +59,7 @@ Secondary: a child (7–10) using it hands-on in that demo.
 | D7 | Change shot, lighting or a line in Studio mode → instant local re-render, $0 | Why not video diffusion? | P1 |
 | D8 | Timeline (dope sheet) labeled "every produced episode already exists in this format → training data" | Is the data moat real? | P1 |
 | D9 | Tap a character after the episode ends → reaction (playable scene) | Interactivity | P2 |
+| D10 | Sound is part of the script: "It starts to rain. Spooky music. Masha runs home shouting 'Bear!'" → rain ambience, the music shifts, splashy running footsteps, Masha's voice; characters audibly breathe, grunt and giggle as they move | Does it feel like an episode, not a tech demo? | P0 |
 
 ## 2. Honesty labels (mandatory, visible in Studio mode)
 
@@ -100,7 +101,18 @@ Studio mode adds a right drawer "Under the hood" for the selected paragraph.
 ### 4.2 Paragraph = unit of tracking
 
 Each paragraph card has: index, editable text (textarea that auto-grows), status chip, duration, a one-line director
-summary (in UI language), version counter, and a ⋯ menu (delete, revert to previous version — P1, move up/down — P2).
+summary (in UI language), small audio chips (🎵 music mood, 🌧 ambience, 💬 number of spoken lines), version counter,
+and a ⋯ menu (delete, revert to previous version — P1, move up/down — P2).
+
+**How the child writes sound and speech** (plain language, no special syntax required, both languages):
+- Speech: quoted text after a speaker, or screenplay style — `Masha shouts, "Bear, wake up!"` /
+  `MASHA: Bear, wake up!` / `Маша кричит: «Мишка, вставай!»`. The child's words are **kept verbatim** (only trimmed
+  to ≤ 120 characters and passed through the safety rules). Without quotes, the director may write short in-character
+  lines.
+- Music: "Cheerful music plays", "spooky music", "the music stops", «играет весёлая музыка».
+- Background: "It starts to rain", "birds are singing", "a thunderstorm", «ночь, стрекочут сверчки».
+- Event sounds: "the door slams", "a loud crash", "thunder", «бах!».
+- Movement sounds are automatic. The child never has to write "footsteps".
 
 Status lifecycle: `draft` (edited, not yet sent) → `directing` (LLM call in flight; show the offline preview, see
 §6.5) → `ready` → or `adjusted` (ready, but canon/safety rules changed something; amber chip, tooltip with kid-friendly
@@ -145,6 +157,8 @@ has an "Export log (JSON)" button. This is the "demand intelligence" hook from t
     deck's range ($0.05–0.75 per second) labeled "per pitch deck, unverified". Never present an unsourced number as
     fact.
   - Rule report: each hit → rule id, original, replacement, studio explanation.
+  - **Sound** for the selected paragraph: music mood + intensity dropdowns, ambience layer toggles, per-bus volume
+    sliders (voice, vocals/foley/SFX, ambience, music), a list of the compiled audio cues; overrides re-render locally.
   - Per-shot override dropdown (wide / medium / close / low angle / over-shoulder / tracking), time-of-day override,
     editable dialogue lines → re-render locally (no LLM call) and show "Re-rendered locally in N ms · $0" (D7).
   - The honesty legend (§2).
@@ -191,7 +205,7 @@ src/engine/   stage.ts  toon.ts  assets.ts  set/bearsYard.ts  characters/{rig.ts
               props/props.ts  motion/retarget.ts
 public/assets/  (downloaded open motion clips and models; licenses in docs/ASSETS.md)
               motion/{library.ts, verbs/*.ts, blend.ts}  player/{player.ts, evaluate.ts}  fx/fx.ts
-              audio/{tts.ts, music.ts, sfx.ts}
+              audio/{bus.ts, scheduler.ts, tts.ts, vocals.ts, foley.ts, sfx.ts, ambience.ts, music.ts}
 src/app/      main.tsx  App.tsx  store.ts  components/{TopBar, ScriptEditor, ParagraphCard, Stage, Timeline,
               UnderTheHood, SystemLayers}.tsx  i18n/{en.ts, ru.ts, index.ts}  styles.css
 worker/       index.ts  auth.ts  rateLimit.ts  direct.ts
@@ -222,7 +236,15 @@ Emotion   = "neutral" | "happy" | "excited" | "mischievous" | "curious" | "surpr
 Mood      = "playful" | "calm" | "sleepy" | "tense" | "triumphant" | "sad"
 TimeOfDay = "morning" | "day" | "sunset" | "night"
 Shot      = "auto" | "wide" | "medium" | "close" | "low_angle" | "over_shoulder" | "tracking"
-Emote     = "none" | "grunt" | "sigh" | "hum" | "growl_soft" | "laugh" | "gasp" | "snore"
+Emote     = "none" | "giggle" | "laugh" | "gasp" | "wheee" | "hmph" | "uh_oh" | "yawn" | "cry" | "cheer" | "scream_fun"
+          | "grunt" | "sigh" | "hum" | "growl_soft" | "chuckle" | "snore" | "huff" | "roar_soft" | "sneeze"
+          // non-verbal vocalizations; each character's bible lists which ones it can make
+MusicMood = "none" | "playful" | "calm" | "sleepy" | "tense" | "spooky" | "chase" | "triumphant" | "sad" | "romantic_waltz"
+Ambience  = "birds_day" | "forest_wind" | "creek" | "rain" | "thunderstorm" | "night_crickets" | "bees" | "strong_wind"
+SfxId     = "door_creak" | "door_slam" | "knock" | "crash" | "splash" | "thunder_clap" | "pop" | "boing" | "whoosh"
+          | "bell" | "pot_clang" | "sizzle" | "munch" | "glass_clink" | "van_horn" | "engine_start" | "magic_chime"
+          | "drum_roll" | "rimshot" | "cuckoo"
+          // event sounds the script can ask for; locomotion/body foley is automatic (§7.6), never listed here
 RuleId    = "bear_silent" | "cast_only" | "no_weapons" | "no_scary" | "kind_language" | "no_brands"
           | "no_personal_data" | "in_character"
 ```
@@ -230,7 +252,10 @@ RuleId    = "bear_silent" | "cast_only" | "no_weapons" | "no_scary" | "kind_lang
 ### 6.2 Action grammar (`src/shared/grammar.ts`)
 
 Each verb: `{ id, actors: ActorId[], target: "mark"|"actor"|"prop"|"mark_or_actor"|"none", needsItem: boolean,
-baseDuration: seconds, loopable: boolean, defaultSfx: SfxId|null, description }`. The description is fed to the
+baseDuration: seconds, loopable: boolean, foley: FoleyRule[], effortVocal: Emote|null, description }`, where a
+`FoleyRule` says which automatic sound the verb makes and when (e.g. `walk_to` → footsteps on every foot contact;
+`jump` → effort vocal at takeoff + landing thud; `fall_down` → whoosh + thud + "oof"; `swing` → rope-creak loop;
+`cook` → sizzle loop; `eat` → munch). See §7.6. The description is fed to the
 director prompt. P0 verbs (implement all in the motion library):
 
 | Group | Verbs |
@@ -241,7 +266,10 @@ director prompt. P0 verbs (implement all in the motion library):
 | Emotion | `laugh`, `cry`, `sulk`, `surprised`, `scared`, `angry_stomp`, `sneeze`, `sigh` |
 | Objects | `take` (item), `give` (item → actor), `eat` (item), `throw` (item → target), `cook` (frying_pan/pancakes at table), `fish` (at pier), `swing` (Masha, at swing), `carry` (Bear lifts Masha onto shoulders), `water_plants` (garden) |
 
-Dialogue is not a verb: any Masha beat may carry a `line`. Bear beats may carry only an `emote`.
+**Speech.** Dialogue is not a verb: any beat may carry a `line` if that character's bible entry has
+`speaks: true`. Masha speaks; Bear has `speaks: false` (canon, to be confirmed by Animaccord; flipping the flag is
+the only change needed). Every character can **vocalize** through `emote` (Bear: grunt, sigh, hum, chuckle, snore,
+huff…). Each speaking character has a voice profile (TTS voice per language, pitch, rate) in the bible.
 
 ### 6.3 BeatScript (director output — the LLM contract)
 
@@ -273,8 +301,9 @@ Beat = {
   verb: Verb,
   target: string | null,        // MarkId | ActorId | PropId; compiler validates against verb.target
   item: PropId | null,
-  line: string | null,          // spoken words, Masha only, ≤ 120 chars, in UI language
-  emote: Emote | null,
+  line: string | null,          // spoken words; only characters with speaks:true; ≤ 120 chars; UI language
+  emote: Emote | null,          // non-verbal vocalization (any character, from its bible list)
+  sfx: SfxId | null,            // an event sound tied to this beat ("the door slams", "a crash in the kitchen")
   emotion: Emotion,
   with_previous: boolean,       // true = anchored to the previous beat's START (parallel); false = to its END (sequential)
   delay_s: number,              // 0–6 s offset from the anchor; e.g. with_previous + 2.0 = "two seconds into Bear's walk"
@@ -284,6 +313,9 @@ BeatScript = {
   summary: string,              // ≤ 140 chars, UI language, shown on the card
   time_of_day: TimeOfDay | null,// null = unchanged
   mood: Mood,
+  music: { mood: MusicMood, intensity: "soft" | "medium" | "full", change: "continue" | "start" | "stop" },
+                                // "continue" keeps the previous paragraph's music unless the mood changed
+  ambience: Ambience[] | null,  // background soundscape; null = unchanged from the previous paragraph; [] = silence
   beats: Beat[],                // 1..14
   rule_hits: { rule: RuleId, original: string, replacement: string, kid_message: string }[]
 }
@@ -303,10 +335,13 @@ Segment = {
   startState: WorldState, endState: WorldState,
   actorClips: Record<ActorId, ActorClip[]>,  // ActorClip { start, dur, verb, emotion, params: { from?, to?, path?: [x,z][], lookAt?, item? } }
   dialogue: { start, dur, actor, text, lang, visemes: { t: number, v: Viseme }[] }[],
-  emotes:   { start, dur, actor, emote }[],
+  emotes:   { start, dur, actor, emote }[],                      // vocalizations, incl. automatic effort vocals
+  foley:    { start, actor, id: FoleyId, surface: "grass" | "wood" | "water" | "dirt", gain, pan }[],  // automatic
   camera:   { start, dur, shot, from: CamKey, to: CamKey, overridden: boolean }[],   // CamKey { pos:[x,y,z], look:[x,y,z], fov }
-  sfx:      { start, id: SfxId, gain }[],
-  music:    { start, mood }[],
+  sfx:      { start, id: SfxId, gain, pan }[],
+  music:    { start, mood: MusicMood, intensity, fade: number }[],
+  ambience: { start, layers: Ambience[], fade: number }[],
+  ducking:  { start, dur, depth }[],                              // music/ambience dip under dialogue
   lighting: { start, timeOfDay, transition: number }[],
   fx:       { start, dur, id: "flour_cloud" | "hearts" | "sparkles" | "zzz" | "dust" | "splash" | "tears" | "anger_puff", at: [x,y,z] }[]
 }
@@ -324,14 +359,16 @@ Episode timeline = concatenation of segments; segment i starts at Σ duration(0.
    changed. If a downstream BeatScript fails validation against its new start state (e.g. `eat jam_jar` but nobody
    holds it), the compiler auto-repairs where trivial (insert `take`) or marks the paragraph `draft` and re-directs it.
 5. At most 2 director calls in flight; newer edits of the same paragraph cancel older calls (AbortController).
-6. Studio overrides `{ shots: Record<clipIndex, Shot>, lines: Record<beatIndex, string>, timeOfDay }` are stored per
+6. Studio overrides `{ shots: Record<clipIndex, Shot>, lines: Record<beatIndex, string>, timeOfDay, music,
+   ambience }` are stored per
    paragraph version and applied by the compiler — **never** trigger an LLM call.
 
 ### 6.6 Fixtures (golden path, offline-safe)
 
 `src/director/fixtures/` holds three example episodes × {en, ru}, each 3–4 paragraphs with hand-authored BeatScripts:
 **Pancake morning** (Masha cooks for Bear, flour sneeze), **Bear's nap** (Masha wakes Bear in the hammock and gets
-carried on his shoulders), **Fishing trip** (Bear fishes at the pier, Masha throws the ball, splash). Loading an
+carried on his shoulders), **Fishing trip** (Bear fishes at the pier, Masha throws the ball, splash). Each fixture
+includes quoted dialogue, explicit music and ambience, and event SFX so the golden path shows off the sound design. Loading an
 example uses the fixtures (no API calls) and renders instantly. The fixtures double as e2e test data and few-shot
 examples for the director prompt.
 
@@ -494,20 +531,38 @@ Rules, in priority order: user override > beat `shot` hint > automatic rules:
    dolly within a shot; never put the camera inside geometry (clamp to a bounding region; nudge if it collides with
    the house).
 
-### 7.6 Dialogue, lip-sync, audio
+### 7.6 Sound design: voices, vocalizations, foley, event SFX, ambience, music
+
+Sound is half of a cartoon; treat it as P0. The compiler produces six audio tracks (§6.4). The player schedules them
+on one shared `AudioContext` (unlocked on the first user gesture), with buses: **voice**, **vocals + foley + SFX**,
+**ambience**, **music**, then master. Volume sliders and mute per bus live in Studio mode; a master mute is in the top bar.
+
+| Track | Where it comes from | Prototype sound source |
+|---|---|---|
+| **Dialogue** | `line` on beats (the child's quoted words or the director's lines) | TTS (§ below), with lip-sync |
+| **Vocalizations** | `emote` on beats, plus **automatic effort vocals** from the grammar (jump "hup!", landing "oof", Bear's huff after running, a giggle on `swing`/`spin`, a sigh on `facepalm`) and automatic reactions from ambient life (§6.3) | Masha: short TTS interjections in the UI language ("Hee-hee!", "Wheee!", "Ой!") at high pitch. Bear: synthesized low vocal tones (formant-filtered oscillator + noise) |
+| **Foley** (automatic, never written by the child) | Locomotion and body verbs via `FoleyRule`s: a footstep on every foot contact of the gait cycle, its surface taken from the position (porch/pier/footbridge = wood, creek/pond edge = water, path = dirt, else grass); Bear's steps heavier and lower with a ground thump; cloth rustle on fast moves; prop handling sounds | CC0 sample packs (try Kenney's "Impact Sounds" / "RPG Audio" packs from kenney.nl, CC0), else synthesized |
+| **Event SFX** | `sfx` on beats ("the door slams", "a crash", "thunder") | CC0 samples or synthesized |
+| **Ambience** | `ambience` per paragraph (birds, forest wind, creek, rain, thunderstorm, night crickets, bees); defaults from the set and time of day (day → birds + light wind; night → crickets); positional layers near the creek and the beehive | Synthesized loops (filtered noise for wind/rain/creek, chirp generators for birds and crickets) or CC0 loops |
+| **Music** | `music` per paragraph (mood, intensity, start/continue/stop); crossfades across paragraph boundaries and keeps playing across them when the mood stays the same | Procedural folk-flavored score per mood: plucked "balalaika" (Karplus-Strong), accordion-like pad (detuned saws + low-pass), light percussion; tempo and instrumentation vary by mood and intensity |
+
+Mixing rules: music and ambience **duck** ~8 dB under dialogue (gain automation, 150 ms attack, 400 ms release).
+Foley, vocals and SFX are **spatialized** relative to the current camera (`StereoPannerNode` for pan plus distance
+attenuation), so a character running off-screen sounds off-screen. Audio is scheduled ahead with `AudioContext`
+time, never with `setTimeout`. When scrubbing, nothing plays; on play, start mid-cue at the right offset. Record every
+sample's source and license in `docs/ASSETS.md`. Time-box sample hunting to 20 minutes, then synthesize.
 
 - Dialogue duration = max(1.2 s, chars / 13 per second) + 0.3 s. Visemes from text: map vowels (EN `a e i o u y`;
   RU `а о у э и ы е ё ю я`) to `open_wide / e / e / o / o / e…`, consonant runs to `open_small`, punctuation pauses
   to `rest`, ~12 visemes per second.
-- TTS (`speechSynthesis`): choose the best available voice for the language (prefer names containing "Google",
-  then any match); Masha pitch 1.6, rate 1.05. TTS must **never block or crash** playback: if no voice is available
-  (headless tests), skip silently and keep the lips moving.
-- Music (`music.ts`): WebAudio procedural folk-flavored loops per `Mood` — a plucked "balalaika" (Karplus-Strong),
-  an accordion-like pad (detuned saws through a low-pass), light percussion; crossfade 1 s between moods; master
-  volume control + mute in the top bar.
-- SFX (`sfx.ts`): synthesized footsteps, boing (jump), whoosh, pop, splash, thud (fall), clap, sneeze (noise burst
-  + pitch sweep), bear grunt / sigh / snore (filtered low oscillator + noise), bees, birds ambience.
-- One shared `AudioContext`, unlocked on the first user gesture.
+- TTS (`speechSynthesis`): per speaking character, choose the best available voice for the language (prefer names
+  containing "Google", then any match); Masha pitch 1.6, rate 1.05. Use `onboundary` word events, when available,
+  to tighten the lip-sync. TTS must **never block or crash** playback: if no voice is available (headless tests),
+  skip silently and keep the lips moving. Production swaps in studio voices (Masha's real voice) through the same
+  voice-profile interface.
+- Modules: `src/engine/audio/{bus.ts, tts.ts, vocals.ts, foley.ts, sfx.ts, ambience.ts, music.ts, scheduler.ts}`;
+  compiler side `src/compiler/audioCues.ts` (foley from gait contacts and surfaces, effort vocals, ducking,
+  ambience and music cue resolution across paragraphs).
 
 ---
 
@@ -561,7 +616,13 @@ an `error` string. **The endpoint never returns a 5xx for a director failure.**
    asleep); total 3–10 beats for a typical 1–3-sentence paragraph; prefer the most specific verb.
 5. Canon and safety rules (§9) with the instruction to rewrite, never refuse, and to record each change in
    `rule_hits` with a short, warm `kid_message` in the UI language.
-6. 3–4 few-shot examples (EN and RU) derived from the fixtures: terse paragraph → BeatScript JSON.
+6. **Speech and sound**: keep the child's quoted words verbatim as `line`s on the right speaker (Bear's quotes become a
+   fitting `emote` + gesture, with a `bear_silent` rule hit); map music, ambience and event-sound requests to
+   `music` / `ambience` / `sfx`; when the script says nothing about sound, choose music and ambience that fit the
+   mood and set (keep the previous paragraph's music with `change: "continue"` unless the mood shifts); add `emote`s
+   generously so characters sound alive (giggles, gasps, grunts, sighs). Don't list footsteps or other automatic foley.
+7. 3–4 few-shot examples (EN and RU) derived from the fixtures: terse paragraph → BeatScript JSON, at least one with
+   quoted dialogue and one with explicit music/ambience requests.
 
 ### 8.4 Quality bar for the director (checked in §13)
 
@@ -599,7 +660,9 @@ result. Unit-test every hard rule in both languages.
 Deterministic, ~200–400 lines, EN + RU lexicons: split into sentences; detect the actor (Masha / Маша, Bear /
 Медведь / Мишка; pronouns → the last mentioned actor); map verb stems to grammar verbs (e.g., "run|runs|ran|бежит|
 побежала" → `run_to`); targets by mark and prop lexicons ("garden|огород", "pond|пруд", "jam|варенье"…); quoted
-text → Masha `line`; default emotion per verb; ensure ≥ 1 beat per sentence and ≥ 2 beats per paragraph (add a
+text and `NAME:` lines → `line` for that speaker (Bear → emote + rule hit); sound lexicon ("music", "музыка",
+"rain", "дождь", "thunder", "гром", "birds", "птицы", "door slams", "хлопнула дверь"…) → `music` / `ambience` /
+`sfx`; default emotion per verb; ensure ≥ 1 beat per sentence and ≥ 2 beats per paragraph (add a
 reaction beat for the other actor). It powers the instant preview, the no-key fallback, and the tests.
 
 ## 11. Security, access control, cost protection (`worker/`)
@@ -636,7 +699,10 @@ reaction beat for the other actor). It powers the instant preview, the no-key fa
 - **Unit (vitest)**: schema round-trips; grammar coverage (every verb has a motion implementation and an i18n label);
   compiler determinism and world-state continuity (positions, held items, posture across paragraphs); incremental
   recompile (editing ¶2 changes only ¶2, plus downstream recompiles, with no director call for downstream); all hard
-  rules in EN/RU; offline parser on 20 EN + 20 RU sentences; camera rules (establishing shot first, speaker framed
+  rules in EN/RU; offline parser on 20 EN + 20 RU sentences (including dialogue and sound requests); audio cues
+  (footstep count ∝ distance walked; surface switches to wood on the porch and pier; Bear's steps lower and louder;
+  effort vocals on jump/fall; music continues across paragraphs with the same mood and crossfades on change; ducking
+  windows match dialogue; quoted words preserved verbatim; a Bear quote yields no dialogue and one emote); camera rules (establishing shot first, speaker framed
   during dialogue, shot lengths within bounds); price/cost math; viseme generation.
 - **E2E (Playwright, Chromium at `/opt/pw-browsers`, launched with `--use-angle=swiftshader
   --enable-unsafe-swiftshader --autoplay-policy=no-user-gesture-required`)** against `vite preview` + mock director:
@@ -649,6 +715,9 @@ reaction beat for the other actor). It powers the instant preview, the no-key fa
   5. Canon: "Bear says thank you to Masha" → no Bear dialogue in the compiled segment and an `adjusted` chip.
   6. EN → RU toggle → UI strings switch (assert 3 labels) and a RU example loads.
   7. Studio mode → the drawer shows plan size, cost and FPS; a shot override re-renders without a director request.
+  7b. Sound: a paragraph with "It starts to rain. Spooky music." compiles to `ambience` containing `rain` and
+     `music.mood = spooky`; during playback the app's audio debug hook (`window.__mabearAudio`) reports scheduled
+     dialogue, foley and music cues (assert counts > 0; actual audio output isn't verified headless).
   8. Save screenshots to `docs/screenshots/` (kid-mode.png, studio-mode.png, masha-closeup.png, bear-closeup.png,
      ru-mode.png).
 - **Visual self-review**: run the §7.3 likeness protocol (reference board, measured proportions and sampled colors,
@@ -688,7 +757,7 @@ log them as deferred, and move on. **P0 before P1 before P2, always.**
 | M2 Engine | T+0:40–2:00 | Set (incl. creek, van), Masha and Bear rigs on Mixamo-named skeletons + procedural faces, asset manifest, open motion clips retargeted + procedural layers for every P0 verb, blend, evaluate, series look (§7.1), fx, render the fixtures | Subagent A (characters + faces + motion/retarget), subagent B (set + look + fx + asset manifest) |
 | M3 Compiler + rules + parser | T+0:40–1:30 | compile, world state, camera, dialogue/visemes, audio cues, validator, offline parser + unit tests | Subagent C |
 | M4 Director | T+1:15–2:00 | Worker (auth, rate limit, direct), prompt, mock mode, client, eval script | Subagent D |
-| M5 App | T+1:30–2:45 | Store + paragraph pipeline (§6.5), editor, stage, timeline, under the hood, i18n, kid/studio, audio | Main thread integrates |
+| M5 App | T+1:30–2:45 | Store + paragraph pipeline (§6.5), editor, stage, timeline, under the hood, i18n, kid/studio, integrate audio | Main thread integrates; Subagent E builds the audio engine (§7.6 buses, scheduler, TTS, vocals, foley, SFX, ambience, music) from T+0:40 against the frozen Segment contract |
 | M6 Editing + polish | T+2:40–3:15 | Likeness passes 2–3 (§7.3) first, then Studio overrides (D7), dope sheet (D8), performance pass | Subagent for likeness while the main thread does D7/D8 |
 | M7 Verify + ship | T+3:15–3:45 | E2E, screenshots, director eval, deploy + smoke test, DEMO_SCRIPT, final STATUS | — |
 | Buffer | T+3:45–4:00 | Fixes only | — |
