@@ -31,7 +31,7 @@ dataset. The prototype **cannot** train that model. It approximates each learned
 
 | Layer | Production (what the funding builds) | Prototype stand-in (tonight) |
 |---|---|---|
-| Text → staging plan | Model trained on Animaccord scripts aligned with episode timelines | Claude + a written character bible (prompt) → a validated **beat script** (§6.3) |
+| Text → staging plan | Model trained on Animaccord scripts aligned with episode timelines, plus the character bible (the writers' implicit knowledge, made explicit and partly derivable from the footage) | Claude + a written character bible (prompt) → a validated **beat script** (§6.3) |
 | Plan → body motion | Learned text-to-motion trained on episode character animation | Open motion-capture/animation clip libraries retargeted onto the rigs (§7.4) |
 | Faces, lip-sync, exclamations | Learned from episode facial animation and audio | Procedural face rig: emotions, blinks, visemes from text |
 | Characters, sets, props | Animaccord's existing production 3D sources | Stand-in models built in code, as close to the originals as possible |
@@ -173,7 +173,7 @@ Browser (Vite + React + TypeScript)                              Cloudflare Work
 │        ▼                                           │             │ static assets (dist/)       │
 │ Player.evaluate(t) → poses, camera, fx, audio cues │             └─────────────────────────────┘
 │        ▼                                           │
-│ Three.js Stage (toon look) + WebAudio + TTS        │
+│ Three.js Stage (series look) + WebAudio + TTS      │
 └──────────────────────────────────────────────────┘
 Shared (imported by both): src/shared/ — zod schemas, bible JSON, grammar, rules, price table
 ```
@@ -256,6 +256,14 @@ wakes him." →
 5. Bear `facepalm` (annoyed, emote sigh);
 6. Masha `laugh` (happy), with_previous.
 
+**Beats run in parallel.** Each character has its own track in the compiled timeline. `with_previous` anchors a beat
+to the previous beat's start instead of its end, and `delay_s` offsets it, so any overlap is expressible: three
+chained `with_previous` beats run at once, and "Masha shouts two seconds into Bear's walk" is `with_previous: true,
+delay_s: 2`. A character's own beats never overlap each other: the compiler queues them on that character's track.
+Characters with no beat at a given moment are never frozen. The compiler fills their track with ambient life:
+idle fidgets, look-at toward the speaker or the action, and small reactions to loud beats (`fall_down`, `sneeze`,
+`laugh`, shouted lines).
+
 Beats exist only in the prototype: they are the interface between the stand-in director (Claude) and the
 deterministic compiler. A trained production model would likely emit the timeline directly.
 
@@ -268,7 +276,8 @@ Beat = {
   line: string | null,          // spoken words, Masha only, ≤ 120 chars, in UI language
   emote: Emote | null,
   emotion: Emotion,
-  with_previous: boolean,       // true = starts together with the previous beat (reactions, overlaps)
+  with_previous: boolean,       // true = anchored to the previous beat's START (parallel); false = to its END (sequential)
+  delay_s: number,              // 0–6 s offset from the anchor; e.g. with_previous + 2.0 = "two seconds into Bear's walk"
   shot: Shot                    // "auto" unless the script implies a specific framing
 }
 BeatScript = {
@@ -332,9 +341,13 @@ examples for the director prompt.
 
 ### 7.1 Look and feel
 
-Three.js (latest, ES modules). `MeshToonMaterial` with a 3-step gradient map, inverted-hull outlines (backface,
-scaled ~1.03, near-black brown `#2a1a12`), one warm directional light with soft shadows (PCFSoft, 2048 map) plus a
-hemisphere light, sky gradient (shader or canvas texture) per time of day, light fog. Cap pixel ratio at 2. Target
+Three.js (latest, ES modules). **Match the series' look**: soft, warm, saturated 3D CG, *not* cel shading and *no*
+outlines. Use `MeshStandardMaterial` / `MeshPhysicalMaterial` with high roughness: `sheen` for fabric (Masha's
+dress and kerchief), a subtle warm emissive or `sheen` on skin to fake subsurface scattering, and Bear's fur either
+as shell fur (6–10 shells with a noise alpha mask; P1) or as a soft normal-mapped noise. ACES filmic tone mapping,
+sRGB output. Light rig: warm key light with soft shadows (PCFSoft, 2048 map), a cool sky/hemisphere fill, and a rim
+light so silhouettes read against the forest. Sky gradient per time of day, light atmospheric fog, grass as a
+textured ground plus instanced tufts near the camera. Cap pixel ratio at 2. Target
 **≥ 50 FPS** on a 2020+ laptop with integrated GPU at 1280×720 canvas. Keep the total scene under ~150 draw calls
 (merge static set geometry with `BufferGeometryUtils.mergeGeometries` per material).
 
@@ -381,6 +394,30 @@ each body part to a `THREE.Bone` in a **standard humanoid skeleton that uses Mix
 cleanly (§7.4). Faces are separate procedural rigs (eyes, lids, brows, mouth visemes) on the `Head` bone. Each
 character module exports `build(): CharacterRig` and a `CharacterLook` config (all colors and proportions in one
 object for easy tuning).
+
+**Likeness protocol (no official assets are available — the stand-ins must be good enough that Animaccord's own
+artists don't wince).** Aim for a faithful, respectful *maquette*: recognizable at a glance, charming, never uncanny.
+1. **Reference board (first 15 minutes of M2, character subagent).** Download 6–10 reference images of Masha and of
+   Bear (front, three-quarter, side, a close-up of each face; e.g. from the Wikipedia/Fandom articles or the official
+   site) into the git-ignored `refs/` folder. **Never commit or deploy them** (add `refs/` to `.gitignore`; they must
+   not end up in `public/` or `dist/`). View them with the Read tool.
+2. **Measure, don't guess.** Write `docs/LIKENESS.md` with a proportion sheet measured from the references (head :
+   body ratio, eye size and spacing relative to head width, kerchief outline, dress length, Bear's height relative to
+   Masha, belly and ear shapes, muzzle size) and a color sheet sampled from the images with a small Python/PIL script
+   (median color of hand-picked regions: kerchief, dress, sleeves, skin, cheeks, iris, hair, Bear's fur, muzzle,
+   nose). Replace the default hex values below with the sampled ones.
+3. **Sculpt, don't stack primitives.** Shape the heads, kerchief, dress and Bear's body by deforming high-segment
+   geometry with displacement functions (cheek bulges, small chin, pear-shaped belly, kerchief shell that leaves an
+   oval face opening and ends in a chin knot with two short tails), with smooth normals, so the forms read as
+   sculpted rather than assembled. The eyes carry most of the life: large irises, specular highlights, eyelids that
+   blink, and brows that act.
+4. **Compare side by side, and iterate at least three times.** Each pass: render front, three-quarter and face
+   close-up screenshots at the references' angles; render a black **silhouette** version and compare it with the
+   reference silhouettes; score each character 1–5 against this rubric — silhouette, proportions, face, colors,
+   materials, motion feel — as an Animaccord art director would; log scores and fixes in `LIKENESS.md`. Stop when
+   every score is ≥ 4 or the time box ends (pass 1 in M2, passes 2–3 in M6).
+5. When in doubt, prefer *simpler and cleaner* over detailed and wrong. A clean, stylized maquette is respected; a
+   busy, off-model one is despised.
 
 **Asset manifest (`src/engine/assets.ts`)**: every character, set element and prop resolves through a manifest entry
 `{ id, kind, source: "procedural" | { gltf: url }, skeletonMap?, scale, offset }`. Replacing a stand-in with an
@@ -519,7 +556,7 @@ an `error` string. **The endpoint never returns a 5xx for a director failure.**
    - Mark these "to verify against the Animaccord series bible" in a code comment; keep them editable data.
 3. The set (marks with descriptions), props, verbs (from the grammar descriptions), emotions, shots.
 4. **Expansion guidance** ("a few words express a lot"): turn each sentence into 2–4 beats with in-character
-   business; add reactions (`with_previous: true`) so both characters stay alive; add at most one or two short Masha
+   business; add reactions (`with_previous: true`, optional `delay_s`) so both characters act in parallel; add at most one or two short Masha
    lines per paragraph when natural; respect continuity with the world state (who holds what, who is where, who is
    asleep); total 3–10 beats for a typical 1–3-sentence paragraph; prefer the most specific verb.
 5. Canon and safety rules (§9) with the instruction to rewrite, never refuse, and to record each change in
@@ -614,8 +651,8 @@ reaction beat for the other actor). It powers the instant preview, the no-key fa
   7. Studio mode → the drawer shows plan size, cost and FPS; a shot override re-renders without a director request.
   8. Save screenshots to `docs/screenshots/` (kid-mode.png, studio-mode.png, masha-closeup.png, bear-closeup.png,
      ru-mode.png).
-- **Visual self-review**: open the screenshots with the Read tool and compare against §7.3; iterate on character
-  likeness at least twice (silhouette, proportions, colors, faces). Record what changed in `NOTES.md`.
+- **Visual self-review**: run the §7.3 likeness protocol (reference board, measured proportions and sampled colors,
+  ≥ 3 side-by-side passes with silhouettes, rubric scores in `docs/LIKENESS.md`).
 - **Performance**: in a non-headless-equivalent check, log the average FPS of a 10 s playback in the e2e run (headless
   SwiftShader FPS is not representative; just assert > 10 there) and the scene's draw-call count (assert < 200).
 
@@ -626,7 +663,8 @@ reaction beat for the other actor). It powers the instant preview, the no-key fa
 3. All P0 rows of §1 are demonstrable, and each P0 row maps to at least one passing test (list the mapping in
    `STATUS.md`).
 4. Screenshots from §13.8 exist and were reviewed; Masha (magenta kerchief + sarafan, green eyes, blond fringe, chibi
-   proportions) and Bear (big brown upright bear, tan muzzle, round ears) are recognizable.
+   proportions) and Bear (big brown upright bear, tan muzzle, round ears) are recognizable; `docs/LIKENESS.md` shows
+   ≥ 3 passes with rubric scores (target ≥ 4 everywhere); `refs/` is git-ignored and absent from `dist/`.
 5. The director eval (§8.4) passes with real API calls — **or**, if `ANTHROPIC_API_KEY` is absent in the build
    environment, it is explicitly marked "not run: key absent" in `STATUS.md` (then it must pass on the deployed Worker
    smoke test instead).
@@ -647,11 +685,11 @@ log them as deferred, and move on. **P0 before P1 before P2, always.**
 |---|---|---|---|
 | M0 Bootstrap | T+0:00–0:15 | Vite + React + TS, three, zod, @anthropic-ai/sdk, vitest, playwright, wrangler; scripts; CLAUDE.md conventions; STATUS/NOTES files | — |
 | M1 Contracts | T+0:15–0:40 | `src/shared/*` (schemas, grammar, bible, rules, pricing), fixtures (EN first, RU next), schema tests. **Freeze contracts; later changes must be additive.** | — |
-| M2 Engine | T+0:40–2:00 | Set (incl. creek, van), Masha and Bear rigs on Mixamo-named skeletons + procedural faces, asset manifest, open motion clips retargeted + procedural layers for every P0 verb, blend, evaluate, toon look, fx, render the fixtures | Subagent A (characters + faces + motion/retarget), subagent B (set + look + fx + asset manifest) |
+| M2 Engine | T+0:40–2:00 | Set (incl. creek, van), Masha and Bear rigs on Mixamo-named skeletons + procedural faces, asset manifest, open motion clips retargeted + procedural layers for every P0 verb, blend, evaluate, series look (§7.1), fx, render the fixtures | Subagent A (characters + faces + motion/retarget), subagent B (set + look + fx + asset manifest) |
 | M3 Compiler + rules + parser | T+0:40–1:30 | compile, world state, camera, dialogue/visemes, audio cues, validator, offline parser + unit tests | Subagent C |
 | M4 Director | T+1:15–2:00 | Worker (auth, rate limit, direct), prompt, mock mode, client, eval script | Subagent D |
 | M5 App | T+1:30–2:45 | Store + paragraph pipeline (§6.5), editor, stage, timeline, under the hood, i18n, kid/studio, audio | Main thread integrates |
-| M6 Editing + polish | T+2:45–3:15 | Studio overrides (D7), dope sheet (D8), likeness iteration ×2, performance pass | — |
+| M6 Editing + polish | T+2:40–3:15 | Likeness passes 2–3 (§7.3) first, then Studio overrides (D7), dope sheet (D8), performance pass | Subagent for likeness while the main thread does D7/D8 |
 | M7 Verify + ship | T+3:15–3:45 | E2E, screenshots, director eval, deploy + smoke test, DEMO_SCRIPT, final STATUS | — |
 | Buffer | T+3:45–4:00 | Fixes only | — |
 
@@ -663,7 +701,7 @@ independent subagents in a single message so they run concurrently.
 
 | Risk | Mitigation |
 |---|---|
-| Stand-in characters look cheap → undermines the pitch | Spend the M6 likeness passes on faces and silhouettes first; toon outlines; good lighting; close-ups only where the face is strong |
+| Stand-in characters look cheap or off-model → Animaccord's artists despise them | §7.3 likeness protocol (references, measured proportions, sampled colors, ≥ 3 scored passes); the series' soft CG look, not cel shading; good lighting; close-ups only where the face is strong |
 | Director latency (Opus at low effort may take several seconds) | Instant offline preview while waiting; prompt caching; `DIRECTOR_MODEL` env lets the operator choose a faster model |
 | WebGL in headless tests | SwiftShader flags; tests assert non-blank pixels, not exact images |
 | TTS unavailable or voices vary | Never block; lips keep moving; Studio legend says "placeholder voice" |
