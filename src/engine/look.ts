@@ -4,6 +4,8 @@
 // Also hosts the shared vertex-coloured material palette and a small geometry "bag" used by the set and props:
 // many differently coloured parts share ONE material each, so the whole set merges to a handful of draw calls.
 import * as THREE from "three";
+import { HDRLoader } from "three/examples/jsm/loaders/HDRLoader.js";
+import { FullScreenQuad } from "three/examples/jsm/postprocessing/Pass.js";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import type { TimeOfDay } from "../shared/schema";
 
@@ -47,11 +49,11 @@ export const TOD_PRESETS: Record<TimeOfDay, LightingParams> = {
     exposure: 1.0, envIntensity: 0.45, windowGlow: 0.0, stars: 0,
   },
   day: {
-    skyTop: 0x4b9df0, skyHorizon: 0xcfe8ff, skyBottom: 0xc8dcc0,
+    skyTop: 0x3a8ae8, skyHorizon: 0x9ccbf5, skyBottom: 0xc8dcc0,
     sunDir: [6, 13, 9], sunColor: 0xfff0d8, sunIntensity: 3.0, sunGlow: 0.45,
     hemiSky: 0xcfe2ff, hemiGround: 0x76884a, hemiIntensity: 1.15,
     rimColor: 0xfff4e0, rimIntensity: 1.1,
-    fogColor: 0xd7e9f7, fogNear: 30, fogFar: 140,
+    fogColor: 0xbedbf2, fogNear: 30, fogFar: 140,
     exposure: 1.0, envIntensity: 0.5, windowGlow: 0.0, stars: 0,
   },
   sunset: {
@@ -68,7 +70,7 @@ export const TOD_PRESETS: Record<TimeOfDay, LightingParams> = {
     hemiSky: 0x40589c, hemiGround: 0x161c2c, hemiIntensity: 0.55,
     rimColor: 0x8fb0ff, rimIntensity: 0.9,
     fogColor: 0x1d2a4f, fogNear: 14, fogFar: 80,
-    exposure: 1.15, envIntensity: 0.22, windowGlow: 1.0, stars: 1,
+    exposure: 1.15, envIntensity: 0.12, windowGlow: 1.0, stars: 1,
   },
 };
 
@@ -138,6 +140,8 @@ export interface LookRig {
   sky: THREE.Mesh;
   fog: THREE.Fog;
   materials: LookMaterials;
+  /** image-based lighting: CC0 HDRI (once loaded) tinted per time of day, prefiltered with PMREM */
+  env: EnvSystem;
   /** last applied params */
   current: LightingParams;
   dispose(): void;
@@ -156,10 +160,36 @@ uniform vec3 uTop; uniform vec3 uHorizon; uniform vec3 uBottom; uniform vec3 uSu
 uniform float uSunGlow; uniform float uStars;
 varying vec3 vDir;
 float hash(vec3 p) { p = fract(p * 0.3183099 + 0.1); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
+float h2(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float vnoise(vec2 p) {
+  vec2 i = floor(p), f = fract(p);
+  f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(h2(i), h2(i + vec2(1.0, 0.0)), f.x), mix(h2(i + vec2(0.0, 1.0)), h2(i + vec2(1.0, 1.0)), f.x), f.y);
+}
+float fbm(vec2 p) {
+  float v = 0.0, a = 0.5;
+  for (int i = 0; i < 4; i++) { v += a * vnoise(p); p = p * 2.03 + vec2(1.7, 9.2); a *= 0.5; }
+  return v;
+}
 void main() {
   vec3 d = normalize(vDir);
   float h = d.y;
   vec3 col = h > 0.0 ? mix(uHorizon, uTop, pow(smoothstep(0.0, 1.0, h), 0.55)) : mix(uHorizon, uBottom, smoothstep(0.0, 0.25, -h));
+  // soft cumulus clouds on a sky plane (static, deterministic), lit warm from the sun side, fading to the horizon
+  if (h > 0.02) {
+    vec2 cp = d.xz / (h + 0.18) * 1.6 + vec2(3.0, 1.0);
+    float n = fbm(cp);
+    float cov = smoothstep(0.52, 0.78, n) * smoothstep(0.02, 0.22, h);
+    if (cov > 0.0) {
+      float lit = clamp(0.55 + 0.45 * dot(normalize(vec3(d.x, 0.0, d.z) + 1e-4), normalize(vec3(uSunDir.x, 0.0, uSunDir.z) + 1e-4)), 0.0, 1.0);
+      float night = uStars;
+      vec3 cLit = mix(vec3(1.0, 0.98, 0.95), uSunColor, 0.3) * mix(1.05, 0.2, night);
+      vec3 cShade = mix(uHorizon, uTop, 0.35) * mix(0.95, 0.35, night);
+      float edge = smoothstep(0.55, 0.9, n); // denser cores are brighter on the lit side
+      vec3 cc = mix(cShade, cLit, clamp(lit * 0.7 + edge * 0.5, 0.0, 1.0));
+      col = mix(col, cc, cov * 0.92);
+    }
+  }
   float s = max(dot(d, normalize(uSunDir)), 0.0);
   col += uSunColor * (pow(s, 8.0) * 0.35 + pow(s, 64.0) * 0.6) * uSunGlow;
   col += uSunColor * smoothstep(0.9993, 0.9997, s) * uSunGlow * 2.0;
@@ -222,15 +252,13 @@ export function createLook(scene: THREE.Scene, renderer: THREE.WebGLRenderer): L
   const fog = new THREE.Fog(0xd7e9f7, 30, 140);
   scene.fog = fog;
 
-  // A soft neutral environment (constant across times of day; only its intensity blends) for gentle IBL on
-  // metals, water and paint. No discontinuities when blending.
-  const env = buildEnvironment(renderer);
-  scene.environment = env;
-
+  // Image-based lighting: a procedural sky-gradient environment until the CC0 HDRI arrives (loadHdri), both tinted
+  // per time of day and prefiltered with PMREM (see EnvSystem). The PMREM target is reused, so swaps never recompile.
+  const env = createEnvSystem(renderer);
   const materials = createMaterials();
 
   const rig: LookRig = {
-    hemi, key, rim, lantern, sky, fog, materials,
+    hemi, key, rim, lantern, sky, fog, materials, env,
     current: TOD_PRESETS.day,
     dispose() {
       skyMat.dispose();
@@ -241,31 +269,193 @@ export function createLook(scene: THREE.Scene, renderer: THREE.WebGLRenderer): L
     },
   };
   applyParams(rig, scene, renderer, TOD_PRESETS.day);
+  updateEnvironment(rig, scene, 0);
   return rig;
 }
 
-function buildEnvironment(renderer: THREE.WebGLRenderer): THREE.Texture {
-  const envScene = new THREE.Scene();
-  const g = new THREE.SphereGeometry(10, 32, 16);
-  const cols: number[] = [];
-  const pos = g.attributes.position;
-  const top = new THREE.Color(0xdfeaff), hor = new THREE.Color(0xfff2e0), bot = new THREE.Color(0x6f7f4a);
-  const c = new THREE.Color();
-  for (let i = 0; i < pos.count; i++) {
-    const y = pos.getY(i) / 10;
-    if (y > 0) c.copy(hor).lerp(top, Math.pow(y, 0.6));
-    else c.copy(hor).lerp(bot, Math.min(1, -y * 3));
-    cols.push(c.r, c.g, c.b);
+// ---------------------------------------------------------------------------------------------------------------
+// Environment (IBL): HDRI × time-of-day tint → small equirect target → PMREM (reused target)
+// ---------------------------------------------------------------------------------------------------------------
+
+const ENV_FRAG = /* glsl */ `
+uniform sampler2D tHdr; uniform float uHasHdr; uniform float uGain; uniform float uRot; uniform float uTintAmt;
+uniform vec3 uTop; uniform vec3 uHorizon; uniform vec3 uGround; uniform vec3 uSunDir; uniform vec3 uSunColor; uniform float uSun;
+varying vec2 vUv;
+const vec3 LUM = vec3(0.2126, 0.7152, 0.0722);
+void main() {
+  // inverse of three's equirectUv(): this target is sampled by PMREM exactly like an equirect texture
+  float phi = (vUv.x - 0.5) * 6.28318530718;
+  float lat = (vUv.y - 0.5) * 3.14159265359;
+  vec3 d = vec3(cos(phi) * cos(lat), sin(lat), sin(phi) * cos(lat));
+  vec3 g = d.y > 0.0 ? mix(uHorizon, uTop, pow(clamp(d.y, 0.0, 1.0), 0.55)) : mix(uHorizon, uGround, smoothstep(0.0, 0.3, -d.y));
+  g += uSunColor * pow(max(dot(d, uSunDir), 0.0), 6.0) * uSun;
+  vec3 col = g;
+  if (uHasHdr > 0.5) {
+    vec3 h = min(texture2D(tHdr, vec2(fract(vUv.x + uRot), vUv.y)).rgb, vec3(3.0)) * uGain;
+    float lh = dot(h, LUM);
+    float lg = max(dot(g, LUM), 1e-3);
+    vec3 gs = mix(vec3(lg), g, 0.45); // hue toward the time of day, but never fully saturated (night stays soft)
+    col = mix(h, gs * (lh / lg), uTintAmt); // the HDRI's light structure, hued toward the time of day
   }
-  g.setAttribute("color", new THREE.Float32BufferAttribute(cols, 3));
-  const m = new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.BackSide });
-  envScene.add(new THREE.Mesh(g, m));
+  gl_FragColor = vec4(col, 1.0);
+}`;
+
+export interface EnvSystem {
+  /** PMREM texture used as scene.environment (same object for the rig's lifetime) */
+  readonly texture: THREE.Texture | null;
+  /** true once the CC0 HDRI is in use */
+  readonly hdri: boolean;
+  /** params changed since the last prefilter */
+  dirty: boolean;
+  lastGen: number;
+  /** number of prefilter runs (tests / perf) */
+  generations: number;
+  setHdri(tex: THREE.DataTexture): void;
+  setParams(p: LightingParams): void;
+  generate(): void;
+  dispose(): void;
+}
+
+/** Pure: how strongly the HDRI is hued toward the time-of-day palette (warm/cool sun + night → stronger). */
+export function envTintAmount(p: LightingParams): number {
+  _ca.setHex(p.sunColor);
+  return Math.min(0.8, Math.max(0.2, 0.22 + Math.abs(_ca.r - _ca.b) * 0.7 + p.stars * 0.4));
+}
+
+function createEnvSystem(renderer: THREE.WebGLRenderer): EnvSystem {
+  const rt = new THREE.WebGLRenderTarget(512, 256, { type: THREE.HalfFloatType, depthBuffer: false });
+  rt.texture.name = "look:env_equirect";
+  rt.texture.mapping = THREE.EquirectangularReflectionMapping;
+  const mat = new THREE.ShaderMaterial({
+    vertexShader: "varying vec2 vUv; void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }",
+    fragmentShader: ENV_FRAG,
+    uniforms: {
+      tHdr: { value: null },
+      uHasHdr: { value: 0 },
+      uGain: { value: 1 },
+      uRot: { value: 0 },
+      uTintAmt: { value: 0.3 },
+      uTop: { value: new THREE.Color() },
+      uHorizon: { value: new THREE.Color() },
+      uGround: { value: new THREE.Color() },
+      uSunDir: { value: new THREE.Vector3(0, 1, 0) },
+      uSunColor: { value: new THREE.Color() },
+      uSun: { value: 0 },
+    },
+    depthTest: false,
+    depthWrite: false,
+  });
+  const quad = new FullScreenQuad(mat);
   const pmrem = new THREE.PMREMGenerator(renderer);
-  const rt = pmrem.fromScene(envScene, 0.04);
-  pmrem.dispose();
-  g.dispose();
-  m.dispose();
-  return rt.texture;
+  let target: THREE.WebGLRenderTarget | null = null;
+  let hdri = false;
+  let hdriSunAz = 0; // azimuth (radians, three's equirect convention) of the HDRI's brightest region
+  let sunAz = 0;
+  const sys: EnvSystem = {
+    get texture() {
+      return target ? target.texture : null;
+    },
+    get hdri() {
+      return hdri;
+    },
+    dirty: true,
+    lastGen: -Infinity,
+    generations: 0,
+    setHdri(tex) {
+      const st = hdriStats(tex);
+      mat.uniforms.tHdr.value = tex;
+      mat.uniforms.uHasHdr.value = 1;
+      // normalise the HDRI so its mean (sun clamped) matches the gradient environment's brightness (~0.6)
+      mat.uniforms.uGain.value = st.mean > 0 ? 0.6 / st.mean : 1;
+      hdriSunAz = st.sunAz;
+      mat.uniforms.uRot.value = (hdriSunAz - sunAz) / (Math.PI * 2);
+      hdri = true;
+      sys.dirty = true;
+    },
+    setParams(p) {
+      const u = mat.uniforms;
+      (u.uTop.value as THREE.Color).setHex(p.skyTop);
+      (u.uHorizon.value as THREE.Color).setHex(p.skyHorizon);
+      (u.uGround.value as THREE.Color).setHex(p.hemiGround);
+      const sd = (u.uSunDir.value as THREE.Vector3).set(p.sunDir[0], p.sunDir[1], p.sunDir[2]).normalize();
+      (u.uSunColor.value as THREE.Color).setHex(p.sunColor);
+      u.uSun.value = (p.sunIntensity / 3) * 0.9;
+      u.uTintAmt.value = envTintAmount(p);
+      // rotate the HDRI so its sun sits where the key light comes from (three: u = atan(z, x) / 2π + 0.5)
+      sunAz = Math.atan2(sd.z, sd.x);
+      u.uRot.value = (hdriSunAz - sunAz) / (Math.PI * 2);
+      sys.dirty = true;
+    },
+    generate() {
+      const prevTarget = renderer.getRenderTarget();
+      renderer.setRenderTarget(rt);
+      quad.render(renderer);
+      renderer.setRenderTarget(prevTarget);
+      target = pmrem.fromEquirectangular(rt.texture, target as unknown as THREE.WebGLCubeRenderTarget | null);
+      sys.dirty = false;
+      sys.generations++;
+    },
+    dispose() {
+      rt.dispose();
+      mat.dispose();
+      quad.dispose();
+      pmrem.dispose();
+      target?.dispose();
+      (mat.uniforms.tHdr.value as THREE.Texture | null)?.dispose();
+    },
+  };
+  return sys;
+}
+
+/** Mean luminance (clamped at 3) and the azimuth of the brightest row-weighted region of an equirect HDR texture. */
+function hdriStats(tex: THREE.DataTexture): { mean: number; sunAz: number } {
+  const img = tex.image as { data: ArrayLike<number>; width: number; height: number };
+  const { data, width, height } = img;
+  const half = data instanceof Uint16Array;
+  const val = (i: number) => (half ? THREE.DataUtils.fromHalfFloat(data[i]) : data[i]);
+  const stride = data.length / (width * height);
+  let sum = 0, n = 0, best = -1, bestX = 0;
+  const step = 4; // subsample: plenty for a mean
+  for (let y = 0; y < height; y += step) {
+    for (let x = 0; x < width; x += step) {
+      const i = (y * width + x) * stride;
+      const l = 0.2126 * val(i) + 0.7152 * val(i + 1) + 0.0722 * val(i + 2);
+      sum += Math.min(3, l);
+      n++;
+      if (l > best) {
+        best = l;
+        bestX = x;
+      }
+    }
+  }
+  return { mean: n ? sum / n : 0, sunAz: ((bestX + 0.5) / width - 0.5) * Math.PI * 2 };
+}
+
+/** Load the CC0 HDRI (async). Resolves false (procedural environment stays) if it cannot be loaded. */
+export async function loadHdri(rig: LookRig, url: string): Promise<boolean> {
+  try {
+    const loader = new HDRLoader();
+    loader.setDataType(THREE.HalfFloatType);
+    const tex = await loader.loadAsync(url);
+    tex.mapping = THREE.EquirectangularReflectionMapping;
+    tex.minFilter = THREE.LinearFilter;
+    tex.magFilter = THREE.LinearFilter;
+    tex.generateMipmaps = false;
+    tex.wrapS = THREE.RepeatWrapping;
+    rig.env.setHdri(tex);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Re-prefilter the environment when lighting changed (throttled to every `minGapMs` during blends). */
+export function updateEnvironment(rig: LookRig, scene: THREE.Scene, now: number, minGapMs = 120): void {
+  const e = rig.env;
+  if (!e.dirty || now - e.lastGen < minGapMs) return;
+  e.lastGen = now;
+  e.generate();
+  if (scene.environment !== e.texture) scene.environment = e.texture;
 }
 
 const _v = new THREE.Vector3();
@@ -287,6 +477,7 @@ function applyParams(rig: LookRig, scene: THREE.Scene, renderer: THREE.WebGLRend
   rig.fog.far = p.fogFar;
   renderer.toneMappingExposure = p.exposure;
   scene.environmentIntensity = p.envIntensity;
+  rig.env.setParams(p);
   const u = (rig.sky.material as THREE.ShaderMaterial).uniforms;
   (u.uTop.value as THREE.Color).setHex(p.skyTop);
   (u.uHorizon.value as THREE.Color).setHex(p.skyHorizon);
@@ -401,13 +592,20 @@ function softNoise(ctx: CanvasRenderingContext2D, s: number, base: string, amp: 
   }
 }
 
+/** 1×1 flat tangent-space normal (placeholder until a CC0 normal map is loaded). */
+function flatNormal(): THREE.DataTexture {
+  const t = new THREE.DataTexture(new Uint8Array([128, 128, 255, 255]), 1, 1, THREE.RGBAFormat);
+  t.needsUpdate = true;
+  return t;
+}
+
 export function createMaterials(): LookMaterials {
   const grain = canvasTex(256, woodGrain);
   const stony = canvasTex(128, (c, s) => softNoise(c, s, "#dddddd", 0.3, 5));
   const std = (o: THREE.MeshStandardMaterialParameters) => new THREE.MeshStandardMaterial({ vertexColors: true, ...o });
   const mats = {
-    wood: std({ roughness: 0.82, map: grain }),
-    bark: std({ roughness: 0.95, map: grain }),
+    wood: std({ roughness: 0.82, map: grain, normalMap: flatNormal() }),
+    bark: std({ roughness: 0.95, map: grain, normalMap: flatNormal() }),
     foliage: std({ roughness: 0.88 }),
     paint: std({ roughness: 0.55 }),
     metal: std({ roughness: 0.32, metalness: 0.65 }),
@@ -419,12 +617,92 @@ export function createMaterials(): LookMaterials {
     soil: std({ roughness: 1.0, map: stony }),
   } as LookMaterials;
   for (const k of MAT_KEYS) mats[k].name = `look:${k}`;
+  installFoliageClumps(mats.foliage);
   return mats;
+}
+
+/** Detail textures for the shared look materials (subset of the set's CC0 textures; see set/textures.ts). */
+export interface LookTextures {
+  wood?: THREE.Texture;
+  woodN?: THREE.Texture;
+  bark?: THREE.Texture;
+  barkN?: THREE.Texture;
+}
+
+/**
+ * Swap the CC0 wood and bark textures into the shared materials (A5). Missing textures keep the procedural grain.
+ * The colour maps are neutral "detail" maps (mean sRGB ≈ 0.85, like the procedural grain they replace), so the baked
+ * vertex colours still carry the palette.
+ */
+export function applyLookTextures(m: LookMaterials, t: LookTextures): void {
+  const set = (mat: THREE.MeshStandardMaterial, map?: THREE.Texture, nrm?: THREE.Texture, ns = 0.8) => {
+    // map + normalMap are never null on these materials (procedural grain, flat 1×1 normal placeholder), so the
+    // swap reuses the already-compiled shader program: no hitch when the textures arrive
+    let recompile = false;
+    if (map) {
+      recompile ||= !mat.map;
+      mat.map = map;
+    }
+    if (nrm) {
+      recompile ||= !mat.normalMap;
+      mat.normalMap = nrm;
+      mat.normalScale.set(ns, ns);
+    }
+    if (recompile) mat.needsUpdate = true;
+  };
+  set(m.wood, t.wood, t.woodN, 0.7);
+  set(m.bark, t.bark, t.barkN, 1.0);
+}
+
+/**
+ * Foliage "clumps" (A5): cheap world-space value noise breaks every canopy into soft leaf/needle clusters (brightness
+ * and a slight yellow-green shift), so flat canopy cones and blobs read as layered foliage. No textures, ~20 ALU.
+ */
+function installFoliageClumps(mat: THREE.MeshStandardMaterial): void {
+  mat.onBeforeCompile = (sh) => {
+    sh.vertexShader = sh.vertexShader
+      .replace("#include <common>", "#include <common>\nvarying vec3 vFolW;")
+      .replace(
+        "#include <project_vertex>",
+        `#include <project_vertex>
+{
+  vec4 fw = vec4(transformed, 1.0);
+  #ifdef USE_INSTANCING
+  fw = instanceMatrix * fw;
+  #endif
+  vFolW = (modelMatrix * fw).xyz;
+}`,
+      );
+    sh.fragmentShader = sh.fragmentShader
+      .replace(
+        "#include <common>",
+        `#include <common>
+varying vec3 vFolW;
+float folHash(vec3 p) { p = fract(p * 0.3183099 + vec3(0.71, 0.113, 0.419)); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
+float folNoise(vec3 x) {
+  vec3 i = floor(x), f = fract(x);
+  f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(mix(folHash(i), folHash(i + vec3(1, 0, 0)), f.x), mix(folHash(i + vec3(0, 1, 0)), folHash(i + vec3(1, 1, 0)), f.x), f.y),
+             mix(mix(folHash(i + vec3(0, 0, 1)), folHash(i + vec3(1, 0, 1)), f.x), mix(folHash(i + vec3(0, 1, 1)), folHash(i + vec3(1, 1, 1)), f.x), f.y), f.z);
+}`,
+      )
+      .replace(
+        "#include <color_fragment>",
+        `#include <color_fragment>
+{
+  float n = folNoise(vFolW * 2.2) * 0.65 + folNoise(vFolW * 5.3) * 0.35;
+  diffuseColor.rgb *= 0.78 + 0.42 * n;
+  diffuseColor.rgb += vec3(0.02, 0.025, -0.01) * (n - 0.5);
+}`,
+      );
+  };
+  mat.customProgramCacheKey = () => "look:foliage:clumps:v1";
 }
 
 export function disposeMaterials(m: LookMaterials): void {
   for (const k of MAT_KEYS) {
     m[k].map?.dispose();
+    m[k].normalMap?.dispose();
     m[k].dispose();
   }
 }
@@ -523,8 +801,69 @@ export function xf(
   return new THREE.Matrix4().compose(new THREE.Vector3(...pos), _q.clone(), _s.clone());
 }
 
-/** Materials that merge into another bucket (fewer draw calls: same shader, near-identical look). */
-const MAT_ALIAS: Partial<Record<MatKey, MatKey>> = { bark: "wood", soil: "stone" };
+/** Materials that merge into another bucket (fewer draw calls: same shader, near-identical look). Bark keeps its own
+ *  material since A5 (CC0 bark texture vs. sawn-log wood texture). */
+const MAT_ALIAS: Partial<Record<MatKey, MatKey>> = { soil: "stone" };
+
+/** Texture tile size in metres per textured material (metric UVs, so grain and bark read at the same scale everywhere). */
+export const UV_TILE_M: Partial<Record<MatKey, number>> = { wood: 1.1, bark: 1.4, stone: 1.2 };
+
+const _sx = new THREE.Vector3();
+const _sy = new THREE.Vector3();
+const _sz = new THREE.Vector3();
+/**
+ * Rewrite a primitive's UVs in metres / `tile` (before its transform `m` is applied; `m`'s scale is honoured).
+ * Cylinders/cones: u around (rounded to whole tiles so the seam is invisible), v along the axis — grain follows logs,
+ * trunks and posts. Everything else: planar per face (dominant local normal) with v along the face's longer side, so
+ * planks and boards carry their grain lengthwise.
+ */
+export function metricUV(g: THREE.BufferGeometry, tile: number, m?: THREE.Matrix4): void {
+  const uv = g.attributes.uv as THREE.BufferAttribute | undefined;
+  const pos = g.attributes.position;
+  const nor = g.attributes.normal;
+  if (!pos || !nor) return;
+  let sx = 1, sy = 1, sz = 1;
+  if (m) {
+    m.extractBasis(_sx, _sy, _sz);
+    sx = _sx.length();
+    sy = _sy.length();
+    sz = _sz.length();
+  }
+  const prm = (g as unknown as { parameters?: Record<string, number> }).parameters ?? {};
+  const type = g.type;
+  if (uv && (type === "CylinderGeometry" || type === "ConeGeometry")) {
+    const rt = type === "ConeGeometry" ? 0 : prm.radiusTop ?? 1;
+    const rb = type === "ConeGeometry" ? prm.radius ?? 1 : prm.radiusBottom ?? 1;
+    const h = (prm.height ?? 1) * sy;
+    const rs = (sx + sz) / 2;
+    const around = Math.max(1, Math.round((Math.PI * (rt + rb) * rs) / tile));
+    const along = h / tile;
+    const cap = (2 * Math.max(rt, rb) * rs) / tile;
+    for (let i = 0; i < uv.count; i++) {
+      if (Math.abs(nor.getY(i)) > 0.95 && rt > 0) uv.setXY(i, uv.getX(i) * cap, uv.getY(i) * cap);
+      else uv.setXY(i, uv.getX(i) * around, uv.getY(i) * along);
+    }
+    uv.needsUpdate = true;
+    return;
+  }
+  g.computeBoundingBox();
+  const bb = g.boundingBox!;
+  const ex = (bb.max.x - bb.min.x) * sx, ey = (bb.max.y - bb.min.y) * sy, ez = (bb.max.z - bb.min.z) * sz;
+  const out = new Float32Array(pos.count * 2);
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i) * sx, y = pos.getY(i) * sy, z = pos.getZ(i) * sz;
+    const ax = Math.abs(nor.getX(i)), ay = Math.abs(nor.getY(i)), az = Math.abs(nor.getZ(i));
+    let a: number, b: number, ea: number, eb: number;
+    if (ax >= ay && ax >= az) [a, b, ea, eb] = [z, y, ez, ey];
+    else if (ay >= az) [a, b, ea, eb] = [x, z, ex, ez];
+    else [a, b, ea, eb] = [x, y, ex, ey];
+    // v (texture grain axis) along the longer side of this face
+    if (ea > eb) [a, b] = [b, a];
+    out[i * 2] = a / tile;
+    out[i * 2 + 1] = b / tile;
+  }
+  g.setAttribute("uv", new THREE.BufferAttribute(out, 2));
+}
 
 export class GeoBag {
   readonly parts = new Map<MatKey, THREE.BufferGeometry[]>();
@@ -532,6 +871,8 @@ export class GeoBag {
   /** Add a geometry (painted with `color`) under material `mat`, transformed by `m` (local to this bag). */
   add(mat: MatKey, g: THREE.BufferGeometry, color: THREE.ColorRepresentation, m?: THREE.Matrix4, o?: PaintOpts): this {
     mat = MAT_ALIAS[mat] ?? mat;
+    const tile = UV_TILE_M[mat];
+    if (tile) metricUV(g, tile, m);
     paint(g, color, o);
     normalize(g);
     if (m) g.applyMatrix4(m);

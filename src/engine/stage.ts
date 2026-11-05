@@ -5,9 +5,19 @@ import { ACTOR_IDS, type ActorId } from "../shared/schema";
 import type { CharacterRig, FrameState, StageHandle, StageStats } from "./api";
 import { assetStatus, gltfSetElements, loadCharacter, loadPropOverrides, loadSetOverrides, TEST_GLTF_ID, type AssetStatus } from "./assets";
 import { createFx, type FxHandle } from "./fx/fx";
-import { applyLighting, createLook, followCamera, setShadowQuality, setupRenderer, type LookRig } from "./look";
+import { applyLighting, applyLookTextures, createLook, followCamera, loadHdri, setShadowQuality, setupRenderer, updateEnvironment, type LookRig } from "./look";
+import { adaptStep, createPost, DEFAULT_GRADE, parsePostQuality, type PostPipeline, type PostQuality } from "./post/post";
 import { createProps, type PropsHandle } from "./props/props";
 import { buildBearsYard, walkHeightAt, type SetHandle } from "./set/bearsYard";
+import { assetUrl, loadEnvTextures } from "./set/textures";
+
+/** CC0 HDRI used for image-based lighting (docs/ASSETS.md). */
+export const HDRI_URL = "assets/hdri/meadow_2_1k.hdr";
+
+export interface StageOptions {
+  /** post-processing tier 0..3 (off | low | medium | high). Default: `?post=` URL flag, else 3 (high). */
+  post?: PostQuality;
+}
 
 /** Extra handles for tools, tests and the behind-the-scenes overlay (additive to the frozen StageHandle). */
 export interface StageHandleEx extends StageHandle {
@@ -27,8 +37,12 @@ export interface StageHandleEx extends StageHandle {
   timings: Record<string, number>;
   /** current adaptive resolution scale (0.5..1) */
   resolutionScale: () => number;
-  /** disable/enable adaptive resolution (tools, screenshots) */
+  /** disable/enable adaptive resolution + post degradation (tools, screenshots); off restores full quality */
   setAdaptive: (on: boolean) => void;
+  /** current post-processing tier (0 off, 1 grade+SMAA, 2 +bloom, 3 +AO) */
+  postQuality: () => PostQuality;
+  /** force a post-processing tier (0..3, capped at what the device supports) */
+  setPostQuality: (q: PostQuality) => void;
 }
 
 /** Drawing-buffer cap: ~1280×720 pixels regardless of canvas size × devicePixelRatio. */
@@ -37,8 +51,10 @@ const SCALE_MIN = 0.5;
 
 const NO_FX: FrameState["fx"] = [];
 
-export async function createStage(canvas: HTMLCanvasElement): Promise<StageHandleEx> {
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance", preserveDrawingBuffer: false });
+export async function createStage(canvas: HTMLCanvasElement, opts: StageOptions = {}): Promise<StageHandleEx> {
+  const postWanted: PostQuality = opts.post ?? parsePostQuality(typeof location !== "undefined" ? location.search : "");
+  // with post-processing on, SMAA anti-aliases the composited image; native MSAA is only used by the plain path
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: postWanted === 0, powerPreference: "high-performance", preserveDrawingBuffer: false });
   const dpr = Math.min(2, window.devicePixelRatio || 1);
   renderer.setPixelRatio(dpr);
   setupRenderer(renderer);
@@ -57,15 +73,22 @@ export async function createStage(canvas: HTMLCanvasElement): Promise<StageHandl
     tp = n;
   };
   const look = createLook(scene, renderer);
+  let post: PostPipeline | null = null;
+  try {
+    post = createPost(renderer, scene, camera, postWanted);
+  } catch {
+    post = null; // plain renderer path (pre-A5 look), never a black screen
+  }
+  const postMax: PostQuality = post ? post.quality : 0;
   mark("look");
   const setTimings: Record<string, number> = {};
   const set = buildBearsYard(look.materials, { skip: gltfSetElements(), timings: setTimings });
   scene.add(set.root);
   mark("set");
 
-  const [masha, bear] = await Promise.all([loadCharacter("masha"), loadCharacter("bear")]);
+  const loadedRigs = await Promise.all(ACTOR_IDS.map((id) => loadCharacter(id)));
   mark("characters");
-  const rigs = { masha, bear } as Record<ActorId, CharacterRig>;
+  const rigs = Object.fromEntries(ACTOR_IDS.map((id, i) => [id, loadedRigs[i]])) as Record<ActorId, CharacterRig>;
   for (const id of ACTOR_IDS) scene.add(rigs[id].root);
 
   const props = createProps(look.materials);
@@ -84,6 +107,12 @@ export async function createStage(canvas: HTMLCanvasElement): Promise<StageHandl
     }),
     loadSetOverrides(set.elements),
     loadPropOverrides(props.objects),
+    // A5 environment: CC0 HDRI + PBR textures swap in asynchronously; failures keep the procedural look
+    loadHdri(look, assetUrl(HDRI_URL)),
+    loadEnvTextures(Math.min(8, renderer.capabilities.getMaxAnisotropy())).then(({ textures }) => {
+      applyLookTextures(look.materials, textures);
+      set.applyTextures(textures);
+    }),
   ]).then(() => undefined);
 
   // ---- size / adaptive resolution / point-sprite scale ----
@@ -104,6 +133,7 @@ export async function createStage(canvas: HTMLCanvasElement): Promise<StageHandl
     renderer.setSize(cssW, cssH, false);
     setShadowQuality(look, scale < 1 ? 1024 : 2048);
     updatePointScale();
+    post?.setSize(size.x, size.y);
   };
   const resize = (w: number, h: number) => {
     cssW = Math.max(1, Math.floor(w));
@@ -121,16 +151,20 @@ export async function createStage(canvas: HTMLCanvasElement): Promise<StageHandl
   let lastNow = 0;
   let lastAdjust = 0;
   const last: StageStats = { fps: 0, drawCalls: 0, triangles: 0 };
+  let postCeiling: PostQuality = postMax;
   const adapt = (now: number, fps: number) => {
     if (!adaptive || ringN < 30 || now - lastAdjust < 1500) return;
-    if (fps < 30 && scale > SCALE_MIN) {
-      scale = Math.max(SCALE_MIN, scale * 0.75);
-    } else if (fps > 55 && scale < 1) {
-      scale = Math.min(1, scale * 1.2);
-    } else return;
+    // slow: drop AO, then bloom, then resolution; fast: resolution back up (dropped post tiers stay dropped)
+    const next = adaptStep({ quality: post ? post.quality : 0, ceiling: postCeiling, scale }, fps, SCALE_MIN);
+    if (!next) return;
     lastAdjust = now;
-    ringN = 0; // re-measure at the new resolution
-    applyPixelRatio();
+    ringN = 0; // re-measure at the new settings
+    postCeiling = next.ceiling;
+    if (post && next.quality !== post.quality) post.setQuality(next.quality);
+    if (next.scale !== scale) {
+      scale = next.scale;
+      applyPixelRatio();
+    }
   };
 
   const sockets: Partial<Record<ActorId, THREE.Object3D>> = {};
@@ -152,10 +186,21 @@ export async function createStage(canvas: HTMLCanvasElement): Promise<StageHandl
     resolutionScale: () => scale,
     setAdaptive(on: boolean) {
       adaptive = on;
+      if (!on) {
+        postCeiling = postMax;
+        post?.setQuality(postMax);
+      }
       if (!on && scale !== 1) {
         scale = 1;
         applyPixelRatio();
       }
+    },
+    postQuality: () => (post ? post.quality : 0),
+    setPostQuality(q: PostQuality) {
+      if (!post) return;
+      const nq = Math.max(0, Math.min(postMax, q)) as PostQuality;
+      postCeiling = nq;
+      post.setQuality(nq);
     },
     render(frame: FrameState) {
       // camera
@@ -170,6 +215,7 @@ export async function createStage(canvas: HTMLCanvasElement): Promise<StageHandl
       followCamera(look, camera);
       // light
       const lp = applyLighting(look, scene, renderer, frame.lighting);
+      if (post) post.grade.saturation = DEFAULT_GRADE.saturation - 0.16 * lp.stars; // calmer night palette
       set.update(frame.t, lp.windowGlow, pointScale);
       // actors (stand on the porch / pier / bridges)
       let swing = 0;
@@ -191,8 +237,10 @@ export async function createStage(canvas: HTMLCanvasElement): Promise<StageHandl
       set.setSwing(swing);
       props.apply(frame.props, sockets, yaws);
       fx.apply(frame.fx ?? NO_FX, pointScale);
+      updateEnvironment(look, scene, performance.now());
       renderer.info.reset();
-      renderer.render(scene, camera);
+      if (post) post.render();
+      else renderer.render(scene, camera);
       // stats: frame intervals between renders; gaps > 250 ms are pauses (scrub/idle), not slow frames
       const now = performance.now();
       const dt = now - lastNow;
@@ -218,6 +266,7 @@ export async function createStage(canvas: HTMLCanvasElement): Promise<StageHandl
       fx.dispose();
       set.dispose();
       look.dispose();
+      post?.dispose();
       renderer.dispose();
     },
   };

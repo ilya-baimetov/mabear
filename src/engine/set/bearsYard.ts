@@ -8,6 +8,7 @@ import { mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { MARKS } from "../../shared/bible/set";
 import type { MarkId, Vec2 } from "../../shared/schema";
 import { GeoBag, bagToSingle, lumpy, paint, rng, xf, type LookMaterials, type MatKey } from "../look";
+import { DETAIL_MEAN_SRGB, type EnvTextures } from "./textures";
 
 // ---------------------------------------------------------------------------------------------------------------
 // Element registry (ids + placement). Placement mirrors src/shared/bible/set.ts marks.
@@ -203,28 +204,41 @@ function beam(a: THREE.Vector3, b: THREE.Vector3, r0: number, r1 = r0, seg = 8):
 
 const V = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);
 
-/** A stylized pine (trunk + 4 soft tiers) into `bag`, base at the origin of `m`. */
+/**
+ * A stylized pine into `bag`, base at the origin of `m`: tapered trunk with a small root flare, and 4 (lod 1) to 6
+ * (lod 0) overlapping layered tiers whose rims are jagged and drooping (branch tips), darker underneath and sunlit
+ * toward the tips, so the silhouette reads as a soft CG conifer rather than stacked cones.
+ */
 export function addPine(bag: GeoBag, height: number, seed: number, m: THREE.Matrix4, mat: MatKey = "foliage", lod = 0, clear = 0): void {
   const r = rng(seed);
   const h = height;
-  bag.add("bark", new THREE.CylinderGeometry(0.025 * h, 0.04 * h, 0.5 * h, lod ? 4 : 6, 1, true), 0x6b4428, xf([0, 0.25 * h, 0]).premultiply(m), { aoBottom: 0.3 });
-  const tiers = lod ? 3 : 4;
+  bag.add("bark", new THREE.CylinderGeometry(0.018 * h, 0.042 * h, 0.62 * h, lod ? 5 : 8, 1, true), 0x6b4428, xf([0, 0.31 * h, 0]).premultiply(m), { aoBottom: 0.3 });
+  if (!lod) bag.add("bark", new THREE.ConeGeometry(0.075 * h, 0.09 * h, 8, 1, true), 0x5e3b23, xf([0, 0.045 * h, 0]).premultiply(m), { aoBottom: 0.4 });
+  const tiers = lod ? 4 : 6;
+  const y0 = Math.max(h * 0.2, clear);
+  const top = new THREE.Color(0x6aa64e), bot = new THREE.Color(0x24552f), under = new THREE.Color(0x1f4a2b);
   for (let i = 0; i < tiers; i++) {
-    const ch = h * (0.36 - i * 0.045);
-    const cr = h * (0.2 - i * 0.036) * (0.9 + r() * 0.2);
-    const y0 = Math.max(h * 0.2, clear);
-    const y = y0 + (h - y0) * (i * (0.82 / tiers)) + ch / 2;
-    const g = new THREE.ConeGeometry(cr * (lod ? 1.1 : 1), ch * (lod ? 1.2 : 1), lod ? 6 : 9, 1, lod > 0);
-    // soften: droop the rim slightly and jitter
+    const f = i / (tiers - 1); // 0 bottom … 1 top
+    const ch = h * (0.3 - f * 0.12) * (lod ? 1.15 : 1);
+    const cr = h * (0.215 - f * 0.15) * (0.92 + r() * 0.16) * (lod ? 1.08 : 1);
+    const y = y0 + (h - y0 - ch * 0.5) * (f * 0.86) + ch / 2;
+    const seg = lod ? 7 : 12;
+    const g = new THREE.ConeGeometry(cr, ch, seg, 1, lod > 0);
+    // jagged, drooping rim (branch tips) + a little radial wobble mid-height
     const pos = g.attributes.position;
+    const ph = seed * 1.7 + i * 2.1;
     for (let k = 0; k < pos.count; k++) {
-      const py = pos.getY(k);
-      if (py < -ch / 2 + 1e-3) {
-        const a = Math.atan2(pos.getZ(k), pos.getX(k));
-        pos.setY(k, py + Math.sin(a * 5 + seed) * 0.04 * ch);
-      }
+      const py = pos.getY(k), px = pos.getX(k), pz = pos.getZ(k);
+      const a = Math.atan2(pz, px);
+      const t = (ch / 2 - py) / ch; // 0 apex … 1 rim
+      if (t < 0.02) continue;
+      const jag = Math.sin(a * 7 + ph) * 0.13 + Math.sin(a * 13 - ph) * 0.06;
+      const sc = 1 + jag * t * t;
+      pos.setX(k, px * sc);
+      pos.setZ(k, pz * sc);
+      if (t > 0.98) pos.setY(k, py - (0.06 + Math.max(0, jag) * 0.5) * ch);
     }
-    // keep CylinderGeometry's analytic normals (smooth up to the apex), tilted a little upward for a softer read
+    // keep the cone's analytic normals (smooth up to the apex), tilted a little upward for a softer read
     const nn = g.attributes.normal;
     for (let k = 0; k < nn.count; k++) {
       const ny = nn.getY(k);
@@ -234,37 +248,46 @@ export function addPine(bag: GeoBag, height: number, seed: number, m: THREE.Matr
         nn.setXYZ(k, x / l, y2 / l, z / l);
       }
     }
-    const top = new THREE.Color(0x5f9c48), bot = new THREE.Color(0x2c6236);
+    const tierTop = bot.clone().lerp(top, 0.55 + f * 0.45);
     bag.add(mat, g, 0x3f7d3f, xf([0, y, 0], [0, r() * 6, 0]).premultiply(m), {
-      capColor: 0x2a5e34,
+      capColor: under,
       colorFn: (p, n, out) => {
         if (n.y < -0.8) return;
         const t = clamp01(p.y / ch + 0.5);
-        out.copy(bot).lerp(top, t * 0.85);
+        out.copy(bot).lerp(tierTop, Math.pow(t, 0.8));
       },
-      jitter: 0.15,
+      jitter: 0.12,
       seed: seed + i,
     });
   }
 }
 
-/** A birch (white trunk with dark marks + light leafy blobs). */
+/** A birch: white tapered trunk with dark marks, two side limbs, and a layered canopy of light leafy clumps. */
 export function addBirch(bag: GeoBag, height: number, seed: number, m: THREE.Matrix4, mat: MatKey = "foliage", lod = 0): void {
   const r = rng(seed);
   const h = height;
-  bag.add("bark", new THREE.CylinderGeometry(0.028 * h, 0.04 * h, 0.75 * h, lod ? 4 : 6, lod ? 2 : 7, true), 0xeeeae0, xf([0, 0.375 * h, 0]).premultiply(m), {
-    colorFn: (p, _n, out) => {
-      const a = Math.atan2(p.z, p.x);
-      if (Math.sin(p.y * 9 + a * 2 + seed) > 0.82 || Math.sin(p.y * 4.1 - a + seed * 2) > 0.93) out.setHex(0x37322d);
-    },
-  });
-  const n = lod ? 2 : 3;
+  const marks = (p: THREE.Vector3, _n: THREE.Vector3, out: THREE.Color) => {
+    const a = Math.atan2(p.z, p.x);
+    if (Math.sin(p.y * 9 + a * 2 + seed) > 0.82 || Math.sin(p.y * 4.1 - a + seed * 2) > 0.93) out.setHex(0x37322d);
+  };
+  bag.add("bark", new THREE.CylinderGeometry(0.02 * h, 0.042 * h, 0.8 * h, lod ? 5 : 7, lod ? 2 : 7, true), 0xeeeae0, xf([0, 0.4 * h, 0]).premultiply(m), { colorFn: marks });
+  if (!lod) {
+    for (const s of [-1, 1]) {
+      const a = V(0, h * (0.5 + s * 0.04), 0), e = V(s * h * 0.16, h * 0.68, (r() - 0.5) * h * 0.1);
+      const { g, m: bm } = beam(a, e, 0.012 * h, 0.006 * h, 5);
+      bag.add("bark", g, 0xe6e1d6, bm.premultiply(m), { colorFn: marks });
+    }
+  }
+  const pal = [0x7fb446, 0x8cbf4c, 0x74ab40, 0x86ba4a, 0x6fa63e];
+  const n = lod ? 3 : 6;
   for (let i = 0; i < n; i++) {
-    const rr = h * (0.17 + r() * 0.06) * (lod ? 1.25 : 1.1);
-    const y = h * (0.58 + i * 0.1);
-    const ox = (r() - 0.5) * h * 0.18, oz = (r() - 0.5) * h * 0.18;
-    // one colour per blob: lighting + puffy normals do the shading (vertex-colour gradients on coarse meshes read as facets)
-    bag.add(mat, blob(rr, seed * 7 + i, 0.14, lod ? 0 : 1, 0.7), [0x7fb446, 0x8cbf4c, 0x74ab40][i % 3], xf([ox, y, oz], [0, 0, 0], [1, 1.25, 1]).premultiply(m));
+    const f = i / Math.max(1, n - 1);
+    const rr = h * (lod ? 0.2 : 0.135 + r() * 0.04) * (1.15 - f * 0.35);
+    const ang = i * 2.39996 + seed;
+    const spread = h * (lod ? 0.09 : 0.13) * (1 - f * 0.6);
+    const y = h * (0.56 + f * 0.33);
+    // one colour per clump: lighting + puffy normals do the shading (vertex-colour gradients on coarse meshes read as facets)
+    bag.add(mat, blob(rr, seed * 7 + i, 0.16, lod ? 0 : 1, 0.7), pal[(i + seed) % pal.length], xf([Math.cos(ang) * spread, y, Math.sin(ang) * spread], [0, 0, 0], [1, 1.2, 1]).premultiply(m));
   }
 }
 
@@ -291,6 +314,10 @@ interface SetExtras {
   bees?: THREE.Points;
   grassMat?: THREE.MeshStandardMaterial;
   groundTex?: THREE.Texture | null;
+  /** wind uniforms of the grass tufts (vertex sway) */
+  grassUniforms?: { uTime: { value: number }; uWind: { value: number } };
+  /** detail-texture uniforms of the ground shader (CC0 grass / dirt swap in when loaded) */
+  groundUniforms?: GroundDetailUniforms;
   disposables: { dispose(): void }[];
 }
 
@@ -1071,31 +1098,111 @@ function buildForest(c: BuildCtx): void {
     const x = side * (20 + r() * 12), z = 12 + r() * 22;
     near.birch.push({ x, z, s: 0.8 + r() * 0.4, rot: r() * 6 });
   }
-  const protoSet = (lod: number): Record<"pineA" | "pineB" | "birch", THREE.BufferGeometry> => ({
-    pineA: protoGeo((bag) => addPine(bag, 7.5, 11, xf(), "foliage", lod)),
-    pineB: protoGeo((bag) => addPine(bag, 9, 12, xf(), "foliage", lod)),
-    birch: protoGeo((bag) => addBirch(bag, 6.5, 13, xf(), "foliage", lod)),
-  });
-  const protosNear = protoSet(0), protosFar = protoSet(1);
+  type Kind = "pineA" | "pineB" | "birch";
+  const fill: Record<Kind, (bag: GeoBag, lod: number) => void> = {
+    pineA: (bag, lod) => addPine(bag, 7.5, 11, xf(), "foliage", lod),
+    pineB: (bag, lod) => addPine(bag, 9, 12, xf(), "foliage", lod),
+    birch: (bag, lod) => addBirch(bag, 6.5, 13, xf(), "foliage", lod),
+  };
   const m4 = new THREE.Matrix4();
-  for (const [set, cast, tag] of [[near, true, "near"], [far, false, "far"]] as const) {
-    for (const kind of ["pineA", "pineB", "birch"] as const) {
-      const spots = set[kind];
-      if (!spots.length) continue;
-      const im = new THREE.InstancedMesh((tag === "near" ? protosNear : protosFar)[kind], c.mats.foliage, spots.length);
-      im.name = `set:forest:${kind}:${tag}`;
-      spots.forEach((sp, i) => {
-        m4.copy(xf([sp.x, groundY(sp.x, sp.z), sp.z], [0, sp.rot, 0], sp.s));
-        im.setMatrixAt(i, m4);
-      });
-      im.instanceMatrix.needsUpdate = true;
-      im.computeBoundingSphere();
-      im.castShadow = false; // perf: trees don't render into the shadow map
-      im.receiveShadow = cast;
-      c.dyn.push(im);
+  const col = new THREE.Color();
+  const disposables: THREE.BufferGeometry[] = [];
+  const instanced = (geo: THREE.BufferGeometry, mat: THREE.Material, spots: Spot[], name: string, receive: boolean, tint: boolean) => {
+    const im = new THREE.InstancedMesh(geo, mat, spots.length);
+    im.name = name;
+    const rc = rng(name.length * 31 + spots.length);
+    spots.forEach((sp, i) => {
+      m4.copy(xf([sp.x, groundY(sp.x, sp.z), sp.z], [0, sp.rot, 0], sp.s));
+      im.setMatrixAt(i, m4);
+      // per-tree hue/brightness variation (multiplies the baked vertex colours)
+      if (tint) {
+        const br = 0.84 + rc() * 0.3, warm = (rc() - 0.5) * 0.18;
+        im.setColorAt(i, col.setRGB(br * (1 + warm), br, br * (1 - warm * 1.4)));
+      }
+    });
+    im.instanceMatrix.needsUpdate = true;
+    if (im.instanceColor) im.instanceColor.needsUpdate = true;
+    im.computeBoundingSphere();
+    im.castShadow = false; // perf: trees don't render into the shadow map
+    im.receiveShadow = receive;
+    c.dyn.push(im);
+    disposables.push(geo);
+  };
+  for (const kind of ["pineA", "pineB", "birch"] as const) {
+    // near: trunks in the CC0 bark material, canopies in foliage (2 draws per kind)
+    if (near[kind].length) {
+      const bag = new GeoBag();
+      fill[kind](bag, 0);
+      const trunk = bag.parts.get("bark");
+      const crown = bag.parts.get("foliage");
+      if (trunk?.length) instanced(mergeGeos(trunk), c.mats.bark, near[kind], `set:forest:${kind}:near:trunks`, true, false);
+      if (crown?.length) instanced(mergeGeos(crown), c.mats.foliage, near[kind], `set:forest:${kind}:near`, true, true);
+      bag.dispose();
     }
+    // far: one merged proto in foliage (trunks barely show through the fog)
+    if (far[kind].length) instanced(protoGeo((bag) => fill[kind](bag, 1)), c.mats.foliage, far[kind], `set:forest:${kind}:far`, false, true);
   }
-  c.extra.disposables.push(...Object.values(protosNear), ...Object.values(protosFar));
+  c.extra.disposables.push(...disposables);
+  addForestSilhouettes(c.bag);
+}
+
+function mergeGeos(list: THREE.BufferGeometry[]): THREE.BufferGeometry {
+  const bag = new GeoBag();
+  for (const g of list) bag.addPainted("foliage", g.clone());
+  const out = bagToSingle(bag);
+  bag.dispose();
+  return out;
+}
+
+/**
+ * Distant forest silhouettes: three rings of tree-top profiles (72–118 m) behind the instanced forest, darker and
+ * bluer with distance; the scene fog fades them into the sky (aerial perspective). Merged into the static foliage
+ * mesh, so they cost no draw call.
+ */
+function addForestSilhouettes(bag: GeoBag): void {
+  const layers: [number, number, number, number][] = [
+    // radius, crown base height, colour, seed
+    [70, 6.5, 0x254d2e, 1],
+    [90, 8.5, 0x2c5440, 2],
+    [116, 10.5, 0x355a50, 3],
+  ];
+  for (const [R, base, color, seed] of layers) {
+    const r = rng(900 + seed);
+    const pos: number[] = [], nor: number[] = [], cols: number[] = [], idx: number[] = [];
+    const c0 = new THREE.Color(color);
+    const top: [number, number][] = []; // (angle, height)
+    let a = 0;
+    while (a < Math.PI * 2) {
+      const w = (1.6 + r() * 1.8) / R; // crown width (rad)
+      const hb = base + (r() - 0.5) * 2 + Math.sin(a * 3 + seed) * 2 + Math.sin(a * 7.3 - seed) * 1;
+      const tip = hb + 2.5 + r() * 3.5;
+      top.push([a, hb], [a + w * 0.5, tip]);
+      a += w;
+    }
+    top.push([Math.PI * 2, top[0][1]]);
+    for (const [ang, ht] of top) {
+      const x = Math.cos(ang) * R, z = Math.sin(ang) * R;
+      const gy = groundY(x, z);
+      const nx = -Math.cos(ang), nz = -Math.sin(ang);
+      const l = Math.hypot(nx, 0.7, nz);
+      for (const y of [gy - 8, gy + ht]) {
+        pos.push(x, y, z);
+        nor.push(nx / l, 0.7 / l, nz / l);
+        const k = y > gy ? 1 : 0.7;
+        cols.push(c0.r * k, c0.g * k, c0.b * k);
+      }
+    }
+    for (let i = 0; i < top.length - 1; i++) {
+      const v = i * 2;
+      idx.push(v, v + 2, v + 1, v + 1, v + 2, v + 3);
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
+    g.setAttribute("normal", new THREE.Float32BufferAttribute(nor, 3));
+    g.setAttribute("color", new THREE.Float32BufferAttribute(cols, 3));
+    g.setIndex(idx);
+    bag.addPainted("foliage", g);
+  }
 }
 
 function protoGeo(fill: (bag: GeoBag) => void): THREE.BufferGeometry {
@@ -1115,7 +1222,7 @@ export function groundY(x: number, z: number): number {
 }
 
 function buildGround(c: BuildCtx): void {
-  const size = 200, seg = 50;
+  const size = 300, seg = 60;
   const g = new THREE.PlaneGeometry(size, size, seg, seg);
   g.rotateX(-Math.PI / 2);
   const pos = g.attributes.position;
@@ -1133,6 +1240,7 @@ function buildGround(c: BuildCtx): void {
   if (!tex) mat.color.setHex(0x7fb24a);
   if (tex) {
     tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
+    c.extra.groundUniforms = installGroundDetail(mat, T);
   }
   const mesh = new THREE.Mesh(g, mat);
   mesh.name = "set:ground:mesh";
@@ -1141,6 +1249,84 @@ function buildGround(c: BuildCtx): void {
   c.extra.groundTex = tex;
   c.extra.disposables.push(g, mat);
   if (tex) c.extra.disposables.push(tex);
+}
+
+export interface GroundDetailUniforms {
+  uGrass: { value: THREE.Texture };
+  uDirt: { value: THREE.Texture };
+  uGrassN: { value: THREE.Texture };
+  uDirtN: { value: THREE.Texture };
+  uDetailScale: { value: number };
+  uDetailAmt: { value: number };
+  uNormalAmt: { value: number };
+}
+
+/** linear value of the detail maps' neutral mean (they multiply the painted layout without shifting its palette) */
+const DETAIL_MEAN_LIN = Math.pow((DETAIL_MEAN_SRGB + 0.055) / 1.055, 2.4);
+
+function solidTex(r: number, g: number, b: number, srgb: boolean): THREE.DataTexture {
+  const t = new THREE.DataTexture(new Uint8Array([r, g, b, 255]), 1, 1, THREE.RGBAFormat);
+  t.colorSpace = srgb ? THREE.SRGBColorSpace : THREE.NoColorSpace;
+  t.needsUpdate = true;
+  return t;
+}
+
+/**
+ * Ground detail (A5): the painted 64 m layout texture stays the macro colour (paths, worn clearing, shore); tiled CC0
+ * grass and dirt detail + normal maps are blended on top by a mask derived from the layout colour (brown = dirt).
+ * Neutral 1×1 placeholders until the textures load (identical to the pre-A5 look), so the program never recompiles.
+ */
+function installGroundDetail(mat: THREE.MeshStandardMaterial, T: number): GroundDetailUniforms {
+  const u: GroundDetailUniforms = {
+    uGrass: { value: solidTex(217, 217, 217, true) },
+    uDirt: { value: solidTex(217, 217, 217, true) },
+    uGrassN: { value: solidTex(128, 128, 255, false) },
+    uDirtN: { value: solidTex(128, 128, 255, false) },
+    uDetailScale: { value: T / 2.4 }, // one grass tile per 2.4 m
+    uDetailAmt: { value: 0 },
+    uNormalAmt: { value: 0 },
+  };
+  mat.onBeforeCompile = (sh) => {
+    Object.assign(sh.uniforms, u);
+    sh.fragmentShader = sh.fragmentShader
+      .replace(
+        "#include <common>",
+        `#include <common>
+uniform sampler2D uGrass; uniform sampler2D uDirt; uniform sampler2D uGrassN; uniform sampler2D uDirtN;
+uniform float uDetailScale; uniform float uDetailAmt; uniform float uNormalAmt;
+float gDirt = 0.0;`,
+      )
+      .replace(
+        "#include <map_fragment>",
+        `#include <map_fragment>
+{
+  vec2 duv = vMapUv * uDetailScale;
+  vec3 mc = sampledDiffuseColor.rgb;
+  gDirt = smoothstep(0.0, 0.05, mc.r - mc.g * 0.9);
+  // two scales of grass break up visible tiling
+  vec3 gr = mix(texture2D(uGrass, duv).rgb, texture2D(uGrass, duv * 0.29 + vec2(0.37, 0.71)).rgb, 0.4);
+  vec3 dt = texture2D(uDirt, duv * 1.3).rgb;
+  vec3 det = mix(gr, dt, gDirt) / ${DETAIL_MEAN_LIN.toFixed(4)};
+  diffuseColor.rgb *= mix(vec3(1.0), det, uDetailAmt);
+}`,
+      )
+      .replace(
+        "#include <normal_fragment_maps>",
+        `#include <normal_fragment_maps>
+{
+  vec2 duv = vMapUv * uDetailScale;
+  vec3 tg = texture2D(uGrassN, duv).xyz * 2.0 - 1.0;
+  vec3 td = texture2D(uDirtN, duv * 1.3).xyz * 2.0 - 1.0;
+  vec3 tn = normalize(mix(tg, td, gDirt));
+  // tangent ≈ +x, bitangent ≈ -z on the (nearly flat) ground; perturb the geometric normal by the detail delta
+  vec3 wn = normalize(mix(vec3(0.0, 1.0, 0.0), vec3(tn.x, tn.z, -tn.y), uNormalAmt));
+  vec3 up = (viewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz;
+  normal = normalize(normal + (viewMatrix * vec4(wn, 0.0)).xyz - up);
+}`,
+      );
+  };
+  mat.customProgramCacheKey = () => "set:ground:detail:v1";
+  return u;
 }
 
 function groundTexture(T: number): THREE.Texture | null {
@@ -1273,25 +1459,26 @@ function groundTexture(T: number): THREE.Texture | null {
 }
 
 function buildGrass(c: BuildCtx): void {
-  // tuft prototype: 7 soft blades fanning out, dark base -> sunlit tip (matches the ground palette)
+  // tuft prototype: 6 soft, slightly curved blades (2 segments each) fanning out, dark base -> sunlit tip
   const pos: number[] = [], col: number[] = [], idx: number[] = [];
-  const base = new THREE.Color(0x5f9f36), tip = new THREE.Color(0xa9dc62), cc = new THREE.Color();
+  const base = new THREE.Color(0x6aac3c), mid = new THREE.Color(0x86c24c), tip = new THREE.Color(0xb0da68);
   let v = 0;
-  // one triangle per blade (perf: ~6 triangles per tuft)
-  const blades = 6;
+  const blades = 5;
   for (let b = 0; b < blades; b++) {
     const a = (b / blades) * Math.PI * 2 + (b % 2) * 0.4;
     const dx = Math.cos(a), dz = Math.sin(a);
-    const w = 0.1;
+    const w = 0.07 + 0.02 * (b % 2);
     const hgt = 0.6 + 0.4 * ((b * 37) % 7) / 7;
-    const lean = 0.35 + 0.2 * (b % 3);
-    pos.push(dx * 0.05 - dz * w, 0, dz * 0.05 + dx * w, dx * 0.05 + dz * w, 0, dz * 0.05 - dx * w, dx * lean, hgt, dz * lean);
-    cc.copy(base);
-    col.push(cc.r, cc.g, cc.b, cc.r, cc.g, cc.b);
-    cc.copy(tip);
-    col.push(cc.r, cc.g, cc.b);
-    idx.push(v, v + 1, v + 2);
-    v += 3;
+    const lean = 0.3 + 0.18 * (b % 3);
+    const px = -dz, pz = dx; // blade width direction
+    const o = 0.05;
+    // base pair, mid pair (bent outward), tip
+    pos.push(dx * o + px * w, 0, dz * o + pz * w, dx * o - px * w, 0, dz * o - pz * w);
+    pos.push(dx * lean * 0.45 + px * w * 0.7, hgt * 0.55, dz * lean * 0.45 + pz * w * 0.7, dx * lean * 0.45 - px * w * 0.7, hgt * 0.55, dz * lean * 0.45 - pz * w * 0.7);
+    pos.push(dx * lean, hgt, dz * lean);
+    for (const cc of [base, base, mid, mid, tip]) col.push(cc.r, cc.g, cc.b);
+    idx.push(v, v + 1, v + 2, v + 1, v + 3, v + 2, v + 2, v + 3, v + 4);
+    v += 5;
   }
   const g = new THREE.BufferGeometry();
   g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
@@ -1301,21 +1488,47 @@ function buildGrass(c: BuildCtx): void {
   const n = new Float32Array(pos.length);
   for (let i = 0; i < n.length; i += 3) n[i + 1] = 1;
   g.setAttribute("normal", new THREE.BufferAttribute(n, 3));
-  // FrontSide: blades fan in all directions, so about half face the camera; shares the forest's shader program
-  const mat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95 });
+  const mat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, side: THREE.DoubleSide });
   mat.name = "set:grass";
+  // wind sway in the vertex shader (deterministic in frame time t; tips move most, neighbours move together)
+  const wind = { uTime: { value: 0 }, uWind: { value: 1 } };
+  mat.onBeforeCompile = (sh) => {
+    Object.assign(sh.uniforms, wind);
+    // two-sided blades keep the UP normal on both faces (no back-face flip → no dark blades)
+    sh.fragmentShader = sh.fragmentShader.replace("#include <normal_fragment_begin>", "#include <normal_fragment_begin>\n  normal = normalize(vNormal);");
+    sh.vertexShader = sh.vertexShader
+      .replace("#include <common>", "#include <common>\nuniform float uTime; uniform float uWind;")
+      .replace(
+        "#include <begin_vertex>",
+        `#include <begin_vertex>
+{
+  #ifdef USE_INSTANCING
+  vec2 ip = vec2(instanceMatrix[3][0], instanceMatrix[3][2]);
+  #else
+  vec2 ip = vec2(0.0);
+  #endif
+  float hh = max(position.y, 0.0);
+  float ph = uTime * 1.6 + ip.x * 0.31 + ip.y * 0.23;
+  float gust = 0.55 + 0.45 * sin(uTime * 0.37 + ip.x * 0.05 - ip.y * 0.04);
+  float sw = (sin(ph) * 0.7 + sin(ph * 2.7 + ip.y) * 0.3) * gust * uWind;
+  transformed.x += sw * hh * hh * 0.32;
+  transformed.z += sw * hh * hh * 0.12;
+}`,
+      );
+  };
+  mat.customProgramCacheKey = () => "set:grass:wind:v1";
   const r = rng(808);
   const mats: THREE.Matrix4[] = [];
-  for (let i = 0; i < 16000 && mats.length < 3600; i++) {
-    const x = (r() - 0.5) * 46, z = (r() - 0.5) * 44 + 3;
-    const s = 0.12 + r() * 0.14;
+  for (let i = 0; i < 24000 && mats.length < 4800; i++) {
+    const x = (r() - 0.5) * 48, z = (r() - 0.5) * 46 + 3;
+    const s = 0.11 + r() * 0.13;
     const rot = r() * Math.PI * 2;
     if (!openGround(x, z, 0.1)) continue;
     // clumpy: denser along edges, fences, house, trees; sparse in the worn clearing and on the path
     const worn = ((x + 1.5) / 6) ** 2 + ((z + 0.5) / 4.2) ** 2 < 1;
     const clump = 0.5 + 0.5 * Math.sin(x * 0.9 + Math.cos(z * 0.7) * 2) * Math.cos(z * 1.1 - x * 0.3);
     if (r() > (worn ? 0.12 : 0.25 + 0.75 * clump)) continue;
-    mats.push(xf([x, groundY(x, z), z], [0, rot, 0], [s * 1.3, s * (0.8 + r() * 0.5), s * 1.3]));
+    mats.push(xf([x, groundY(x, z), z], [0, rot, 0], [s * 1.3, s * (0.8 + r() * 0.6), s * 1.3]));
   }
   const im = new THREE.InstancedMesh(g, mat, mats.length);
   mats.forEach((m, i) => im.setMatrixAt(i, m));
@@ -1326,6 +1539,7 @@ function buildGrass(c: BuildCtx): void {
   im.castShadow = false;
   c.dyn.push(im);
   c.extra.grassMat = mat;
+  c.extra.grassUniforms = wind;
   c.extra.disposables.push(g, mat);
 }
 
@@ -1370,6 +1584,8 @@ export interface SetHandle {
   update(t: number, windowGlow: number, pointScale: number): void;
   /** swing angle in radians (0 = hanging still) */
   setSwing(angle: number): void;
+  /** swap in the CC0 ground detail textures (A5); missing ones keep the painted look */
+  applyTextures(t: EnvTextures): void;
   dispose(): void;
 }
 
@@ -1439,6 +1655,7 @@ export function buildBearsYard(mats: LookMaterials, opts: BuildSetOptions = {}):
     swingPivot: extra.swingPivot ?? null,
     swingSeat: extra.swingSeat ?? null,
     update(t, windowGlow, pointScale) {
+      if (extra.grassUniforms) extra.grassUniforms.uTime.value = t;
       if (smokeMat) {
         smokeMat.uniforms.uTime.value = t;
         smokeMat.uniforms.uScale.value = pointScale;
@@ -1454,6 +1671,16 @@ export function buildBearsYard(mats: LookMaterials, opts: BuildSetOptions = {}):
     setSwing(angle) {
       if (extra.swingPivot) extra.swingPivot.rotation.x = angle;
     },
+    applyTextures(t) {
+      const u = extra.groundUniforms;
+      if (!u) return;
+      if (t.grass) u.uGrass.value = t.grass;
+      if (t.dirt) u.uDirt.value = t.dirt;
+      if (t.grassN) u.uGrassN.value = t.grassN;
+      if (t.dirtN) u.uDirtN.value = t.dirtN;
+      u.uDetailAmt.value = t.grass || t.dirt ? 0.85 : 0;
+      u.uNormalAmt.value = t.grassN || t.dirtN ? 0.55 : 0;
+    },
     dispose() {
       root.traverse((o) => {
         const m = o as THREE.Mesh;
@@ -1463,6 +1690,8 @@ export function buildBearsYard(mats: LookMaterials, opts: BuildSetOptions = {}):
         if (mat && !Array.isArray(mat) && (mat as THREE.ShaderMaterial).isShaderMaterial) mat.dispose();
       });
       for (const d of extra.disposables) d.dispose();
+      const gu = extra.groundUniforms;
+      if (gu) for (const k of ["uGrass", "uDirt", "uGrassN", "uDirtN"] as const) gu[k].value.dispose();
     },
   };
   return handle;
