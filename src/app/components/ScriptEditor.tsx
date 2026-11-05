@@ -1,6 +1,6 @@
 import { store } from "../store";
 import { useStore, useStrings } from "../useStore";
-import { ParagraphCard } from "./ParagraphCard";
+import { focusBlock, ParagraphCard } from "./ParagraphCard";
 
 const FIXTURE_IDS = ["pancake_morning", "bears_nap", "fishing_trip"] as const;
 
@@ -33,7 +33,7 @@ export function ScriptEditor() {
           <ParagraphCard key={p.id} p={p} index={i} active={activeId === p.id} selected={s.selectedId === p.id} count={s.paragraphs.length} />
         ))}
       </div>
-      <button className="btn add" data-testid="add-paragraph" onClick={() => store.addParagraph()}>＋ {t.addParagraph}</button>
+      <button className="btn add" data-testid="add-paragraph" onClick={() => focusBlock(store.addParagraph(), "start")}>＋ {t.addParagraph}</button>
     </aside>
   );
 }

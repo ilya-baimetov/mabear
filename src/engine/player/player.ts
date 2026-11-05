@@ -27,6 +27,8 @@ export class Player {
   private lastNow = 0;
   /** debug/screenshot hook: replaces the compiled camera (e.g. a character close-up) */
   cameraOverride: ((frame: FrameState) => CamKey) | null = null;
+  /** debug/screenshot hook: skip rendering (the last frame stays on screen) so headless screenshots aren't starved */
+  frozen = false;
 
   constructor(private opts: PlayerOptions) {
     this.loop = this.loop.bind(this);
@@ -84,6 +86,7 @@ export class Player {
 
   private loop(now: number): void {
     this.raf = requestAnimationFrame(this.loop);
+    if (this.frozen) return;
     const dt = this.lastNow ? Math.min(0.1, Math.max(0, (now - this.lastNow) / 1000)) : 1 / 60;
     this.lastNow = now;
     if (this.playing) {

@@ -6,7 +6,24 @@ import type { CharacterRig, FrameState, StageHandle, StageStats } from "./api";
 import { assetStatus, gltfSetElements, loadCharacter, loadPropOverrides, loadSetOverrides, TEST_GLTF_ID, type AssetStatus } from "./assets";
 import { createFx, type FxHandle } from "./fx/fx";
 import { applyLighting, applyLookTextures, createLook, followCamera, loadHdri, setShadowQuality, setupRenderer, updateEnvironment, type LookRig } from "./look";
-import { adaptStep, createPost, DEFAULT_GRADE, parsePostQuality, type PostPipeline, type PostQuality } from "./post/post";
+import { adaptStep, createPost, DEFAULT_GRADE, defaultPostQuality, isSoftwareRenderer, parsePostQuality, type PostPipeline, type PostQuality } from "./post/post";
+
+/** `?post=` flag, or null when absent. */
+function parsePostQualityFlag(search: string): PostQuality | null {
+  const v = new URLSearchParams(search).get("post");
+  return v === null || v === "" ? null : parsePostQuality(search);
+}
+
+/** Unmasked GL renderer string when available (e.g. "ANGLE (Google, Vulkan … SwiftShader …)"). */
+function rendererName(renderer: THREE.WebGLRenderer): string {
+  try {
+    const gl = renderer.getContext();
+    const ext = gl.getExtension("WEBGL_debug_renderer_info");
+    return String(gl.getParameter(ext ? ext.UNMASKED_RENDERER_WEBGL : gl.RENDERER) ?? "");
+  } catch {
+    return "";
+  }
+}
 import { createProps, type PropsHandle } from "./props/props";
 import { buildBearsYard, walkHeightAt, type SetHandle } from "./set/bearsYard";
 import { assetUrl, loadEnvTextures } from "./set/textures";
@@ -52,9 +69,14 @@ const SCALE_MIN = 0.5;
 const NO_FX: FrameState["fx"] = [];
 
 export async function createStage(canvas: HTMLCanvasElement, opts: StageOptions = {}): Promise<StageHandleEx> {
-  const postWanted: PostQuality = opts.post ?? parsePostQuality(typeof location !== "undefined" ? location.search : "");
+  const postFlag: PostQuality | null = opts.post ?? parsePostQualityFlag(typeof location !== "undefined" ? location.search : "");
   // with post-processing on, SMAA anti-aliases the composited image; native MSAA is only used by the plain path
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: postWanted === 0, powerPreference: "high-performance", preserveDrawingBuffer: false });
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: postFlag === 0, powerPreference: "high-performance", preserveDrawingBuffer: false });
+  // no explicit flag: full effects on a GPU, the light tier on a software renderer (AO/bloom there stall the GPU queue)
+  const glName = rendererName(renderer);
+  const postWanted: PostQuality = postFlag ?? defaultPostQuality(glName);
+  // software WebGL (no GPU): start at the lowest resolution step too — its GPU queue can't keep up otherwise
+  const software = isSoftwareRenderer(glName);
   const dpr = Math.min(2, window.devicePixelRatio || 1);
   renderer.setPixelRatio(dpr);
   setupRenderer(renderer);
@@ -119,8 +141,8 @@ export async function createStage(canvas: HTMLCanvasElement, opts: StageOptions 
   const size = new THREE.Vector2();
   let pointScale = 600;
   let cssW = 1280, cssH = 720;
-  let scale = 1; // adaptive resolution scale (SCALE_MIN..1)
-  let adaptive = true;
+  let scale = software ? SCALE_MIN : 1; // adaptive resolution scale (SCALE_MIN..1)
+  let adaptive = !software; // software WebGL: frame timing measures the CPU queue, not the GPU — keep the low preset fixed
   const updatePointScale = () => {
     renderer.getDrawingBufferSize(size);
     pointScale = size.y / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2));

@@ -117,6 +117,11 @@ chip, duration, small audio chips (🎵 music mood, 🌧 ambience, 💬 number o
 (delete, revert to previous version — P1, move up/down — P2). **No director summary on the card** (the beat script and
 its summary live only in Behind the scenes). When rules changed something, a small 💡 icon appears; its kid-friendly
 notes are shown **only on click**. Clicking a card (or its text) selects it for editing and **never plays it**.
+**Editor style (v1.1, owner feedback): Notion-style blocks.** Each paragraph is a borderless text block (no card
+border, background or shadow); ▶ and the ⋮⋮ menu sit in a left gutter that brightens on hover; the status is a small
+emoji at the end of the first line; duration, audio chips, 💡, remix buttons (on hover/selection) and the version sit on
+one faint details line. Enter at the end of a block creates a new block below, Shift+Enter breaks the line, Backspace
+in an empty block deletes it, ↑/↓ at the block edges move between blocks.
 
 **How the child writes sound and speech** (plain language, no special syntax required, both languages):
 - Speech: quoted text after a speaker, or screenplay style — `Masha shouts, "Bear, wake up!"` /
@@ -416,7 +421,9 @@ textured ground plus instanced tufts near the camera. Cap pixel ratio at 2.
 occlusion, subtle bloom, ACES, a warm grade and SMAA; CC0 PBR textures (Poly Haven / ambientCG) on the ground, cabin
 and trees; better trees (CC0 packs if downloadable, else improved procedural ones); instanced grass with wind sway;
 distant forest silhouettes in fog. Post-processing degrades with the adaptive resolution (AO first, then bloom).
-Licenses in `docs/ASSETS.md`. Target
+On a **software WebGL renderer** (no GPU: SwiftShader/llvmpipe, as in headless CI) the stage uses a fixed low
+preset — post tier 1 (grade + SMAA), half resolution, no adaptation — because the CPU outruns the software GPU's queue
+and anything needing a finished frame stalls. GPUs get the full look. Licenses in `docs/ASSETS.md`. Target
 **≥ 50 FPS** on a 2020+ laptop with integrated GPU at 1280×720 canvas. Keep the total scene under ~150 draw calls
 (merge static set geometry with `BufferGeometryUtils.mergeGeometries` per material).
 

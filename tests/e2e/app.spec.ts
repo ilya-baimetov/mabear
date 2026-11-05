@@ -1,5 +1,6 @@
 // E2E (spec §13): app against the real Worker (wrangler dev) + mock director.
 import { expect, test, type Page } from "@playwright/test";
+import { writeFileSync } from "node:fs";
 import { E2E_PASSWORD } from "../../playwright.config";
 
 const SHOTS = "docs/screenshots";
@@ -77,6 +78,13 @@ async function typeParagraph(page: Page, text: string) {
   const ta = page.getByTestId("paragraph-text").last();
   await ta.fill(text);
   await page.getByTestId("play-all").click();
+}
+
+/** Canvas still read straight from WebGL (a busy render loop can starve headless compositor screenshots). */
+async function still(page: Page, path: string) {
+  const url = await page.evaluate(() => window.__mabear!.snapshot());
+  expect(url).toMatch(/^data:image\/png;base64,/);
+  writeFileSync(path, Buffer.from(url!.split(",")[1], "base64"));
 }
 
 async function stopIfPlaying(page: Page) {
@@ -243,14 +251,14 @@ test("8. close-up screenshots + performance (FPS > 10 headless, draw calls < 200
   await page.addStyleTag({ content: ".tap-hint { display: none !important; }" });
   await page.evaluate(() => window.__mabear!.closeup("masha", 0.35));
   await page.waitForTimeout(1200);
-  await page.getByTestId("stage-canvas").screenshot({ path: `${SHOTS}/masha-closeup.png` });
+  await still(page, `${SHOTS}/masha-closeup.png`);
   await page.evaluate(() => window.__mabear!.closeup("bear", -0.35));
   await page.waitForTimeout(1200);
-  await page.getByTestId("stage-canvas").screenshot({ path: `${SHOTS}/bear-closeup.png` });
+  await still(page, `${SHOTS}/bear-closeup.png`);
   // the Wolves by their van (canon characters, stand-in rigs)
   await page.evaluate(() => window.__mabear!.wide([8.6, 2.0, 3.2], [12.9, 1.05, -1.0], 40));
   await page.waitForTimeout(1200);
-  await page.getByTestId("stage-canvas").screenshot({ path: `${SHOTS}/wolves.png` });
+  await still(page, `${SHOTS}/wolves.png`);
   await page.evaluate(() => window.__mabear!.closeup(null));
 });
 
@@ -281,7 +289,7 @@ test("10. no rendering while typing: zero director calls and compiles; ▶ Play 
     maxInflight = Math.max(maxInflight, inflight);
     const body = JSON.parse(route.request().postData() ?? "{}") as { paragraph?: string };
     // paragraph 1 answers at once; the rest are slow, so the player has to hold for them
-    await new Promise((r) => setTimeout(r, body.paragraph?.startsWith("Masha runs") ? 50 : 7000));
+    await new Promise((r) => setTimeout(r, body.paragraph?.startsWith("Masha runs") ? 50 : 15_000));
     try {
       await route.continue();
     } finally {
@@ -318,10 +326,12 @@ test("10. no rendering while typing: zero director calls and compiles; ▶ Play 
   expect(directing).toBeGreaterThan(0);
   // the playhead catches up with the director → a friendly hold
   await expect(page.getByTestId("getting-ready")).toBeVisible({ timeout: 20_000 });
-  await allSettled(page);
+  await expect
+    .poll(async () => (await page.getByTestId("paragraph-card").evaluateAll((els) => els.map((e) => e.getAttribute("data-status")))).every((s) => s === "ready"), { timeout: 60_000 })
+    .toBe(true);
   await expect(page.getByTestId("getting-ready")).toHaveCount(0, { timeout: 10_000 });
   expect(calls).toBe(5);
-  expect(maxInflight).toBeLessThanOrEqual(4);
+  expect(maxInflight).toBe(4);
   expect(await page.evaluate(() => window.__mabear!.segments())).toBe(5);
 
   // ▶ again with nothing edited: everything is cached in the story → no director call
@@ -336,7 +346,7 @@ test("11. clicking a card to edit never plays it; each card has its own ▶", as
   await page.getByTestId("chip-pancake_morning").click();
   await allSettled(page);
   await expect(page.getByTestId("summary")).toHaveCount(0);
-  await page.getByTestId("paragraph-card").nth(1).click({ position: { x: 20, y: 70 } });
+  await page.getByTestId("paragraph-card").nth(1).click();
   await page.getByTestId("paragraph-text").nth(2).click();
   await page.waitForTimeout(1200);
   expect(await page.evaluate(() => window.__mabear!.playing())).toBe(false);

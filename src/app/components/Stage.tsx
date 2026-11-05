@@ -9,7 +9,7 @@ import { reactionTimeline } from "../react";
 
 declare global {
   interface Window {
-    __mabear?: { screenOf: (actor: ActorId) => [number, number] | null; closeup: (actor: ActorId | null, angle?: number) => void; wide: (pos: [number, number, number], look: [number, number, number], fov?: number) => void; stats: () => { fps: number; drawCalls: number; triangles: number } | null; t: () => number; playing: () => boolean; segments: () => number; timeline: () => unknown; compiles: () => number };
+    __mabear?: { screenOf: (actor: ActorId) => [number, number] | null; closeup: (actor: ActorId | null, angle?: number) => void; wide: (pos: [number, number, number], look: [number, number, number], fov?: number) => void; stats: () => { fps: number; drawCalls: number; triangles: number } | null; t: () => number; playing: () => boolean; segments: () => number; timeline: () => unknown; compiles: () => number; freeze: (on: boolean) => void; snapshot: () => string | null; quality: () => { scale: number; post: number } | null };
   }
 }
 
@@ -108,6 +108,20 @@ export function Stage() {
         segments: () => store.getState().timeline.segments.length,
         timeline: () => store.getState().timeline,
         compiles: () => store.compileCount,
+        quality: () => {
+          const ex = stage as unknown as { resolutionScale?: () => number; postQuality?: () => number };
+          return ex.resolutionScale && ex.postQuality ? { scale: ex.resolutionScale(), post: ex.postQuality() } : null;
+        },
+        snapshot: () => {
+          // render now and read the pixels in the same task (no preserveDrawingBuffer needed, no compositor wait)
+          const f = player.frame;
+          if (!f || !canvas.current) return null;
+          stage.render(f);
+          return canvas.current.toDataURL("image/png");
+        },
+        freeze: (on) => {
+          player.frozen = on;
+        },
       };
       setReady(true);
     })().catch((err) => {

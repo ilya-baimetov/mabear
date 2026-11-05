@@ -26,6 +26,16 @@ export function parsePostQuality(search: string, fallback: PostQuality = 3): Pos
   return Number.isFinite(n) ? (Math.max(0, Math.min(3, n)) as PostQuality) : fallback;
 }
 
+/** True for a CPU (software) WebGL renderer: SwiftShader, llvmpipe, Microsoft Basic Render, … */
+export function isSoftwareRenderer(name: string): boolean {
+  return /swiftshader|llvmpipe|softpipe|software|basic render/i.test(name);
+}
+
+/** Default tier: full (3) on a GPU; grade + SMAA (1) on a software renderer, where AO/bloom stall the GPU queue. */
+export function defaultPostQuality(rendererName: string): PostQuality {
+  return isSoftwareRenderer(rendererName) ? 1 : 3;
+}
+
 export interface AdaptState {
   quality: PostQuality;
   /** highest quality allowed (lowered permanently when a tier is dropped for speed: no oscillation) */
