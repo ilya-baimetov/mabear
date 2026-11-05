@@ -16,6 +16,7 @@
 | 3:10 | **D7** — remix without AI | On a card: 🎥 (another camera), ☀️/🌙 (time of day), 🎵 (music mood). | "Re-rendered locally in milliseconds, at $0 — no AI call. Try doing that with video diffusion." Point at "Re-rendered locally in N ms · $0". |
 | 3:40 | **D5** — economics at internet scale | Drawer → *Economics*. Leave defaults (10M users × 10 paragraphs/day). | "Per paragraph: diffusion video vs our prototype vs a small trained model. The plan is a few KB instead of megabytes of video, and rendering costs us nothing because it happens on the device." Point at plan size and FPS. |
 | 4:15 | **D8** — the data moat | Drawer → *Data view*. | "This is the paragraph as tracks: Masha, Bear, camera, dialogue, vocals, foley, music, light. Every episode you've produced already exists in this format — that's the training set nobody else has." |
+| 4:25 | **D9** — playable (bonus) | After a scene ends, click Masha or Bear on the stage. | "Tap a character and they react — computed on the device, no AI call." |
 | 4:35 | **D6** — international | Click **RU**, then **Примеры → Блинное утро**, play. | "Same engine, Russian UI, Russian lines and voice." |
 | 4:50 | Honesty + close | Drawer → *System layers*. | "We label every layer: live, stand-in or placeholder. Tonight Claude + a bible stand in for the model your archive trains. The funding builds that model." |
 
