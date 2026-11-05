@@ -103,13 +103,13 @@ button:disabled { opacity: 0.45; cursor: default; }
 .status-draft .status-chip { opacity: 0.55; }
 .block-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 6px; padding: 0 2px 2px; min-height: 20px; font-size: 12px; color: var(--ink-soft); opacity: 0.7; transition: opacity 0.12s; }
 .block:hover .block-meta, .block.selected .block-meta, .block:focus-within .block-meta, .block.active .block-meta { opacity: 1; }
-.meta-text { font-weight: 700; }
+.meta-text { font-weight: 700; white-space: nowrap; }
 .meta-spacer { flex: 1; }
 .achip { font-size: 12px; font-weight: 700; color: var(--ink-soft); }
 .linkbtn { border: none; background: none; color: #9b2222; font-weight: 800; font-size: 12px; padding: 0 2px; cursor: pointer; }
 .kid-msg { margin: 2px 2px 4px; font-size: 13px; font-weight: 700; color: #8a5a00; background: #fff6dc; padding: 6px 10px; border-radius: 6px; }
-.remix { display: flex; gap: 2px; visibility: hidden; }
-.block:hover .remix, .block.selected .remix, .block:focus-within .remix { visibility: visible; }
+.remix { display: none; gap: 2px; }
+.block:hover .remix, .block.selected .remix, .block:focus-within .remix { display: flex; }
 .rbtn { border: none; background: transparent; border-radius: 6px; width: 24px; height: 22px; font-size: 13px; padding: 0; cursor: pointer; }
 .rbtn:hover { background: var(--magenta-soft); }
 .card-menu { position: relative; }
