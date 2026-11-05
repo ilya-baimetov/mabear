@@ -614,3 +614,18 @@ Adversarial notes (honest):
 
 Budgets: each Wolf is 25.8k triangles / 3 meshes / 4 draw calls incl. shadow. The cast total is unchanged at 25 draw
 calls. In-stage frame: 64–66 draw calls with all four characters.
+
+## Pass 16 — in-app check on the final v1.1 code (2026-11-05, e2e screenshots at b8b9fe5)
+Judged from the real app (docs/screenshots/player.png, behind-the-scenes.png, masha-closeup.png, bear-closeup.png,
+ru-mode.png, wolves.png). These are rendered on headless **software WebGL**, so they use the low preset (post tier 1:
+grade + SMAA, no AO/bloom, half resolution) — slightly softer and flatter than on a GPU; the full look is in the
+after-a5-* shots. Scores are for the characters as they read in play, not for the preset.
+
+| Character | Silhouette | Proportions | Face | Colors | Materials | Motion feel | Notes |
+|---|---|---|---|---|---|---|---|
+| Masha | 4 | 4 | 4 | 4.5 | 4 | 4 | Fringe stays under the kerchief edge; round face opening, big green eyes; pink-lilac sleeves read clearly against the magenta sarafan; reads instantly at yard distance (ru-mode, behind-the-scenes). |
+| Bear | 4.5 | 4 | 4 | 4 | 4 | 4 | Bigger head sits into the shoulders; one pear torso with the tan belly patch, no crease (player.png mid-walk); elbows soft. Fur still slightly smooth at half resolution. |
+| Wolves | 4 | 4 | 4 | 4 | 3.5 | 3.5 | By the van they read as the series' scruffy grey wolves (ruff, snout, ears, tail beside the leg). Materials 3.5 at this distance under the low preset (ruff clumps look flat); motion judged on idle only — no fixture animates them yet. |
+
+Open items: Wolves need an animated example (sneaking/fleeing) to judge motion; shell fur (P1) would lift Bear and the
+Wolves' materials; check the full preset on a GPU laptop (`?pitch=1`, Rendering card for FPS).
