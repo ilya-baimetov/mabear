@@ -16,10 +16,32 @@ A web app where a child writes a cartoon script **paragraph by paragraph** ("Mas
 steals a carrot.") and each paragraph is rendered, within seconds, into an animated 3D scene starring Masha and the
 Bear — with motion, camera cuts, Masha's voice + lip-sync, music and SFX. Because the system knows the characters
 deeply (personality, signature behaviors, canon rules), **a few words expand into rich, in-character staging**.
-Architecture thesis being demonstrated: an LLM **"Director"** turns text into a compact, validated **beat script**;
-a deterministic **compiler** turns beats into a timed **3D world-state timeline** (a few KB); the user's own GPU
-**renders** it in real time. Pixels are never generated server-side → near-zero marginal cost, on-model by
-construction, fully editable after generation, and canon/safety rules apply **before** anything is rendered.
+
+**The thesis being demonstrated: no diffusion.** Every character, set and prop of the series already exists as
+production 3D (characters, rigs, houses, forest, trees, creek, the Wolves' ambulance van…). So the only thing to
+*generate* is a small **3D world-state timeline**: who moves where, body motion, faces and emotions, lines and
+sounds, camera, light. The frames come from ordinary real-time 3D rendering **on the user's own device**. That is
+orders of magnitude less compute than diffusion, which is what lets one service reach ~10 million users without a
+massive data center.
+
+**Where the intelligence comes from.** In production it comes from a model trained on Animaccord's archive:
+hundreds of hours of produced episodes, where every script line is already aligned with the actions, motion
+sequences, faces, exclamations, sounds and emotions that realized it. This is a perfect, proprietary text↔3D-timeline
+dataset. The prototype **cannot** train that model. It approximates each learned layer with a stand-in:
+
+| Layer | Production (what the funding builds) | Prototype stand-in (tonight) |
+|---|---|---|
+| Text → staging plan | Model trained on Animaccord scripts aligned with episode timelines | Claude + a written character bible (prompt) → a validated **beat script** (§6.3) |
+| Plan → body motion | Learned text-to-motion trained on episode character animation | Open motion-capture/animation clip libraries retargeted onto the rigs (§7.4) |
+| Faces, lip-sync, exclamations | Learned from episode facial animation and audio | Procedural face rig: emotions, blinks, visemes from text |
+| Characters, sets, props | Animaccord's existing production 3D sources | Stand-in models built in code, as close to the originals as possible |
+| Voice, music, SFX | Studio voices, score, SFX library | Browser TTS, synthesized music and SFX |
+| Rendering | Real-time 3D on the user's device | **Same, live** |
+| Canon and safety | Studio rulebook + review of public posts | **Live**: prompt + deterministic validator (§9) |
+
+A deterministic **compiler** turns the beat script into the timed timeline (a few KB); the browser renders it. The
+result is on-model by construction, fully editable after generation, and the canon/safety rules apply **before**
+anything is rendered.
 
 ## 1. Audience and what the prototype must prove
 
@@ -32,7 +54,7 @@ Secondary: a child (7–10) using it hands-on in that demo.
 | D2 | Rewrite paragraph 2 → only paragraph 2 re-renders; the rest is cached | Is iteration fast and cheap? | P0 |
 | D3 | Terse script ("Bear naps. Masha wakes him.") → rich in-character staging | Is the character knowledge the moat? | P0 |
 | D4 | "Bear says thank you" / "Masha grabs a knife" → adjusted; the rule shown | Will studio and parents trust it? | P0 |
-| D5 | Studio mode: plan size (KB), on-device FPS, real token cost per paragraph | Do the economics hold at internet scale? | P0 |
+| D5 | Studio mode "Economics" panel (§4.4): plan size (KB), on-device FPS, server cost per paragraph, and a 10-million-user projection vs diffusion video | Do the economics hold at internet scale? | P0 |
 | D6 | EN ⇄ RU toggle: UI, Masha's lines and voice switch | International? | P0 |
 | D7 | Change shot, lighting or a line in Studio mode → instant local re-render, $0 | Why not video diffusion? | P1 |
 | D8 | Timeline (dope sheet) labeled "every produced episode already exists in this format → training data" | Is the data moat real? | P1 |
@@ -40,22 +62,16 @@ Secondary: a child (7–10) using it hands-on in that demo.
 
 ## 2. Honesty labels (mandatory, visible in Studio mode)
 
-The prototype must never pretend a layer exists when it doesn't. Show a small "System layers" legend:
-
-| Layer | Prototype status | Funded production version |
-|---|---|---|
-| Director (text → beats) | **Live** — Claude API | Same, plus fine-tuning on Animaccord scripts |
-| Canon & safety rules | **Live** — prompt + deterministic validator | Studio-authored rulebook + human review of public posts |
-| Motion | **Prototype** — hand-built procedural motion library | Learned text-to-motion model trained on Animaccord episode timelines |
-| Characters & sets | **Stand-in** rigs built in code | Official Animaccord production assets |
-| Voice / music / SFX | **Placeholder** — browser TTS, synthesized audio | Studio voices, score, SFX library |
-| Render | **Live** — real-time on this device | Same |
+The prototype must never pretend a layer exists when it doesn't. Studio mode shows a "System layers" legend rendering
+the §0 table: each row tagged **Live**, **Stand-in** or **Placeholder**, each with its production counterpart. The
+legend also states: "In production, the text→plan and plan→motion layers are one model trained on Animaccord's
+episode archive. Here they are approximated by Claude + a character bible and by open motion libraries."
 
 ## 3. Out of scope (do not build)
 
 User accounts, server-side persistence (use `localStorage`), public sharing/feed, mobile layout (desktop Chrome only;
-must not break below 1280 px but needn't be pretty), a trained motion model, official assets, interior sets
-(P2 at most), more than three characters.
+must not break below 1280 px but needn't be pretty), training any model, official assets (but keep them a drop-in
+swap, §7.3), interior sets (P2 at most), more than three characters, speech input (voice dictation comes later).
 
 ---
 
@@ -113,9 +129,21 @@ has an "Export log (JSON)" button. This is the "demand intelligence" hook from t
 - **Studio mode**: dope-sheet timeline with tracks; the "Under the hood" drawer for the selected paragraph:
   - Beat script (pretty JSON, collapsible) and its `source` (LLM / offline / fixture).
   - **Plan size** in bytes vs "equivalent 1080p video ≈ duration × 1 MB/s" (state the assumption: H.264 @ ~8 Mbit/s).
-  - Director latency, input/output/cache tokens, **cost in $** computed from `usage` × price table
-    (`claude-opus-5-5`: $4/M input, $20/M output, $0.20/M cache read; keep prices in one config constant).
-  - Live render FPS, draw calls, "Rendered on this device — server cost $0".
+  - Director latency; input/output/cache tokens; **actual cost in $** from `usage` × the price table in
+    `src/shared/pricing.ts` (`claude-opus-5-5`: $4/M input, $20/M output, $0.20/M cache read; `claude-haiku-5-5`:
+    $0.10/M input, $0.50/M output; one constant per model).
+  - Live render FPS, draw calls, "Rendered on this device — server render cost $0".
+  - **Economics panel (D5, P0).** Per paragraph and at scale, three columns side by side:
+    (a) **diffusion video** = paragraph duration × $/generated second;
+    (b) **this prototype** = the actual director cost (a frontier LLM standing in for the trained model);
+    (c) **production projection** = a small trained model at an assumed cost per paragraph (editable, labeled
+    "assumption").
+    A scale calculator (users, paragraphs per user per day; defaults 10,000,000 and 10) shows daily server cost and
+    daily egress (plan KB vs video MB) for each column; rendering is $0 server-side in (b) and (c). Every constant
+    lives in `pricing.ts` with a source URL and an as-of date. Get the video price from the Vertex AI pricing page
+    (https://cloud.google.com/vertex-ai/generative-ai/pricing, Veo rows). If you can't verify it, use the pitch
+    deck's range ($0.05–0.75 per second) labeled "per pitch deck, unverified". Never present an unsourced number as
+    fact.
   - Rule report: each hit → rule id, original, replacement, studio explanation.
   - Per-shot override dropdown (wide / medium / close / low angle / over-shoulder / tracking), time-of-day override,
     editable dialogue lines → re-render locally (no LLM call) and show "Re-rendered locally in N ms · $0" (D7).
@@ -128,11 +156,6 @@ has an "Export log (JSON)" button. This is the "demand intelligence" hook from t
   and `kid_message`s in the **toggle language**.
 - TTS picks a `ru-RU` / `en-US` voice; the offline parser has EN and RU lexicons.
 - Example episodes exist in both languages (fixtures, §6.6).
-
-### 4.6 Input accessibility (P2)
-
-A 🎤 button uses the Web Speech API (`webkitSpeechRecognition`, lang per toggle) to dictate a paragraph. This lowers
-the age floor (Masha's core audience can't type).
 
 ---
 
@@ -164,7 +187,9 @@ docs/SPEC.md  docs/NOTES.md (decision log)  docs/STATUS.md (progress log)  docs/
 src/shared/   schema.ts  grammar.ts  rules.ts  pricing.ts  bible/{characters.ts, set.ts, props.ts}
 src/compiler/ compile.ts  worldState.ts  validate.ts  camera.ts  dialogue.ts  audioCues.ts
 src/director/ client.ts  offline/{parser.ts, lexicon.en.ts, lexicon.ru.ts}  fixtures/{*.json}  prompt.ts
-src/engine/   stage.ts  toon.ts  set/bearsYard.ts  characters/{rig.ts, masha.ts, bear.ts}  props/props.ts
+src/engine/   stage.ts  toon.ts  assets.ts  set/bearsYard.ts  characters/{rig.ts, masha.ts, bear.ts, face.ts}
+              props/props.ts  motion/retarget.ts
+public/assets/  (downloaded open motion clips and models; licenses in docs/ASSETS.md)
               motion/{library.ts, verbs/*.ts, blend.ts}  player/{player.ts, evaluate.ts}  fx/fx.ts
               audio/{tts.ts, music.ts, sfx.ts}
 src/app/      main.tsx  App.tsx  store.ts  components/{TopBar, ScriptEditor, ParagraphCard, Stage, Timeline,
@@ -219,6 +244,20 @@ director prompt. P0 verbs (implement all in the motion library):
 Dialogue is not a verb: any Masha beat may carry a `line`. Bear beats may carry only an `emote`.
 
 ### 6.3 BeatScript (director output — the LLM contract)
+
+A **beat** is one indivisible piece of on-screen action: *one character does one thing*, optionally to a target or
+with an object, with an emotion, and optionally saying a line or making a sound. It is roughly one storyboard
+panel; the term comes from screenwriting. A paragraph becomes a short sequence of beats. Example: "Bear naps. Masha
+wakes him." →
+1. Bear `sleep` at `hammock` (sleepy, emote snore);
+2. Masha `tiptoe_to` `hammock` (mischievous);
+3. Masha `wave`, line "Bear! Wake up! It's morning!" (excited);
+4. Bear `surprised` + `fall_down` (surprised, emote grunt), with_previous;
+5. Bear `facepalm` (annoyed, emote sigh);
+6. Masha `laugh` (happy), with_previous.
+
+Beats exist only in the prototype: they are the interface between the stand-in director (Claude) and the
+deterministic compiler. A trained production model would likely emit the timeline directly.
 
 ```ts
 Beat = {
@@ -321,18 +360,33 @@ Ground ~40×40, origin at the center, +z toward the default camera (south). All 
 | `path_entry` | (0, 16) | Forest path where characters enter and exit the yard |
 | `big_tree` | (-2, -10) | Large pine behind the house; hiding spot |
 | `bush` | (6, 7) | Round bush; hiding spot |
+| `creek` | (12, 9) | A small creek crossing the yard's east edge, with a plank footbridge at this mark |
+| `van` | (14, -1) | The Wolves' old ambulance van (boxy Soviet-era 4×4 minibus, faded white/cream with a red stripe), parked at the edge of the forest. Set dressing and a hiding spot in the prototype |
 
 Bear's house: a two-storey log cabin (stacked cylinder logs, gable roof with planks, chimney with a soft smoke
-particle effect, warm windows that glow at night), porch, door. Surround the yard with stylized pines and birches
-(instanced), a picket fence fragment, flowers, a few rocks. Locomotion paths: straight lines with simple obstacle
-avoidance around the house footprint, pond, and table (waypoint graph of ~10 nodes is enough).
+particle effect, warm windows that glow at night), porch, door. Surround the yard with a dense stylized forest of
+pines and birches (instanced), a picket fence fragment, flowers, a few rocks; the creek winds from north-east to
+south-east and feeds the pond. Locomotion paths: straight lines with simple obstacle avoidance around the house
+footprint, pond, creek, van and table (a waypoint graph of ~12 nodes is enough).
+
+Every set element is a **stand-in for an existing Animaccord 3D source**. Build each as a separate named group, and
+keep their placement in `set.ts`, so a production export (glTF) can replace any element 1:1 (§7.3 asset manifest).
 
 ### 7.3 Characters — stand-in rigs, as close to the originals as possible
 
-Build procedurally from smooth primitives (spheres, capsules, lathe-profiled dress, tube-bent arms), parented to a
-bone hierarchy of `Object3D` pivots: `root → hips → spine → chest → neck → head`, `chest → shoulder_{l,r} →
-upper_arm → forearm → hand`, `hips → thigh_{l,r} → shin → foot`. Each character module exports
-`build(): CharacterRig` and a `CharacterLook` config (all colors and proportions in one object for easy tuning).
+Build procedurally from smooth primitives (spheres, capsules, lathe-profiled dress, tube-bent arms). Rigidly attach
+each body part to a `THREE.Bone` in a **standard humanoid skeleton that uses Mixamo bone names** (`Hips`, `Spine`,
+`Spine1`, `Spine2`, `Neck`, `Head`, `LeftShoulder`, `LeftArm`, `LeftForeArm`, `LeftHand`, `RightShoulder`…,
+`LeftUpLeg`, `LeftLeg`, `LeftFoot`, `LeftToeBase`, `RightUpLeg`…). Rest pose: T-pose, so open motion clips retarget
+cleanly (§7.4). Faces are separate procedural rigs (eyes, lids, brows, mouth visemes) on the `Head` bone. Each
+character module exports `build(): CharacterRig` and a `CharacterLook` config (all colors and proportions in one
+object for easy tuning).
+
+**Asset manifest (`src/engine/assets.ts`)**: every character, set element and prop resolves through a manifest entry
+`{ id, kind, source: "procedural" | { gltf: url }, skeletonMap?, scale, offset }`. Replacing a stand-in with an
+official Animaccord glTF export must need **only a manifest change** (plus a bone-name map if the official rig uses
+different names). Provide one working example of a glTF-sourced entry (e.g., the three.js `RobotExpressive.glb`
+loaded as a hidden test character) to prove the path works.
 
 **Masha** (reference: the series' main character; verify colors against the Animaccord style guide if available,
 otherwise use these defaults):
@@ -362,8 +416,28 @@ breathing on the chest bone in every pose, look-at head turn toward the speaker 
 
 ### 7.4 Motion library and player
 
-- A verb implementation is a pure function `(localT, params, rig, ctx) → PoseLayer` (bone rotations, root offset,
-  face params). Loopable verbs repeat within their clip duration.
+- **Body motion comes from open motion clip libraries** (motion capture or keyframed), retargeted onto the stand-in
+  skeletons with `SkeletonUtils.retargetClip` (or a direct name-mapped track rebinding when the skeletons share
+  Mixamo names). Try sources in this order and stop at the first that gives ≥ 15 of the §6.2 verbs (time box: 40
+  minutes total):
+  1. Quaternius **Universal Animation Library** (CC0) or other Quaternius CC0 animated-character packs, if they can be
+     downloaded without a login;
+  2. three.js example models with embedded clips (`RobotExpressive.glb` CC0: Idle, Walking, Running, Jump, Dance,
+     Wave, Yes, No, Sitting, Standing, ThumbsUp, Punch→*not used*, Death→*not used*; `Xbot.glb`: idle/walk/run plus
+     additive agree/headShake/sad/sneak), fetched from `raw.githubusercontent.com/mrdoob/three.js/dev/examples/models/gltf/`;
+  3. CMU Graphics Lab motion capture (BVH, free for any use) via a GitHub mirror, loaded with `BVHLoader`.
+
+  Record every asset's source URL, author and license in `docs/ASSETS.md`. Keep downloaded files in `public/assets/`.
+  Never use a source that needs a login or forbids this use.
+- **Bear** uses the same humanoid clips (he walks upright in the series), retargeted onto his proportions and played
+  slower with added weight (lower hips, wider stance, a delayed belly-jiggle layer). Bear-specific verbs with no clip
+  (`facepalm`, `sigh`, `carry`) and anything the libraries lack are authored procedurally as additive layers.
+- A verb implementation maps to `clip | procedural | clip + additive procedural`, exposed as a pure function
+  `(localT, params, rig, ctx) → PoseLayer` (bone rotations, root offset, face params). Sample clips at `localT`
+  without a running `AnimationMixer` clock, so evaluation stays pure. Loopable verbs repeat within their clip
+  duration.
+- **Faces are always procedural** in the prototype (motion libraries carry no faces): emotion presets
+  (brows, lids, mouth), blinks, look-at, and visemes from dialogue.
 - `blend.ts`: 0.2 s crossfade between consecutive clips; an additive breathing layer; look-at layer.
 - Locomotion uses the compiled path, speed per verb (walk 1.2 m/s Masha / 1.0 Bear; run 3.0 / 2.2; tiptoe 0.6),
   turning in place before moving, foot-plant-ish leg cycle synced to distance traveled.
@@ -457,7 +531,10 @@ an `error` string. **The endpoint never returns a 5xx for a director failure.**
 For the 6 golden prompts in `tests/golden/prompts.json` (3 EN, 3 RU, including one canon-violating prompt), every
 response must parse, pass the post-validator with 0 errors, contain ≥ 3 beats, give Bear no `line`, and place every
 `line` in the requested language. Run this as `npm run eval:director` (uses the real API; skipped with a clear
-message if `ANTHROPIC_API_KEY` is absent). Log P50 latency and mean cost per paragraph in `STATUS.md`.
+message if `ANTHROPIC_API_KEY` is absent). Run the eval on **both** `claude-opus-5-5` and `claude-haiku-5-5`, and log
+a comparison table in `STATUS.md`: pass rate, P50 latency, mean cost per paragraph, and a one-line judgment of
+staging richness. The deployed default stays `claude-opus-5-5` unless the operator sets `DIRECTOR_MODEL`. The
+results feed the Economics panel.
 
 ---
 
@@ -555,7 +632,9 @@ reaction beat for the other actor). It powers the instant preview, the no-key fa
    smoke test instead).
 6. Deployed to Cloudflare behind the password gate, with the §12 smoke test output printed — **or**, if Cloudflare
    credentials are absent, `STATUS.md` names the missing variables and the one command that finishes the deploy.
-7. `docs/DEMO_SCRIPT.md` (a 5-minute funder walkthrough mapping D1–D8 to clicks and lines to say) is written;
+7. `docs/ASSETS.md` lists the source, author and license of every third-party asset, and Studio mode's System
+   layers legend matches the §0 table;
+8. `docs/DEMO_SCRIPT.md` (a 5-minute funder walkthrough mapping D1–D8 to clicks and lines to say) is written;
    `docs/STATUS.md` is current; everything is committed and pushed to the session's designated branch.
 
 ## 15. Execution plan for the autonomous run (time-boxed; T = goal start)
@@ -568,7 +647,7 @@ log them as deferred, and move on. **P0 before P1 before P2, always.**
 |---|---|---|---|
 | M0 Bootstrap | T+0:00–0:15 | Vite + React + TS, three, zod, @anthropic-ai/sdk, vitest, playwright, wrangler; scripts; CLAUDE.md conventions; STATUS/NOTES files | — |
 | M1 Contracts | T+0:15–0:40 | `src/shared/*` (schemas, grammar, bible, rules, pricing), fixtures (EN first, RU next), schema tests. **Freeze contracts; later changes must be additive.** | — |
-| M2 Engine | T+0:40–2:00 | Set, Masha and Bear rigs + faces, motion library (all P0 verbs), blend, evaluate, toon look, fx, render the fixtures | Subagent A (characters + motion), subagent B (set + look + fx) |
+| M2 Engine | T+0:40–2:00 | Set (incl. creek, van), Masha and Bear rigs on Mixamo-named skeletons + procedural faces, asset manifest, open motion clips retargeted + procedural layers for every P0 verb, blend, evaluate, toon look, fx, render the fixtures | Subagent A (characters + faces + motion/retarget), subagent B (set + look + fx + asset manifest) |
 | M3 Compiler + rules + parser | T+0:40–1:30 | compile, world state, camera, dialogue/visemes, audio cues, validator, offline parser + unit tests | Subagent C |
 | M4 Director | T+1:15–2:00 | Worker (auth, rate limit, direct), prompt, mock mode, client, eval script | Subagent D |
 | M5 App | T+1:30–2:45 | Store + paragraph pipeline (§6.5), editor, stage, timeline, under the hood, i18n, kid/studio, audio | Main thread integrates |
@@ -591,3 +670,5 @@ independent subagents in a single message so they run concurrently.
 | Free text breaks the compiler | Zod-strict schema + deterministic validator + offline fallback; the endpoint never 5xxs |
 | Secrets leak | Worker secrets only; `grep sk-ant dist/` in DoD; no secrets in logs or repo |
 | Scope creep | §3 out-of-scope list; P2 items only after every P0/P1 item is green |
+| Open motion libraries can't be downloaded or don't retarget cleanly | 40-minute time box (§7.4), then procedural motion for the missing verbs; log the decision in NOTES.md |
+| Frontier-LLM cost per paragraph undermines the economics story | Economics panel separates the prototype's stand-in cost from the production projection and the diffusion baseline; the eval compares Opus vs Haiku |
