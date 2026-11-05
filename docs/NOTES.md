@@ -33,3 +33,4 @@ One line per decision: date — decision — why.
 - 2026-11-05 — Dialogue cue `lang` follows the script of the words (Cyrillic → RU voice) — a Russian quote in the EN UI is spoken by a Russian voice.
 - 2026-11-05 — Remix time of day changes the end state, so later paragraphs inherit it (recompile only, no director call).
 - 2026-11-05 — Offline parser turns unquoted speech into a line ("Bear says thank you" → "Thank you" → bear_silent hit) — makes the D4 canon demo visible even offline.
+- 2026-11-05 — Committed .deploy-ready at 05:21 on e2e evidence from QA runs 1–2 (tests 1–6 green; 7/7b/8 functionally green, earlier failures were only the 90 s timeout, since raised) while run 3 finishes — the deploy gates the director eval/tuning, the critical path.
