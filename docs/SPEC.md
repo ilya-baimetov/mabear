@@ -707,8 +707,9 @@ reaction beat for the other actor). It powers the instant preview, the no-key fa
   Its commands are gated on a repo-root file **`.deploy-ready`**:
   build `if [ -f .deploy-ready ]; then npm ci && npm run build; else echo skip; fi`,
   deploy `if [ -f .deploy-ready ]; then npx wrangler deploy; else echo skip; fi`.
-  **Create and commit `.deploy-ready` only once the password gate works and the unit and e2e tests pass** (M7). From
-  then on, every push deploys, so keep the branch green. `package-lock.json` must be committed (`npm ci`).
+  **Create and commit `.deploy-ready` as early as possible, but only once the password gate works and the unit and
+  e2e tests pass** (aim for the end of M5, not M7, so the director can be tuned against the live Worker). From then
+  on, every push deploys, so keep the branch green. `package-lock.json` must be committed (`npm ci`).
 - Follow builds through the Cloudflare MCP connector (`mcp__CloudFlare_API__execute`):
   `GET /accounts/{account_id}/builds/workers/e7aad35669b44223a2dc22aa1bdf8934/builds` for the latest build,
   `GET /accounts/{account_id}/builds/builds/{build_uuid}/logs` for its logs. To rebuild without a new commit:
@@ -795,6 +796,13 @@ log them as deferred, and move on. **P0 before P1 before P2, always.**
 | M6 Editing + polish | T+2:40–3:15 | Likeness passes 2–3 (§7.3) first, then remix polish (D7), data view (D8), performance pass | Subagent for likeness while the main thread does D7/D8 |
 | M7 Verify + ship | T+3:15–3:45 | E2E, screenshots, director eval, deploy + smoke test, DEMO_SCRIPT, final STATUS | — |
 | Buffer | T+3:45–4:00 | Fixes only | — |
+
+**Spend for quality (credits are not the constraint; wall-clock time is).** Keep up to 8 subagents busy at once.
+Beyond M2–M4 and audio, run three long-lived subagents until the hard stop: (1) **likeness**, which owns the
+character files and keeps iterating the §7.3 protocol past three passes; (2) **QA**, which keeps running the e2e
+suite and reviewing fresh screenshots, and fixes regressions in files nobody else owns or reports them to the main
+thread; (3) **director tuning**, which starts once the Worker is live and iterates on the prompt and few-shots against
+the live eval (§8.4), logging pass rate and cost per round in `STATUS.md`.
 
 Subagent rules: give each subagent the file list it owns plus a pointer to §6 contracts; subagents must not edit files
 outside their list; the main thread merges, runs all tests, and owns `store.ts` / `App.tsx` integration. Launch
