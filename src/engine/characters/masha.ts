@@ -1,12 +1,15 @@
 // Masha — procedural stand-in rig (spec §7.3). A respectful maquette: 1.0 m, head ≈ 40 % of height,
-// magenta kerchief with an oval face opening + chin knot + two short tails, A-line sarafan over a pale
-// lilac blouse, big green eyes, blond fringe, rosy cheeks. Colours sampled from references (docs/LIKENESS.md).
+// magenta kerchief with a small round face opening + chin knot + two short tails, A-line sarafan over a pink-lilac
+// blouse, big green eyes, blond fringe tucked under the kerchief rim, rosy cheeks. Colours sampled from references
+// (docs/LIKENESS.md). All parts are merged per material into skinned meshes; arms and legs are continuous and
+// smooth-skinned across elbows and knees.
 import * as THREE from "three";
-import type { CharacterRig } from "../api";
+import type { ActorFrame, CharacterRig } from "../api";
 import { buildFace, type FaceConfig } from "./face";
 import {
-  attach, blob, buildSkeleton, bump, col, dir, fabricMaterial, lathe, limb, makeRig, materialSet, mergeSame,
-  paintVertices, skinMaterial, smoothstep, welded, type SkeletonProportions,
+  blob, bump, buildSkeleton, col, dir, extraBone, eyeMaterial, fabricMaterial, lathe, limb, makeRig, materialSet,
+  mergeSame, paintVertices, restWorld, skinBody, skinMaterial, smoothstep, welded, type SkeletonProportions,
+  type SkinPart,
 } from "./rig";
 
 /** All colours and proportions in one object (easy tuning; production swap = a glTF via the asset manifest). */
@@ -17,12 +20,13 @@ export const MASHA_LOOK = {
     skinSheen: "#FFB59A",
     cheeks: "#F59A8C",
     kerchief: "#B8327A",
-    kerchiefSheen: "#F07DB8",
+    kerchiefSheen: "#F48CC4",
     dress: "#B8327A",
-    dressSheen: "#F07DB8",
+    dressSheen: "#F48CC4",
     hemTrim: "#E8643C",
-    sleeves: "#CFCDE8",
-    sleevesSheen: "#FFFFFF",
+    /** pink-lilac blouse sleeves (series renders; the printed stamp sample #A2A5B3 is a shadowed, desaturated read) */
+    sleeves: "#DBA8D3",
+    sleevesSheen: "#FFE6F6",
     stockings: "#F2E2EA",
     shoes: "#7A2A5C",
     soles: "#E3B04A",
@@ -59,44 +63,58 @@ export const MASHA_LOOK = {
     center: [0, 0.158, 0.008] as [number, number, number],
     radius: 0.168,
     cheekBulge: 0.11,
-    /** kerchief shell radius factor, opening (elevation top/bottom, azimuth half width; radians) */
+    /** kerchief shell radius factor, face opening (elevation top/bottom, azimuth half width; radians): small, round */
     kerchief: 1.06,
-    openTop: 0.7,
-    openBottom: -1.02,
-    openHalfAz: 1.08,
+    openTop: 0.6,
+    openBottom: -1.0,
+    openHalfAz: 0.9,
     /** how far the kerchief's cape falls below the skull centre at the back/sides (m) */
     capeDrop: 0.2,
+    /** azimuth where the cape starts to drape (independent of the opening, so the shell never folds onto itself) */
+    drapeAz: 1.08,
   },
-  eyes: { x: 0.059, y: 0.132, r: 0.04, iris: 0.72, pupil: 0.38 },
+  eyes: { x: 0.065, y: 0.131, r: 0.046, iris: 0.72, pupil: 0.38 },
 } as const;
 
 type V3 = [number, number, number];
+const v3 = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);
 
 export function buildMasha(): CharacterRig {
   const L = MASHA_LOOK;
   const C = L.colors;
   const mats = materialSet();
-  const geoms: THREE.BufferGeometry[] = [];
   const built = buildSkeleton(L.skeleton);
   const B = built.bones;
   const root = new THREE.Group();
   root.name = "masha";
   root.add(built.skeletonRoot);
+  const chest = extraBone(B.Spine1, "chest");
+  const skirt = extraBone(B.Hips, "skirt", 0, 0.1, 0); // pivot at the waist
+  root.updateMatrixWorld(true);
+  const parts: SkinPart[] = [];
 
-  // ---- materials
+  // ---- materials (one per look; everything vertex-coloured so parts merge)
   const skin = mats.add(skinMaterial(C.skin, C.skinSheen, true));
-  const skinPlain = mats.add(skinMaterial(C.skin, C.skinSheen, false));
+  skin.name = "skin";
   const fabric = mats.add(fabricMaterial(C.dress, C.dressSheen, true));
+  fabric.name = "fabric";
   fabric.side = THREE.DoubleSide;
-  const sleeve = mats.add(fabricMaterial(C.sleeves, C.sleevesSheen, false));
-  const stocking = mats.add(fabricMaterial(C.stockings, "#FFFFFF", false));
-  stocking.roughness = 0.75;
+  const light = mats.add(fabricMaterial(C.sleeves, C.sleevesSheen, true));
+  light.name = "blouse";
+  light.roughness = 0.82;
   const shoe = mats.add(
     new THREE.MeshPhysicalMaterial({ color: 0xffffff, vertexColors: true, roughness: 0.5, clearcoat: 0.3, clearcoatRoughness: 0.4 }),
   );
+  shoe.name = "shoes";
   const hair = mats.add(
-    new THREE.MeshPhysicalMaterial({ color: 0xffffff, vertexColors: true, roughness: 0.55, sheen: 0.6, sheenColor: col("#FFE2A0") }),
+    new THREE.MeshPhysicalMaterial({
+      color: 0xffffff, vertexColors: true, roughness: 0.55, specularIntensity: 0.6, sheen: 0.8, sheenColor: col("#FFE2A0"), sheenRoughness: 0.4,
+      side: THREE.DoubleSide,
+    }),
   );
+  hair.name = "hair";
+  const eyeMat = mats.add(eyeMaterial());
+  eyeMat.name = "eyes";
 
   // ---- head (sculpted sphere: chubby cheeks, small chin) + nose button, cheek blush in vertex colours
   const H = L.head;
@@ -112,7 +130,7 @@ export function buildMasha(): CharacterRig {
       0.035 * bump(d, chin, 0.28) -
       0.05 * bump(d, jaw, 0.6) +
       0.02 * bump(d, dir(0, 0.55, 0.85), 0.5));
-  const headGeom = blob(14, (d, out) => {
+  const headGeom = blob(13, (d, out) => {
     out.copy(d).multiplyScalar(headR(d)).add(hc);
   });
   const cSkin = col(C.skin);
@@ -129,8 +147,7 @@ export function buildMasha(): CharacterRig {
     out.set(d.x * 0.017, d.y * 0.0145, d.z * 0.014).add(noseAt);
   });
   paintVertices(noseGeom, (_p, out) => out.copy(cSkin).lerp(cCheek, 0.05));
-  const headMesh = attach(B.Head, mergeSame([headGeom, noseGeom]), skin, "head");
-  geoms.push(headMesh.geometry);
+  parts.push({ geom: mergeSame([headGeom, noseGeom]), bone: B.Head, material: skin });
 
   /** exact skin depth for features (fixed-point iteration over the sculpt function) */
   const skinZ = (x: number, y: number): number => {
@@ -144,39 +161,68 @@ export function buildMasha(): CharacterRig {
     return z;
   };
 
-  // ---- fringe: a thick swoosh of blond hair emerging from the forehead, scalloped strand tips
+  // ---- face opening (ellipse in azimuth/elevation) and the fringe envelope it shares with the kerchief
+  const ay0 = (H.openTop + H.openBottom) / 2;
+  const Bv = (H.openTop - H.openBottom) / 2;
+  const A = H.openHalfAz;
+  const openK = (ax: number, ay: number) => Math.hypot(ax / A, (ay - ay0) / Bv);
+  const FR = { az: 0.8, locks: [-0.5, -0.22, 0.06, 0.34, 0.6] };
+  const lockTip = (ax: number): number => {
+    let tip = 0;
+    for (const c of FR.locks) {
+      const off = ax - c;
+      const w = off < 0 ? 0.26 : 0.15; // asymmetric locks: swept toward the character's left
+      const u = Math.min(1, Math.abs(off) / w);
+      tip = Math.max(tip, Math.pow(Math.cos((u * Math.PI) / 2), 1.6)); // rounded lock tips
+    }
+    return tip;
+  };
+  /** lower (tip) edge of the fringe and the elevation where it tucks under the kerchief rim (k = 1.12) */
+  const fringeEdge = (ax: number) => {
+    const a = Math.abs(ax) / FR.az;
+    return 0.34 + 0.22 * a * a - 0.12 * lockTip(ax);
+  };
+  const fringeTop = (ax: number) => {
+    const q = 1.12 * 1.12 - (ax / A) ** 2;
+    const top = q > 0 ? ay0 + Bv * Math.sqrt(q) : fringeEdge(ax);
+    return Math.max(fringeEdge(ax) + 0.08, top);
+  };
+  /** fringe thickness above the skin (fraction of the head radius); 0 outside the fringe. `v` runs edge → top. */
+  const fringeThick = (ax: number, ay: number): number => {
+    if (Math.abs(ax) >= FR.az) return 0;
+    const e = fringeEdge(ax);
+    const t = fringeTop(ax);
+    const vv = (ay - e) / (t - e);
+    if (vv <= 0 || vv >= 1.4) return 0;
+    const a = Math.abs(ax) / FR.az;
+    const base = 0.058 * (1 - 0.3 * a) + 0.012 * lockTip(ax);
+    const vc = Math.min(1, vv);
+    return base * Math.sqrt(vc) * (1 - 0.65 * smoothstep(0.7, 1.0, vv)) * smoothstep(1.4, 1.0, vv) * smoothstep(FR.az, FR.az - 0.1, Math.abs(ax));
+  };
+
+  // ---- fringe: a thick swoosh of blond hair visible ONLY in the face opening; its root tucks under the rim
   {
     const cols = 44;
-    const rows = 10;
-    const az0 = -0.95;
-    const az1 = 0.95;
-    const top = H.openTop + 0.12;
+    const rows = 12;
     const pos: number[] = [];
     const colr: number[] = [];
     const idx: number[] = [];
     const cHair = col(C.hair);
     const cHairDark = col(C.hairDark);
     for (let i = 0; i <= cols; i++) {
-      const ax = az0 + ((az1 - az0) * i) / cols;
-      const a = Math.abs(ax) / az1;
-      // 5 pointed locks sweeping slightly to the character's right
-      let tip = 0;
-      for (const c of [-0.6, -0.26, 0.08, 0.42, 0.72]) {
-        const off = ax - c;
-        const w = off < 0 ? 0.3 : 0.17; // asymmetric locks: swept toward the character's left
-        const u = Math.min(1, Math.abs(off) / w);
-        tip = Math.max(tip, Math.pow(Math.cos((u * Math.PI) / 2), 1.6)); // rounded lock tips
-      }
-      const edge = 0.47 + 0.24 * a * a - 0.15 * tip;
+      const ax = -FR.az + (2 * FR.az * i) / cols;
+      const tip = lockTip(ax);
+      const e = fringeEdge(ax);
+      const t = fringeTop(ax);
       for (let j = 0; j <= rows; j++) {
-        const v = j / rows;
-        const ay = edge + (top - edge) * v;
+        const vv = j / rows;
+        const ay = e + (t - e) * vv;
         const d = new THREE.Vector3(Math.cos(ay) * Math.sin(ax), Math.sin(ay), Math.cos(ay) * Math.cos(ax));
-        const ridge = 0.006 * Math.cos(ax * 15) * Math.sqrt(v);
-        const m = 0.996 + 0.062 * Math.sqrt(v) * (1 - 0.3 * a) + 0.012 * tip * Math.sqrt(v) + ridge;
+        const ridge = 0.005 * Math.cos(ax * 16) * Math.sqrt(vv) * (1 - vv);
+        const m = 0.996 + fringeThick(ax, ay + 1e-4) + ridge;
         const p = d.clone().multiplyScalar(headR(d) * m).add(hc);
         pos.push(p.x, p.y, p.z);
-        const c = cHair.clone().lerp(cHairDark, 0.4 * v + 0.35 * (1 - tip) * (1 - v) + 0.12 * (0.5 - 0.5 * Math.cos(ax * 15)));
+        const c = cHair.clone().lerp(cHairDark, 0.45 * vv + 0.35 * (1 - tip) * (1 - vv) + 0.12 * (0.5 - 0.5 * Math.cos(ax * 16)));
         colr.push(c.r, c.g, c.b);
       }
     }
@@ -192,37 +238,37 @@ export function buildMasha(): CharacterRig {
     g.setAttribute("color", new THREE.Float32BufferAttribute(colr, 3));
     g.setIndex(idx);
     g.computeVertexNormals();
-    hair.side = THREE.DoubleSide;
-    attach(B.Head, g, hair, "fringe", false);
-    geoms.push(g);
+    parts.push({ geom: g, bone: B.Head, material: hair, shadow: false });
   }
 
-  // ---- kerchief: shell with an oval face opening (pinched boundary), rolled rim, forward peak, drape to the
-  //      shoulders, knot under the chin and two short tails. One mesh, one material.
+  // ---- kerchief: shell with a small round face opening (pinched boundary), rolled rim lying OVER the fringe,
+  //      forward peak, drape to the shoulders, knot under the chin and two short tails. One material.
   const cK = col(C.kerchief);
   {
     const Rk = H.radius * H.kerchief;
-    const ay0 = (H.openTop + H.openBottom) / 2;
-    const Bv = (H.openTop - H.openBottom) / 2;
-    const A = H.openHalfAz;
     const shapeAt = (ax: number, ay: number, k: number, out: THREE.Vector3): void => {
       const dd = new THREE.Vector3(Math.cos(ay) * Math.sin(ax), Math.sin(ay), Math.cos(ay) * Math.cos(ax));
       // the rim dives just under the skin (edge reads as fabric lying on the face), rolled lip just outside it
       const tuck = smoothstep(1.0, 1.16, k);
       const roll = Math.exp(-(((k - 1.09) / 0.1) ** 2));
-      const skinR = headR(dd) * (0.985 + 0.027 * smoothstep(1.0, 1.05, k));
+      const hr = headR(dd);
+      const skinR = hr * (0.985 + 0.027 * smoothstep(1.0, 1.05, k));
       let r = skinR + (Rk - skinR) * tuck + 0.011 * roll;
-      // flatter crown, soft fullness low over the ears
+      // over the fringe the rim rides on top of the hair (the fringe never pokes through)
+      const ft = fringeThick(ax, ay);
+      if (ft > 0) r = Math.max(r, hr * (1.0 + ft) + 0.0035 + 0.004 * roll);
+      // flatter crown, soft fullness low over the ears; never closer than 2.5 % above the skull away from the rim
       r += -0.012 * bump(dd, dir(0, 1, -0.1), 0.55) - 0.012 * bump(dd, dir(0, 0.1, -1), 0.7) + 0.008 * (bump(dd, dir(1, -0.6, 0.0), 0.6) + bump(dd, dir(-1, -0.6, 0.0), 0.6));
+      r = Math.max(r, hr * (0.985 + 0.04 * tuck));
       out.copy(dd).multiplyScalar(r).add(hc);
       // forward peak over the forehead
-      const peak = Math.exp(-((ax / 0.4) ** 2)) * Math.exp(-(((ay - (H.openTop + 0.18)) / 0.22) ** 2));
-      out.z += 0.022 * peak;
+      const peak = Math.exp(-((ax / 0.4) ** 2)) * Math.exp(-(((ay - (H.openTop + 0.2)) / 0.22) ** 2));
+      out.z += 0.02 * peak;
       out.y += 0.01 * peak;
       // drape: sides and back become a bell cape over the shoulders; the front under the chin keeps the head shape
       if (ay < -0.05) {
         const t = (-0.05 - ay) / (Math.PI / 2 - 0.05); // 0 at the cheek line .. 1 at the bottom
-        const w = smoothstep(A * 0.85, A * 1.45, Math.abs(ax)) * smoothstep(0, 0.3, t);
+        const w = smoothstep(H.drapeAz * 0.85, H.drapeAz * 1.45, Math.abs(ax)) * smoothstep(0, 0.3, t);
         const bh = Rk * (1.0 + 0.18 * t) * Math.sqrt(Math.max(0, 1 - Math.pow(t, 8)));
         const backness = 0.5 - 0.5 * Math.cos(ax); // the cape comes to a soft point at the back
         const drop = t * L.head.capeDrop * (0.95 + 0.1 * backness);
@@ -231,7 +277,7 @@ export function buildMasha(): CharacterRig {
       }
     };
     // icosphere shell; triangles wholly inside the face opening are dropped, boundary vertices snap onto the oval
-    const shell = welded(new THREE.IcosahedronGeometry(1, 16));
+    const shell = welded(new THREE.IcosahedronGeometry(1, 15));
     {
       const pos = shell.getAttribute("position") as THREE.BufferAttribute;
       const inside: boolean[] = [];
@@ -241,7 +287,7 @@ export function buildMasha(): CharacterRig {
         d.fromBufferAttribute(pos, i).normalize();
         let ax = Math.atan2(d.x, d.z);
         let ay = Math.asin(THREE.MathUtils.clamp(d.y, -1, 1));
-        let k = Math.hypot(ax / A, (ay - ay0) / Bv);
+        let k = openK(ax, ay);
         inside.push(k < 1);
         if (k < 1) {
           const kk = Math.max(k, 1e-3);
@@ -275,9 +321,9 @@ export function buildMasha(): CharacterRig {
     for (const s of [1, -1]) {
       const t = blob(4, (d, out) => {
         // teardrop: wide at the bottom, pinched at the knot
-        const v = (d.y + 1) / 2; // 0 bottom .. 1 top
-        const w = 0.022 * Math.sin(Math.PI * (0.15 + 0.85 * (1 - v))) * (0.5 + 0.5 * (1 - v)) + 0.004;
-        out.set(d.x * w, (v - 1) * 0.075, d.z * 0.008 + 0.004 * Math.cos(d.x * 2));
+        const vv = (d.y + 1) / 2; // 0 bottom .. 1 top
+        const w = 0.022 * Math.sin(Math.PI * (0.15 + 0.85 * (1 - vv))) * (0.5 + 0.5 * (1 - vv)) + 0.004;
+        out.set(d.x * w, (vv - 1) * 0.075, d.z * 0.008 + 0.004 * Math.cos(d.x * 2));
       });
       t.rotateZ(s * 0.5);
       t.rotateX(-0.25);
@@ -285,12 +331,10 @@ export function buildMasha(): CharacterRig {
       tails.push(t);
     }
     for (const g of [knot, ...tails]) paintVertices(g, (_p, out) => out.copy(cK).multiplyScalar(0.97));
-    const kGeom = mergeSame([shell, knot, ...tails]);
-    attach(B.Head, kGeom, fabric, "kerchief");
-    geoms.push(kGeom);
+    parts.push({ geom: mergeSame([shell, knot, ...tails]), bone: B.Head, material: fabric });
   }
 
-  // ---- face rig
+  // ---- face rig (lids and brows in the skin material, eyes in the shared eye material)
   const E = L.eyes;
   const faceCfg: FaceConfig = {
     eyes: {
@@ -313,12 +357,14 @@ export function buildMasha(): CharacterRig {
       lidOpen: -0.66,
       lidCap: 1.25,
       lashFlick: true,
+      lidMaterial: skin,
     },
-    brows: { color: C.brows, y: 0.057, dx: 0.003, length: 0.04, thickness: 0.003, arch: 0.006, range: 0.011 },
+    eyeMaterial: eyeMat,
+    brows: { color: C.brows, y: 0.058, dx: 0.003, length: 0.042, thickness: 0.003, arch: 0.006, range: 0.011, material: skin },
     mouth: {
       surface: { center: H.center as V3, radius: H.radius, zAt: skinZ },
-      y: H.center[1] - 0.084,
-      halfWidth: 0.031,
+      y: H.center[1] - 0.086,
+      halfWidth: 0.03,
       height: 0.042,
       line: 0.0052,
       curve: 0.01,
@@ -331,14 +377,12 @@ export function buildMasha(): CharacterRig {
   };
   const face = buildFace(faceCfg, mats);
   B.Head.add(face.group);
-  for (const m of face.group.children) m.castShadow = false;
+  root.updateMatrixWorld(true);
+  parts.push(...face.parts);
 
-  // ---- sarafan: bodice (chest group on Spine1, scaled for breathing) + A-line skirt on Hips (sways)
+  // ---- sarafan: bodice (chest bone on Spine1, scaled for breathing) + A-line skirt on its bone (sways)
   const cDress = col(C.dress);
   const cTrim = col(C.hemTrim);
-  const chest = new THREE.Group();
-  chest.name = "chest";
-  B.Spine1.add(chest);
   {
     const g = lathe(
       [
@@ -353,20 +397,9 @@ export function buildMasha(): CharacterRig {
       ],
       { sq: 0.82, segments: 32, samples: 22 },
     );
-    // the pale blouse shows in a rounded V at the neckline (reference: white shape under the knot)
-    const cBlouse = col(C.sleeves);
-    paintVertices(g, (p, out) => {
-      const phi = Math.atan2(p.x, p.z);
-      const v = smoothstep(-0.005, 0.005, p.y - 0.104 - 0.12 * Math.abs(phi)) * smoothstep(0.2, 0.5, p.z / 0.1);
-      out.copy(cDress).lerp(cBlouse, v * 0); // blouse V disabled (QA: read as a white speck under the knot)
-    });
-    attach(chest, g, fabric, "bodice");
-    geoms.push(g);
+    paintVertices(g, (_p, out) => out.copy(cDress));
+    parts.push({ geom: g, bone: chest, material: fabric });
   }
-  const skirt = new THREE.Group();
-  skirt.name = "skirt";
-  skirt.position.set(0, 0.1, 0); // pivot at the waist
-  B.Hips.add(skirt);
   {
     const g = lathe(
       [
@@ -385,33 +418,49 @@ export function buildMasha(): CharacterRig {
       ],
       {
         sq: 0.86,
-        segments: 36,
+        segments: 40,
         samples: 30,
         ripple: (phi, y) => 1 + 0.04 * smoothstep(-0.06, -0.28, y) * Math.sin(phi * 9),
       },
     );
     paintVertices(g, (p, out) => {
-      out.copy(cDress);
+      // soft occlusion deep in the folds; orange-red hem stripes
+      const phi = Math.atan2(p.x, p.z);
+      out.copy(cDress).multiplyScalar(1 - 0.06 * smoothstep(-0.06, -0.28, p.y) * (0.5 - 0.5 * Math.sin(phi * 9)));
       const band = Math.exp(-(((p.y + 0.292) / 0.006) ** 2)) + Math.exp(-(((p.y + 0.273) / 0.005) ** 2));
       out.lerp(cTrim, Math.min(1, band));
     });
-    attach(skirt, g, fabric, "skirt");
-    geoms.push(g);
+    parts.push({ geom: g, bone: skirt, material: fabric });
   }
 
-  // ---- arms: puffed lilac sleeves, small hands
-  const sleeveGeoms: Record<string, THREE.BufferGeometry> = {};
+  // ---- arms: one puffed pink-lilac sleeve per arm (puff at the shoulder, cuff at the wrist), smooth-skinned
+  //      across the elbow; small hands
+  const cSleeve = col(C.sleeves);
   for (const side of ["Left", "Right"] as const) {
     const s = side === "Left" ? 1 : -1;
-    const ua = limb(new THREE.Vector3(-0.01 * s, 0, 0), new THREE.Vector3(0.11 * s, 0, 0), (t) => 0.04 + 0.012 * Math.sin(Math.PI * Math.min(1, t * 1.3)) - 0.006 * t, {
-      detail: 4,
+    const up = L.skeleton.upperArm;
+    const len = up + L.skeleton.foreArm - 0.012;
+    const g = limb(v3(-0.012 * s, 0, 0), v3(len * s, 0, 0), (t) => {
+      const x = t * (len + 0.012) - 0.012;
+      const puff = 0.013 * Math.exp(-(((x - 0.045) / 0.045) ** 2));
+      const cuff = 0.006 * smoothstep(len - 0.03, len - 0.008, x);
+      return 0.036 + puff - 0.006 * smoothstep(0, len, x) + cuff;
+    }, { detail: 7 });
+    paintVertices(g, (p, out) => {
+      // soft fold shading in the elbow crease
+      const x = Math.abs(p.x);
+      out.copy(cSleeve).multiplyScalar(1 - 0.08 * Math.exp(-(((x - up) / 0.02) ** 2)));
     });
-    attach(B[`${side}Arm`], ua, sleeve, `${side}Sleeve`);
-    const fa = limb(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0.088 * s, 0, 0), (t) => 0.033 - 0.004 * t + 0.006 * smoothstep(0.75, 1, t), {
-      detail: 4,
+    const upper = B[`${side}Arm`];
+    const fore = B[`${side}ForeArm`];
+    const ex = restWorld(fore).x;
+    parts.push({
+      geom: g, bone: upper, material: light,
+      weights: (p) => [
+        [upper, 1 - smoothstep(ex - 0.025 * s, ex + 0.025 * s, p.x)],
+        [fore, smoothstep(ex - 0.025 * s, ex + 0.025 * s, p.x)],
+      ],
     });
-    attach(B[`${side}ForeArm`], fa, sleeve, `${side}ForeSleeve`);
-    sleeveGeoms[side] = ua;
     // hand: soft mitten + thumb (forward, +z)
     const palm = blob(3, (d, out) => {
       out.set(0.028 * s + d.x * 0.03, d.y * 0.02, d.z * 0.026);
@@ -420,18 +469,31 @@ export function buildMasha(): CharacterRig {
       out.set(0.012 * s + d.x * 0.012, -0.002 + d.y * 0.01, 0.022 + d.z * 0.012);
     });
     const hg = mergeSame([palm, thumb]);
-    attach(B[`${side}Hand`], hg, skinPlain, `${side}Hand`);
-    geoms.push(ua, fa, hg);
+    paintVertices(hg, (_p, out) => out.copy(cSkin));
+    parts.push({ geom: hg, bone: B[`${side}Hand`], material: skin });
   }
 
-  // ---- legs: pale stockings, dark-pink shoes
+  // ---- legs: pale stockings (one piece across the knee), dark-pink shoes
+  const cStock = col(C.stockings);
   const cShoe = col(C.shoes);
   const cSole = col(C.soles);
   for (const side of ["Left", "Right"] as const) {
-    const th = limb(new THREE.Vector3(0, 0.02, 0), new THREE.Vector3(0, -0.15, 0), (t) => 0.045 - 0.006 * t, { detail: 4 });
-    attach(B[`${side}UpLeg`], th, stocking, `${side}Thigh`);
-    const sh = limb(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, -0.13, 0), (t) => 0.039 - 0.007 * t, { detail: 4 });
-    attach(B[`${side}Leg`], sh, stocking, `${side}Shin`);
+    const len = L.skeleton.upperLeg + L.skeleton.lowerLeg - 0.01;
+    const g = limb(v3(0, 0.02, 0), v3(0, -len, 0), (t) => {
+      const y = 0.02 - t * (len + 0.02);
+      return 0.045 - 0.006 * smoothstep(0.02, -0.15, y) - 0.004 * smoothstep(-0.16, -len, y) + 0.002 * Math.exp(-(((y + 0.2) / 0.03) ** 2));
+    }, { detail: 6 });
+    paintVertices(g, (_p, out) => out.copy(cStock));
+    const up = B[`${side}UpLeg`];
+    const lo = B[`${side}Leg`];
+    const ky = restWorld(lo).y;
+    parts.push({
+      geom: g, bone: up, material: light,
+      weights: (p) => [
+        [up, smoothstep(ky - 0.025, ky + 0.025, p.y)],
+        [lo, smoothstep(ky + 0.025, ky - 0.025, p.y)],
+      ],
+    });
     const sg = blob(4, (d, out) => {
       const fz = (d.z + 1) / 2; // 0 heel .. 1 toe
       const w = 0.041 * (0.85 + 0.3 * Math.sin(Math.PI * Math.min(1, fz * 1.1)));
@@ -439,15 +501,16 @@ export function buildMasha(): CharacterRig {
       out.set(d.x * w, -0.02 + yy * 0.032 * (1 - 0.3 * fz), 0.026 + d.z * 0.072);
     });
     paintVertices(sg, (p, out) => out.copy(cShoe).lerp(cSole, smoothstep(-0.041, -0.046, p.y)));
-    attach(B[`${side}Foot`], sg, shoe, `${side}Shoe`);
-    geoms.push(th, sh, sg);
+    parts.push({ geom: sg, bone: B[`${side}Foot`], material: shoe });
   }
+
+  const body = skinBody(root, parts);
 
   // ---- secondary motion: skirt follows the legs (no poke-through) and sways
   const down = new THREE.Vector3();
   const qL = new THREE.Quaternion();
   const secondary = {
-    update(frame: import("../api").ActorFrame, phase: number): void {
+    update(frame: ActorFrame, phase: number): void {
       let fwd = 0;
       let side = 0;
       for (const n of ["LeftUpLeg", "RightUpLeg"] as const) {
@@ -474,8 +537,9 @@ export function buildMasha(): CharacterRig {
     face,
     chest,
     materials: mats,
-    geometries: geoms,
+    geometries: [],
     secondary,
     socketOffset: new THREE.Vector3(-0.03, -0.005, 0.03),
+    body,
   });
 }

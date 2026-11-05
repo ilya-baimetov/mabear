@@ -1,5 +1,5 @@
 // Likeness bench (spec §7.3 step 4): renders ONE character with the series light rig for side-by-side review.
-// Query params: char=masha|bear  angle=front|three|side|back|face  sil=1 (black silhouette on white)
+// Query params: char=masha|bear|wolf_a|wolf_b|wolves|lineup  angle=front|three|side|back|face  sil=1 (black silhouette)
 //               emotion=<Emotion>  viseme=<Viseme>  vw=0..1  pose=a|t  look=cam|none  size=<px>  label=0
 // Motion filmstrip (motion feel): motion=<fixture index> char=masha|bear t0=<s> dt=<s> n=<frames> cols=<n>
 //   compiles the fixture episode with the real compiler, samples evaluate() and renders a grid of tiles with a
@@ -9,6 +9,7 @@
 import * as THREE from "three";
 import { buildMasha } from "../src/engine/characters/masha";
 import { buildBear } from "../src/engine/characters/bear";
+import { buildWolf } from "../src/engine/characters/wolf";
 import { restFrame } from "../src/engine/characters/rig";
 import type { CharacterRig, Quat } from "../src/engine/api";
 import { DEFAULT_REMIX, type Emotion, type Viseme } from "../src/shared/schema";
@@ -18,7 +19,15 @@ import { evaluate } from "../src/engine/player/evaluate";
 import { createStage } from "../src/engine/stage";
 
 const q = new URLSearchParams(location.search);
-const char = q.get("char") === "bear" ? "bear" : "masha";
+const CHARS = ["masha", "bear", "wolf_a", "wolf_b", "wolves", "lineup"] as const;
+type CharKey = (typeof CHARS)[number];
+const char: CharKey = (CHARS as readonly string[]).includes(q.get("char") ?? "") ? (q.get("char") as CharKey) : "masha";
+const BUILD: Record<string, () => CharacterRig> = {
+  masha: buildMasha,
+  bear: buildBear,
+  wolf_a: () => buildWolf("a"),
+  wolf_b: () => buildWolf("b"),
+};
 const angle = q.get("angle") ?? "front";
 const sil = q.get("sil") === "1";
 const emotion = (q.get("emotion") ?? "neutral") as Emotion;
@@ -64,10 +73,10 @@ async function runStage(idx: number): Promise<void> {
   await Promise.race([stage.assetsReady, new Promise((r) => setTimeout(r, 8000))]);
   const t = Math.min(timeline.duration - 1e-3, Number(q.get("t") ?? 1));
   let fr = evaluate(timeline, t);
-  const focus = q.get("focus") as "masha" | "bear" | null;
+  const focus = q.get("focus") as "masha" | "bear" | "wolf_a" | "wolf_b" | null;
   if (focus && fr.actors[focus]) {
     const a = fr.actors[focus];
-    const hh = focus === "bear" ? 2.4 : 1.0;
+    const hh = stage.rigs[focus]?.height ?? 1.0;
     const yaw = a.yaw + 0.45;
     const dist = hh * 1.7;
     const look: [number, number, number] = [a.pos[0], a.pos[1] + hh * 0.7, a.pos[2]];
@@ -113,20 +122,22 @@ function runMotion(idx: number): void {
   const ground = new THREE.Mesh(new THREE.CircleGeometry(40, 64), new THREE.MeshStandardMaterial({ color: "#6f9a45", roughness: 1 }));
   ground.rotation.x = -Math.PI / 2;
   scene.add(hemi, key, rim, ground);
-  const rigs: Record<string, CharacterRig> = { masha: buildMasha(), bear: buildBear() };
+  const rigs: Record<string, CharacterRig> = { masha: buildMasha(), bear: buildBear(), wolf_a: buildWolf("a"), wolf_b: buildWolf("b") };
   for (const r of Object.values(rigs)) scene.add(r.root);
+  const focusId = char in rigs ? char : "masha";
   const cam = new THREE.PerspectiveCamera(35, tw / th, 0.05, 200);
   const info: string[] = [];
   for (let i = 0; i < n; i++) {
     const t = Math.min(timeline.duration - 1e-3, t0 + i * dt);
     const fr = evaluate(timeline, t);
-    for (const id of ["masha", "bear"] as const) {
-      const a = fr.actors[id];
+    for (const id of Object.keys(rigs)) {
+      const a = fr.actors[id as keyof typeof fr.actors];
       if (a) for (let k = 0; k < 8; k++) rigs[id].apply(a); // let face easing settle per tile
+      else rigs[id].root.visible = false;
     }
-    const a = fr.actors[char];
-    const tgt = new THREE.Vector3(a.pos[0], a.pos[1] + rigs[char].height * 0.55, a.pos[2]);
-    const dist = rigs[char].height * (q.get("close") === "1" ? 2.0 : 2.6);
+    const a = fr.actors[focusId as keyof typeof fr.actors] ?? fr.actors.masha;
+    const tgt = new THREE.Vector3(a.pos[0], a.pos[1] + rigs[focusId].height * 0.55, a.pos[2]);
+    const dist = rigs[focusId].height * (q.get("close") === "1" ? 2.0 : 2.6);
     const yaw = a.yaw + 0.5; // three-quarter view relative to the character's facing
     cam.position.set(tgt.x + Math.sin(yaw) * dist, tgt.y + dist * 0.12, tgt.z + Math.cos(yaw) * dist);
     cam.lookAt(tgt);
@@ -146,9 +157,24 @@ function runMotion(idx: number): void {
 }
 
 function runStills(): void {
-  const rig = char === "bear" ? buildBear() : buildMasha();
-  scene.add(rig.root);
-  const h = rig.height;
+  // one character, or a group (wolves: both Wolves side by side; lineup: the whole cast for scale)
+  const ids = char === "wolves" ? ["wolf_a", "wolf_b"] : char === "lineup" ? ["wolf_a", "bear", "masha", "wolf_b"] : [char];
+  const spacing: Record<string, number> = { masha: 0.75, bear: 1.45, wolf_a: 0.85, wolf_b: 0.85 };
+  const rigs = ids.map((id) => BUILD[id]());
+  const xs: number[] = [];
+  {
+    let x = 0;
+    rigs.forEach((r, i) => {
+      if (i > 0) x += spacing[ids[i - 1]] + spacing[ids[i]];
+      xs.push(x);
+    });
+    const mid = (xs[0] + xs[xs.length - 1]) / 2;
+    for (let i = 0; i < xs.length; i++) xs[i] -= mid;
+  }
+  for (const r of rigs) scene.add(r.root);
+  const rig = rigs[0];
+  const h = Math.max(...rigs.map((r) => r.height));
+  const groupW = rigs.length > 1 ? xs[xs.length - 1] - xs[0] + 1.5 : 0;
 
   if (!sil) {
     const hemi = new THREE.HemisphereLight("#cfe3ff", "#7a6a48", 1.15);
@@ -165,16 +191,21 @@ function runStills(): void {
     const rim = new THREE.DirectionalLight("#fff0d8", 1.7);
     rim.position.set(1.6 * h, 2.0 * h, -3.0 * h);
     scene.add(rim);
-    const ground = new THREE.Mesh(new THREE.CircleGeometry(6 * h, 64), new THREE.MeshStandardMaterial({ color: "#6f9a45", roughness: 1 }));
+    if (rigs.length > 1) {
+      sc.left = -h - groupW / 2;
+      sc.right = h + groupW / 2;
+    }
+    const ground = new THREE.Mesh(new THREE.CircleGeometry(6 * h + groupW, 64), new THREE.MeshStandardMaterial({ color: "#6f9a45", roughness: 1 }));
     ground.rotation.x = -Math.PI / 2;
     ground.receiveShadow = true;
     scene.add(ground);
   } else {
     const black = new THREE.MeshBasicMaterial({ color: 0x000000, side: THREE.DoubleSide });
-    rig.root.traverse((o) => {
-      const m = o as THREE.Mesh;
-      if (m.isMesh) m.material = black;
-    });
+    for (const r of rigs)
+      r.root.traverse((o) => {
+        const m = o as THREE.Mesh;
+        if (m.isMesh) m.material = black;
+      });
   }
 
   // camera framing
@@ -185,9 +216,9 @@ function runStills(): void {
     camera.lookAt(target);
   }
 
-  function armsDown(): Record<string, Quat> {
+  function armsDown(id: string): Record<string, Quat> {
     if (pose === "t") return {};
-    const ang = char === "bear" ? 1.05 : 1.15;
+    const ang = id === "bear" ? 1.05 : id.startsWith("wolf") ? 1.25 : 1.15;
     const l = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), -ang);
     const r = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), ang);
     const fl = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), 0.25);
@@ -200,31 +231,29 @@ function runStills(): void {
     };
   }
 
-  rig.apply(restFrame({ bones: armsDown() }));
+  const applyAll = (face?: import("../src/engine/api").FaceParams) =>
+    rigs.forEach((r, i) => r.apply(restFrame({ pos: [xs[i], 0, 0], bones: armsDown(ids[i]), ...(face ? { face } : {}) })));
+  applyAll();
   const headPos = new THREE.Vector3().setFromMatrixPosition(rig.bones.Head.matrixWorld);
   if (angle === "face") {
-    const headSize = char === "bear" ? 0.62 : 0.4;
-    const target = headPos.clone().add(new THREE.Vector3(0, char === "bear" ? 0.2 : 0.15, 0));
-    placeCamera(target, headSize * 2.6);
+    const headSize = ids[0] === "bear" ? 0.74 : ids[0].startsWith("wolf") ? 0.5 : 0.4;
+    const target = headPos.clone().add(new THREE.Vector3(0, ids[0] === "bear" ? 0.24 : ids[0].startsWith("wolf") ? 0.1 : 0.15, 0));
+    if (rigs.length > 1) target.x = 0;
+    placeCamera(target, headSize * 2.6 + groupW * 0.9);
   } else {
-    placeCamera(new THREE.Vector3(0, h * 0.5, 0), h * 2.25);
+    placeCamera(new THREE.Vector3(0, h * 0.5, 0), h * 2.25 + groupW * 1.1);
   }
 
   let frames = 0;
   function frame(): void {
-    rig.apply(
-      restFrame({
-        bones: armsDown(),
-        face: {
-          emotion,
-          lidClose: 0,
-          viseme,
-          visemeWeight: vw,
-          lookAt: look === "cam" ? [camera.position.x, camera.position.y, camera.position.z] : null,
-          browRaise: 0,
-        },
-      }),
-    );
+    applyAll({
+      emotion,
+      lidClose: 0,
+      viseme,
+      visemeWeight: vw,
+      lookAt: look === "cam" ? [camera.position.x, camera.position.y, camera.position.z] : null,
+      browRaise: 0,
+    });
     renderer.render(scene, camera);
     frames++;
     if (frames === 12) {

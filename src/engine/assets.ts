@@ -44,7 +44,13 @@ export const ROBOT_SKELETON_MAP: Record<string, string> = {
 const CHARACTER_LABELS: Record<string, string> = {
   masha: "Masha — procedural stand-in for the production character rig",
   bear: "Bear — procedural stand-in for the production character rig",
+  wolf_a: "Wolf — procedural stand-in for the production character rig",
+  wolf_b: "Wolf — procedural stand-in for the production character rig",
 };
+
+/** Height of each character (m): used for the last-resort capsule when a builder or download fails. */
+const CHARACTER_HEIGHTS: Record<string, number> = { masha: 1.0, bear: 2.4, wolf_a: 2.05, wolf_b: 1.93 };
+const CHARACTER_TINTS: Record<string, number> = { masha: 0xc7317d, bear: 0x7a4a2b, wolf_a: 0x7c8288, wolf_b: 0x76716c };
 
 function buildManifest(): Record<string, AssetEntry> {
   const m: Record<string, AssetEntry> = {};
@@ -126,6 +132,8 @@ export async function loadCharacter(id: string, manifest: Record<string, AssetEn
       rig = (await import("./characters/masha")).buildMasha();
     } else if (id === "bear") {
       rig = (await import("./characters/bear")).buildBear();
+    } else if (id === "wolf_a" || id === "wolf_b") {
+      rig = (await import("./characters/wolf")).buildWolf(id === "wolf_a" ? "a" : "b");
     } else {
       throw new Error(`no procedural builder for ${id}`);
     }
@@ -144,8 +152,7 @@ export async function loadCharacter(id: string, manifest: Record<string, AssetEn
     return rig;
   } catch (err) {
     status.set(id, { id, source: entry && isGltf(entry.source) ? "gltf" : "procedural", ok: false, error: String(err) });
-    const h = id === "bear" ? 2.4 : 1.0;
-    const rig = standInRig(id, h, id === "bear" ? 0x7a4a2b : 0xc7317d);
+    const rig = standInRig(id, CHARACTER_HEIGHTS[id] ?? 1.0, CHARACTER_TINTS[id] ?? 0xc7317d);
     if (entry?.hidden) rig.root.visible = false;
     return rig;
   }
@@ -267,7 +274,8 @@ export function gltfRig(id: string, model: THREE.Object3D, entry: AssetEntry): C
 export function standInRig(id: string, height: number, color: number): CharacterRig {
   const root = new THREE.Group();
   root.name = `character:${id}:capsule`;
-  const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.7 });
+  // fade-stable (B11): transparent from the start, so a fade never recompiles the program
+  const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.7, transparent: true });
   const body = new THREE.Mesh(new THREE.CapsuleGeometry(height * 0.22, height * 0.5, 6, 12), mat);
   body.position.y = height * 0.47;
   body.castShadow = true;
@@ -291,8 +299,8 @@ export function standInRig(id: string, height: number, color: number): Character
     apply(frame) {
       root.position.set(frame.pos[0], frame.pos[1], frame.pos[2]);
       root.rotation.set(0, frame.yaw, 0);
-      mat.transparent = frame.opacity < 1;
       mat.opacity = frame.opacity;
+      mat.depthWrite = frame.opacity >= 0.999;
       root.updateMatrixWorld(true);
     },
     dispose() {

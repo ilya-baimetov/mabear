@@ -499,3 +499,75 @@ and sways, belly jiggles, ears wiggle, chest breathes. Budgets suit the headless
 Everything above is a stand-in for Animaccord's production characters and is labelled as such in the
 Behind-the-scenes overlay (spec §2). Replacing a stand-in with the official rig needs only an asset-manifest change.
 
+
+### Pass 14 — 2026-11-05 (A5 visual overhaul: "Masha, Bear and the environment are very crude")
+
+Trigger: the user's art review. Before-shots: `before-a5-masha-closeup.png`, `before-a5-bear-closeup.png`,
+`before-a5-player.png` (in-app). After-shots: `after-a5-<masha|bear|wolves|lineup>-<front|three|face|silhouette>.png`
+(bench) and `after-a5-<masha|bear|wolves|wolves-b>-closeup.png` (the real engine stage with the new HDRI look,
+`--stage 0:<t>:<focus>`). Three iterations (two discarded intermediate sets, then the final set).
+
+**Re-judging the before state honestly** (pass 13 scored 4s; an Animaccord art director would not have):
+Bear's torso was two stacked blobs with a visible "snowman" crease at the waist and a head too small for the body;
+his arms were straight tubes; the fur read as brown plastic. Masha's blond fringe poked through the top of the
+kerchief, the face opening was wide and oval, the sleeves read as white, and the materials looked flat.
+
+What changed:
+- **Construction (all characters):** every body part is merged per material into a `SkinnedMesh` bound to the bones
+  (`skinBody` in `rig.ts`). Rigid parts get weight 1 on their bone; continuous parts get smooth weights across the
+  joints. So the torso bends at the waist without a crease, and elbows and knees bend as one surface (no segment
+  junctions). Face features (eyes, lids, brows) sit on small face bones and merge too. Only the dynamic mouth stays
+  a separate mesh.
+- **Bear:** head ×1.2 (cranium, muzzle, ears and the whole face rig scale together through a `headScale` bone, so
+  the face rig stays exact); neck bone 0.36 → 0.31 so his height stays 2.4 m. ONE pear torso: a soft union of hips,
+  belly, chest, shoulder caps and neck ruff, ray-cast into one welded mesh (detail 15), smooth-skinned
+  Hips → Spine → Spine1 → chest, with the belly front on a jiggle bone and the shoulder caps partly on the
+  clavicle/arm (deltoid). Arms are one mass each: deltoid → biceps → elbow point → heavy forearm → wrist, with
+  bigger paws and a thumb pad. A fuller neck ruff lets the bigger head sink into the shoulders.
+- **Masha:** the fringe is now generated only between its tip edge and the kerchief rim (k = 1.12). The kerchief
+  rim rides on top of the fringe envelope (a shared `fringeThick` function), so the hair shows only in the face
+  opening, under the rim. The crown is clamped ≥ 2.5 % above the skull, which fixes the skin poking through at the
+  top. Face opening is smaller and rounder (half-azimuth 1.08 → 0.9 rad, top 0.7 → 0.6). The cape drape is keyed to
+  its own azimuth, so the shell never folds onto itself (that fold had caused speckled shading). Eyes are bigger
+  (r 0.040 → 0.046, spacing 0.059 → 0.065). Sleeves are pink-lilac `#DBA8D3`. Sleeves and stockings are one piece
+  across the elbow and knee.
+- **Materials:**
+  - Skin: sheen plus a warm, albedo-tinted translucency rim (fake SSS) instead of a flat emissive.
+  - Fabric: sheen 1.0, sheen roughness 0.6, low specular (cotton).
+  - Fur: specular 0.25 (it was the plastic look), two-octave strand noise, a soft grazing fuzz, and a sheen colour
+    darker than the fur's highlights.
+  - Eyes, highlights and glossy noses: one clearcoat material with a vertex-colour emissive mask.
+  - Albedos are unchanged and physically plausible (the stage's HDRI/ACES does the lighting).
+- **Wolves (new):** `buildWolf("a" | "b")`, 2.05 m and 1.93 m, cool vs warm grey, on the same skeleton. Lanky, with
+  a narrow chest, small pot belly and a long neck. The long blunt snout has a black nose and a mouth projected onto
+  the actual snout mesh (`frontSurface`, ray-cast). Tall pointed ears are on wiggle bones. The bushy tail has three
+  tail bones that sway. Eyes are small, narrow and half-lidded (sly), with a one-sided resting smirk. There is a
+  light throat stripe, and the hands have a thumb and finger lumps.
+
+Findings during the iterations (fixed): wolf snout placed relative to the Head bone instead of the cranium (hung at
+the chest); wolf mouth fragmented (sparse height field → ray-cast grid); near-white wolf sheen washed the grey out;
+Masha's crown skin and cape speckles (above); Bear shoulder-cap fold from aggressive arm weights (softened).
+
+| | Silhouette | Proportions | Face | Colors | Materials | Motion feel |
+|---|---|---|---|---|---|---|
+| Masha — before (re-judged) | 4 | 3.5 | 3 | 3.5 | 3 | 4 |
+| **Masha — after** | 4 | 4 | 4 | 4.5 | 4 | 4 |
+| Bear — before (re-judged) | 3 | 3 | 4 | 4 | 3 | 3.5 |
+| **Bear — after** | 4.5 | 4 | 4 | 4 | 4 | 4 |
+| **Wolves — first pass** | 3.5 | 3.5 | 4 | 4 | 3.5 | 3.5 |
+
+Adversarial notes (what an Animaccord artist would still flag):
+- Masha: the eyes are now on the large side of the show (bigger than the series' proportion, as asked). The
+  kerchief rim is slightly wavy where it tucks under the lower cheeks. The fringe is still one sculpted swoosh, not
+  strands.
+- Bear: the fur silhouette is still smooth (no shell fur). The head-to-shoulder junction reads as "head on a ruff"
+  from the front. Paws have no fingers.
+- Wolves: recognisable in ¾ view (snout, ears, tail, sly eyes), but from the front they still read as a generic thin
+  humanoid. The legs are featureless tubes, the throat ruff is too subtle to break the outline, and there is no
+  wolf-specific motion (they use the shared verbs). These are the open items for the next pass: chest/elbow fur
+  tufts that read in silhouette, knee/ankle definition, and a slightly hunched idle from the motion layer.
+
+Budgets (final): Masha 26.3k triangles / 8 meshes / 12 draw calls incl. shadow; Bear 26.3k / 4 / 5; each Wolf
+24.6k / 3 / 4. The whole cast is 25 draw calls (was ~88). In-stage totals measured by the bench: 64–76 draw calls
+for the full scene with all four characters. B11: character materials are fade-stable (no program change at the
+first fade); covered by `tests/unit/characters.test.ts`.

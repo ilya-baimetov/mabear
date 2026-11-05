@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import * as THREE from "three";
 import { buildMasha, MASHA_LOOK } from "../../src/engine/characters/masha";
 import { buildBear, BEAR_LOOK } from "../../src/engine/characters/bear";
+import { buildWolf, WOLF_LOOK } from "../../src/engine/characters/wolf";
 import { MIXAMO_BONES, restFrame } from "../../src/engine/characters/rig";
 import { EMOTION_PRESETS, mouthShapeFor, VISEME_SHAPES } from "../../src/engine/characters/face";
 import { EMOTIONS, VISEMES } from "../../src/shared/schema";
@@ -10,7 +11,24 @@ import type { CharacterRig } from "../../src/engine/api";
 const builders: Array<[string, () => CharacterRig, number]> = [
   ["masha", buildMasha, 1.0],
   ["bear", buildBear, 2.4],
+  ["wolf_a", () => buildWolf("a"), WOLF_LOOK.variants.a.height],
+  ["wolf_b", () => buildWolf("b"), WOLF_LOOK.variants.b.height],
 ];
+
+/** Draw calls of one character: one per visible mesh, plus one per shadow caster (key-light shadow pass). */
+function drawCalls(rig: CharacterRig): { meshes: number; calls: number; tris: number } {
+  let meshes = 0;
+  let calls = 0;
+  let tris = 0;
+  rig.root.traverse((o) => {
+    const m = o as THREE.Mesh;
+    if (!m.isMesh) return;
+    meshes++;
+    calls += m.castShadow ? 2 : 1;
+    tris += (m.geometry.index ? m.geometry.index.count : m.geometry.getAttribute("position").count) / 3;
+  });
+  return { meshes, calls, tris };
+}
 
 function bbox(rig: CharacterRig): THREE.Box3 {
   rig.root.updateMatrixWorld(true);
@@ -89,18 +107,54 @@ describe.each(builders)("%s rig", (id, build, height) => {
     expect(rig.handSocket.parent).toBe(rig.bones.RightHand);
   });
 
-  it("stays within the draw-call budget (~25 meshes)", () => {
-    let meshes = 0;
-    let tris = 0;
+  it("stays within the draw-call and triangle budgets (merged per material, ≤ ~25k triangles)", () => {
+    const { meshes, calls, tris } = drawCalls(rig);
+    console.log(`${id}: ${meshes} meshes, ${calls} draw calls incl. shadow, ${Math.round(tris)} triangles`);
+    expect(calls).toBeLessThanOrEqual(id.startsWith("wolf") ? 8 : 14);
+    expect(tris).toBeLessThan(32_000);
+  });
+
+  it("B11: fades never change a material's shader program (no compile at the first fade)", () => {
+    const mats = new Set<THREE.Material>();
     rig.root.traverse((o) => {
-      const m = o as THREE.Mesh;
-      if (!m.isMesh) return;
-      meshes++;
-      tris += (m.geometry.index ? m.geometry.index.count : m.geometry.getAttribute("position").count) / 3;
+      const m = (o as THREE.Mesh).material;
+      if (m) for (const x of Array.isArray(m) ? m : [m]) mats.add(x);
     });
-    console.log(`${id}: ${meshes} meshes, ${Math.round(tris)} triangles`);
-    expect(meshes).toBeLessThanOrEqual(30);
-    expect(tris).toBeLessThan(250_000);
+    rig.apply(restFrame());
+    const before = [...mats].map((m) => ({ m, v: m.version, t: m.transparent }));
+    for (const m of mats) expect(m.transparent, m.name || m.type).toBe(true); // transparent-capable from the start
+    for (const o of [1, 0.6, 0.02, 0, 0.5, 1]) rig.apply(restFrame({ opacity: o }));
+    for (const b of before) {
+      expect(b.m.version, b.m.name || b.m.type).toBe(b.v); // no needsUpdate → same program
+      expect(b.m.transparent).toBe(b.t);
+    }
+    rig.apply(restFrame({ opacity: 0.5 }));
+    for (const m of mats) expect(m.depthWrite).toBe(false);
+    rig.apply(restFrame());
+    for (const m of mats) {
+      expect(m.depthWrite).toBe(true);
+      expect(m.opacity).toBe(1);
+    }
+  });
+
+  it("skins every body mesh to bones that live under the character root", () => {
+    rig.root.traverse((o) => {
+      const sm = o as THREE.SkinnedMesh;
+      if (!sm.isSkinnedMesh) return;
+      for (const b of sm.skeleton.bones) {
+        let p: THREE.Object3D | null = b;
+        while (p && p !== rig.root) p = p.parent;
+        expect(p, b.name).toBe(rig.root);
+      }
+    });
+  });
+});
+
+describe("cast budget", () => {
+  it("all four characters together stay well inside the scene's 150 draw calls", () => {
+    const total = [buildMasha(), buildBear(), buildWolf("a"), buildWolf("b")].reduce((s, r) => s + drawCalls(r).calls, 0);
+    console.log(`cast: ${total} draw calls incl. shadows`);
+    expect(total).toBeLessThanOrEqual(40);
   });
 });
 
@@ -117,5 +171,11 @@ describe("face presets", () => {
   it("looks match the spec heights", () => {
     expect(MASHA_LOOK.height).toBe(1.0);
     expect(BEAR_LOOK.height).toBe(2.4);
+    // the Wolves: about Bear's shoulder height, two slightly different heights
+    for (const vv of Object.values(WOLF_LOOK.variants)) {
+      expect(vv.height).toBeGreaterThan(1.85);
+      expect(vv.height).toBeLessThan(2.15);
+    }
+    expect(WOLF_LOOK.variants.a.height).not.toBe(WOLF_LOOK.variants.b.height);
   });
 });

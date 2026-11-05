@@ -1,4 +1,5 @@
-// Likeness screenshots (spec §7.3 step 4). Usage: npx tsx scripts/likenessShots.ts [--pass N] [--char masha|bear]
+// Likeness screenshots (spec §7.3 step 4). Usage: npx tsx scripts/likenessShots.ts [--pass N] [--prefix name]
+//   [--char masha|bear|wolf_a|wolf_b|wolves|lineup] (repeatable; default masha, bear, wolves)
 // Starts (or reuses) a vite dev server on port 5180, renders tools/likeness.html in headless Chromium and saves
 // docs/likeness/pass<N>-<char>-<shot>.png (front, three-quarter, face close-up, black silhouette).
 // Motion filmstrips (motion feel): --motion <fixture>:<char>:<t0>:<dt>:<n> (repeatable) renders evaluate() frames of a
@@ -17,7 +18,10 @@ const argOf = (k: string): string | undefined => {
   return i >= 0 ? args[i + 1] : undefined;
 };
 const pass = Number(argOf("--pass") ?? 1);
-const chars = argOf("--char") ? [argOf("--char") as string] : ["masha", "bear"];
+const charArgs = args.flatMap((a, i) => (a === "--char" && args[i + 1] ? [args[i + 1]] : []));
+const chars = charArgs.length ? charArgs : ["masha", "bear", "wolves"];
+/** file name prefix: `pass<N>` by default, or e.g. `--prefix after-a5` */
+const prefix = argOf("--prefix") ?? `pass${pass}`;
 const motions = args.flatMap((a, i) => (a === "--motion" && args[i + 1] ? [args[i + 1]] : []));
 const apps = args.flatMap((a, i) => (a === "--app" && args[i + 1] ? [args[i + 1]] : []));
 const stages = args.flatMap((a, i) => (a === "--stage" && args[i + 1] ? [args[i + 1]] : []));
@@ -72,8 +76,8 @@ async function main(): Promise<void> {
       await page.setViewportSize({ width: 1600, height: 300 * Math.ceil(Number(n || 12) / 4) });
       await page.goto(`${base}?motion=${f}&char=${c}&t0=${t0 ?? 0}&dt=${dt ?? ""}&n=${n ?? 12}&label=0`.replace("&dt=&", "&"));
       await page.waitForFunction(() => (window as unknown as { __ready?: boolean }).__ready === true, null, { timeout: 120_000 });
-      const file = `${outDir}/pass${pass}-motion-f${f}-${c}-${t0 ?? 0}.png`;
-      await page.screenshot({ path: file });
+      const file = `${outDir}/${prefix}-motion-f${f}-${c}-${t0 ?? 0}.png`;
+      await page.screenshot({ path: file, timeout: 180_000 });
       console.log("saved", file);
     }
     for (const spec of stages) {
@@ -82,7 +86,7 @@ async function main(): Promise<void> {
       await page.setViewportSize({ width: 1280, height: 720 });
       await page.goto(`${base}?stage=${f}&t=${t}${focus ? `&focus=${focus}` : ""}`);
       await page.waitForFunction(() => (window as unknown as { __ready?: boolean }).__ready === true, null, { timeout: 180_000 });
-      const file = `${outDir}/pass${pass}-stage-f${f}-${t}${focus ? `-${focus}` : ""}.png`;
+      const file = `${outDir}/${prefix}-stage-f${f}-${t}${focus ? `-${focus}` : ""}.png`;
       const png = await page.evaluate(() => (window as unknown as { __png: string }).__png);
       writeFileSync(file, Buffer.from(png.split(",")[1], "base64"));
       console.log("saved", file);
@@ -98,8 +102,8 @@ async function main(): Promise<void> {
       await page.getByTestId("play-all").click();
       for (let i = 0; i < 6; i++) {
         await page.waitForTimeout(i === 0 ? 1500 : 3500);
-        const file = `${outDir}/pass${pass}-app-${id}-${i}.png`;
-        await page.getByTestId("stage-canvas").screenshot({ path: file });
+        const file = `${outDir}/${prefix}-app-${id}-${i}.png`;
+        await page.getByTestId("stage-canvas").screenshot({ path: file, timeout: 180_000 });
         console.log("saved", file);
       }
       const st = await page.evaluate(() => (window as unknown as { __mabear: { stats(): unknown } }).__mabear.stats());
@@ -109,8 +113,8 @@ async function main(): Promise<void> {
       for (const [who, ang] of [["masha", 0.35], ["bear", -0.35]] as const) {
         await page.evaluate(([w, a]) => (window as unknown as { __mabear: { closeup(w: string, a: number): void } }).__mabear.closeup(w, a), [who, ang] as const);
         await page.waitForTimeout(1500);
-        const file = `${outDir}/pass${pass}-app-${id}-closeup-${who}.png`;
-        await page.getByTestId("stage-canvas").screenshot({ path: file });
+        const file = `${outDir}/${prefix}-app-${id}-closeup-${who}.png`;
+        await page.getByTestId("stage-canvas").screenshot({ path: file, timeout: 180_000 });
         console.log("saved", file);
       }
     }
@@ -118,8 +122,8 @@ async function main(): Promise<void> {
       for (const s of SHOTS) {
         await page.goto(`${base}?char=${c}&${s.query}&label=0`);
         await page.waitForFunction(() => (window as unknown as { __ready?: boolean }).__ready === true, null, { timeout: 90_000 });
-        const file = `${outDir}/pass${pass}-${c}-${s.name}.png`;
-        await page.screenshot({ path: file });
+        const file = `${outDir}/${prefix}-${c}-${s.name}.png`;
+        await page.screenshot({ path: file, timeout: 180_000 });
         console.log("saved", file);
       }
     }

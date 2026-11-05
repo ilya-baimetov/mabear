@@ -1,12 +1,16 @@
 // Bear — procedural stand-in rig (spec §7.3). 2.4 m, pear-shaped, big round belly with a tan patch, tan muzzle
 // and face mask, small round dark ears, small eyes with highlights, big glossy black nose, heavy brows.
 // Colours sampled from references (docs/LIKENESS.md).
+// Body: ONE sculpted pear torso (soft union of ellipsoids, smooth-skinned from Hips to Spine2, belly and chest on
+// secondary bones), continuous arms and legs smooth-skinned across elbows and knees, all merged per material into
+// skinned meshes (≈ 5 draw calls + 1 shadow draw).
 import * as THREE from "three";
 import type { ActorFrame, CharacterRig } from "../api";
 import { buildFace, type FaceConfig } from "./face";
 import {
-  attach, blob, buildSkeleton, bump, col, dir, furMaterial, limb, makeRig, materialSet, mergeSame, paintVertices,
-  noise3, restWorld, roughen, smoothstep, type SkeletonProportions,
+  blob, bump, buildSkeleton, col, dir, extraBone, eyeMaterial, furMaterial, limb, makeRig, materialSet, mergeSame,
+  noise3, paintVertices, profile, restWorld, roughen, sdEllipsoid, sdfBlob, skinBody, smin, smoothstep, toLocal,
+  type SkeletonProportions, type SkinPart, type Weights,
 } from "./rig";
 
 export const BEAR_LOOK = {
@@ -14,7 +18,7 @@ export const BEAR_LOOK = {
   colors: {
     fur: "#5E3622",
     furDark: "#40241A",
-    furSheen: "#C08A5C",
+    furSheen: "#B07A50",
     tan: "#D9A062",
     muzzle: "#E8B676",
     earInner: "#C8955E",
@@ -35,7 +39,7 @@ export const BEAR_LOOK = {
     spine: 0.18,
     spine1: 0.25,
     spine2: 0.27,
-    neck: 0.36,
+    neck: 0.31,
     head: 0.14,
     shoulder: [0.12, 0.2],
     clavicle: 0.22,
@@ -46,36 +50,45 @@ export const BEAR_LOOK = {
     lowerLeg: 0.25,
     toe: [0.07, 0.15],
   } satisfies SkeletonProportions,
+  /** the whole head (cranium, muzzle, ears, face rig) is built at this base size and scaled by `headScale` */
+  headScale: 1.2,
   head: {
     center: [0, 0.2, -0.02] as [number, number, number],
     radius: 0.255,
-    /** snout ellipsoid (Head-bone space) */
+    /** snout ellipsoid (head space, before headScale) */
     snoutCenter: [0, 0.09, 0.2] as [number, number, number],
     snoutRadii: [0.15, 0.12, 0.235] as [number, number, number],
   },
+  /** tan belly patch ellipse (rest-world metres) */
   belly: { centerY: 1.0, halfW: 0.38, halfH: 0.5 },
   /** fur breakup: displacement amplitude (m) and spatial frequency (1/m) */
   furNoise: { amp: 0.011, freq: 14 },
 } as const;
 
 type V3 = [number, number, number];
+const v = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);
 
 export function buildBear(): CharacterRig {
   const L = BEAR_LOOK;
   const C = L.colors;
   const mats = materialSet();
-  const geoms: THREE.BufferGeometry[] = [];
   const built = buildSkeleton(L.skeleton);
   const B = built.bones;
   const root = new THREE.Group();
   root.name = "bear";
   root.add(built.skeletonRoot);
+  // secondary bones: belly jiggle (Hips), breathing chest (Spine2), the scaled head
+  const belly = extraBone(B.Hips, "belly");
+  const chest = extraBone(B.Spine2, "chest");
+  const headS = extraBone(B.Head, "headScale");
+  headS.scale.setScalar(L.headScale);
   root.updateMatrixWorld(true);
+  const parts: SkinPart[] = [];
 
   const fur = mats.add(furMaterial(C.furSheen));
-  const nose = mats.add(
-    new THREE.MeshPhysicalMaterial({ color: col(C.nose), roughness: 0.28, clearcoat: 1, clearcoatRoughness: 0.12, sheen: 0 }),
-  );
+  fur.name = "fur";
+  const eyeMat = mats.add(eyeMaterial());
+  eyeMat.name = "eyes";
   const cFur = col(C.fur);
   const cFurDark = col(C.furDark);
   const cTan = col(C.tan);
@@ -88,83 +101,97 @@ export function buildBear(): CharacterRig {
     const e = Math.hypot(pw.x / L.belly.halfW, (pw.y - L.belly.centerY) / L.belly.halfH);
     return smoothstep(1.05, 0.88, e) * smoothstep(0.0, 0.35, nz);
   };
-  const paintBody = (g: THREE.BufferGeometry, offset: THREE.Vector3) => {
+
+  const W = (name: keyof typeof B) => restWorld(B[name]);
+  const hipsY = W("Hips").y;
+  const spineY = W("Spine").y;
+  const spine1Y = W("Spine1").y;
+  const spine2Y = W("Spine2").y;
+  const armW = W("LeftArm");
+  const legW = W("LeftUpLeg");
+
+  // ---- torso: ONE pear (hips + belly + chest + shoulder caps + neck ruff), no crease anywhere
+  {
+    const core = [
+      { c: v(0, 0.94, 0.05), r: v(0.56, 0.52, 0.49) }, // belly: the widest, lowest mass
+      { c: v(0, 0.7, -0.01), r: v(0.5, 0.31, 0.43) }, // seat / hips
+      { c: v(0, 1.38, -0.03), r: v(0.45, 0.36, 0.37) }, // chest, narrower: the pear tapers up
+    ];
+    const caps = [
+      { c: v(0.31, armW.y, -0.02), r: v(0.18, 0.18, 0.18) },
+      { c: v(-0.31, armW.y, -0.02), r: v(0.18, 0.18, 0.18) },
+      { c: v(0, 1.7, -0.05), r: v(0.31, 0.19, 0.24) }, // neck ruff: the head sinks into it, no visible neck
+    ];
+    const sdf = (p: THREE.Vector3): number => {
+      let d = sdEllipsoid(p, core[0].c, core[0].r);
+      for (let i = 1; i < core.length; i++) d = smin(d, sdEllipsoid(p, core[i].c, core[i].r), 0.34);
+      for (const e of caps) d = smin(d, sdEllipsoid(p, e.c, e.r), 0.16);
+      return d;
+    };
+    const g = sdfBlob(15, v(0, 1.1, 0), sdf, 1.3, (d, out) => {
+      // soft forward belly sag, slightly lower than the centre
+      out.z += 0.05 * bump(d, dir(0, -0.25, 1), 0.55);
+    });
+    fuzz(g);
     const nrm = g.getAttribute("normal");
     let i = 0;
     paintVertices(g, (p, out) => {
-      const nz = nrm.getZ(i++);
-      const pw = p.clone().add(offset);
-      out.copy(cFur).lerp(cTan, bellyMask(pw, nz));
+      out.copy(cFur).lerp(cTan, bellyMask(p, nrm.getZ(i++)));
     });
-  };
-
-  // ---- body: pear-shaped belly blob on Hips (jiggles), chest/shoulder blob on Spine2 (breathes)
-  const belly = new THREE.Group();
-  belly.name = "belly";
-  B.Hips.add(belly);
-  const hipsW = restWorld(B.Hips);
-  {
-    const g = blob(11, (d, out) => {
-      const y = d.y < 0 ? d.y * 0.42 : d.y * 0.58;
-      const t = (d.y + 1) / 2; // 0 bottom .. 1 top
-      const w = 0.54 * (0.76 + 0.32 * Math.sin(Math.PI * Math.min(1, 0.25 + t * 0.95)));
-      out.set(d.x * w * 1.04, 0.2 + y, d.z * w * 0.9 + 0.03);
-      out.z += 0.1 * bump(d, dir(0, -0.05, 1), 0.65);
-    });
-    fuzz(g);
-    paintBody(g, hipsW);
-    attach(belly, g, fur, "bellyBody");
-    geoms.push(g);
-  }
-  const chest = new THREE.Group();
-  chest.name = "chest";
-  B.Spine2.add(chest);
-  const spine2W = restWorld(B.Spine2);
-  {
-    // One smooth surface for chest + shoulder caps + neck ruff: a soft union of ellipsoids, ray-cast from the chest
-    // centre along every icosphere direction. No creases where shoulders and neck meet the chest. The caps are
-    // spheres around the arm joints, so the arms rotate inside them without exposing a seam.
-    const sc0 = new THREE.Vector3(0, 0.1, -0.02);
-    const parts: Array<{ c: THREE.Vector3; r: THREE.Vector3 }> = [
-      { c: new THREE.Vector3(0, 0.06, -0.02), r: new THREE.Vector3(0.52, 0.46, 0.42) },
-      { c: new THREE.Vector3(0.32, 0.19, -0.01), r: new THREE.Vector3(0.2, 0.2, 0.19) },
-      { c: new THREE.Vector3(-0.32, 0.19, -0.01), r: new THREE.Vector3(0.2, 0.2, 0.19) },
-      { c: new THREE.Vector3(0, 0.45, -0.05), r: new THREE.Vector3(0.27, 0.17, 0.21) },
+    const knots: Array<[THREE.Object3D, number]> = [
+      [B.Hips, hipsY + 0.12],
+      [B.Spine, spineY + 0.16],
+      [B.Spine1, spine1Y + 0.14],
+      [B.Spine2, spine2Y + 0.1],
     ];
-    const q = new THREE.Vector3();
-    const sdf = (p: THREE.Vector3): number => {
-      let res = Infinity;
-      for (const e of parts) {
-        q.copy(p).sub(e.c);
-        const k0 = Math.hypot(q.x / e.r.x, q.y / e.r.y, q.z / e.r.z);
-        const k1 = Math.hypot(q.x / (e.r.x * e.r.x), q.y / (e.r.y * e.r.y), q.z / (e.r.z * e.r.z));
-        const dd = k1 > 1e-9 ? (k0 * (k0 - 1)) / k1 : -Math.min(e.r.x, e.r.y, e.r.z);
-        // polynomial smooth min, k = 0.12 m
-        const k = 0.12;
-        const h = Math.max(k - Math.abs(res - dd), 0) / k;
-        res = res === Infinity ? dd : Math.min(res, dd) - h * h * k * 0.25;
+    const weights = (p: THREE.Vector3): Weights => {
+      const w: Weights = [];
+      // chain partition of unity along height
+      if (p.y <= knots[0][1]) w.push([knots[0][0], 1]);
+      else if (p.y >= knots[3][1]) w.push([knots[3][0], 1]);
+      else {
+        for (let k = 0; k < 3; k++) {
+          const [b0, y0] = knots[k];
+          const [b1, y1] = knots[k + 1];
+          if (p.y >= y0 && p.y <= y1) {
+            const t = smoothstep(y0, y1, p.y);
+            w.push([b0, 1 - t], [b1, t]);
+          }
+        }
       }
-      return res;
+      // belly front → belly bone (jiggle); upper body → chest bone (breathing)
+      const front = smoothstep(-0.05, 0.3, p.z) * smoothstep(1.32, 1.05, p.y);
+      for (const e of w) {
+        if (e[0] === B.Hips || e[0] === B.Spine) {
+          const k = e[1] * front * 0.8;
+          e[1] -= k;
+          w.push([belly, k]);
+        } else if (e[0] === B.Spine2) {
+          e[0] = chest;
+        }
+      }
+      const ax = Math.abs(p.x);
+      const s = p.x > 0 ? "Left" : "Right";
+      // shoulder caps ride the clavicle and, outermost, the arm (a deltoid that follows the arm down)
+      const sh = smoothstep(0.12, 0.34, ax) * smoothstep(spine2Y, armW.y, p.y);
+      if (sh > 0) {
+        const arm = smoothstep(0.3, 0.52, ax) * smoothstep(armW.y - 0.2, armW.y, p.y) * 0.5;
+        const tot = w.reduce((a, e) => a + e[1], 0);
+        for (const e of w) e[1] *= 1 - sh * 0.7;
+        w.push([B[`${s}Shoulder`], tot * sh * 0.7 * (1 - arm)], [B[`${s}Arm`], tot * sh * 0.7 * arm]);
+      }
+      // the seat follows the thighs a little
+      const lg = smoothstep(legW.y + 0.02, legW.y - 0.16, p.y) * smoothstep(0.06, 0.2, ax);
+      if (lg > 0) {
+        for (const e of w) e[1] *= 1 - lg * 0.55;
+        w.push([B[`${s}UpLeg`], lg * 0.55]);
+      }
+      return w;
     };
-    const pt = new THREE.Vector3();
-    const g = blob(12, (d, out) => {
-      let lo = 0;
-      let hi = 1.2;
-      for (let i = 0; i < 26; i++) {
-        const mid = (lo + hi) / 2;
-        if (sdf(pt.copy(d).multiplyScalar(mid).add(sc0)) < 0) lo = mid;
-        else hi = mid;
-      }
-      out.copy(d).multiplyScalar((lo + hi) / 2).add(sc0);
-      out.z += 0.03 * bump(d, dir(0, -0.3, 1), 0.6);
-    });
-    fuzz(g);
-    paintBody(g, spine2W);
-    attach(chest, g, fur, "chestBody");
-    geoms.push(g);
+    parts.push({ geom: toLocal(g, B.Hips), bone: B.Hips, material: fur, weights });
   }
 
-  // ---- head: cranium + fluffy cheeks + snout, tan face mask in vertex colours, big glossy nose
+  // ---- head: cranium + fluffy cheeks + snout, tan face mask in vertex colours, big glossy nose (all ×headScale)
   const H = L.head;
   const hc = new THREE.Vector3(...H.center);
   const sc = new THREE.Vector3(...H.snoutCenter);
@@ -175,7 +202,7 @@ export function buildBear(): CharacterRig {
       0.14 * (bump(d, dir(0.8, -0.32, 0.45), 0.36) + bump(d, dir(-0.8, -0.32, 0.45), 0.36)) +
       0.04 * (bump(d, dir(0.35, 0.3, 0.88), 0.25) + bump(d, dir(-0.35, 0.3, 0.88), 0.25)) -
       0.09 * bump(d, dir(0, 1, 0.1), 0.55));
-  const cranium = blob(13, (d, out) => {
+  const cranium = blob(12, (d, out) => {
     out.copy(d).multiplyScalar(craniumR(d)).add(hc);
   });
   const snout = blob(8, (d, out) => {
@@ -191,43 +218,42 @@ export function buildBear(): CharacterRig {
     out.copy(cFur).lerp(cTan, mask);
   });
   fuzz(cranium, 0.6);
-  paintVertices(snout, (_p, out) => out.copy(cMuzzle));
-  const headGeom = mergeSame([cranium, snout]);
+  paintVertices(snout, (p, out) => {
+    // a touch darker toward the chin (soft occlusion under the muzzle)
+    out.copy(cMuzzle).multiplyScalar(1 - 0.12 * smoothstep(sc.y, sc.y - sr[1], p.y));
+  });
   // the head does not cast onto the chest (a hard dark "bib" under the chin read as stacked primitives)
-  attach(B.Head, headGeom, fur, "head").castShadow = false;
-  geoms.push(headGeom);
+  parts.push({ geom: mergeSame([cranium, snout]), bone: headS, material: fur, shadow: false });
 
   const noseAt = new THREE.Vector3(0, sc.y + sr[1] * 0.55, sc.z + sr[2] * 0.86);
   const noseGeom = blob(5, (d, out) => {
     const top = d.y > 0 ? 1 : 0.85;
     out.set(d.x * 0.088, d.y * 0.058 * top, d.z * 0.064 - 0.012 * d.y * d.y).add(noseAt);
   });
-  attach(B.Head, noseGeom, nose, "nose", false);
-  geoms.push(noseGeom);
+  paintVertices(noseGeom, (_p, out) => out.copy(col(C.nose)));
+  parts.push({ geom: noseGeom, bone: headS, material: eyeMat, shadow: false });
 
-  // ---- ears: round, dark, cupped, with a tan-brown inner; each in a group for wiggle
+  // ---- ears: round, dark, cupped, with a tan-brown inner; each on a bone for wiggle
   const cEarIn = col(C.earInner);
-  const ears: THREE.Group[] = [];
+  const ears: THREE.Bone[] = [];
   for (const s of [1, -1]) {
-    const eg = new THREE.Group();
-    eg.name = s === 1 ? "earL" : "earR";
     const ed = dir(0.6 * s, 0.76, -0.12);
-    eg.position.copy(ed.clone().multiplyScalar(H.radius * 0.93).add(hc));
-    eg.rotation.set(-0.1, 0.25 * s, -0.42 * s);
+    const p = ed.clone().multiplyScalar(H.radius * 0.93).add(hc);
+    const eb = extraBone(headS, s === 1 ? "earL" : "earR", p.x, p.y, p.z);
+    eb.rotation.set(-0.1, 0.25 * s, -0.42 * s);
     const g = blob(4, (d, out) => {
       const rr = d.x * d.x + d.y * d.y;
       const cup = d.z > 0 ? 0.03 * (1 - rr) : 0;
       out.set(d.x * 0.112, d.y * 0.106, d.z * 0.05 - cup);
     });
-    paintVertices(g, (p, out) => {
-      const inner = smoothstep(0.08, 0.06, Math.hypot(p.x, p.y + 0.01)) * smoothstep(-0.02, 0.01, p.z);
+    paintVertices(g, (q, out) => {
+      const inner = smoothstep(0.08, 0.06, Math.hypot(q.x, q.y + 0.01)) * smoothstep(-0.02, 0.01, q.z);
       out.copy(cFurDark).lerp(cEarIn, inner);
     });
-    attach(eg, g, fur, "ear", false);
-    B.Head.add(eg);
-    ears.push(eg);
-    geoms.push(g);
+    ears.push(eb);
+    parts.push({ geom: g, bone: eb, material: fur, shadow: false });
   }
+  root.updateMatrixWorld(true);
 
   // ---- face rig: small eyes at the top of the snout, heavy brows, mouth on the muzzle
   const craniumZ = (x: number, y: number): number => {
@@ -267,7 +293,9 @@ export function buildBear(): CharacterRig {
       lidOpen: -0.38,
       lidCap: 1.3,
       lashFlick: false,
+      lidMaterial: fur,
     },
+    eyeMaterial: eyeMat,
     brows: { color: C.brows, y: 0.058, dx: 0.006, length: 0.11, thickness: 0.019, arch: 0.016, range: 0.03, material: fur },
     mouth: {
       surface: { center: H.snoutCenter as V3, radius: sr[2], zAt: snoutZ },
@@ -283,52 +311,107 @@ export function buildBear(): CharacterRig {
     },
   };
   const face = buildFace(faceCfg, mats);
-  B.Head.add(face.group);
-  for (const m of face.group.children) m.castShadow = false;
+  headS.add(face.group);
+  root.updateMatrixWorld(true);
+  parts.push(...face.parts);
 
-  // ---- arms: long, thick; paws
+  // ---- arms: one continuous mass per arm (deltoid → biceps → elbow → heavy forearm → wrist), smooth-skinned
+  //      across the elbow; big paws with a thumb pad
+  const upperLen = L.skeleton.upperArm;
+  const armLen = upperLen + L.skeleton.foreArm;
+  const armR = profile([
+    [0, 0.19],
+    [0.12, 0.185],
+    [0.32, 0.158],
+    [0.52, 0.128],
+    [0.6, 0.13],
+    [0.72, 0.148],
+    [0.88, 0.132],
+    [1, 0.118],
+  ]);
   for (const side of ["Left", "Right"] as const) {
     const s = side === "Left" ? 1 : -1;
-    const ua = limb(new THREE.Vector3(-0.06 * s, 0, 0), new THREE.Vector3(0.42 * s, 0, 0), (t) => 0.19 - 0.055 * t + 0.015 * Math.sin(Math.PI * t), {
-      detail: 5,
-      sq: 0.95,
+    const x0 = -0.07;
+    const g = limb(v(x0 * s, 0, 0), v(armLen * s, 0, 0), (t) => armR(t), { detail: 8, sq: 0.94 });
+    // elbow point at the back, a soft forearm flexor bulge at the front-top
+    const pos = g.getAttribute("position") as THREE.BufferAttribute;
+    for (let i = 0; i < pos.count; i++) {
+      const x = pos.getX(i) * s;
+      const z = pos.getZ(i);
+      const y = pos.getY(i);
+      const e = Math.exp(-(((x - upperLen) / 0.06) ** 2)) * smoothstep(0, -0.12, z);
+      const f = Math.exp(-(((x - upperLen - 0.12) / 0.1) ** 2)) * smoothstep(0, 0.1, y + z * 0.5);
+      pos.setZ(i, z - 0.022 * e);
+      pos.setY(i, y + 0.012 * f);
+    }
+    g.computeVertexNormals();
+    fuzz(g);
+    paintVertices(g, (_p, out) => out.copy(cFur));
+    const upper = B[`${side}Arm`];
+    const fore = B[`${side}ForeArm`];
+    const elbowX = restWorld(fore).x;
+    parts.push({
+      geom: g,
+      bone: upper,
+      material: fur,
+      weights: (p) => [
+        [upper, 1 - smoothstep(elbowX - 0.07 * s, elbowX + 0.07 * s, p.x)],
+        [fore, smoothstep(elbowX - 0.07 * s, elbowX + 0.07 * s, p.x)],
+      ],
     });
-    fuzz(ua);
-    paintVertices(ua, (_p, out) => out.copy(cFur));
-    attach(B[`${side}Arm`], ua, fur, `${side}UpperArm`);
-    const fa = limb(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0.34 * s, 0, 0), (t) => 0.135 - 0.02 * t, { detail: 5, sq: 0.95 });
-    fuzz(fa);
-    paintVertices(fa, (_p, out) => out.copy(cFur));
-    attach(B[`${side}ForeArm`], fa, fur, `${side}ForeArm`);
     const paw = blob(5, (d, out) => {
-      out.set(0.09 * s + d.x * 0.13, d.y * 0.09, d.z * 0.115);
+      out.set(0.1 * s + d.x * 0.155, d.y * 0.11, d.z * 0.14);
+      out.z += 0.02 * bump(d, dir(0, 0, 1), 0.6);
     });
-    fuzz(paw, 0.5);
-    paintVertices(paw, (p, out) => out.copy(cFur).lerp(cFurDark, smoothstep(-0.03, -0.07, p.y) * 0.5));
-    attach(B[`${side}Hand`], paw, fur, `${side}Paw`);
-    geoms.push(ua, fa, paw);
+    const thumb = blob(3, (d, out) => {
+      out.set(0.04 * s + d.x * 0.065, -0.012 + d.y * 0.058, 0.12 + d.z * 0.058);
+    });
+    const pawG = mergeSame([paw, thumb]);
+    fuzz(pawG, 0.5);
+    paintVertices(pawG, (p, out) => out.copy(cFur).lerp(cFurDark, smoothstep(-0.03, -0.08, p.y) * 0.55));
+    parts.push({ geom: pawG, bone: B[`${side}Hand`], material: fur });
   }
 
-  // ---- legs: short, thick; big feet
+  // ---- legs: short, thick; one mass from the seat to the ankle, smooth-skinned across the knee; big feet
+  const legLen = L.skeleton.upperLeg + L.skeleton.lowerLeg;
+  const legR = profile([
+    [0, 0.25],
+    [0.3, 0.225],
+    [0.52, 0.18],
+    [0.68, 0.19],
+    [1, 0.155],
+  ]);
   for (const side of ["Left", "Right"] as const) {
-    const th = limb(new THREE.Vector3(0, 0.06, 0), new THREE.Vector3(0, -0.29, 0), (t) => 0.24 - 0.045 * t, { detail: 5 });
-    fuzz(th);
-    paintVertices(th, (_p, out) => out.copy(cFur));
-    attach(B[`${side}UpLeg`], th, fur, `${side}Thigh`);
-    const sh = limb(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, -0.24, 0), (t) => 0.185 - 0.025 * t, { detail: 5 });
-    fuzz(sh);
-    paintVertices(sh, (_p, out) => out.copy(cFur));
-    attach(B[`${side}Leg`], sh, fur, `${side}Shin`);
-    const ft = blob(4, (d, out) => {
+    const g = limb(v(0, 0.07, 0), v(0, -legLen, 0), legR, { detail: 8 });
+    fuzz(g);
+    paintVertices(g, (_p, out) => out.copy(cFur));
+    const up = B[`${side}UpLeg`];
+    const lo = B[`${side}Leg`];
+    const kneeY = restWorld(lo).y;
+    parts.push({ geom: g, bone: up, material: fur, weights: (p) => [[up, smoothstep(kneeY - 0.06, kneeY + 0.06, p.y)], [lo, smoothstep(kneeY + 0.06, kneeY - 0.06, p.y)]] });
+    const ft = blob(5, (d, out) => {
       const fz = (d.z + 1) / 2;
       const yy = d.y < -0.35 ? -0.35 - (d.y + 0.35) * 0.2 : d.y;
       out.set(d.x * 0.16 * (0.9 + 0.2 * fz), -0.035 + yy * 0.075 * (1 - 0.25 * fz), 0.07 + d.z * 0.2);
     });
     fuzz(ft, 0.5);
     paintVertices(ft, (p, out) => out.copy(cFur).lerp(cFurDark, smoothstep(-0.07, -0.095, p.y)));
-    attach(B[`${side}Foot`], ft, fur, `${side}Foot`);
-    geoms.push(th, sh, ft);
+    parts.push({ geom: ft, bone: B[`${side}Foot`], material: fur });
   }
+
+  // fur clumps: subtle value breakup in the vertex colours (darker in the noise valleys)
+  for (const part of parts) {
+    if (part.material !== fur) continue;
+    const c = part.geom.getAttribute("color") as THREE.BufferAttribute | undefined;
+    const p = part.geom.getAttribute("position") as THREE.BufferAttribute;
+    if (!c) continue;
+    for (let i = 0; i < c.count; i++) {
+      const k = 0.9 + 0.1 * noise3(p.getX(i) * 24, p.getY(i) * 24 + 1.7, p.getZ(i) * 24);
+      c.setXYZ(i, c.getX(i) * k, c.getY(i) * k, c.getZ(i) * k);
+    }
+  }
+
+  const body = skinBody(root, parts);
 
   // ---- secondary motion: belly jiggle (lags the hips), ear wiggle
   const secondary = {
@@ -344,19 +427,6 @@ export function buildBear(): CharacterRig {
     },
   };
 
-  // fur clumps: subtle value breakup in the vertex colours (darker in the noise valleys)
-  root.traverse((o) => {
-    const m = o as THREE.Mesh;
-    if (!m.isMesh || m.material !== fur) return;
-    const c = m.geometry.getAttribute("color") as THREE.BufferAttribute | undefined;
-    const p = m.geometry.getAttribute("position") as THREE.BufferAttribute;
-    if (!c) return;
-    for (let i = 0; i < c.count; i++) {
-      const k = 0.9 + 0.1 * noise3(p.getX(i) * 24, p.getY(i) * 24 + 1.7, p.getZ(i) * 24);
-      c.setXYZ(i, c.getX(i) * k, c.getY(i) * k, c.getZ(i) * k);
-    }
-  });
-
   return makeRig({
     id: "bear",
     root,
@@ -365,8 +435,9 @@ export function buildBear(): CharacterRig {
     face,
     chest,
     materials: mats,
-    geometries: geoms,
+    geometries: [],
     secondary,
     socketOffset: new THREE.Vector3(-0.1, -0.02, 0.08),
+    body,
   });
 }

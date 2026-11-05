@@ -1,10 +1,12 @@
 // Procedural face rig (spec §7.3): eyes (sclera, big iris, pupil, two specular highlights), upper eyelids that
 // blink, acting brows, a morphing mouth (visemes + emotion shapes), emotion presets for all 12 emotions,
-// eye look-at toward a world point. Shared by Masha and Bear through FaceConfig. Lives under the Head bone.
+// eye look-at toward a world point. Shared by every character through FaceConfig. Lives under the Head bone.
 import * as THREE from "three";
 import type { FaceParams } from "../api";
 import type { Emotion, Viseme } from "../../shared/schema";
-import { blob, col, mergeSame, paintVertices, smoothstep, type MaterialSet } from "./rig";
+import {
+  blob, col, eyeMaterial, HIGHLIGHT_VALUE, mergeSame, paintVertices, smoothstep, type MaterialSet, type SkinPart,
+} from "./rig";
 
 /** A sphere (in head-bone local space) that facial features are projected onto. */
 export interface FaceSurface {
@@ -45,7 +47,11 @@ export interface FaceConfig {
     lidCap: number;
     /** draw a lash flick at the outer corner (Masha) */
     lashFlick: boolean;
+    /** vertex-coloured material for the lids (e.g. the character's skin or fur, so they merge into its body) */
+    lidMaterial?: THREE.Material;
   };
+  /** shared eye material (sclera, iris, highlights; e.g. also a glossy nose); default: a new `eyeMaterial()` */
+  eyeMaterial?: THREE.Material;
   brows: {
     color: string;
     /** offset above the eye centre, horizontal centre offset from eye x */
@@ -81,6 +87,9 @@ export interface FaceConfig {
 
 export interface FaceRig {
   group: THREE.Group;
+  /** eyes, highlights, lids and brows on their face bones: the character merges them into its skinned body */
+  parts: SkinPart[];
+  eyeMaterial: THREE.Material;
   update(p: FaceParams, sleeping: boolean): void;
   dispose(): void;
 }
@@ -181,49 +190,51 @@ const LID_R = 1.045;
 const U_SEG = 28;
 const V_SEG = 8;
 
+/**
+ * Build the face. Every feature except the mouth lives on its own small bone (eye, gaze, lid, brow) under `group` and
+ * is returned as a skin part, so the character merges eyes + highlights (one eye material) and lids + brows (into
+ * the character's skin/fur material when `eyes.lidMaterial` / `brows.material` are given) into its skinned body:
+ * the whole face costs ~2 draw calls. The mouth is a small dynamic mesh rebuilt from a MouthShape every update.
+ */
 export function buildFace(cfg: FaceConfig, mats: MaterialSet): FaceRig {
   const group = new THREE.Group();
   group.name = "face";
   const geoms: THREE.BufferGeometry[] = [];
+  const parts: SkinPart[] = [];
   const E = cfg.eyes;
 
   // ---- materials
-  const scleraMat = mats.add(
-    new THREE.MeshStandardMaterial({ color: col(E.sclera), roughness: 0.4, metalness: 0, emissive: col(E.sclera), emissiveIntensity: 0.22 }),
-  );
-  const irisMat = mats.add(
-    new THREE.MeshPhysicalMaterial({ color: 0xffffff, vertexColors: true, roughness: 0.35, clearcoat: 1, clearcoatRoughness: 0.08 }),
-  );
-  const hiMat = mats.add(new THREE.MeshBasicMaterial({ color: 0xffffff }));
-  const lidMat = mats.add(
-    new THREE.MeshPhysicalMaterial({ color: 0xffffff, vertexColors: true, roughness: 0.62, sheen: 0.5, sheenColor: col(E.lidColor) }),
-  );
-  const browMat = cfg.brows.material ?? mats.add(new THREE.MeshStandardMaterial({ color: col(cfg.brows.color), roughness: 0.85 }));
+  const eyeMat = cfg.eyeMaterial ?? mats.add(eyeMaterial());
+  mats.add(eyeMat);
+  const lidMat =
+    E.lidMaterial ??
+    mats.add(new THREE.MeshPhysicalMaterial({ color: 0xffffff, vertexColors: true, roughness: 0.62, sheen: 0.5, sheenColor: col(E.lidColor) }));
+  const browMat = cfg.brows.material ?? mats.add(new THREE.MeshStandardMaterial({ color: 0xffffff, vertexColors: true, roughness: 0.85 }));
   const browCol = col(cfg.brows.color);
   const mouthMat = mats.add(new THREE.MeshStandardMaterial({ color: 0xffffff, vertexColors: true, roughness: 0.55 }));
 
   // ---- eyes
   interface Eye {
-    g: THREE.Group;
-    rot: THREE.Object3D;
-    lid: THREE.Object3D;
+    g: THREE.Bone;
+    rot: THREE.Bone;
+    lid: THREE.Bone;
     side: 1 | -1;
   }
   const eyes: Eye[] = [];
-  const scleraGeoms: THREE.BufferGeometry[] = [];
-  const hiGeoms: THREE.BufferGeometry[] = [];
   const lidColor = col(E.lidColor);
   const lashColor = col(E.lashColor);
   const irisC = col(E.irisColor);
   const irisRim = col(E.irisRim);
+  const scleraC = col(E.sclera);
   const black = new THREE.Color(0.006, 0.005, 0.005);
+  const hiC = new THREE.Color(HIGHLIGHT_VALUE, HIGHLIGHT_VALUE, HIGHLIGHT_VALUE);
 
   for (const side of [1, -1] as const) {
     const x = side * E.x;
     const n = surfNormal(E.surface, x, E.y);
     const surf = new THREE.Vector3(x, E.y, surfZ(E.surface, x, E.y));
     const centre = surf.clone().addScaledVector(n, -E.depth * E.r * E.scaleZ);
-    const g = new THREE.Group();
+    const g = new THREE.Bone();
     g.name = side === 1 ? "eyeL" : "eyeR";
     g.position.copy(centre);
     const yaw = Math.atan2(n.x, n.z) + side * E.toeOut;
@@ -231,15 +242,15 @@ export function buildFace(cfg: FaceConfig, mats: MaterialSet): FaceRig {
     g.rotation.set(pitch, yaw, 0, "YXZ");
     g.scale.set(E.scaleX, E.scaleY, E.scaleZ);
     group.add(g);
-    g.updateMatrix();
 
-    // sclera (baked into one merged mesh in face space)
+    // sclera
     const sg = new THREE.SphereGeometry(E.r, 22, 14);
-    sg.applyMatrix4(g.matrix);
-    scleraGeoms.push(sg);
+    sg.deleteAttribute("uv");
+    paintVertices(sg, (_p, out) => out.copy(scleraC));
+    parts.push({ geom: sg, bone: g, material: eyeMat, shadow: false });
 
-    // iris + pupil: domed disc with radial vertex colours, on a rotator for gaze
-    const rot = new THREE.Object3D();
+    // iris + pupil: domed disc with radial vertex colours, on a gaze bone
+    const rot = new THREE.Bone();
     rot.name = "gaze";
     g.add(rot);
     const ri = E.r * E.iris;
@@ -269,12 +280,9 @@ export function buildFace(cfg: FaceConfig, mats: MaterialSet): FaceRig {
       const pupil = 1 - smoothstep(rp * 0.92, rp * 1.08, rr);
       out.copy(base.lerp(black, pupil));
     });
-    const im = new THREE.Mesh(ig, irisMat);
-    im.name = "iris";
-    rot.add(im);
-    geoms.push(ig);
+    parts.push({ geom: ig, bone: rot, material: eyeMat, shadow: false });
 
-    // highlights: fixed (reflections do not follow gaze), baked into one merged mesh
+    // highlights: fixed on the eye bone (reflections do not follow gaze)
     const addHi = (dx: number, dy: number, rad: number) => {
       const d = new THREE.Vector3(dx, dy, 1).normalize();
       const hg = new THREE.CircleGeometry(rad, 16);
@@ -290,14 +298,14 @@ export function buildFace(cfg: FaceConfig, mats: MaterialSet): FaceRig {
         tv.fromBufferAttribute(hp, i).setLength(E.r * 1.03);
         hp.setXYZ(i, tv.x, tv.y, tv.z);
       }
-      hg.applyMatrix4(g.matrix);
-      hiGeoms.push(hg);
+      paintVertices(hg, (_p, out) => out.copy(hiC));
+      parts.push({ geom: hg, bone: g, material: eyeMat, shadow: false });
     };
     addHi(-0.28, 0.32, E.r * 0.2);
     addHi(0.22, -0.22, E.r * 0.085);
 
     // upper lid: a spherical cap slightly larger than the sclera, rotating about x; lash line at its rim
-    const lid = new THREE.Object3D();
+    const lid = new THREE.Bone();
     lid.name = "lid";
     g.add(lid);
     const lg = new THREE.SphereGeometry(E.r * LID_R, 30, 9, 0, Math.PI * 2, 0, E.lidCap);
@@ -315,33 +323,19 @@ export function buildFace(cfg: FaceConfig, mats: MaterialSet): FaceRig {
         out.set(d.x * E.r * 0.2, d.y * E.r * 0.05, d.z * E.r * 0.05);
       });
       fl.rotateZ(side === 1 ? 0.5 : -0.5);
-      // positioned at the outer rim of the cap
       const ang = E.lidCap;
       fl.translate(side * E.r * LID_R * Math.sin(ang) * 0.95, E.r * LID_R * Math.cos(ang) + E.r * 0.06, E.r * 0.25);
       paintVertices(fl, (_p, out) => out.copy(lashColor));
       lidGeom = mergeSame([lg, fl]);
     }
-    const lm = new THREE.Mesh(lidGeom, lidMat);
-    lm.name = "lidMesh";
-    lid.add(lm);
-    geoms.push(lidGeom);
+    parts.push({ geom: lidGeom, bone: lid, material: lidMat, shadow: false });
     eyes.push({ g, rot, lid, side });
   }
-  const scleraGeom = mergeSame(scleraGeoms);
-  const sclera = new THREE.Mesh(scleraGeom, scleraMat);
-  sclera.name = "sclera";
-  group.add(sclera);
-  geoms.push(scleraGeom);
-  const hiGeom = mergeSame(hiGeoms);
-  const hi = new THREE.Mesh(hiGeom, hiMat);
-  hi.name = "highlights";
-  group.add(hi);
-  geoms.push(hiGeom);
 
-  // ---- brows: sculpted tapered arcs following the face surface
+  // ---- brows: sculpted tapered arcs following the face surface, each on a bone
   const B = cfg.brows;
   interface Brow {
-    g: THREE.Group;
+    g: THREE.Bone;
     side: 1 | -1;
     x: number;
     y: number;
@@ -350,7 +344,7 @@ export function buildFace(cfg: FaceConfig, mats: MaterialSet): FaceRig {
   for (const side of [1, -1] as const) {
     const bx = side * (E.x + B.dx);
     const by = E.y + B.y;
-    const g = new THREE.Group();
+    const g = new THREE.Bone();
     g.name = side === 1 ? "browL" : "browR";
     g.position.set(bx, by, 0);
     const bg = blob(3, (d, out) => {
@@ -361,11 +355,8 @@ export function buildFace(cfg: FaceConfig, mats: MaterialSet): FaceRig {
       const z0 = surfZ(E.surface, bx + lx, by + ly);
       out.set(lx, ly, z0 + d.z * B.thickness * 0.55 * taper + B.thickness * 0.3);
     });
-    if (cfg.brows.material) paintVertices(bg, (_p, out) => out.copy(browCol));
-    const bm = new THREE.Mesh(bg, browMat);
-    bm.name = "brow";
-    g.add(bm);
-    geoms.push(bg);
+    paintVertices(bg, (_p, out) => out.copy(browCol));
+    parts.push({ geom: bg, bone: g, material: browMat, shadow: false });
     group.add(g);
     brows.push({ g, side, x: bx, y: by });
   }
@@ -392,6 +383,7 @@ export function buildFace(cfg: FaceConfig, mats: MaterialSet): FaceRig {
   const mouth = new THREE.Mesh(mouthGeom, mouthMat);
   mouth.name = "mouth";
   mouth.frustumCulled = false;
+  mouth.castShadow = false;
   group.add(mouth);
   geoms.push(mouthGeom);
   const cInterior = col(Mo.interior);
@@ -496,15 +488,18 @@ export function buildFace(cfg: FaceConfig, mats: MaterialSet): FaceRig {
       const r = (b.side === 1 ? cur.browL : cur.browR) + raise * 0.6;
       const y = b.y + r * B.range;
       b.g.position.set(b.x, y, 0);
-      b.g.position.y = y;
       // keep the brow on the surface when it travels
       b.g.position.z = surfZ(E.surface, b.x, y) - surfZ(E.surface, b.x, b.y);
       b.g.rotation.set(0, 0, -b.side * cur.tilt * 0.5);
     }
+    // lids/brows/gaze are skinned: refresh their world matrices (the rig updates the root before calling us)
+    group.updateMatrixWorld(true);
   }
 
   return {
     group,
+    parts,
+    eyeMaterial: eyeMat,
     update,
     dispose(): void {
       for (const g of geoms) g.dispose();
