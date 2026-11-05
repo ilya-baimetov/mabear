@@ -42,3 +42,20 @@ Changes: every noticeable beat gets a `with_previous` reaction from the other ch
 | claude-haiku-5-5 | 6/6 (100%) | 4 752 ms | $0.00096 | 8, 6, 6, 8, 5, 8 | 6.3 → 6.8 | Fuller than round 1, still plainer than Opus; ~32× cheaper |
 
 Judgment: Opus stays the deployed default (richer in-character staging); Haiku is a credible cost lever for the Economics story (~$0.001/¶ today on a frontier-lab small model).
+
+## M7 — Final verification + ship (06:24 UTC, code HEAD 8450977)
+- **Done:** M6 polish (likeness passes 10–13 → every rubric score ≥ 4; motion-feel pass; soft canopies; camera: speaker owns the line, Masha screen-time bias, occlusion-aware framing with a clear-framing fallback; D9 tap-to-react; QA fixes). Final verification on 8450977:
+  - `npm run typecheck` exit 0 · `npm test` 16 files / 321 tests passed · `npm run e2e` 10/10 passed, exit 0 (headless SwiftShader 45.3 FPS avg over 10 s, 94 draw calls).
+  - `npm run build` OK; `grep -r "sk-ant" dist/` → nothing; `refs/` git-ignored and absent from `dist/`.
+  - Workers Build `b7b10a72` for 8450977: **success**. §12 smoke test (REQUIRE_LLM=1) all green: health 200, noindex, `/` → login, 401 without cookie, login cookie, `/api/direct` ×2 → `source=llm` (9 and 6 beats).
+  - Director eval against the deployed Worker (final):
+
+| Model | Pass rate | P50 latency | Mean cost / paragraph | Beats (en_nap, en_rain, en_canon, ru_carrot, ru_swing, ru_fishing) | Staging richness |
+|---|---|---|---|---|---|
+| claude-opus-5-5 (deployed default) | 6/6 (100%) | 6 931 ms | $0.0203 (warm cache) | 9, 8, 7, 7, 7, 10 | Rich, parallel, in character; canon prompt → no_weapons + bear_silent |
+| claude-haiku-5-5 | 6/6 (100%) | 3 145 ms | $0.00093 | 8, 6, 6, 8, 6, 9 | Valid and on-model, plainer; ~22× cheaper than Opus |
+
+  - Screenshots reviewed (Read tool): player.png, behind-the-scenes.png, masha-closeup.png, bear-closeup.png, ru-mode.png — Masha (magenta kerchief + sarafan, green eyes, blond fringe, chibi) and Bear (big brown upright bear, tan muzzle, round ears) recognizable; LIKENESS.md has 13 scored passes.
+- **§14 DoD:** 1 ✅ · 2 ✅ · 3 ✅ (P0 → test table above) · 4 ✅ · 5 ✅ (real API via the deployed Worker, both models) · 6 ✅ · 7 ✅ (ASSETS.md: motion clips, models, audio = synthesized, font, references not shipped; legend = §0 table) · 8 ✅ (DEMO_SCRIPT.md, this file, pushed).
+- **Open items / known gaps (honest):** no IK (residual foot slip ~9% Masha / ~20% Bear); rigid (unskinned) kerchief and skirt; Bear's fur is a shader texture (shell fur P1 deferred); only 3 likeness references were obtainable; TTS `onboundary` lip-sync tightening not wired; offline parser is coarse on unusual sentences ("Masha grabs a knife" → peek) — only matters without a key; Opus latency ~7 s per paragraph (offline preview covers the wait); headless e2e is slow (~6 min) under SwiftShader.
+- **Next (post-prototype):** studio voices through the voice-profile interface; official glTF exports via the asset manifest; the trained text→timeline model on Animaccord's archive.
