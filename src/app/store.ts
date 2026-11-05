@@ -473,7 +473,9 @@ class Store {
 
   /** true when the story has paragraphs the player wrote (not just an unchanged example) */
   hasOwnWriting(): boolean {
-    return this.state.paragraphs.some((p) => p.text.trim() && p.versions[p.current]?.source !== "fixture");
+    return this.state.paragraphs.some(
+      (p) => p.text.trim() && (p.versions[p.current]?.source !== "fixture" || normalizeText(p.text) !== normalizeText(p.versions[p.current]?.text ?? "")),
+    );
   }
 
   loadFixtureById(id: FixtureEpisode["id"]): void {

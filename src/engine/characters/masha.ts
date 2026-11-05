@@ -213,7 +213,7 @@ export function buildMasha(): CharacterRig {
       const skinR = headR(dd) * (0.985 + 0.027 * smoothstep(1.0, 1.05, k));
       let r = skinR + (Rk - skinR) * tuck + 0.011 * roll;
       // flatter crown, soft fullness low over the ears
-      r += -0.012 * bump(dd, dir(0, 1, -0.1), 0.55) + 0.01 * (bump(dd, dir(1, -0.6, 0.0), 0.6) + bump(dd, dir(-1, -0.6, 0.0), 0.6));
+      r += -0.012 * bump(dd, dir(0, 1, -0.1), 0.55) - 0.012 * bump(dd, dir(0, 0.1, -1), 0.7) + 0.008 * (bump(dd, dir(1, -0.6, 0.0), 0.6) + bump(dd, dir(-1, -0.6, 0.0), 0.6));
       out.copy(dd).multiplyScalar(r).add(hc);
       // forward peak over the forehead
       const peak = Math.exp(-((ax / 0.4) ** 2)) * Math.exp(-(((ay - (H.openTop + 0.18)) / 0.22) ** 2));
@@ -225,7 +225,7 @@ export function buildMasha(): CharacterRig {
         const w = smoothstep(A * 0.85, A * 1.45, Math.abs(ax)) * smoothstep(0, 0.3, t);
         const bh = Rk * (1.0 + 0.18 * t) * Math.sqrt(Math.max(0, 1 - Math.pow(t, 8)));
         const backness = 0.5 - 0.5 * Math.cos(ax); // the cape comes to a soft point at the back
-        const drop = t * L.head.capeDrop * (0.9 + 0.25 * backness);
+        const drop = t * L.head.capeDrop * (0.95 + 0.1 * backness);
         const bell = new THREE.Vector3(hc.x + Math.sin(ax) * bh * 1.04, hc.y - 0.01 - drop, hc.z + Math.cos(ax) * bh * 0.9);
         out.lerp(bell, w);
       }

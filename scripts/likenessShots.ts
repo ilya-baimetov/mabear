@@ -23,12 +23,18 @@ const apps = args.flatMap((a, i) => (a === "--app" && args[i + 1] ? [args[i + 1]
 const stages = args.flatMap((a, i) => (a === "--stage" && args[i + 1] ? [args[i + 1]] : []));
 const base = `http://127.0.0.1:${PORT}/tools/likeness.html`;
 
-const SHOTS: Array<{ name: string; query: string }> = [
-  { name: "front", query: "angle=front" },
-  { name: "three", query: "angle=three&emotion=happy" },
-  { name: "face", query: "angle=face&emotion=happy" },
-  { name: "silhouette", query: "angle=front&sil=1" },
-];
+const SHOTS: Array<{ name: string; query: string }> = args.includes("--faces")
+  ? // face sheet: every viseme + a few emotions, close-up (spec §7.3 face rig check)
+    [
+      ...["rest", "open_small", "open_wide", "o", "e", "frown", "grin"].map((v) => ({ name: `viseme-${v}`, query: `angle=face&viseme=${v}` })),
+      ...["surprised", "sad", "angry", "sleepy", "mischievous", "scared"].map((e) => ({ name: `emotion-${e}`, query: `angle=face&emotion=${e}` })),
+    ]
+  : [
+      { name: "front", query: "angle=front" },
+      { name: "three", query: "angle=three&emotion=happy" },
+      { name: "face", query: "angle=face&emotion=happy" },
+      { name: "silhouette", query: "angle=front&sil=1" },
+    ];
 
 async function up(): Promise<boolean> {
   try {

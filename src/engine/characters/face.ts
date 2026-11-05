@@ -176,6 +176,8 @@ function surfNormal(s: FaceSurface, x: number, y: number): THREE.Vector3 {
   return new THREE.Vector3(-dzdx, -dzdy, 1).normalize();
 }
 
+/** upper-lid shell radius / sclera radius (just above the highlights at 1.035; larger reads as bulging lids) */
+const LID_R = 1.045;
 const U_SEG = 28;
 const V_SEG = 8;
 
@@ -279,7 +281,15 @@ export function buildFace(cfg: FaceConfig, mats: MaterialSet): FaceRig {
       hg.deleteAttribute("uv");
       const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), d);
       hg.applyQuaternion(q);
-      hg.translate(d.x * E.r * 1.035, d.y * E.r * 1.035, d.z * E.r * 1.035);
+      hg.translate(d.x * E.r * 1.03, d.y * E.r * 1.03, d.z * E.r * 1.03);
+      // wrap the disc onto the sphere (r 1.03: above the iris cap at 1.012, below the lid shell) so its rim
+      // never pokes through a closing lid
+      const hp = hg.getAttribute("position") as THREE.BufferAttribute;
+      const tv = new THREE.Vector3();
+      for (let i = 0; i < hp.count; i++) {
+        tv.fromBufferAttribute(hp, i).setLength(E.r * 1.03);
+        hp.setXYZ(i, tv.x, tv.y, tv.z);
+      }
       hg.applyMatrix4(g.matrix);
       hiGeoms.push(hg);
     };
@@ -290,11 +300,11 @@ export function buildFace(cfg: FaceConfig, mats: MaterialSet): FaceRig {
     const lid = new THREE.Object3D();
     lid.name = "lid";
     g.add(lid);
-    const lg = new THREE.SphereGeometry(E.r * 1.07, 30, 9, 0, Math.PI * 2, 0, E.lidCap);
+    const lg = new THREE.SphereGeometry(E.r * LID_R, 30, 9, 0, Math.PI * 2, 0, E.lidCap);
     lg.deleteAttribute("uv");
     const capCos = Math.cos(E.lidCap);
     paintVertices(lg, (p, out) => {
-      const c = p.y / (E.r * 1.07); // cos(polar)
+      const c = p.y / (E.r * LID_R); // cos(polar)
       const lash = smoothstep(capCos + 0.22, capCos + 0.02, c);
       out.copy(lidColor).lerp(lashColor, lash);
     });
@@ -307,7 +317,7 @@ export function buildFace(cfg: FaceConfig, mats: MaterialSet): FaceRig {
       fl.rotateZ(side === 1 ? 0.5 : -0.5);
       // positioned at the outer rim of the cap
       const ang = E.lidCap;
-      fl.translate(side * E.r * 1.07 * Math.sin(ang) * 0.95, E.r * 1.07 * Math.cos(ang) + E.r * 0.06, E.r * 0.25);
+      fl.translate(side * E.r * LID_R * Math.sin(ang) * 0.95, E.r * LID_R * Math.cos(ang) + E.r * 0.06, E.r * 0.25);
       paintVertices(fl, (_p, out) => out.copy(lashColor));
       lidGeom = mergeSame([lg, fl]);
     }
@@ -489,7 +499,7 @@ export function buildFace(cfg: FaceConfig, mats: MaterialSet): FaceRig {
       b.g.position.y = y;
       // keep the brow on the surface when it travels
       b.g.position.z = surfZ(E.surface, b.x, y) - surfZ(E.surface, b.x, b.y);
-      b.g.rotation.set(0, 0, -b.side * cur.tilt * 0.35);
+      b.g.rotation.set(0, 0, -b.side * cur.tilt * 0.5);
     }
   }
 
