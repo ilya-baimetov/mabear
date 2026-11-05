@@ -86,3 +86,4 @@ Judgment: Opus stays the deployed default (richer in-character staging); Haiku i
   - Wolves: close-up ruff hints at feathers; their motion feel is judged on idle only (no fixture animates them); `speaks:false` to verify with Animaccord.
   - Night still reads a bit blue at the pond; Kenney/Quaternius tree packs not used (faceted low-poly style mismatch, Quaternius behind itch.io).
   - Earlier open items unchanged: no IK (foot slip), rigid kerchief/skirt, no shell fur, TTS onboundary lip-sync.
+- **Deploy:** Workers Build `052d6082` for 054bc5a **success** (and `c3379d86` for 40a2d0c). §12 smoke test against https://mabear.ilya-baimetov.workers.dev: health 200 ✅ · noindex ✅ · `/` → login ✅ · `/api/direct` 401 without cookie ✅ · authenticated part not run: DEMO_PASSWORD not in environment.
