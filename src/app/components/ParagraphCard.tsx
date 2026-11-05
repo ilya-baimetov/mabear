@@ -7,14 +7,13 @@ import { RemixButtons } from "./RemixButtons";
 import { MAX_PARAGRAPH_CHARS } from "../../shared/schema";
 
 const CHIP: Record<Paragraph["status"], string> = { draft: "✏️", directing: "⏳", ready: "✅", adjusted: "✨", error: "⚠️" };
-const DEBOUNCE_MS = 1500;
 
 export function ParagraphCard({ p, index, active, selected, count }: { p: Paragraph; index: number; active: boolean; selected: boolean; count: number }) {
   const s = useStore();
   const t = useStrings();
   const ta = useRef<HTMLTextAreaElement>(null);
-  const timer = useRef<number | null>(null);
   const [menu, setMenu] = useState(false);
+  const [notes, setNotes] = useState(false);
   const menuRef = useOutsideClose(menu, useCallback(() => setMenu(false), []));
   const v = p.versions[p.current];
   const si = s.segmentIds.indexOf(p.id);
@@ -27,24 +26,14 @@ export function ParagraphCard({ p, index, active, selected, count }: { p: Paragr
     el.style.height = "auto";
     el.style.height = `${el.scrollHeight}px`;
   }, [p.text]);
-  useEffect(() => () => { if (timer.current) window.clearTimeout(timer.current); }, []);
-
-  const schedule = () => {
-    if (timer.current) window.clearTimeout(timer.current);
-    timer.current = window.setTimeout(() => store.submit(p.id), DEBOUNCE_MS);
-  };
-  const flush = () => {
-    if (timer.current) window.clearTimeout(timer.current);
-    timer.current = null;
-    store.submit(p.id);
-  };
+  // Typing, blur and Ctrl+Enter never render: the story is directed and compiled only on ▶ Play (spec §4.2).
 
   const bs = v?.beatScript;
   const lines = result ? result.segment.dialogue.length : bs ? bs.beats.filter((b) => b.line).length : 0;
   const music = result?.carry.music?.mood ?? null;
   const amb = result?.carry.ambience ?? [];
   const hits = v?.ruleHits ?? [];
-  const tooltip = hits.map((h) => h.kid_message).join("\n");
+  const canPlay = p.text.trim().length > 0;
 
   return (
     <div
@@ -53,16 +42,17 @@ export function ParagraphCard({ p, index, active, selected, count }: { p: Paragr
       data-status={p.status}
       data-version={v?.version ?? 0}
       data-active={active ? "1" : "0"}
-      onClick={(e) => {
-        store.select(p.id);
-        if (!(e.target as HTMLElement).closest("textarea,button,.menu,input") && store.segmentRange(p.id)) playback.playParagraph(p.id);
-      }}
+      onClick={() => store.select(p.id)}
     >
       <div className="card-head">
-        <button className="idx" title="▶" onClick={(e) => { e.stopPropagation(); store.select(p.id); playback.playParagraph(p.id); }}>{index + 1}</button>
-        <span className={`status-chip chip-${p.status}`} data-testid="status-chip" title={p.status === "adjusted" ? tooltip : p.status === "error" ? t.errorTip : ""}>
+        <span className="idx">{index + 1}</span>
+        <button className="btn icon small card-play" data-testid="card-play" title={t.playThis} aria-label={t.playThis} disabled={!canPlay} onClick={(e) => { e.stopPropagation(); playback.playParagraph(p.id); }}>▶</button>
+        <span className={`status-chip chip-${p.status}`} data-testid="status-chip" title={p.status === "error" ? t.errorTip : p.status === "draft" && canPlay ? t.draftTip : ""}>
           {CHIP[p.status]} {t.status[p.status]}
         </span>
+        {hits.length > 0 && (
+          <button className="btn icon small notes-btn" data-testid="rule-notes-btn" title={t.ruleNotes} aria-label={t.ruleNotes} aria-expanded={notes} onClick={(e) => { e.stopPropagation(); setNotes(!notes); }}>💡</button>
+        )}
         {dur > 0 && <span className="dur">{dur.toFixed(1)}{t.seconds}</span>}
         <span className="ver" data-testid="version">{t.version}{v?.version ?? 0}</span>
         <div className="card-menu" ref={menuRef}>
@@ -84,10 +74,9 @@ export function ParagraphCard({ p, index, active, selected, count }: { p: Paragr
         maxLength={MAX_PARAGRAPH_CHARS}
         value={p.text}
         placeholder={t.paragraphPlaceholder}
-        onChange={(e) => { store.editText(p.id, e.target.value); schedule(); }}
-        onBlur={flush}
+        onChange={(e) => store.editText(p.id, e.target.value)}
         onKeyDown={(e) => {
-          if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); flush(); return; }
+          if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); e.currentTarget.blur(); return; }
           if (e.key === "Enter" && !e.shiftKey && index === count - 1) {
             const el = e.currentTarget;
             const atEnd = el.selectionStart === el.value.length;
@@ -95,7 +84,6 @@ export function ParagraphCard({ p, index, active, selected, count }: { p: Paragr
             if (atEnd && lastLine.trim() === "" && el.value.trim() !== "") {
               e.preventDefault();
               store.editText(p.id, el.value.replace(/\n+$/, ""));
-              flush();
               const id = store.addParagraph(p.id);
               setTimeout(() => (document.querySelector(`[data-pid="${id}"]`) as HTMLTextAreaElement | null)?.focus(), 0);
             }
@@ -103,11 +91,14 @@ export function ParagraphCard({ p, index, active, selected, count }: { p: Paragr
         }}
         data-pid={p.id}
       />
-      {bs && <div className="summary" data-testid="summary">{bs.summary}</div>}
-      {p.status === "adjusted" && hits.length > 0 && <div className="kid-msg">✨ {hits[0].kid_message}</div>}
+      {notes && hits.length > 0 && (
+        <div className="kid-msg" data-testid="rule-notes" onClick={(e) => e.stopPropagation()}>
+          {hits.map((h, i) => <div key={i}>✨ {h.kid_message}</div>)}
+        </div>
+      )}
       {p.status === "error" && (
         <div className="err">
-          <button className="btn small" data-testid="retry" onClick={(e) => { e.stopPropagation(); store.retry(p.id); }}>↻ {t.retry}</button>
+          <button className="btn small" data-testid="retry" onClick={(e) => { e.stopPropagation(); store.retry(p.id); playback.playParagraph(p.id); }}>↻ {t.retry}</button>
         </div>
       )}
       {v && (

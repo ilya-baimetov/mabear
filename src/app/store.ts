@@ -10,7 +10,6 @@ import {
   type FixtureEpisode,
   type Lang,
   type LogEntry,
-  type MusicMood,
   type Remix,
   type RuleHit,
   type Timeline,
@@ -19,6 +18,8 @@ import {
 } from "../shared/schema";
 import type { CompileResult } from "../compiler/types";
 import { compileEpisode } from "../compiler/episode";
+import { compile } from "../compiler/compile";
+import { EMPTY_CARRY } from "../compiler/audioCues";
 import { initialWorldState, worldStateDigest } from "../compiler/worldState";
 import { parseParagraph } from "../director/offline/parser";
 import { directParagraph } from "../director/client";
@@ -73,9 +74,14 @@ export interface AppState {
   directorCalls: number;
   /** example currently loaded (unchanged), so the EN/RU toggle can swap it without an AI call */
   fixtureId: FixtureEpisode["id"] | null;
+  /** ▶ Play is holding for the director ("getting ready…") */
+  waiting: boolean;
 }
 
 type Listener = () => void;
+
+/** Director calls in flight at once during a ▶ Play run. */
+export const MAX_PARALLEL = 4;
 
 const LS = {
   lang: "mabear.lang",
@@ -189,6 +195,8 @@ class Store {
   private queue: (() => void)[] = [];
   private redirected = new Set<string>();
   private active = 0;
+  /** recompile() calls so far (e2e: typing must not compile) */
+  compileCount = 0;
 
   constructor() {
     const vol = Number(lsGet(LS.volume) ?? "0.8");
@@ -209,6 +217,7 @@ class Store {
       model: null,
       directorCalls: 0,
       fixtureId: null,
+      waiting: false,
     };
     this.restore();
   }
@@ -235,7 +244,7 @@ class Store {
 
   private persist(): void {
     const s = this.state;
-    lsSet(LS.episode, JSON.stringify({ episodeId: s.episodeId, title: s.title, paragraphs: s.paragraphs.map((p) => ({ ...p, pendingVersion: null, status: p.status === "directing" ? (p.current >= 0 ? "ready" : "draft") : p.status })) }));
+    lsSet(LS.episode, JSON.stringify({ episodeId: s.episodeId, title: s.title, paragraphs: s.paragraphs.map((p) => ({ ...p, pendingVersion: null, status: p.status === "directing" ? "draft" : p.status })) }));
   }
 
   private restore(): void {
@@ -282,6 +291,9 @@ class Store {
   setPlayback(playing: boolean, t?: number): void {
     this.set(t === undefined ? { playing } : { playing, t });
   }
+  setWaiting(waiting: boolean): void {
+    if (this.state.waiting !== waiting) this.set({ waiting });
+  }
   setTime(t: number): void {
     this.state = { ...this.state, t };
     for (const l of this.listeners) l();
@@ -290,7 +302,7 @@ class Store {
   newStory(): void {
     for (const c of this.inflight.values()) c.abort();
     this.inflight.clear();
-    this.set({ episodeId: newId("e"), title: "", paragraphs: [], selectedId: null, timeline: emptyTimeline(), results: [], segmentIds: [], t: 0, playing: false, fixtureId: null });
+    this.set({ episodeId: newId("e"), title: "", paragraphs: [], selectedId: null, timeline: emptyTimeline(), results: [], segmentIds: [], t: 0, playing: false, fixtureId: null, waiting: false });
     this.persist();
   }
 
@@ -307,7 +319,7 @@ class Store {
   deleteParagraph(id: string): void {
     this.inflight.get(id)?.abort();
     this.setParagraphs(this.state.paragraphs.filter((p) => p.id !== id));
-    this.recompile({ redirectBroken: true });
+    this.recompile({ redirectBroken: "mark" });
   }
 
   moveParagraph(id: string, dir: -1 | 1): void {
@@ -317,7 +329,7 @@ class Store {
     if (i < 0 || j < 0 || j >= list.length) return;
     [list[i], list[j]] = [list[j], list[i]];
     this.setParagraphs(list);
-    this.recompile({ redirectBroken: true });
+    this.recompile({ redirectBroken: "mark" });
   }
 
   revert(id: string): void {
@@ -325,7 +337,7 @@ class Store {
     if (!p || p.current <= 0) return;
     const prev = p.versions[p.current - 1];
     this.patchParagraph(id, { current: p.current - 1, text: prev.text, status: prev.ruleHits.length ? "adjusted" : "ready", error: null });
-    this.recompile({ redirectBroken: true });
+    this.recompile({ redirectBroken: "mark" });
   }
 
   editText(id: string, text: string): void {
@@ -333,50 +345,85 @@ class Store {
     if (!p) return;
     const cur = p.versions[p.current];
     const changed = !cur || normalizeText(cur.text) !== normalizeText(text);
+    if (p.pendingVersion !== null) {
+      this.patchParagraph(id, { text });
+      return;
+    }
     this.patchParagraph(id, { text, status: changed ? "draft" : p.status === "draft" ? (cur?.ruleHits.length ? "adjusted" : "ready") : p.status });
   }
 
-  /** Render trigger (debounce / blur / Ctrl+Enter). Creates a version only when the text actually changed. */
-  submit(id: string, force = false): void {
-    const idx = this.state.paragraphs.findIndex((x) => x.id === id);
-    const p = this.state.paragraphs[idx];
-    if (!p) return;
-    const text = normalizeText(p.text).slice(0, MAX_PARAGRAPH_CHARS);
-    if (!text) return;
-    const cur = p.versions[p.current];
-    if (!force && cur && normalizeText(cur.text) === text) return;
+  /** A paragraph needs the director before it can play: it has text and was edited (or never rendered). */
+  isDirty(p: Paragraph): boolean {
+    return p.pendingVersion === null && p.status === "draft" && normalizeText(p.text).length > 0;
+  }
 
+  /** Any director work in flight (the player may be holding with "getting ready…"). */
+  hasPending(): boolean {
+    return this.state.paragraphs.some((p) => p.pendingVersion !== null);
+  }
+
+  /**
+   * Render on ▶ Play only (no compiles or director calls while typing). Directs every dirty paragraph up to and
+   * including `uptoIndex` (cache hits are free), up to MAX_PARALLEL calls in parallel. Start states for dirty
+   * paragraphs that follow other dirty paragraphs are estimated from the offline parser's end state (internal, never
+   * shown); a result that doesn't fit its real start state is repaired or re-directed by recompile().
+   * Returns the number of paragraphs sent to the director (cache misses).
+   */
+  prepare(uptoIndex: number): number {
     const lang = this.state.lang;
-    const start = this.startStateFor(idx);
-    const version = (p.versions[p.versions.length - 1]?.version ?? 0) + 1;
-    const remix = cur?.remix ?? { ...DEFAULT_REMIX };
-
-    // (a) instant offline preview
-    let preview: BeatScript;
-    try {
-      preview = parseParagraph(text, lang, start, { prevMusicMood: this.prevMusicFor(idx) });
-    } catch {
-      return;
+    const paras = this.state.paragraphs;
+    let state = initialWorldState();
+    let carry = EMPTY_CARRY;
+    let first = true;
+    let sent = 0;
+    const jobs: { id: string; text: string; start: WorldState; version: number; previous: string[] }[] = [];
+    for (let i = 0; i <= Math.min(uptoIndex, paras.length - 1); i++) {
+      const p = paras[i];
+      const text = normalizeText(p.text).slice(0, MAX_PARAGRAPH_CHARS);
+      let bs: BeatScript | null = null;
+      let remix: Remix = p.versions[p.current]?.remix ?? { ...DEFAULT_REMIX };
+      if (this.isDirty(p)) {
+        const version = (p.versions[p.versions.length - 1]?.version ?? 0) + 1;
+        const previous = paras.slice(Math.max(0, i - 3), i).map((x) => normalizeText(x.text)).filter(Boolean);
+        jobs.push({ id: p.id, text, start: state, version, previous });
+        try {
+          bs = parseParagraph(text, lang, state, { prevMusicMood: carry.music?.mood ?? null });
+        } catch {
+          bs = null;
+        }
+      } else if (p.pendingVersion === null && p.current >= 0 && p.versions[p.current]) {
+        bs = p.versions[p.current].beatScript;
+        remix = p.versions[p.current].remix;
+      }
+      if (!bs) continue;
+      try {
+        const r = compile(bs, state, { paragraphId: p.id, version: 0, lang, remix, isFirst: first, carry });
+        state = r.segment.endState;
+        carry = r.carry;
+        first = false;
+      } catch {
+        /* keep the previous estimate */
+      }
     }
-    const pv: ParagraphVersion = { version, text, lang, beatScript: preview, source: "offline", latencyMs: 0, usage: null, model: "offline-parser", ruleHits: preview.rule_hits, remix };
-    const versions = [...p.versions, pv];
-    this.patchParagraph(id, { versions, current: versions.length - 1, status: "directing", error: null, pendingVersion: version });
-    this.recompile({ redirectBroken: true });
+    if (!jobs.length) return 0;
+    const pending = new Map(jobs.map((j) => [j.id, j.version]));
+    this.setParagraphs(this.state.paragraphs.map((p) => (pending.has(p.id) ? { ...p, status: "directing", error: null, pendingVersion: pending.get(p.id)! } : p)));
+    this.recompile();
+    for (const j of jobs) if (this.direct(j.id, j.text, lang, j.start, j.version, j.previous)) sent += 1;
+    return sent;
+  }
 
-    // (b) director (cache first)
+  /** One director call for a pending paragraph version. Returns false on a cache hit (applied synchronously, $0). */
+  private direct(id: string, text: string, lang: Lang, start: WorldState, version: number, previous: string[]): boolean {
     const key = directorCacheKey(text, lang, start, this.state.model);
     const hit = cacheGet(key);
     if (hit) {
-      this.applyDirectorResponse(id, version, hit, start, 0, true);
-      return;
+      this.applyDirectorResponse(id, version, text, lang, hit, start, 0, true);
+      return false;
     }
     this.inflight.get(id)?.abort();
     const ctrl = new AbortController();
     this.inflight.set(id, ctrl);
-    const previous = this.state.paragraphs
-      .slice(Math.max(0, idx - 3), idx)
-      .map((x) => normalizeText(x.text))
-      .filter(Boolean);
     const run = () => {
       if (ctrl.signal.aborted) {
         this.next();
@@ -392,11 +439,20 @@ class Store {
         .then((res) => {
           if (ctrl.signal.aborted) return;
           if (!res.error) cachePut(key, res);
-          this.applyDirectorResponse(id, version, res, start, performance.now() - t0);
+          this.applyDirectorResponse(id, version, text, lang, res, start, performance.now() - t0);
         })
         .catch((err: unknown) => {
           if (ctrl.signal.aborted) return;
-          this.markError(id, version, err instanceof Error ? err.message : String(err));
+          // network failure: fall back to the offline parser so the paragraph still plays (status error + Retry)
+          let beatScript: BeatScript | null = null;
+          try {
+            beatScript = parseParagraph(text, lang, start);
+          } catch {
+            beatScript = null;
+          }
+          const msg = err instanceof Error ? err.message : String(err);
+          if (beatScript) this.applyDirectorResponse(id, version, text, lang, { beatScript, source: "offline", latencyMs: 0, usage: null, model: "offline-parser", error: msg }, start, performance.now() - t0);
+          else this.markError(id, version, msg);
         })
         .finally(() => {
           if (this.inflight.get(id) === ctrl) this.inflight.delete(id);
@@ -406,46 +462,52 @@ class Store {
     };
     this.queue.push(run);
     this.next();
+    return true;
   }
 
   private next(): void {
-    while (this.active < 2 && this.queue.length) this.queue.shift()?.();
+    while (this.active < MAX_PARALLEL && this.queue.length) this.queue.shift()?.();
   }
 
   private markError(id: string, version: number, error: string): void {
     const p = this.state.paragraphs.find((x) => x.id === id);
     if (!p || p.pendingVersion !== version) return;
-    this.patchParagraph(id, { status: "error", error, pendingVersion: null });
+    this.patchParagraph(id, { status: p.current >= 0 ? "error" : "draft", error, pendingVersion: null });
+    this.recompile({ redirectBroken: "direct" });
   }
 
-  private applyDirectorResponse(id: string, version: number, res: DirectResponse, start: WorldState, clientMs: number, cached = false): void {
+  private applyDirectorResponse(id: string, version: number, text: string, lang: Lang, res: DirectResponse, start: WorldState, clientMs: number, cached = false): void {
     const p = this.state.paragraphs.find((x) => x.id === id);
     if (!p || p.pendingVersion !== version) return;
-    const vi = p.versions.findIndex((v) => v.version === version);
-    if (vi < 0) return;
-    const old = p.versions[vi];
     const nv: ParagraphVersion = {
-      ...old,
+      version,
+      text,
+      lang,
       beatScript: res.beatScript,
       source: res.source,
       latencyMs: res.latencyMs || Math.round(clientMs),
       usage: res.usage,
       model: res.model,
       ruleHits: res.beatScript.rule_hits,
+      remix: p.versions[p.current]?.remix ?? { ...DEFAULT_REMIX },
       cached,
     };
-    const versions = [...p.versions];
-    versions[vi] = nv;
-    const status: ParagraphStatus = res.error ? "error" : nv.ruleHits.length ? "adjusted" : "ready";
-    this.patchParagraph(id, { versions, status, error: res.error ?? null, pendingVersion: null });
+    const versions = [...p.versions, nv];
+    // edited again while the director was working → the new text waits for the next ▶ Play
+    const stale = normalizeText(p.text) !== text;
+    const status: ParagraphStatus = stale ? "draft" : res.error ? "error" : nv.ruleHits.length ? "adjusted" : "ready";
+    this.patchParagraph(id, { versions, current: versions.length - 1, status, error: res.error ?? null, pendingVersion: null });
     appendLog({ episodeId: this.state.episodeId, paragraphId: id, version, text: nv.text, lang: nv.lang, beatScript: nv.beatScript, source: nv.source, latencyMs: nv.latencyMs, usage: nv.usage, ruleHits: nv.ruleHits, ts: Date.now() });
     // directed against `start`: re-directing against the same start state can't help (§6.5.4)
     this.redirected.add(`${id}:${directorCacheKey(nv.text, nv.lang, start, this.state.model)}`);
-    this.recompile({ redirectBroken: true });
+    this.recompile({ redirectBroken: "direct" });
   }
 
+  /** Retry a paragraph whose director call failed: mark it dirty; the caller plays it (which directs it). */
   retry(id: string): void {
-    this.submit(id, true);
+    const p = this.state.paragraphs.find((x) => x.id === id);
+    if (!p || p.pendingVersion !== null) return;
+    this.patchParagraph(id, { status: "draft", error: null });
   }
 
   setRemix(id: string, patch: Partial<Remix>): void {
@@ -467,7 +529,7 @@ class Store {
       const v: ParagraphVersion = { version: 1, text: fp.text, lang: fx.lang, beatScript: fp.beatScript, source: "fixture", latencyMs: 0, usage: null, model: "fixture", ruleHits: fp.beatScript.rule_hits, remix: { ...DEFAULT_REMIX } };
       return { id: newId(), text: fp.text, versions: [v], current: 0, status: fp.beatScript.rule_hits.length ? "adjusted" : "ready", error: null, pendingVersion: null, lastRemixMs: null };
     });
-    this.set({ episodeId: newId("e"), title: fx.title, paragraphs, selectedId: paragraphs[0]?.id ?? null, t: 0, playing: false, fixtureId: fx.id });
+    this.set({ episodeId: newId("e"), title: fx.title, paragraphs, selectedId: paragraphs[0]?.id ?? null, t: 0, playing: false, fixtureId: fx.id, waiting: false });
     this.recompile();
     this.persist();
   }
@@ -485,17 +547,6 @@ class Store {
   }
 
   // ---------- compile ----------
-  /** Resolved music mood at the end of the paragraph before `index` (offline parser "continue" hint). */
-  private prevMusicFor(index: number): MusicMood | null {
-    const prev = this.state.paragraphs
-      .slice(0, index)
-      .filter((p) => p.current >= 0)
-      .map((p) => p.id);
-    const lastId = prev[prev.length - 1];
-    const si = lastId ? this.state.segmentIds.indexOf(lastId) : -1;
-    return si >= 0 ? this.state.results[si].carry.music?.mood ?? null : null;
-  }
-
   startStateFor(index: number): WorldState {
     if (index <= 0) return initialWorldState();
     const ids = this.state.segmentIds;
@@ -509,9 +560,19 @@ class Store {
     return si >= 0 ? this.state.results[si].segment.endState : initialWorldState();
   }
 
-  /** Compiler-only recompile of the whole episode (no LLM). Downstream paragraphs whose start state changed recompile here. */
-  recompile(opts: { redirectBroken?: boolean } = {}): void {
-    const playable = this.state.paragraphs.filter((p) => p.current >= 0 && p.versions[p.current]);
+  /**
+   * Compiler-only recompile (no LLM). Plays the prefix of rendered paragraphs up to the first one the director is
+   * still working on. Downstream paragraphs whose start state changed recompile here; one that no longer fits its new
+   * start state is re-directed during a ▶ Play run (`redirectBroken: "direct"`) or just marked ✏️ for the next Play
+   * (`"mark"`, e.g. after delete/move/revert) — never while the player is typing.
+   */
+  recompile(opts: { redirectBroken?: "direct" | "mark" } = {}): void {
+    this.compileCount += 1;
+    const playable: Paragraph[] = [];
+    for (const p of this.state.paragraphs) {
+      if (p.pendingVersion !== null) break;
+      if (p.current >= 0 && p.versions[p.current]) playable.push(p);
+    }
     let results: CompileResult[] = [];
     let timeline: Timeline = emptyTimeline();
     try {
@@ -529,20 +590,27 @@ class Store {
     }
     const segmentIds = playable.map((p) => p.id);
     this.set({ results, timeline, segmentIds, t: Math.min(this.state.t, timeline.duration) });
-    if (opts.redirectBroken) {
-      results.forEach((r, i) => {
-        const p = playable[i];
-        const v = p.versions[p.current];
-        const start = i === 0 ? initialWorldState() : results[i - 1].segment.endState;
-        const key = `${p.id}:${directorCacheKey(v.text, v.lang, start, this.state.model)}`;
-        if (r.errors.length && p.pendingVersion === null && p.status !== "draft" && !this.redirected.has(key)) {
-          this.redirected.add(key);
-          // §6.5.4: not trivially repairable against the new start state → draft + re-direct
-          this.patchParagraph(p.id, { status: "draft" });
-          queueMicrotask(() => this.submit(p.id, true));
-        }
+    if (!opts.redirectBroken) return;
+    const mode = opts.redirectBroken;
+    results.forEach((r, i) => {
+      const p = playable[i];
+      const v = p.versions[p.current];
+      const start = i === 0 ? initialWorldState() : results[i - 1].segment.endState;
+      const key = `${p.id}:${directorCacheKey(v.text, v.lang, start, this.state.model)}`;
+      if (!r.errors.length || p.status === "draft" || this.redirected.has(key)) return;
+      // §6.5.4: not trivially repairable against the new start state → draft (+ re-direct inside a Play run)
+      if (mode === "mark") {
+        this.patchParagraph(p.id, { status: "draft" });
+        return;
+      }
+      this.redirected.add(key);
+      queueMicrotask(() => {
+        const cur = this.state.paragraphs.find((x) => x.id === p.id);
+        if (!cur || cur.pendingVersion !== null) return;
+        this.patchParagraph(p.id, { status: "draft" });
+        this.prepare(this.state.paragraphs.findIndex((x) => x.id === p.id));
       });
-    }
+    });
   }
 
   /** Episode time range of a paragraph's segment. */

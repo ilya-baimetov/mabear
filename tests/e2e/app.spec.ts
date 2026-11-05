@@ -71,11 +71,16 @@ async function segments(page: Page): Promise<SegLike[]> {
   return page.evaluate(() => (window.__mabear!.timeline() as { segments: SegLike[] }).segments);
 }
 
+/** Write a new paragraph (typing never renders), then press ▶ Play all to render it. */
 async function typeParagraph(page: Page, text: string) {
   await page.getByTestId("add-paragraph").click();
   const ta = page.getByTestId("paragraph-text").last();
   await ta.fill(text);
-  await ta.press("Control+Enter");
+  await page.getByTestId("play-all").click();
+}
+
+async function stopIfPlaying(page: Page) {
+  await page.getByTestId("pause").click({ timeout: 2000 }).catch(() => undefined);
 }
 
 test("1. app loads and the canvas renders a non-blank frame", async ({ page }) => {
@@ -104,6 +109,7 @@ test("3. typing a new 2-sentence paragraph reaches ready and grows the timeline"
   const before = Number(await page.getByTestId("timeline").getAttribute("data-duration"));
   await typeParagraph(page, "Masha runs to the swing. She swings and laughs.");
   await allSettled(page);
+  await stopIfPlaying(page);
   await expect.poll(async () => Number(await page.getByTestId("timeline").getAttribute("data-duration"))).toBeGreaterThan(before);
 });
 
@@ -120,6 +126,10 @@ test("4. editing paragraph 2 makes exactly one director request; other cards kee
   const ta = page.getByTestId("paragraph-text").nth(1);
   await ta.fill("Masha jumps on the pier and waves at Bear.");
   await ta.press("Control+Enter");
+  await page.waitForTimeout(2000);
+  expect(calls).toBe(0); // editing never renders
+  await expect(page.getByTestId("paragraph-card").nth(1)).toHaveAttribute("data-status", "draft");
+  await page.getByTestId("card-play").nth(1).click();
   await allSettled(page);
   await page.waitForTimeout(1000);
   expect(calls).toBe(1);
@@ -137,9 +147,16 @@ test("5. canon: Bear says thank you → no Bear dialogue and an adjusted chip", 
   const segs = await segments(page);
   expect(segs.length).toBe(1);
   expect(segs[0].segment.dialogue.filter((d) => d.actor === "bear")).toHaveLength(0);
+  // A3: the rule note sits behind a small icon, shown only on click; no director summary on the card
+  await expect(page.getByTestId("rule-notes")).toHaveCount(0);
+  await expect(page.getByTestId("summary")).toHaveCount(0);
+  await page.getByTestId("rule-notes-btn").first().click();
+  await expect(page.getByTestId("rule-notes").first()).toBeVisible();
+  await stopIfPlaying(page);
   // D4, second half: a weapon is swapped for something safe before anything renders → adjusted as well
   await typeParagraph(page, "Masha grabs a knife.");
   await expect(page.getByTestId("paragraph-card").nth(1)).toHaveAttribute("data-status", "adjusted", { timeout: 30_000 });
+  await stopIfPlaying(page);
   const rules = await page.evaluate(() => (JSON.parse(localStorage.getItem("mabear.log") ?? "[]") as { ruleHits: { rule: string }[] }[]).flatMap((e) => e.ruleHits.map((h) => h.rule)));
   expect(rules).toContain("bear_silent");
   expect(rules).toContain("no_weapons");
@@ -191,7 +208,7 @@ test("7b. sound: rain + spooky music compile; playback schedules dialogue, foley
   const seg = segs[segs.length - 1].segment;
   expect(seg.ambience.some((a) => a.layers.includes("rain"))).toBe(true);
   expect(seg.music.some((m) => m.mood === "spooky")).toBe(true);
-  await page.getByTestId("play-all").click();
+  if (!(await page.evaluate(() => window.__mabear!.playing()))) await page.getByTestId("play-all").click();
   await expect
     .poll(async () => page.evaluate(() => (window as unknown as { __mabearAudio?: { scheduled: Record<string, number> } }).__mabearAudio?.scheduled ?? null), { timeout: 15_000 })
     .toMatchObject({ dialogue: expect.any(Number) });
@@ -230,6 +247,10 @@ test("8. close-up screenshots + performance (FPS > 10 headless, draw calls < 200
   await page.evaluate(() => window.__mabear!.closeup("bear", -0.35));
   await page.waitForTimeout(1200);
   await page.getByTestId("stage-canvas").screenshot({ path: `${SHOTS}/bear-closeup.png` });
+  // the Wolves by their van (canon characters, stand-in rigs)
+  await page.evaluate(() => window.__mabear!.wide([8.6, 2.0, 3.2], [12.9, 1.05, -1.0], 40));
+  await page.waitForTimeout(1200);
+  await page.getByTestId("stage-canvas").screenshot({ path: `${SHOTS}/wolves.png` });
   await page.evaluate(() => window.__mabear!.closeup(null));
 });
 
@@ -247,4 +268,82 @@ test("9. tap a character after the story → it reacts locally (no director call
   await page.mouse.click(box.x + uv![0] * box.width, box.y + uv![1] * box.height);
   await expect.poll(async () => page.evaluate(() => window.__mabear!.playing()), { timeout: 10_000 }).toBe(true);
   expect(calls).toBe(0);
+});
+
+test("10. no rendering while typing: zero director calls and compiles; ▶ Play directs only dirty paragraphs, ≤ 4 at once, and starts as soon as paragraph 1 is ready", async ({ page }) => {
+  await open(page);
+  let calls = 0;
+  let inflight = 0;
+  let maxInflight = 0;
+  await page.route("**/api/direct", async (route) => {
+    calls++;
+    inflight++;
+    maxInflight = Math.max(maxInflight, inflight);
+    const body = JSON.parse(route.request().postData() ?? "{}") as { paragraph?: string };
+    // paragraph 1 answers at once; the rest are slow, so the player has to hold for them
+    await new Promise((r) => setTimeout(r, body.paragraph?.startsWith("Masha runs") ? 50 : 7000));
+    try {
+      await route.continue();
+    } finally {
+      inflight--;
+    }
+  });
+  const compilesBefore = await page.evaluate(() => window.__mabear!.compiles());
+  const texts = [
+    "Masha runs to the swing.",
+    "Bear walks to the garden.",
+    "Masha jumps and laughs.",
+    "Bear sits on the bench.",
+    "Masha waves at Bear.",
+  ];
+  for (const text of texts) {
+    await page.getByTestId("add-paragraph").click();
+    const ta = page.getByTestId("paragraph-text").last();
+    await ta.pressSequentially(text, { delay: 5 });
+  }
+  await page.waitForTimeout(2000); // longer than the old 1.5 s debounce
+  await page.getByTestId("paragraph-text").first().press("Control+Enter");
+  await page.getByTestId("story-title").click(); // blur
+  await page.waitForTimeout(500);
+  expect(calls).toBe(0);
+  expect(await page.evaluate(() => window.__mabear!.compiles())).toBe(compilesBefore);
+  expect(await page.evaluate(() => window.__mabear!.segments())).toBe(0);
+  const statuses = await page.getByTestId("paragraph-card").evaluateAll((els) => els.map((e) => e.getAttribute("data-status")));
+  expect(statuses.every((s) => s === "draft")).toBe(true);
+
+  await page.getByTestId("play-all").click();
+  // plays as soon as paragraph 1 is ready, while the others are still with the director
+  await expect.poll(async () => page.evaluate(() => window.__mabear!.playing()), { timeout: 20_000 }).toBe(true);
+  const directing = await page.getByTestId("paragraph-card").evaluateAll((els) => els.filter((e) => e.getAttribute("data-status") === "directing").length);
+  expect(directing).toBeGreaterThan(0);
+  // the playhead catches up with the director → a friendly hold
+  await expect(page.getByTestId("getting-ready")).toBeVisible({ timeout: 20_000 });
+  await allSettled(page);
+  await expect(page.getByTestId("getting-ready")).toHaveCount(0, { timeout: 10_000 });
+  expect(calls).toBe(5);
+  expect(maxInflight).toBeLessThanOrEqual(4);
+  expect(await page.evaluate(() => window.__mabear!.segments())).toBe(5);
+
+  // ▶ again with nothing edited: everything is cached in the story → no director call
+  await stopIfPlaying(page);
+  await page.getByTestId("play-all").click();
+  await page.waitForTimeout(1000);
+  expect(calls).toBe(5);
+});
+
+test("11. clicking a card to edit never plays it; each card has its own ▶", async ({ page }) => {
+  await open(page);
+  await page.getByTestId("chip-pancake_morning").click();
+  await allSettled(page);
+  await expect(page.getByTestId("summary")).toHaveCount(0);
+  await page.getByTestId("paragraph-card").nth(1).click({ position: { x: 20, y: 70 } });
+  await page.getByTestId("paragraph-text").nth(2).click();
+  await page.waitForTimeout(1200);
+  expect(await page.evaluate(() => window.__mabear!.playing())).toBe(false);
+  await expect(page.getByTestId("card-play")).toHaveCount(await page.getByTestId("paragraph-card").count());
+  await page.getByTestId("card-play").nth(1).click();
+  await expect.poll(async () => page.evaluate(() => window.__mabear!.playing()), { timeout: 10_000 }).toBe(true);
+  await expect(page.locator('[data-testid="paragraph-card"][data-active="1"]')).toHaveCount(1);
+  const active = await page.getByTestId("paragraph-card").evaluateAll((els) => els.findIndex((e) => e.getAttribute("data-active") === "1"));
+  expect(active).toBe(1);
 });

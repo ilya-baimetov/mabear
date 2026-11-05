@@ -89,6 +89,7 @@ button:disabled { opacity: 0.45; cursor: default; }
 .card-head { display: flex; align-items: center; gap: 8px; }
 .idx {
   width: 30px; height: 30px; border-radius: 50%; border: none; background: var(--forest-2); color: #fff; font-weight: 900; font-size: 15px;
+  display: inline-grid; place-items: center; flex: none;
 }
 .status-chip { font-size: 13px; font-weight: 800; padding: 2px 10px; border-radius: 999px; background: #f3efe8; }
 .chip-ready { background: #e2f4dc; color: #2c6b2c; }
@@ -171,3 +172,7 @@ summary { cursor: pointer; font-weight: 800; color: var(--honey); }
 .staged-by b { color: #fff; }
 .stage-error { position: absolute; inset: 0; display: grid; place-items: center; font-weight: 900; font-size: 18px; color: #8a3b1e; text-align: center; padding: 20px; }
 .tap-hint { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); background: rgba(255, 255, 255, 0.88); color: var(--forest); font-weight: 900; padding: 6px 16px; border-radius: 999px; box-shadow: var(--shadow); pointer-events: none; font-size: 15px; }
+.card-play { min-width: 30px; font-size: 13px; }
+.notes-btn { font-size: 14px; }
+.getting-ready { position: absolute; left: 50%; top: 18px; transform: translateX(-50%); background: rgba(255, 255, 255, 0.92); color: var(--forest); font-weight: 900; padding: 8px 20px; border-radius: 999px; box-shadow: var(--shadow); pointer-events: none; font-size: 17px; animation: mb-pulse 1.4s ease-in-out infinite; }
+@keyframes mb-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.65; } }

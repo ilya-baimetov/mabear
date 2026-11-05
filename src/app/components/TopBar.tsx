@@ -21,10 +21,10 @@ export function TopBar() {
         <input className="title-input" data-testid="story-title" value={s.title} placeholder={t.storyTitlePlaceholder} onChange={(e) => store.setTitle(e.target.value)} />
       </div>
       <div className="top-actions">
-        {s.playing ? (
+        {s.playing || s.waiting ? (
           <button className="btn btn-primary" data-testid="pause" onClick={() => playback.pause()}>⏸ {t.pause}</button>
         ) : (
-          <button className="btn btn-primary" data-testid="play-all" disabled={s.timeline.duration === 0} onClick={() => playback.playAll()}>▶ {t.playAll}</button>
+          <button className="btn btn-primary" data-testid="play-all" disabled={!s.paragraphs.some((p) => p.text.trim())} onClick={() => playback.playAll()}>▶ {t.playAll}</button>
         )}
         <button className="btn" data-testid="new-story" onClick={() => { if (!store.hasOwnWriting() || window.confirm(t.replaceStory)) store.newStory(); }}>⟲ {t.newStory}</button>
         <div className="dropdown" ref={ddRef}>

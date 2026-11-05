@@ -21,7 +21,20 @@ const REACTIONS: Record<ActorId, Partial[]> = {
     { verb: "wave", emote: "hum", emotion: "happy" },
     { verb: "shrug", emote: "grunt", emotion: "curious" },
   ],
+  wolf_a: [
+    { verb: "laugh", emote: "snicker", emotion: "mischievous" },
+    { verb: "scared", emote: "whimper", emotion: "scared" },
+    { verb: "jump", emote: "howl", emotion: "excited" },
+  ],
+  wolf_b: [
+    { verb: "laugh", emote: "snicker", emotion: "mischievous" },
+    { verb: "shrug", emote: "whimper", emotion: "curious" },
+    { verb: "wave", emote: "howl", emotion: "happy" },
+  ],
 };
+
+/** Who answers a tapped character: Masha ⇄ Bear; a Wolf's partner Wolf. */
+const PARTNER: Record<ActorId, ActorId> = { masha: "bear", bear: "masha", wolf_a: "wolf_b", wolf_b: "wolf_a" };
 
 function beat(actor: ActorId, p: Partial, lang: Lang, withPrev: boolean, delay: number): Beat {
   return { actor, verb: p.verb, target: null, item: null, line: p.line ? p.line[lang] : null, emote: p.emote, sfx: null, emotion: p.emotion, with_previous: withPrev, delay_s: delay, shot: "medium" };
@@ -31,7 +44,7 @@ function beat(actor: ActorId, p: Partial, lang: Lang, withPrev: boolean, delay: 
 export function reactionTimeline(s: AppState, actor: ActorId, n: number): { timeline: Timeline; start: number; end: number } {
   const list = REACTIONS[actor];
   const main = list[n % list.length];
-  const other: ActorId = actor === "masha" ? "bear" : "masha";
+  const other = PARTNER[actor];
   const reply = REACTIONS[other][(n + 1) % REACTIONS[other].length];
   const last = s.results[s.results.length - 1];
   const start = last ? last.segment.endState : initialWorldState();

@@ -12,6 +12,7 @@ interface Block {
 const TRACK_COLORS: Record<string, string> = {
   Masha: "#E0569A",
   Bear: "#8B5A3C",
+  Wolves: "#8A949C",
   Camera: "#4BA3C7",
   Dialogue: "#F2B33D",
   Vocals: "#F07F4F",
@@ -27,6 +28,13 @@ export function tracksOf(seg: Segment): { name: string; blocks: Block[] }[] {
   return [
     { name: "Masha", blocks: seg.actorClips.masha.map((c) => ({ start: c.start, dur: c.dur, label: c.verb })) },
     { name: "Bear", blocks: seg.actorClips.bear.map((c) => ({ start: c.start, dur: c.dur, label: c.verb })) },
+    {
+      name: "Wolves",
+      blocks: [
+        ...(seg.actorClips.wolf_a ?? []).map((c) => ({ start: c.start, dur: c.dur, label: `W1 ${c.verb}` })),
+        ...(seg.actorClips.wolf_b ?? []).map((c) => ({ start: c.start, dur: c.dur, label: `W2 ${c.verb}` })),
+      ],
+    },
     { name: "Camera", blocks: seg.camera.map((c) => ({ start: c.start, dur: c.dur, label: c.shot })) },
     { name: "Dialogue", blocks: seg.dialogue.map((c) => ({ start: c.start, dur: c.dur, label: `${c.actor}: ${c.text}` })) },
     { name: "Vocals", blocks: seg.emotes.map((c) => ({ start: c.start, dur: Math.max(0.3, c.dur), label: c.emote })) },

@@ -8,6 +8,11 @@ This document is the single source of truth for an autonomous build run (`/goal`
 simplest option that keeps the Definition of Done (§14) achievable, and log the decision in `docs/NOTES.md`.
 **Never stop to ask the user a question during the run.**
 
+> **v1.1 scope update (2026-11-05, from the owner's review):** render only on ▶ Play (no director calls or compiles
+> while typing, §4.2/§4.3/§6.5); cards select on click and have their own ▶; no director summary on cards, rule notes
+> behind an icon (§4.2); the Wolves are canon and ship as two stand-in characters (§6.1, §7.3, §8.3, §9); a visual
+> overhaul of lighting, materials, set and characters (§7.1–§7.3); splashy footsteps in rain (§7.6).
+
 ---
 
 ## 0. One-paragraph summary
@@ -56,8 +61,8 @@ funder evidence (economics, system layers, data view) lives in a hidden **Behind
 
 | # | Demo moment | Funder question answered | Priority |
 |---|---|---|---|
-| D1 | Type a 1–2 sentence paragraph → animated scene plays in seconds | Does the magic work? | P0 |
-| D2 | Rewrite paragraph 2 → only paragraph 2 re-renders; the rest is cached | Is iteration fast and cheap? | P0 |
+| D1 | Type a 1–2 sentence paragraph, press ▶ → animated scene plays in seconds | Does the magic work? | P0 |
+| D2 | Rewrite paragraph 2, press ▶ → only paragraph 2 goes back to the director; the rest is cached | Is iteration fast and cheap? | P0 |
 | D3 | Terse script ("Bear naps. Masha wakes him.") → rich in-character staging | Is the character knowledge the moat? | P0 |
 | D4 | "Bear says thank you" / "Masha grabs a knife" → adjusted; the rule shown | Will studio and parents trust it? | P0 |
 | D5 | Behind-the-scenes "Economics" panel (§4.4): plan size (KB), on-device FPS, server cost per paragraph, and a 10-million-user projection vs diffusion video | Do the economics hold at internet scale? | P0 |
@@ -78,7 +83,7 @@ episode archive. Here they are approximated by Claude + a character bible and by
 
 User accounts, server-side persistence (use `localStorage`), public sharing/feed, mobile layout (desktop Chrome only;
 must not break below 1280 px but needn't be pretty), training any model, official assets (but keep them a drop-in
-swap, §7.3), interior sets (P2 at most), more than three characters, speech input (voice dictation comes later),
+swap, §7.3), interior sets (P2 at most), characters beyond Masha, Bear and the two Wolves, speech input (voice dictation comes later),
 any studio/production tooling (shot-by-shot editing, dope-sheet editing, mixing consoles).
 
 ---
@@ -93,7 +98,7 @@ any studio/production tooling (shot-by-shot editing, dope-sheet editing, mixing 
 ├───────────────────────────┬──────────────────────────────────────────────────┤
 │ SCRIPT (paragraph cards)  │                                                  │
 │ ┌───────────────────────┐ │                 STAGE (Three.js)                  │
-│ │1 Masha runs into the  │ │                                                  │
+│ │1 ▶ Masha runs into the│ │                                                  │
 │ │  yard, shouting.  ✅7s │ │                                                  │
 │ └───────────────────────┘ │                                                  │
 │ ┌───────────────────────┐ │                                                  │
@@ -107,9 +112,11 @@ Behind the scenes (funder overlay, hidden by default): a right drawer for the se
 
 ### 4.2 Paragraph = unit of tracking
 
-Each paragraph card has: index, editable text (textarea that auto-grows), status chip, duration, a one-line director
-summary (in UI language), small audio chips (🎵 music mood, 🌧 ambience, 💬 number of spoken lines), version counter,
-and a ⋯ menu (delete, revert to previous version — P1, move up/down — P2).
+Each paragraph card has: index, its own **▶** (plays that paragraph), editable text (textarea that auto-grows), status
+chip, duration, small audio chips (🎵 music mood, 🌧 ambience, 💬 number of spoken lines), version counter, and a ⋯ menu
+(delete, revert to previous version — P1, move up/down — P2). **No director summary on the card** (the beat script and
+its summary live only in Behind the scenes). When rules changed something, a small 💡 icon appears; its kid-friendly
+notes are shown **only on click**. Clicking a card (or its text) selects it for editing and **never plays it**.
 
 **How the child writes sound and speech** (plain language, no special syntax required, both languages):
 - Speech: quoted text after a speaker, or screenplay style — `Masha shouts, "Bear, wake up!"` /
@@ -121,12 +128,13 @@ and a ⋯ menu (delete, revert to previous version — P1, move up/down — P2).
 - Event sounds: "the door slams", "a loud crash", "thunder", «бах!».
 - Movement sounds are automatic. The child never has to write "footsteps".
 
-Status lifecycle: `draft` (edited, not yet sent) → `directing` (LLM call in flight; show the offline preview, see
-§6.5) → `ready` → or `adjusted` (ready, but canon/safety rules changed something; amber chip, tooltip with kid-friendly
-message) → or `error` (red chip, Retry button; the offline-parser version still plays).
+Status lifecycle: `draft` (edited; renders on the next ▶ Play) → `directing` (LLM call in flight, started by ▶ Play;
+no offline preview) → `ready` → or `adjusted` (ready, but canon/safety rules changed something; amber chip, 💡 notes on
+click) → or `error` (red chip, Retry button; the offline-parser version still plays).
 
-Triggers: render when the user stops typing for **1.5 s**, on blur, or on Ctrl/Cmd+Enter. Enter on an empty last line
-creates a new paragraph. A version is created only when the text actually changed (trimmed, whitespace-normalized).
+**Trigger: ▶ Play only** (Play all, or the ▶ on a card). Typing, blur and Ctrl/Cmd+Enter never call the director,
+never compile and never show an offline preview. Enter on an empty last line creates a new paragraph. A version is
+created only when the text actually changed (trimmed, whitespace-normalized), at Play time.
 
 Every paragraph version is appended to a local **tracking log** (`localStorage: mabear.log`): `{episodeId,
 paragraphId, version, text, lang, beatScript, source: "llm"|"offline", latencyMs, usage, ruleHits, ts}`. The
@@ -134,8 +142,12 @@ Behind-the-scenes overlay has an "Export log (JSON)" button. This is the "demand
 
 ### 4.3 Playback
 
-- **Play all** plays the episode from paragraph 1; selecting a card plays that paragraph's segment; the active card is
-  highlighted during playback and the timeline playhead moves.
+- **▶ Play all** directs only the dirty (`draft`) paragraphs (cache hits are free), at most **4 calls in parallel**,
+  and starts playing from paragraph 1 **as soon as paragraph 1 is ready**. When the playhead reaches a paragraph the
+  director hasn't finished, playback holds on the last frame with idle motion and a friendly "getting ready…" pill,
+  then resumes. The **▶ on a card** renders that paragraph (and any dirty paragraph before it, for continuity) and
+  plays only its segment. Selecting a card never plays it. The active card is highlighted during playback and the
+  timeline playhead moves.
 - Clicking or dragging on the timeline scrubs. Scrubbing is exact (pure `evaluate(t)`, §7.4); audio plays only during
   real-time playback.
 - After the last paragraph finishes: hold the final frame with idle motion (P2: tap-to-react, D9).
@@ -150,7 +162,7 @@ Behind-the-scenes overlay has an "Export log (JSON)" button. This is the "demand
   No technical vocabulary anywhere in the player UI.
 - **Behind the scenes** (funder demo overlay, P0): hidden by default; opened with the `?pitch=1` URL parameter or the
   `Shift+B` shortcut; never shown to players. A right drawer for the selected paragraph:
-  - A read-only **data view** of the paragraph's timeline as tracks (Masha · Bear · Camera · Dialogue · Vocals ·
+  - A read-only **data view** of the paragraph's timeline as tracks (Masha · Bear · Wolves · Camera · Dialogue · Vocals ·
     Foley · SFX · Ambience · Music · Light), labeled "every produced episode already exists in this format →
     training data" (D8).
   - Beat script (pretty JSON, collapsible) and its `source` (LLM / offline / fixture).
@@ -236,7 +248,7 @@ Implement in `src/shared/schema.ts` with **zod**. Every field is required; use `
 ### 6.1 Identifiers
 
 ```ts
-ActorId   = "masha" | "bear"                                   // (P2: "rabbit")
+ActorId   = "masha" | "bear" | "wolf_a" | "wolf_b"             // v1.1: the two Wolves (canon; they live in the van)
 MarkId    = "clearing" | "porch" | "door" | "garden" | "beehive" | "swing" | "pond_shore" | "pier" | "table"
           | "bench" | "woodpile" | "path_entry" | "big_tree" | "bush" | "hammock"
 PropId    = "jam_jar" | "honey_pot" | "pancakes" | "frying_pan" | "ball" | "fishing_rod" | "fish" | "lollipop"
@@ -249,6 +261,7 @@ TimeOfDay = "morning" | "day" | "sunset" | "night"
 Shot      = "auto" | "wide" | "medium" | "close" | "low_angle" | "over_shoulder" | "tracking"
 Emote     = "none" | "giggle" | "laugh" | "gasp" | "wheee" | "hmph" | "uh_oh" | "yawn" | "cry" | "cheer" | "scream_fun"
           | "grunt" | "sigh" | "hum" | "growl_soft" | "chuckle" | "snore" | "huff" | "roar_soft" | "sneeze"
+          | "howl" | "whimper" | "snicker"                              // v1.1, the Wolves
           // non-verbal vocalizations; each character's bible lists which ones it can make
 MusicMood = "none" | "playful" | "calm" | "sleepy" | "tense" | "spooky" | "chase" | "triumphant" | "sad" | "romantic_waltz"
 Ambience  = "birds_day" | "forest_wind" | "creek" | "rain" | "thunderstorm" | "night_crickets" | "bees" | "strong_wind"
@@ -321,7 +334,7 @@ Beat = {
   shot: Shot                    // "auto" unless the script implies a specific framing
 }
 BeatScript = {
-  summary: string,              // ≤ 140 chars, UI language, shown on the card
+  summary: string,              // ≤ 140 chars, UI language, shown only in Behind the scenes (v1.1)
   time_of_day: TimeOfDay | null,// null = unchanged
   mood: Mood,
   music: { mood: MusicMood, intensity: "soft" | "medium" | "full", change: "continue" | "start" | "stop" },
@@ -364,12 +377,16 @@ Episode timeline = concatenation of segments; segment i starts at Σ duration(0.
 1. Paragraph i compiles from `startState = endState(i-1)` (paragraph 0 uses the set's initial state).
 2. Director cache key = hash(`normalizedText`, `lang`, `startStateDigest`, `BIBLE_VERSION`). Cache hits never call
    the API (`localStorage`, LRU 200 entries).
-3. On edit of paragraph i: (a) immediately compile an **offline-parser preview** and show it (status `directing`);
-   (b) call the director; when it returns, replace the preview and set `ready` / `adjusted`.
+3. On edit of paragraph i: only mark it `draft` (no compile, no call, no preview). On ▶ Play: call the director for
+   every dirty paragraph in range (start states of dirty paragraphs that follow other dirty paragraphs are estimated
+   internally from the offline parser's end state); the timeline is the prefix of rendered paragraphs up to the first
+   one still directing; when a reply returns, set `ready` / `adjusted` and recompile.
 4. After paragraph i changes, **recompile** (compiler only, no LLM) every downstream paragraph whose `startState`
    changed. If a downstream BeatScript fails validation against its new start state (e.g. `eat jam_jar` but nobody
-   holds it), the compiler auto-repairs where trivial (insert `take`) or marks the paragraph `draft` and re-directs it.
-5. At most 2 director calls in flight; newer edits of the same paragraph cancel older calls (AbortController).
+   holds it), the compiler auto-repairs where trivial (insert `take`) or marks the paragraph `draft` and re-directs it
+   (within a ▶ Play run; otherwise it waits for the next ▶ Play).
+5. At most 4 director calls in flight; a reply for text that was edited again meanwhile is kept as a version and the
+   paragraph stays `draft` for the next ▶ Play.
 6. Remix choices `{ cameraSeed: number, timeOfDay, musicMood }` are stored per
    paragraph version and applied by the compiler — **never** trigger an LLM call.
 
@@ -394,7 +411,12 @@ dress and kerchief), a subtle warm emissive or `sheen` on skin to fake subsurfac
 as shell fur (6–10 shells with a noise alpha mask; P1) or as a soft normal-mapped noise. ACES filmic tone mapping,
 sRGB output. Light rig: warm key light with soft shadows (PCFSoft, 2048 map), a cool sky/hemisphere fill, and a rim
 light so silhouettes read against the forest. Sky gradient per time of day, light atmospheric fog, grass as a
-textured ground plus instanced tufts near the camera. Cap pixel ratio at 2. Target
+textured ground plus instanced tufts near the camera. Cap pixel ratio at 2.
+**v1.1 visual overhaul:** CC0 HDRI image-based lighting (Poly Haven) tinted per time of day, soft shadows, ambient
+occlusion, subtle bloom, ACES, a warm grade and SMAA; CC0 PBR textures (Poly Haven / ambientCG) on the ground, cabin
+and trees; better trees (CC0 packs if downloadable, else improved procedural ones); instanced grass with wind sway;
+distant forest silhouettes in fog. Post-processing degrades with the adaptive resolution (AO first, then bloom).
+Licenses in `docs/ASSETS.md`. Target
 **≥ 50 FPS** on a 2020+ laptop with integrated GPU at 1280×720 canvas. Keep the total scene under ~150 draw calls
 (merge static set geometry with `BufferGeometryUtils.mergeGeometries` per material).
 
@@ -495,6 +517,16 @@ otherwise use these defaults):
 - Personality in motion: slow, weighty, patient; signature `facepalm` and long-suffering `sigh`; tender when hugging
   or carrying Masha.
 
+**v1.1 likeness fixes (owner review):** Bear's head ×1.2; one pear-shaped torso with no "snowman" crease; arms never
+dead straight in idle (elbows soft); Masha's fringe never pokes through the kerchief; a smaller, rounder face opening
+with bigger eyes; pink-lilac sleeves. Before/after shots in `docs/likeness/`.
+
+**The Wolves** (canon: two wolves who live in the old ambulance van; stand-ins `wolf_a`, `wolf_b` on Bear's humanoid
+rig): lanky and thin, grey (two slightly different greys and heights), long snout with a black nose, pointed ears,
+bushy tail, small sly eyes; walk upright; quick, clumsy, sneaky motion. `speaks: false` (verify with Animaccord);
+emotes `howl`, `whimper`, `snicker` (+ fitting shared ones). Bible: clumsy, always hungry, scheming for food, scared of
+Bear. They start standing by the van.
+
 Secondary motion: dress hem sway (Masha), ear wiggle and belly jiggle (Bear), procedural blinking every 2–5 s,
 breathing on the chest bone in every pose, look-at head turn toward the speaker or target.
 
@@ -556,6 +588,9 @@ config constant.
 | **Event SFX** | `sfx` on beats ("the door slams", "a crash", "thunder") | CC0 samples or synthesized |
 | **Ambience** | `ambience` per paragraph (birds, forest wind, creek, rain, thunderstorm, night crickets, bees); defaults from the set and time of day (day → birds + light wind; night → crickets); positional layers near the creek and the beehive | Synthesized loops (filtered noise for wind/rain/creek, chirp generators for birds and crickets) or CC0 loops |
 | **Music** | `music` per paragraph (mood, intensity, start/continue/stop); crossfades across paragraph boundaries and keeps playing across them when the mood stays the same | Procedural folk-flavored score per mood: plucked "balalaika" (Karplus-Strong), accordion-like pad (detuned saws + low-pass), light percussion; tempo and instrumentation vary by mood and intensity |
+
+While the ambience includes `rain` or `thunderstorm`, footsteps on grass and dirt switch to the splashy `water`
+surface (wood stays wood).
 
 Mixing rules: music and ambience **duck** ~8 dB under dialogue (gain automation, 150 ms attack, 400 ms release).
 Foley, vocals and SFX are **spatialized** relative to the current camera (`StereoPannerNode` for pan plus distance
@@ -621,6 +656,9 @@ an `error` string. **The endpoint never returns a 5xx for a director failure.**
      napping; patient and paternal; exasperated by Masha's chaos but always forgives and protects her; **never speaks
      words** — he communicates with gestures, sighs, grunts, hums and facial expressions; signature moves: facepalm,
      long sigh, gentle hug, carrying Masha on his shoulders; secretly enjoys her company.
+   - *The Wolves* (v1.1): two clumsy, always-hungry wolves who live in the old ambulance van by the forest edge; they
+     scheme to steal food (honey, jam, pancakes, fish), are scared of Bear and flee when he catches them; they don't
+     speak words (howl, whimper, snicker). Canon — never treated as foreign characters. One few-shot features them.
    - Relationship dynamics: Masha initiates, Bear reacts; slapstick consequences land softly; every scene ends warm.
    - Mark these "to verify against the Animaccord series bible" in a code comment; keep them editable data.
 3. The set (marks with descriptions), props, verbs (from the grammar descriptions), emotions, shots.
@@ -660,7 +698,7 @@ hard ones on every BeatScript (including offline and fixture ones). Both produce
 | Rule | Hard (validator)? | Behavior |
 |---|---|---|
 | `bear_silent` — Bear never speaks words *(canon; verify with Animaccord)* | Yes | Bear `line` → removed; emote `grunt`/`hum` added; hit recorded ("Bear doesn't talk in our show — he grumbled instead!") |
-| `cast_only` — only bible characters, marks, props | Yes | Unknown actor/target/prop → dropped or mapped to nearest allowed; other franchises' characters never appear |
+| `cast_only` — only bible characters, marks, props | Yes | Unknown actor/target/prop → dropped or mapped to nearest allowed; other franchises' characters never appear. Canon series characters not built yet (Hare, Penguin, Panda, Tiger, Dasha…) get an honest "not in this prototype yet" message; the Wolves are in the cast (v1.1) |
 | `no_weapons` — no weapons or real violence; soft slapstick is fine | Yes (word lists EN/RU) + LLM | knife/gun/sword/axe → toy or removed; hitting → playful pillow bonk or nothing |
 | `no_scary` — no gore, horror, death, injury | LLM + word list | Reframe as a gentle surprise |
 | `kind_language` — no insults or profanity | Word list EN/RU + LLM | Replace with a kind equivalent |
@@ -743,9 +781,9 @@ reaction beat for the other actor). It powers the instant preview, the no-key fa
   1. The app loads; the canvas renders a non-blank frame (pixel variance check on a screenshot).
   2. Load the "Pancake morning" example → all paragraphs `ready`; Play all → the playhead advances; the active card
      highlights.
-  3. Type a new 2-sentence paragraph → it reaches `ready`/`adjusted`; the timeline grows.
-  4. Edit paragraph 2 → exactly **one** director request is observed (route interception); other cards keep their
-     version numbers.
+  3. Type a new 2-sentence paragraph, press ▶ Play all → it reaches `ready`/`adjusted`; the timeline grows.
+  4. Edit paragraph 2 → zero director requests until ▶; then exactly **one** director request is observed (route
+     interception); other cards keep their version numbers.
   5. Canon: "Bear says thank you to Masha" → no Bear dialogue in the compiled segment and an `adjusted` chip.
   6. EN → RU toggle → UI strings switch (assert 3 labels) and a RU example loads.
   7. Behind the scenes (`?pitch=1`) → the drawer shows plan size, cost, FPS and the economics panel; it's absent
@@ -754,7 +792,12 @@ reaction beat for the other actor). It powers the instant preview, the no-key fa
      `music.mood = spooky`; during playback the app's audio debug hook (`window.__mabearAudio`) reports scheduled
      dialogue, foley and music cues (assert counts > 0; actual audio output isn't verified headless).
   8. Save screenshots to `docs/screenshots/` (player.png, behind-the-scenes.png, masha-closeup.png,
-     bear-closeup.png, ru-mode.png).
+     bear-closeup.png, ru-mode.png, wolves.png).
+  10. (v1.1) Typing five paragraphs (past the old debounce), blur and Ctrl+Enter → zero `/api/direct` calls and zero
+     compiles; ▶ Play all → exactly the dirty paragraphs are directed, ≤ 4 in flight, playback starts while later
+     paragraphs are still directing, and a "getting ready…" hold appears and clears.
+  11. (v1.1) Clicking a card never plays it; every card has a ▶; ▶ on card 2 plays card 2. No summary on cards; rule
+     notes only after clicking the 💡 icon (checked in test 5).
 - **Visual self-review**: run the §7.3 likeness protocol (reference board, measured proportions and sampled colors,
   ≥ 3 side-by-side passes with silhouettes, rubric scores in `docs/LIKENESS.md`).
 - **Performance**: in a non-headless-equivalent check, log the average FPS of a 10 s playback in the e2e run (headless
