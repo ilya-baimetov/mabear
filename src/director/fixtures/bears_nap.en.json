@@ -1,0 +1,445 @@
+{
+  "id": "bears_nap",
+  "lang": "en",
+  "title": "Bear's nap",
+  "paragraphs": [
+    {
+      "text": "On a warm, lazy afternoon the grasshoppers are chirping and soft sleepy music plays. Bear lies down in the hammock and starts to snore. Masha giggles, \"Bear is sleeping? Not for long!\"",
+      "beatScript": {
+        "summary": "Bear settles into the hammock for a snooze while Masha hatches a plan.",
+        "time_of_day": null,
+        "mood": "sleepy",
+        "music": {
+          "mood": "sleepy",
+          "intensity": "soft",
+          "change": "start"
+        },
+        "ambience": [
+          "night_crickets",
+          "forest_wind"
+        ],
+        "beats": [
+          {
+            "actor": "bear",
+            "verb": "yawn_stretch",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": null,
+            "sfx": null,
+            "emotion": "sleepy",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "wide"
+          },
+          {
+            "actor": "bear",
+            "verb": "walk_to",
+            "target": "hammock",
+            "item": null,
+            "line": null,
+            "emote": "hum",
+            "sfx": null,
+            "emotion": "sleepy",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "auto"
+          },
+          {
+            "actor": "masha",
+            "verb": "look_at",
+            "target": "bear",
+            "item": null,
+            "line": null,
+            "emote": null,
+            "sfx": null,
+            "emotion": "curious",
+            "with_previous": true,
+            "delay_s": 1,
+            "shot": "auto"
+          },
+          {
+            "actor": "bear",
+            "verb": "sleep",
+            "target": "hammock",
+            "item": null,
+            "line": null,
+            "emote": "snore",
+            "sfx": null,
+            "emotion": "sleepy",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "auto"
+          },
+          {
+            "actor": "masha",
+            "verb": "peek",
+            "target": "bear",
+            "item": null,
+            "line": null,
+            "emote": "giggle",
+            "sfx": null,
+            "emotion": "mischievous",
+            "with_previous": true,
+            "delay_s": 1.5,
+            "shot": "auto"
+          },
+          {
+            "actor": "masha",
+            "verb": "point_at",
+            "target": "bear",
+            "item": null,
+            "line": "Bear is sleeping? Not for long!",
+            "emote": null,
+            "sfx": null,
+            "emotion": "mischievous",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "medium"
+          }
+        ],
+        "rule_hits": []
+      }
+    },
+    {
+      "text": "Masha tiptoes to the hammock and shouts, \"Bear, wake up! Let's play!\" Bear jumps and tumbles out of the hammock with a loud crash!",
+      "beatScript": {
+        "summary": "Masha sneaks up and shouts — Bear wakes with a start and tumbles out!",
+        "time_of_day": null,
+        "mood": "playful",
+        "music": {
+          "mood": "playful",
+          "intensity": "medium",
+          "change": "start"
+        },
+        "ambience": null,
+        "beats": [
+          {
+            "actor": "masha",
+            "verb": "tiptoe_to",
+            "target": "hammock",
+            "item": null,
+            "line": null,
+            "emote": null,
+            "sfx": null,
+            "emotion": "mischievous",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "tracking"
+          },
+          {
+            "actor": "masha",
+            "verb": "wave",
+            "target": "bear",
+            "item": null,
+            "line": "Bear, wake up! Let's play!",
+            "emote": null,
+            "sfx": null,
+            "emotion": "excited",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "medium"
+          },
+          {
+            "actor": "bear",
+            "verb": "wake_up",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": null,
+            "sfx": null,
+            "emotion": "surprised",
+            "with_previous": true,
+            "delay_s": 0.8,
+            "shot": "auto"
+          },
+          {
+            "actor": "bear",
+            "verb": "fall_down",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": "grunt",
+            "sfx": "crash",
+            "emotion": "surprised",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "wide"
+          },
+          {
+            "actor": "masha",
+            "verb": "laugh",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": null,
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": true,
+            "delay_s": 0.3,
+            "shot": "auto"
+          },
+          {
+            "actor": "bear",
+            "verb": "stand_up",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": null,
+            "sfx": null,
+            "emotion": "annoyed",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "auto"
+          },
+          {
+            "actor": "bear",
+            "verb": "facepalm",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": null,
+            "sfx": null,
+            "emotion": "annoyed",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "auto"
+          },
+          {
+            "actor": "masha",
+            "verb": "jump",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": "giggle",
+            "sfx": null,
+            "emotion": "excited",
+            "with_previous": true,
+            "delay_s": 0.5,
+            "shot": "auto"
+          }
+        ],
+        "rule_hits": []
+      }
+    },
+    {
+      "text": "Bear sighs and lifts Masha onto his shoulders while happy circus music plays. \"Faster, Bear, faster!\" Masha cheers as they gallop around the yard.",
+      "beatScript": {
+        "summary": "Bear sighs, lifts Masha onto his shoulders and gallops around the yard.",
+        "time_of_day": null,
+        "mood": "triumphant",
+        "music": {
+          "mood": "triumphant",
+          "intensity": "full",
+          "change": "start"
+        },
+        "ambience": null,
+        "beats": [
+          {
+            "actor": "masha",
+            "verb": "hug",
+            "target": "bear",
+            "item": null,
+            "line": null,
+            "emote": "giggle",
+            "sfx": null,
+            "emotion": "excited",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "auto"
+          },
+          {
+            "actor": "bear",
+            "verb": "sigh",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": null,
+            "sfx": null,
+            "emotion": "annoyed",
+            "with_previous": true,
+            "delay_s": 0.8,
+            "shot": "auto"
+          },
+          {
+            "actor": "bear",
+            "verb": "carry",
+            "target": "masha",
+            "item": null,
+            "line": null,
+            "emote": null,
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "medium"
+          },
+          {
+            "actor": "masha",
+            "verb": "clap",
+            "target": null,
+            "item": null,
+            "line": "Faster, Bear, faster!",
+            "emote": null,
+            "sfx": null,
+            "emotion": "excited",
+            "with_previous": true,
+            "delay_s": 1.5,
+            "shot": "auto"
+          },
+          {
+            "actor": "bear",
+            "verb": "run_to",
+            "target": "swing",
+            "item": null,
+            "line": null,
+            "emote": "huff",
+            "sfx": null,
+            "emotion": "excited",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "tracking"
+          },
+          {
+            "actor": "masha",
+            "verb": "laugh",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": "wheee",
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": true,
+            "delay_s": 0.5,
+            "shot": "auto"
+          },
+          {
+            "actor": "bear",
+            "verb": "run_to",
+            "target": "clearing",
+            "item": null,
+            "line": null,
+            "emote": "chuckle",
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "tracking"
+          },
+          {
+            "actor": "masha",
+            "verb": "clap",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": "cheer",
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": true,
+            "delay_s": 1,
+            "shot": "auto"
+          }
+        ],
+        "rule_hits": []
+      }
+    },
+    {
+      "text": "The sun goes down and Bear carries Masha back to the porch. Masha yawns, \"Good night, Bear. Let's play again tomorrow!\" A gentle lullaby plays and the crickets sing.",
+      "beatScript": {
+        "summary": "At sunset Bear carries sleepy Masha home and she wishes him good night.",
+        "time_of_day": "sunset",
+        "mood": "sleepy",
+        "music": {
+          "mood": "sleepy",
+          "intensity": "soft",
+          "change": "start"
+        },
+        "ambience": [
+          "night_crickets",
+          "forest_wind"
+        ],
+        "beats": [
+          {
+            "actor": "bear",
+            "verb": "walk_to",
+            "target": "porch",
+            "item": null,
+            "line": null,
+            "emote": "hum",
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "wide"
+          },
+          {
+            "actor": "masha",
+            "verb": "yawn_stretch",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": null,
+            "sfx": null,
+            "emotion": "sleepy",
+            "with_previous": true,
+            "delay_s": 1.5,
+            "shot": "auto"
+          },
+          {
+            "actor": "masha",
+            "verb": "look_at",
+            "target": "bear",
+            "item": null,
+            "line": "Good night, Bear. Let's play again tomorrow!",
+            "emote": null,
+            "sfx": null,
+            "emotion": "sleepy",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "close"
+          },
+          {
+            "actor": "bear",
+            "verb": "nod",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": "chuckle",
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": true,
+            "delay_s": 1.2,
+            "shot": "auto"
+          },
+          {
+            "actor": "bear",
+            "verb": "sit",
+            "target": "porch",
+            "item": null,
+            "line": null,
+            "emote": "sigh",
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "auto"
+          },
+          {
+            "actor": "bear",
+            "verb": "yawn_stretch",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": null,
+            "sfx": null,
+            "emotion": "sleepy",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "wide"
+          }
+        ],
+        "rule_hits": []
+      }
+    }
+  ]
+}

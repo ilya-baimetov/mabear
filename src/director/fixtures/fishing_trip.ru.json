@@ -1,0 +1,432 @@
+{
+  "id": "fishing_trip",
+  "lang": "ru",
+  "title": "На рыбалке",
+  "paragraphs": [
+    {
+      "text": "Мишка идёт рыбачить на мостки. Играет спокойная музыка, журчит вода, поют птицы. Маша хватает мяч и бежит за ним: «Мишка, подожди меня!»",
+      "beatScript": {
+        "summary": "Мишка идёт на мостки порыбачить в тишине, а Маша бежит за ним с мячом.",
+        "time_of_day": null,
+        "mood": "calm",
+        "music": {
+          "mood": "calm",
+          "intensity": "soft",
+          "change": "start"
+        },
+        "ambience": [
+          "creek",
+          "birds_day"
+        ],
+        "beats": [
+          {
+            "actor": "bear",
+            "verb": "walk_to",
+            "target": "pier",
+            "item": null,
+            "line": null,
+            "emote": "hum",
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "wide"
+          },
+          {
+            "actor": "bear",
+            "verb": "take",
+            "target": "fishing_rod",
+            "item": "fishing_rod",
+            "line": null,
+            "emote": null,
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "auto"
+          },
+          {
+            "actor": "masha",
+            "verb": "take",
+            "target": "ball",
+            "item": "ball",
+            "line": null,
+            "emote": null,
+            "sfx": null,
+            "emotion": "excited",
+            "with_previous": true,
+            "delay_s": 0.5,
+            "shot": "auto"
+          },
+          {
+            "actor": "masha",
+            "verb": "wave",
+            "target": "bear",
+            "item": null,
+            "line": "Мишка, подожди меня!",
+            "emote": null,
+            "sfx": null,
+            "emotion": "excited",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "medium"
+          },
+          {
+            "actor": "bear",
+            "verb": "fish",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": "hum",
+            "sfx": null,
+            "emotion": "neutral",
+            "with_previous": true,
+            "delay_s": 0.5,
+            "shot": "auto"
+          },
+          {
+            "actor": "masha",
+            "verb": "run_to",
+            "target": "pond_shore",
+            "item": null,
+            "line": null,
+            "emote": "giggle",
+            "sfx": null,
+            "emotion": "excited",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "tracking"
+          }
+        ],
+        "rule_hits": []
+      }
+    },
+    {
+      "text": "Маша кричит: «Мишка, лови!» — и бросает мяч. Плюх! Мяч падает в воду прямо рядом с поплавком и распугивает всю рыбу.",
+      "beatScript": {
+        "summary": "Маша бросает мяч — плюх! — прямо к поплавку. Вся рыба уплыла!",
+        "time_of_day": null,
+        "mood": "playful",
+        "music": {
+          "mood": "playful",
+          "intensity": "medium",
+          "change": "start"
+        },
+        "ambience": null,
+        "beats": [
+          {
+            "actor": "masha",
+            "verb": "wave",
+            "target": "bear",
+            "item": null,
+            "line": "Мишка, лови!",
+            "emote": null,
+            "sfx": null,
+            "emotion": "mischievous",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "medium"
+          },
+          {
+            "actor": "masha",
+            "verb": "throw",
+            "target": "pier",
+            "item": "ball",
+            "line": null,
+            "emote": null,
+            "sfx": null,
+            "emotion": "mischievous",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "auto"
+          },
+          {
+            "actor": "bear",
+            "verb": "surprised",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": null,
+            "sfx": "splash",
+            "emotion": "surprised",
+            "with_previous": true,
+            "delay_s": 0.7,
+            "shot": "close"
+          },
+          {
+            "actor": "masha",
+            "verb": "shrug",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": "uh_oh",
+            "sfx": null,
+            "emotion": "mischievous",
+            "with_previous": true,
+            "delay_s": 0.4,
+            "shot": "auto"
+          },
+          {
+            "actor": "bear",
+            "verb": "look_at",
+            "target": "masha",
+            "item": null,
+            "line": null,
+            "emote": "huff",
+            "sfx": null,
+            "emotion": "annoyed",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "auto"
+          },
+          {
+            "actor": "bear",
+            "verb": "facepalm",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": null,
+            "sfx": null,
+            "emotion": "annoyed",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "auto"
+          },
+          {
+            "actor": "masha",
+            "verb": "laugh",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": null,
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": true,
+            "delay_s": 0.5,
+            "shot": "auto"
+          }
+        ],
+        "rule_hits": []
+      }
+    },
+    {
+      "text": "Мишка вздыхает, снова закидывает удочку — и вытаскивает большую рыбу! Маша прыгает и хлопает в ладоши: «Ура! Мишка поймал рыбу!» — и звучит радостная музыка.",
+      "beatScript": {
+        "summary": "Мишка пробует снова и вытаскивает большую рыбу; Маша ликует и обнимает его.",
+        "time_of_day": null,
+        "mood": "triumphant",
+        "music": {
+          "mood": "triumphant",
+          "intensity": "full",
+          "change": "start"
+        },
+        "ambience": null,
+        "beats": [
+          {
+            "actor": "bear",
+            "verb": "sigh",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": null,
+            "sfx": null,
+            "emotion": "annoyed",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "auto"
+          },
+          {
+            "actor": "bear",
+            "verb": "fish",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": null,
+            "sfx": null,
+            "emotion": "curious",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "medium"
+          },
+          {
+            "actor": "bear",
+            "verb": "laugh",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": "roar_soft",
+            "sfx": null,
+            "emotion": "proud",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "low_angle"
+          },
+          {
+            "actor": "masha",
+            "verb": "jump",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": "cheer",
+            "sfx": null,
+            "emotion": "excited",
+            "with_previous": true,
+            "delay_s": 0.3,
+            "shot": "auto"
+          },
+          {
+            "actor": "masha",
+            "verb": "clap",
+            "target": null,
+            "item": null,
+            "line": "Ура! Мишка поймал рыбу!",
+            "emote": null,
+            "sfx": null,
+            "emotion": "excited",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "auto"
+          },
+          {
+            "actor": "masha",
+            "verb": "run_to",
+            "target": "bear",
+            "item": null,
+            "line": null,
+            "emote": "giggle",
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "auto"
+          },
+          {
+            "actor": "masha",
+            "verb": "hug",
+            "target": "bear",
+            "item": null,
+            "line": null,
+            "emote": null,
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "medium"
+          },
+          {
+            "actor": "bear",
+            "verb": "nod",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": "chuckle",
+            "sfx": null,
+            "emotion": "proud",
+            "with_previous": true,
+            "delay_s": 0.5,
+            "shot": "auto"
+          }
+        ],
+        "rule_hits": []
+      }
+    },
+    {
+      "text": "Над прудом садится солнце, стрекочут сверчки. Маша и Мишка сидят рядышком на мостках. Маша шепчет: «Это самый лучший день!»",
+      "beatScript": {
+        "summary": "На закате Маша и Мишка сидят рядышком на мостках: самый лучший день!",
+        "time_of_day": "sunset",
+        "mood": "calm",
+        "music": {
+          "mood": "calm",
+          "intensity": "soft",
+          "change": "start"
+        },
+        "ambience": [
+          "night_crickets",
+          "creek"
+        ],
+        "beats": [
+          {
+            "actor": "bear",
+            "verb": "sit",
+            "target": "pier",
+            "item": null,
+            "line": null,
+            "emote": "sigh",
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "wide"
+          },
+          {
+            "actor": "masha",
+            "verb": "sit",
+            "target": "pier",
+            "item": null,
+            "line": null,
+            "emote": "hum",
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": true,
+            "delay_s": 0.6,
+            "shot": "auto"
+          },
+          {
+            "actor": "masha",
+            "verb": "look_at",
+            "target": "bear",
+            "item": null,
+            "line": "Это самый лучший день!",
+            "emote": null,
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "close"
+          },
+          {
+            "actor": "bear",
+            "verb": "look_at",
+            "target": "masha",
+            "item": null,
+            "line": null,
+            "emote": "hum",
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": true,
+            "delay_s": 1,
+            "shot": "auto"
+          },
+          {
+            "actor": "masha",
+            "verb": "yawn_stretch",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": null,
+            "sfx": null,
+            "emotion": "sleepy",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "auto"
+          },
+          {
+            "actor": "bear",
+            "verb": "sigh",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": null,
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "wide"
+          }
+        ],
+        "rule_hits": []
+      }
+    }
+  ]
+}

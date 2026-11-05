@@ -1,0 +1,432 @@
+{
+  "id": "fishing_trip",
+  "lang": "en",
+  "title": "Fishing trip",
+  "paragraphs": [
+    {
+      "text": "Bear goes fishing at the pier. Calm music plays, the water babbles and the birds are singing. Masha grabs her ball and runs after him, \"Bear, wait for me!\"",
+      "beatScript": {
+        "summary": "Bear heads to the pier to fish in peace, and Masha runs after him with her ball.",
+        "time_of_day": null,
+        "mood": "calm",
+        "music": {
+          "mood": "calm",
+          "intensity": "soft",
+          "change": "start"
+        },
+        "ambience": [
+          "creek",
+          "birds_day"
+        ],
+        "beats": [
+          {
+            "actor": "bear",
+            "verb": "walk_to",
+            "target": "pier",
+            "item": null,
+            "line": null,
+            "emote": "hum",
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "wide"
+          },
+          {
+            "actor": "bear",
+            "verb": "take",
+            "target": "fishing_rod",
+            "item": "fishing_rod",
+            "line": null,
+            "emote": null,
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "auto"
+          },
+          {
+            "actor": "masha",
+            "verb": "take",
+            "target": "ball",
+            "item": "ball",
+            "line": null,
+            "emote": null,
+            "sfx": null,
+            "emotion": "excited",
+            "with_previous": true,
+            "delay_s": 0.5,
+            "shot": "auto"
+          },
+          {
+            "actor": "masha",
+            "verb": "wave",
+            "target": "bear",
+            "item": null,
+            "line": "Bear, wait for me!",
+            "emote": null,
+            "sfx": null,
+            "emotion": "excited",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "medium"
+          },
+          {
+            "actor": "bear",
+            "verb": "fish",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": "hum",
+            "sfx": null,
+            "emotion": "neutral",
+            "with_previous": true,
+            "delay_s": 0.5,
+            "shot": "auto"
+          },
+          {
+            "actor": "masha",
+            "verb": "run_to",
+            "target": "pond_shore",
+            "item": null,
+            "line": null,
+            "emote": "giggle",
+            "sfx": null,
+            "emotion": "excited",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "tracking"
+          }
+        ],
+        "rule_hits": []
+      }
+    },
+    {
+      "text": "Masha shouts, \"Bear, catch!\" and throws her ball. Splash! It lands in the water right next to Bear's fishing line and scares all the fish away.",
+      "beatScript": {
+        "summary": "Masha throws her ball — splash! — right next to Bear's line. No more fish!",
+        "time_of_day": null,
+        "mood": "playful",
+        "music": {
+          "mood": "playful",
+          "intensity": "medium",
+          "change": "start"
+        },
+        "ambience": null,
+        "beats": [
+          {
+            "actor": "masha",
+            "verb": "wave",
+            "target": "bear",
+            "item": null,
+            "line": "Bear, catch!",
+            "emote": null,
+            "sfx": null,
+            "emotion": "mischievous",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "medium"
+          },
+          {
+            "actor": "masha",
+            "verb": "throw",
+            "target": "pier",
+            "item": "ball",
+            "line": null,
+            "emote": null,
+            "sfx": null,
+            "emotion": "mischievous",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "auto"
+          },
+          {
+            "actor": "bear",
+            "verb": "surprised",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": null,
+            "sfx": "splash",
+            "emotion": "surprised",
+            "with_previous": true,
+            "delay_s": 0.7,
+            "shot": "close"
+          },
+          {
+            "actor": "masha",
+            "verb": "shrug",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": "uh_oh",
+            "sfx": null,
+            "emotion": "mischievous",
+            "with_previous": true,
+            "delay_s": 0.4,
+            "shot": "auto"
+          },
+          {
+            "actor": "bear",
+            "verb": "look_at",
+            "target": "masha",
+            "item": null,
+            "line": null,
+            "emote": "huff",
+            "sfx": null,
+            "emotion": "annoyed",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "auto"
+          },
+          {
+            "actor": "bear",
+            "verb": "facepalm",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": null,
+            "sfx": null,
+            "emotion": "annoyed",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "auto"
+          },
+          {
+            "actor": "masha",
+            "verb": "laugh",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": null,
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": true,
+            "delay_s": 0.5,
+            "shot": "auto"
+          }
+        ],
+        "rule_hits": []
+      }
+    },
+    {
+      "text": "Bear sighs, casts his line again and this time he catches a big fish! Masha jumps and claps, \"Hooray! Bear caught a fish!\" and happy music plays.",
+      "beatScript": {
+        "summary": "Bear tries again and lands a big fish; Masha cheers and hugs him.",
+        "time_of_day": null,
+        "mood": "triumphant",
+        "music": {
+          "mood": "triumphant",
+          "intensity": "full",
+          "change": "start"
+        },
+        "ambience": null,
+        "beats": [
+          {
+            "actor": "bear",
+            "verb": "sigh",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": null,
+            "sfx": null,
+            "emotion": "annoyed",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "auto"
+          },
+          {
+            "actor": "bear",
+            "verb": "fish",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": null,
+            "sfx": null,
+            "emotion": "curious",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "medium"
+          },
+          {
+            "actor": "bear",
+            "verb": "laugh",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": "roar_soft",
+            "sfx": null,
+            "emotion": "proud",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "low_angle"
+          },
+          {
+            "actor": "masha",
+            "verb": "jump",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": "cheer",
+            "sfx": null,
+            "emotion": "excited",
+            "with_previous": true,
+            "delay_s": 0.3,
+            "shot": "auto"
+          },
+          {
+            "actor": "masha",
+            "verb": "clap",
+            "target": null,
+            "item": null,
+            "line": "Hooray! Bear caught a fish!",
+            "emote": null,
+            "sfx": null,
+            "emotion": "excited",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "auto"
+          },
+          {
+            "actor": "masha",
+            "verb": "run_to",
+            "target": "bear",
+            "item": null,
+            "line": null,
+            "emote": "giggle",
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "auto"
+          },
+          {
+            "actor": "masha",
+            "verb": "hug",
+            "target": "bear",
+            "item": null,
+            "line": null,
+            "emote": null,
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "medium"
+          },
+          {
+            "actor": "bear",
+            "verb": "nod",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": "chuckle",
+            "sfx": null,
+            "emotion": "proud",
+            "with_previous": true,
+            "delay_s": 0.5,
+            "shot": "auto"
+          }
+        ],
+        "rule_hits": []
+      }
+    },
+    {
+      "text": "The sun goes down over the pond and the crickets start to chirp. Masha and Bear sit together on the pier. Masha whispers, \"This is the best day ever.\"",
+      "beatScript": {
+        "summary": "At sunset Masha and Bear sit side by side on the pier: the best day ever.",
+        "time_of_day": "sunset",
+        "mood": "calm",
+        "music": {
+          "mood": "calm",
+          "intensity": "soft",
+          "change": "start"
+        },
+        "ambience": [
+          "night_crickets",
+          "creek"
+        ],
+        "beats": [
+          {
+            "actor": "bear",
+            "verb": "sit",
+            "target": "pier",
+            "item": null,
+            "line": null,
+            "emote": "sigh",
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "wide"
+          },
+          {
+            "actor": "masha",
+            "verb": "sit",
+            "target": "pier",
+            "item": null,
+            "line": null,
+            "emote": "hum",
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": true,
+            "delay_s": 0.6,
+            "shot": "auto"
+          },
+          {
+            "actor": "masha",
+            "verb": "look_at",
+            "target": "bear",
+            "item": null,
+            "line": "This is the best day ever.",
+            "emote": null,
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "close"
+          },
+          {
+            "actor": "bear",
+            "verb": "look_at",
+            "target": "masha",
+            "item": null,
+            "line": null,
+            "emote": "hum",
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": true,
+            "delay_s": 1,
+            "shot": "auto"
+          },
+          {
+            "actor": "masha",
+            "verb": "yawn_stretch",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": null,
+            "sfx": null,
+            "emotion": "sleepy",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "auto"
+          },
+          {
+            "actor": "bear",
+            "verb": "sigh",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": null,
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "wide"
+          }
+        ],
+        "rule_hits": []
+      }
+    }
+  ]
+}

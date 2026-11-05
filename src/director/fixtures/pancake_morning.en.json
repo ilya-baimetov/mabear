@@ -1,0 +1,483 @@
+{
+  "id": "pancake_morning",
+  "lang": "en",
+  "title": "Pancake morning",
+  "paragraphs": [
+    {
+      "text": "Early in the morning, cheerful music plays and the birds are singing. Masha runs to the table and shouts, \"Bear, I'm making you pancakes!\"",
+      "beatScript": {
+        "summary": "A bright morning: Masha dashes to the table and promises Bear pancakes.",
+        "time_of_day": "morning",
+        "mood": "playful",
+        "music": {
+          "mood": "playful",
+          "intensity": "medium",
+          "change": "start"
+        },
+        "ambience": [
+          "birds_day"
+        ],
+        "beats": [
+          {
+            "actor": "masha",
+            "verb": "run_to",
+            "target": "table",
+            "item": null,
+            "line": null,
+            "emote": "giggle",
+            "sfx": null,
+            "emotion": "excited",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "wide"
+          },
+          {
+            "actor": "bear",
+            "verb": "look_at",
+            "target": "masha",
+            "item": null,
+            "line": null,
+            "emote": null,
+            "sfx": null,
+            "emotion": "curious",
+            "with_previous": true,
+            "delay_s": 0.6,
+            "shot": "auto"
+          },
+          {
+            "actor": "masha",
+            "verb": "wave",
+            "target": "bear",
+            "item": null,
+            "line": "Bear, I'm making you pancakes!",
+            "emote": null,
+            "sfx": null,
+            "emotion": "excited",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "medium"
+          },
+          {
+            "actor": "bear",
+            "verb": "yawn_stretch",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": null,
+            "sfx": null,
+            "emotion": "sleepy",
+            "with_previous": true,
+            "delay_s": 0.5,
+            "shot": "auto"
+          },
+          {
+            "actor": "bear",
+            "verb": "nod",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": "hum",
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "auto"
+          },
+          {
+            "actor": "masha",
+            "verb": "clap",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": "cheer",
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": true,
+            "delay_s": 0.3,
+            "shot": "auto"
+          },
+          {
+            "actor": "bear",
+            "verb": "walk_to",
+            "target": "bench",
+            "item": null,
+            "line": null,
+            "emote": "hum",
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "auto"
+          }
+        ],
+        "rule_hits": []
+      }
+    },
+    {
+      "text": "Masha grabs the big bag of flour and says, \"Pancakes need lots of flour!\" Then she sneezes — poof! — and a big flour cloud covers Masha and Bear.",
+      "beatScript": {
+        "summary": "Masha grabs the flour and sneezes — poof! A flour cloud covers them both.",
+        "time_of_day": null,
+        "mood": "playful",
+        "music": {
+          "mood": "playful",
+          "intensity": "medium",
+          "change": "continue"
+        },
+        "ambience": null,
+        "beats": [
+          {
+            "actor": "masha",
+            "verb": "take",
+            "target": "flour_bag",
+            "item": "flour_bag",
+            "line": null,
+            "emote": "giggle",
+            "sfx": null,
+            "emotion": "mischievous",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "medium"
+          },
+          {
+            "actor": "bear",
+            "verb": "sit",
+            "target": "bench",
+            "item": null,
+            "line": null,
+            "emote": "hum",
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": true,
+            "delay_s": 0.4,
+            "shot": "auto"
+          },
+          {
+            "actor": "masha",
+            "verb": "look_at",
+            "target": "bear",
+            "item": null,
+            "line": "Pancakes need lots of flour!",
+            "emote": null,
+            "sfx": null,
+            "emotion": "proud",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "auto"
+          },
+          {
+            "actor": "masha",
+            "verb": "sneeze",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": null,
+            "sfx": "pop",
+            "emotion": "surprised",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "close"
+          },
+          {
+            "actor": "bear",
+            "verb": "surprised",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": null,
+            "sfx": null,
+            "emotion": "surprised",
+            "with_previous": true,
+            "delay_s": 0.3,
+            "shot": "auto"
+          },
+          {
+            "actor": "masha",
+            "verb": "throw",
+            "target": "table",
+            "item": "flour_bag",
+            "line": null,
+            "emote": "uh_oh",
+            "sfx": null,
+            "emotion": "surprised",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "auto"
+          },
+          {
+            "actor": "bear",
+            "verb": "sneeze",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": null,
+            "sfx": null,
+            "emotion": "surprised",
+            "with_previous": true,
+            "delay_s": 0.6,
+            "shot": "auto"
+          },
+          {
+            "actor": "masha",
+            "verb": "laugh",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": null,
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "wide"
+          },
+          {
+            "actor": "bear",
+            "verb": "facepalm",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": null,
+            "sfx": null,
+            "emotion": "annoyed",
+            "with_previous": true,
+            "delay_s": 0.5,
+            "shot": "auto"
+          }
+        ],
+        "rule_hits": []
+      }
+    },
+    {
+      "text": "Masha takes the frying pan and cooks pancakes at the table — sizzle, sizzle! Bear sniffs the yummy smell and his tummy rumbles. \"No peeking, Bear!\" Masha giggles.",
+      "beatScript": {
+        "summary": "Masha fries pancakes while hungry Bear tries to peek.",
+        "time_of_day": null,
+        "mood": "playful",
+        "music": {
+          "mood": "playful",
+          "intensity": "medium",
+          "change": "continue"
+        },
+        "ambience": null,
+        "beats": [
+          {
+            "actor": "masha",
+            "verb": "take",
+            "target": "frying_pan",
+            "item": "frying_pan",
+            "line": null,
+            "emote": "hum",
+            "sfx": null,
+            "emotion": "proud",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "auto"
+          },
+          {
+            "actor": "masha",
+            "verb": "cook",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": null,
+            "sfx": "sizzle",
+            "emotion": "happy",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "medium"
+          },
+          {
+            "actor": "bear",
+            "verb": "look_at",
+            "target": "table",
+            "item": null,
+            "line": null,
+            "emote": "growl_soft",
+            "sfx": null,
+            "emotion": "curious",
+            "with_previous": true,
+            "delay_s": 1,
+            "shot": "auto"
+          },
+          {
+            "actor": "bear",
+            "verb": "peek",
+            "target": "masha",
+            "item": null,
+            "line": null,
+            "emote": null,
+            "sfx": null,
+            "emotion": "curious",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "over_shoulder"
+          },
+          {
+            "actor": "masha",
+            "verb": "point_at",
+            "target": "bear",
+            "item": null,
+            "line": "No peeking, Bear!",
+            "emote": "giggle",
+            "sfx": null,
+            "emotion": "mischievous",
+            "with_previous": true,
+            "delay_s": 0.8,
+            "shot": "auto"
+          },
+          {
+            "actor": "bear",
+            "verb": "sigh",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": null,
+            "sfx": null,
+            "emotion": "sad",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "auto"
+          },
+          {
+            "actor": "masha",
+            "verb": "laugh",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": null,
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": true,
+            "delay_s": 0.4,
+            "shot": "auto"
+          }
+        ],
+        "rule_hits": []
+      }
+    },
+    {
+      "text": "Masha bangs on the frying pan — clang, clang! — and shouts, \"Breakfast is ready, Bear!\" Bear gobbles up all the pancakes and pats his tummy while happy music plays and the bees buzz.",
+      "beatScript": {
+        "summary": "Clang-clang! Breakfast is served and Bear gobbles every pancake.",
+        "time_of_day": null,
+        "mood": "triumphant",
+        "music": {
+          "mood": "triumphant",
+          "intensity": "full",
+          "change": "start"
+        },
+        "ambience": [
+          "birds_day",
+          "bees"
+        ],
+        "beats": [
+          {
+            "actor": "masha",
+            "verb": "wave",
+            "target": "bear",
+            "item": null,
+            "line": null,
+            "emote": null,
+            "sfx": "pot_clang",
+            "emotion": "excited",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "medium"
+          },
+          {
+            "actor": "masha",
+            "verb": "point_at",
+            "target": "table",
+            "item": null,
+            "line": "Breakfast is ready, Bear!",
+            "emote": null,
+            "sfx": null,
+            "emotion": "proud",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "auto"
+          },
+          {
+            "actor": "bear",
+            "verb": "stand_up",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": null,
+            "sfx": null,
+            "emotion": "excited",
+            "with_previous": true,
+            "delay_s": 0.5,
+            "shot": "auto"
+          },
+          {
+            "actor": "bear",
+            "verb": "take",
+            "target": "pancakes",
+            "item": "pancakes",
+            "line": null,
+            "emote": null,
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "auto"
+          },
+          {
+            "actor": "bear",
+            "verb": "eat",
+            "target": null,
+            "item": "pancakes",
+            "line": null,
+            "emote": null,
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "close"
+          },
+          {
+            "actor": "masha",
+            "verb": "clap",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": "giggle",
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": true,
+            "delay_s": 1,
+            "shot": "auto"
+          },
+          {
+            "actor": "bear",
+            "verb": "nod",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": "chuckle",
+            "sfx": null,
+            "emotion": "proud",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "auto"
+          },
+          {
+            "actor": "masha",
+            "verb": "hug",
+            "target": "bear",
+            "item": null,
+            "line": null,
+            "emote": "giggle",
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "medium"
+          }
+        ],
+        "rule_hits": []
+      }
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+[
+  {
+    "id": "en_nap",
+    "lang": "en",
+    "paragraph": "Bear naps in the hammock. Masha sneaks up and wakes him.",
+    "previous": [],
+    "canonViolating": false,
+    "note": "D3 terse script → rich staging"
+  },
+  {
+    "id": "en_rain",
+    "lang": "en",
+    "paragraph": "It starts to rain. Spooky music plays. Masha runs to the porch shouting \"Bear! Bear!\"",
+    "previous": [],
+    "canonViolating": false,
+    "note": "D10 sound in the script + quoted dialogue"
+  },
+  {
+    "id": "en_canon",
+    "lang": "en",
+    "paragraph": "Bear says thank you to Masha and grabs a knife.",
+    "previous": [],
+    "canonViolating": true,
+    "note": "D4 canon/safety: Bear never speaks, no weapons"
+  },
+  {
+    "id": "ru_carrot",
+    "lang": "ru",
+    "paragraph": "Маша пробирается в огород и ворует морковку. Медведь видит её и вздыхает.",
+    "previous": [],
+    "canonViolating": false,
+    "note": "RU terse mischief"
+  },
+  {
+    "id": "ru_swing",
+    "lang": "ru",
+    "paragraph": "Маша качается на качелях и кричит: «Мишка, смотри, как я высоко!»",
+    "previous": [],
+    "canonViolating": false,
+    "note": "RU quoted dialogue, verbatim"
+  },
+  {
+    "id": "ru_fishing",
+    "lang": "ru",
+    "paragraph": "Медведь ловит рыбу на мостике. Маша бросает мяч, и он с плеском падает в пруд. Играет весёлая музыка.",
+    "previous": [],
+    "canonViolating": false,
+    "note": "RU sound: splash + music"
+  }
+]

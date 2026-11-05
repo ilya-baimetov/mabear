@@ -32,12 +32,14 @@ export function costUsd(model: string, usage: Usage | null): number {
 
 /** Diffusion video price per generated second (Veo on Vertex AI). */
 export const VIDEO_PRICE = {
+  /** Veo 3.1 Lite, video + audio, 720p */
   low: 0.05,
-  high: 0.75,
-  /** value used in the calculator */
+  /** Veo 3.1, video + audio, 4k */
+  high: 0.6,
+  /** value used in the calculator: Veo 3.1, video + audio, 720p/1080p */
   default: 0.4,
-  label: "per pitch deck, unverified",
-  source: "Pitch deck range; check https://cloud.google.com/vertex-ai/generative-ai/pricing (Veo rows)",
+  label: "Veo 3.1 video+audio 1080p on Vertex AI, $0.40 per generated second (page lists \"$0.40 / 1 count\"; Lite 720p $0.05, 4k $0.60)",
+  source: "https://cloud.google.com/vertex-ai/generative-ai/pricing (Veo rows, fetched 2026-11-05)",
   asOf: "2026-11-05",
 };
 
