@@ -201,6 +201,8 @@ interface Kin {
   turned: number;
   /** mean path speed of the clip (m/s) — a hurried walk turns into a run */
   speed?: number;
+  /** in-place turn rate (rad/s) — drives the foot shuffle */
+  turnRate?: number;
 }
 
 function kinematics(r: Resolved, lt: number): Kin {
@@ -230,8 +232,9 @@ function kinematics(r: Resolved, lt: number): Kin {
   // in-place turns take longer the further they go (Bear turns slower than Masha)
   const dYaw = Math.abs(wrapAngle(r.endYaw - r.startYaw));
   const turnS = clamp((dYaw / Math.PI) * (clip.params.ambient ? 0.9 : 0.6) * (r.heavy ? 1.5 : 1), 0.2, Math.max(0.2, clip.dur));
-  const k = smooth(clamp01(lt / turnS));
-  return { pos: r.startPos, yaw: lerpAngle(r.startYaw, r.endYaw, k), dist: 0, turned: dYaw * k };
+  const x = clamp01(lt / turnS);
+  const k = smooth(x);
+  return { pos: r.startPos, yaw: lerpAngle(r.startYaw, r.endYaw, k), dist: 0, turned: dYaw * k, turnRate: (dYaw * 6 * x * (1 - x)) / turnS };
 }
 
 // ---------- props ----------
@@ -383,7 +386,7 @@ function makeCtx(actor: ActorId, r: Resolved | null, kin: Kin, lt: number, t: nu
   void seg;
   return {
     actor, style, dur: clip ? clip.dur : 1, emotion: clip ? clip.emotion : "neutral", t,
-    dist: kin.dist, turned: kin.turned, speed: kin.speed ?? 0, fromPosture, posture, targetLocal,
+    dist: kin.dist, turned: kin.turned, speed: kin.speed ?? 0, turnRate: kin.turnRate ?? 0, fromPosture, posture, targetLocal,
     seat: seatMark ? SEAT_HEIGHT[seatMark] ?? 0 : 0,
   };
 }

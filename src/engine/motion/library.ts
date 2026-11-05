@@ -3,8 +3,8 @@
 // Pure: evaluatePose(verb, localT, params, ctx) depends only on its arguments.
 import type { Verb } from "../../shared/schema";
 import { LOCOMOTION_VERBS } from "../../shared/grammar";
-import { addLayer, breathingPose, qmul, type Pose, type PoseLayer } from "./blend";
-import { UPPER, mask, rx, rz, type ClipParams, type VerbCtx, type VerbImpl, type VerbKind } from "./verbs/common";
+import { addLayer, breathingPose, clamp01, qmul, type Pose, type PoseLayer } from "./blend";
+import { UPPER, lowestFoot, mask, rx, rz, type ClipParams, type VerbCtx, type VerbImpl, type VerbKind } from "./verbs/common";
 import * as loco from "./verbs/locomotion";
 import * as body from "./verbs/body";
 import * as gesture from "./verbs/gesture";
@@ -53,6 +53,9 @@ export const VERB_CLIPS: Partial<Record<Verb, string[]>> = {
 /** Verbs that change posture themselves (they own the whole body even when sitting/lying). */
 const POSTURE_VERBS = new Set<Verb>(["sit", "stand_up", "sleep", "wake_up", "fall_down", "swing", "jump", "spin", "dance", "hide", "peek", ...LOCOMOTION_VERBS]);
 
+/** Verbs that manage their own height (lying, sitting, airborne, getting up): no ground lock. */
+const FREE_VERBS = new Set<Verb>(["sit", "sleep", "fall_down", "swing", "jump", "wake_up", "stand_up"]);
+
 /** Bear's weight / Masha's lightness, applied after every verb while standing. */
 function applyStyle(L: PoseLayer, ctx: VerbCtx, standing: boolean): PoseLayer {
   const s = ctx.style;
@@ -60,39 +63,53 @@ function applyStyle(L: PoseLayer, ctx: VerbCtx, standing: boolean): PoseLayer {
   const pre = (b: string, q: [number, number, number, number]) => {
     bones[b] = qmul(q, bones[b] ?? [0, 0, 0, 1]);
   };
-  // arms clear the body (Bear's belly, Masha's dress)
+  // arms clear the body (Bear's belly, Masha's dress) — in every verb
   pre("LeftArm", rz(s.armOut));
   pre("RightArm", rz(-s.armOut));
-  let hips = L.hipsOffset;
   if (standing) {
     pre("LeftUpLeg", rz(s.stance));
     pre("RightUpLeg", rz(-s.stance));
     if (s.hipsDrop > 0) {
-      // lower hips with bent knees, feet stay planted
+      // carry the weight low: knees bent (the ground lock then lowers the hips with the feet planted)
       const a = Math.acos(Math.max(-1, 1 - s.hipsDrop / s.hipHeight));
       for (const side of ["Left", "Right"]) {
         pre(`${side}UpLeg`, rx(-a));
         bones[`${side}Leg`] = qmul(bones[`${side}Leg`] ?? [0, 0, 0, 1], rx(2 * a));
         bones[`${side}Foot`] = qmul(bones[`${side}Foot`] ?? [0, 0, 0, 1], rx(-a));
       }
-      hips = [hips[0], hips[1] - s.hipsDrop, hips[2]];
     }
   }
-  return { ...L, bones, hipsOffset: hips };
+  return { ...L, bones };
+}
+
+/** Small alternating steps while turning on the spot, so feet re-plant instead of skating round. */
+function shuffle(L: PoseLayer, ctx: VerbCtx): PoseLayer {
+  const rate = Math.abs(ctx.turnRate ?? 0);
+  if (rate < 0.15) return L;
+  const w = clamp01((rate - 0.15) / 1.2);
+  const stepAngle = ctx.actor === "bear" ? 0.4 : 0.5;
+  const p = (ctx.turned ?? 0) / stepAngle;
+  const i = Math.floor(p);
+  const lift = Math.sin((p - i) * Math.PI) * w;
+  const side = i % 2 === 0 ? "Left" : "Right";
+  return addLayer(L, { [`${side}UpLeg`]: rx(-0.35 * lift), [`${side}Leg`]: rx(0.7 * lift), [`${side}Foot`]: rx(0.2 * lift) });
 }
 
 /**
  * Full pose for an actor playing `verb` at clip-local time `localT`, honouring held postures:
  * sleeping actors stay lying (only wake_up/stand_up move them), sitting/carried actors gesture with the
- * upper body only. Returns the layer plus the breathing driver.
+ * upper body only. Standing poses are ground-locked by foot FK (no floating, no sinking). Returns the layer plus
+ * the breathing driver.
  */
 export function evaluatePose(verb: Verb, localT: number, params: ClipParams, ctx: VerbCtx): { layer: PoseLayer; breathe: number } {
   const impl = VERB_IMPLS[verb] ?? VERB_IMPLS.idle;
   const held = ctx.fromPosture;
   let L: PoseLayer;
   const seatedLean = (held === "sit" || held === "carried") && (verb === "peek" || verb === "hide");
+  let upright = false;
   if ((POSTURE_VERBS.has(verb) && !seatedLean) || held === "stand" || held === "offstage") {
     L = impl(localT, params, ctx);
+    upright = true;
   } else if (held === "sleep" && ctx.posture !== "sleep") {
     // startled awake (surprised / scared while asleep): get up like wake_up, keeping the verb's face
     const w = VERB_IMPLS.wake_up(localT, params, ctx);
@@ -105,10 +122,18 @@ export function evaluatePose(verb: Verb, localT: number, params: ClipParams, ctx
     const top = impl(localT, params, ctx);
     L = { ...mask(base, top, UPPER), face: top.face, yawOffset: 0 };
   }
-  const standing = (held === "stand" || held === "offstage" || LOCOMOTION_VERBS.includes(verb)) && !["sit", "sleep", "fall_down", "swing", "jump", "wake_up", "stand_up", "hide", "peek", "carry"].includes(verb);
+  const standing = upright && !FREE_VERBS.has(verb);
   L = applyStyle(L, ctx, standing);
+  if (standing && !LOCOMOTION_VERBS.includes(verb)) L = shuffle(L, ctx);
   const br = breathingPose(ctx.t, ctx.style.breathRate, ctx.style.breathDepth);
   L = addLayer(L, br.pose);
+  // ground contact: pin the lowest sole to the floor (or only keep it from sinking during run flight phases)
+  const mode = L.ground ?? (standing ? "lock" : "free");
+  if (mode !== "free") {
+    const low = lowestFoot(L.bones, L.hipsOffset, ctx.style);
+    if (mode === "lock" || low < 0) L = { ...L, hipsOffset: [L.hipsOffset[0], L.hipsOffset[1] - low, L.hipsOffset[2]] };
+  }
+  if (L.lift) L = { ...L, hipsOffset: [L.hipsOffset[0], L.hipsOffset[1] + L.lift, L.hipsOffset[2]] };
   return { layer: L, breathe: br.breathe };
 }
 

@@ -1,6 +1,6 @@
 // Emotion verbs: procedural on the Mixamo idle; cry uses the Xbot sad pose as its base.
 import { addLayer, qmul, smooth, window01 } from "../blend";
-import { ARMS, UPPER, arm, idleBase, leg, mask, poseClip, pose, rx, ry, rz, type VerbImpl } from "./common";
+import { ARMS, UPPER, arm, idleBase, leg, mask, poseClip, pose, preRotate, rx, ry, rz, type VerbImpl } from "./common";
 
 export const laugh: VerbImpl = (lt, _p, ctx) => {
   const k = window01(lt, 0, ctx.dur, 0.2);
@@ -17,8 +17,8 @@ export const laugh: VerbImpl = (lt, _p, ctx) => {
     Spine2: rx(-0.08 * k),
     Head: rx(-0.15 * k + 0.08 * bob),
     LeftShoulder: rz(0.06 * bob), RightShoulder: rz(-0.06 * bob),
-  }, 1, [0, Math.abs(bob) * (ctx.actor === "masha" ? 0.02 : 0.015), 0]);
-  return { ...out, face: { emotion: "happy", viseme: "open_wide", visemeWeight: 0.5 + 0.5 * Math.abs(bob), lidClose: 0.45 * k } };
+  });
+  return { ...out, lift: Math.abs(bob) * (ctx.actor === "masha" ? 0.02 : 0.008), face: { emotion: "happy", viseme: "open_wide", visemeWeight: 0.5 + 0.5 * Math.abs(bob), lidClose: 0.45 * k } };
 };
 
 export const cry: VerbImpl = (lt, _p, ctx) => {
@@ -53,7 +53,8 @@ export const surprised: VerbImpl = (lt, _p, ctx) => {
   const arms = pose(arm("Left", -0.2, 0.5, 1.2, -1.2), arm("Right", -0.2, 0.5, 1.2, -1.2));
   const L = mask(base, { bones: arms, hipsOffset: [0, 0, 0] }, ARMS, jolt);
   return {
-    ...addLayer(L, { Spine: rx(-0.2 * jolt), Head: rx(-0.15 * jolt) }, 1, [0, hop * (ctx.actor === "masha" ? 0.08 : 0.05), -0.03 * jolt]),
+    ...addLayer(L, { Spine: rx(-0.2 * jolt), Head: rx(-0.15 * jolt) }, 1, [0, 0, -0.03 * jolt]),
+    lift: hop * (ctx.actor === "masha" ? 0.08 : 0.04),
     face: { emotion: "surprised", browRaise: jolt, viseme: "o", visemeWeight: jolt },
   };
 };
@@ -109,15 +110,22 @@ export const sneeze: VerbImpl = (lt, _p, ctx) => {
 };
 
 export const sigh: VerbImpl = (lt, _p, ctx) => {
+  // a long-suffering sigh: a deep breath in (chest swells, shoulders rise high, head tips back), held a beat,
+  // then everything sags out further than it started (Bear's is big and slow)
   const u = lt / ctx.dur;
-  const rise = smooth(u / 0.4) * (1 - smooth((u - 0.4) / 0.4));
-  const slump = smooth((u - 0.45) / 0.35) * (1 - smooth((u - 0.9) / 0.1));
-  const base = idleBase(ctx, 0.2);
+  const big = ctx.actor === "bear" ? 1.4 : 1;
+  const rise = smooth(u / 0.38) * (1 - smooth((u - 0.48) / 0.3));
+  const slump = smooth((u - 0.5) / 0.3) * (1 - smooth((u - 0.9) / 0.1));
+  const base = idleBase(ctx, 0.15);
   const L = addLayer(base, {
-    LeftShoulder: rz(0.25 * rise - 0.08 * slump), RightShoulder: rz(-0.25 * rise + 0.08 * slump),
-    Spine1: rx(-0.08 * rise + 0.12 * slump),
-    Head: rx(-0.15 * rise + 0.25 * slump),
-  }, 1, [0, 0.01 * rise - 0.015 * slump, 0]);
-  return { ...L, face: { emotion: "annoyed", lidClose: 0.5 * slump, viseme: "o", visemeWeight: 0.4 * slump } };
+    LeftShoulder: rz((0.32 * rise - 0.1 * slump) * big), RightShoulder: rz((-0.32 * rise + 0.1 * slump) * big),
+    Spine1: rx((-0.07 * rise + 0.12 * slump) * big),
+    Spine2: rx((-0.08 * rise + 0.08 * slump) * big),
+    Neck: rx((-0.05 * rise + 0.1 * slump) * big),
+    Head: qmul(rx((-0.16 * rise + 0.22 * slump) * big), rz(0.06 * slump)),
+  });
+  // arms hang heavier as the breath goes out
+  const out = preRotate(L, { LeftArm: rz(-0.12 * slump * big), RightArm: rz(0.12 * slump * big) });
+  return { ...out, face: { emotion: "annoyed", lidClose: 0.2 * rise + 0.6 * slump, browRaise: 0.4 * rise - 0.3 * slump, viseme: "o", visemeWeight: 0.5 * slump } };
 };
 

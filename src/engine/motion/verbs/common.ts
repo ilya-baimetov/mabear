@@ -110,6 +110,8 @@ export interface VerbCtx {
   turned: number;
   /** mean path speed of the locomotion clip (m/s); 0 when unknown */
   speed?: number;
+  /** yaw rate (rad/s) of an in-place turn — drives the foot shuffle */
+  turnRate?: number;
   /** posture before the clip and after it */
   fromPosture: Posture;
   posture: Posture;

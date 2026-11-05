@@ -74,7 +74,8 @@ function transition(from: PoseLayer, to: PoseLayer, k: number): PoseLayer {
 
 export const idle: VerbImpl = (_lt, _p, ctx) => idleBase(ctx);
 
-export const jump: VerbImpl = (lt, _p, ctx) => {
+export const jump: VerbImpl = (lt, _p, ctx) => ({ ...jumpPose(lt, ctx), ground: "free" });
+function jumpPose(lt: number, ctx: VerbCtx): PoseLayer {
   const u = lt / ctx.dur;
   const h = ctx.style.hipHeight;
   const peak = ctx.actor === "masha" ? 0.28 : 0.2;
@@ -86,7 +87,7 @@ export const jump: VerbImpl = (lt, _p, ctx) => {
     leg("Left", 0.6 * crouch + tuck, 1.2 * crouch + tuck * 1.2), leg("Right", 0.6 * crouch + tuck, 1.2 * crouch + tuck * 1.2),
     { Spine: rx(0.25 * crouch - 0.1 * air), LeftArm: rz(-0.3 * crouch), RightArm: rz(0.3 * crouch) },
   ), 1, [0, -0.22 * h * crouch + peak * air, 0]);
-};
+}
 
 export const spin: VerbImpl = (lt, _p, ctx) => {
   const u = lt / ctx.dur;
@@ -95,7 +96,8 @@ export const spin: VerbImpl = (lt, _p, ctx) => {
   const base = idleBase(ctx, 0.2);
   const L = addLayer(base, pose(
     { LeftArm: rz(0.9 * out), RightArm: rz(-0.9 * out), Head: ry(-0.3 * Math.sin(u * Math.PI)), Spine: rz(0.1 * Math.sin(u * Math.PI * 2)) },
-  ), 1, [0, Math.sin(u * Math.PI) * 0.04 * ctx.style.bounce, 0]);
+  ));
+  L.lift = Math.sin(u * Math.PI) * 0.04 * ctx.style.bounce;
   L.yawOffset = turn;
   return L;
 };

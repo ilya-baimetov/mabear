@@ -109,19 +109,22 @@ export const swing: VerbImpl = (lt, _p, ctx) => {
 };
 
 export const carry: VerbImpl = (lt, _p, ctx) => {
-  // Bear lifts Masha onto his shoulders: squat and reach (0–0.35), lift (0.35–0.6), hold her ankles
+  // Bear lifts Masha onto his shoulders, carefully: squat and reach (0–0.35), lift with a grunt (0.3–0.6),
+  // then hold her ankles, glancing up at her and swaying gently
   const u = lt / ctx.dur;
-  const squat = window01(u, 0, 0.5, 0.15) * (ctx.dur > 0 ? 1 : 0);
+  const squat = window01(u, 0, 0.55, 0.15);
   const lift = smooth((u - 0.3) / 0.3);
-  const reach = arm("Left", 0.9 * (1 - lift), 1.2, 0.4), reachR = arm("Right", 0.9 * (1 - lift), 1.2, 0.4);
-  const hold = pose(arm("Left", -0.7, 0.35, 1.9, -1.4), arm("Right", -0.7, 0.35, 1.9, -1.4));
-  const arms = lift > 0 ? blendLayers({ bones: { ...reach, ...reachR }, hipsOffset: [0, 0, 0] }, { bones: hold, hipsOffset: [0, 0, 0] }, lift).bones : { ...reach, ...reachR };
+  const settled = smooth((u - 0.55) / 0.2);
+  const reach = pose(arm("Left", 0.9 * (1 - lift), 1.2, 0.4), arm("Right", 0.9 * (1 - lift), 1.2, 0.4));
+  const hold = pose(arm("Left", -0.75, 0.3, 1.95, -1.4), arm("Right", -0.75, 0.3, 1.95, -1.4));
+  const arms = blendLayers({ bones: reach, hipsOffset: [0, 0, 0] }, { bones: hold, hipsOffset: [0, 0, 0] }, lift).bones;
   const L = armsOver(ctx, arms, 1, 0.3);
+  const sway = Math.sin(lt * 1.6) * 0.04 * settled;
   const out = addLayer(L, pose(
-    { Spine: rx(0.45 * squat * (1 - lift)) },
+    { Spine: rx(0.45 * squat * (1 - lift) - 0.04 * settled), Spine1: rz(sway), Neck: rx(-0.12 * settled), Head: qmul(rx(-0.18 * settled), ry(0.15 * Math.sin(lt * 0.9) * settled)) },
     leg("Left", 0.6 * squat, 1.1 * squat), leg("Right", 0.6 * squat, 1.1 * squat),
-  ), 1, [0, -0.25 * ctx.style.hipHeight * squat, 0]);
-  return { ...out, face: { emotion: ctx.emotion === "neutral" ? "happy" : ctx.emotion } };
+  ));
+  return { ...out, face: { emotion: ctx.emotion === "neutral" ? "happy" : ctx.emotion, browRaise: 0.3 * settled } };
 };
 
 export const water_plants: VerbImpl = (lt, _p, ctx) => {

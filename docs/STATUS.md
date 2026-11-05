@@ -20,3 +20,15 @@
 | D5 | Economics panel | e2e 7 (plan size, cost, FPS, economics visible only with ?pitch=1); unit schema.test.ts (cost math) |
 | D6 | EN ⇄ RU | e2e 6 (3 labels switch, RU example loads); unit fixtures.test.ts (Cyrillic RU lines) |
 | D10 | Sound in the script | e2e 7b (rain ambience + spooky music compiled; dialogue/foley/music scheduled); unit audioCues.test.ts + audio.test.ts |
+
+## M7 (part 1) — Deployed + smoke test + director eval (05:27 UTC)
+- **Done:** `.deploy-ready` committed; Workers Builds `0fe5b521` (d3c733f) and `54dfa2b9` (13e4a5b) both **success**. §12 smoke test against https://mabear.ilya-baimetov.workers.dev all green: health 200, noindex header, `/` → login, `/api/direct` 401 without cookie, login → cookie, two golden prompts → `source=llm` (9 and 7 beats, Opus). The owner-set `ANTHROPIC_API_KEY` is present.
+- **Director eval (deployed Worker, §8.4), round 1 — both models 6/6:**
+
+| Model | Pass rate | P50 latency | Mean cost / paragraph | Beats (min–max, mean) | Staging richness |
+|---|---|---|---|---|---|
+| claude-opus-5-5 | 6/6 (100%) | 6 944 ms | $0.0303 (incl. one $0.083 cache-write call; ~$0.02 warm) | 6–10, 7.7 | Richer: more parallel reactions and in-character business (e.g. 10-beat fishing scene), 3 rule hits on the canon prompt |
+| claude-haiku-5-5 | 6/6 (100%) | 4 598 ms | $0.00092 | 5–8, 6.3 | Valid and on-model but plainer: fewer reaction beats, 2 rule hits on the canon prompt |
+
+- **Next:** keep the deployed default on `claude-opus-5-5` (spec); director tuning round 2 on beat richness; final e2e + screenshot review.
+- **Risks:** Opus latency ~7 s per paragraph (the offline preview covers the wait).

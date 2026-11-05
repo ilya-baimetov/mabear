@@ -15,8 +15,8 @@ function gestureClip(name: string, lt: number, ctx: VerbCtx, bones = UPPER, loop
 export const wave: VerbImpl = (lt, _p, ctx) => {
   // the robot wave raises the right arm; loop the clip's middle (the waving part) for long beats
   const L = gestureClip("robot_wave", lt, ctx, UPPER_NO_HEAD, true);
-  const out = addLayer(L, ctx.actor === "masha" ? { Spine: rz(Math.sin(lt * 6) * 0.05) } : {}, 1, [0, ctx.actor === "masha" ? Math.abs(Math.sin(lt * 6)) * 0.015 : 0, 0]);
-  return { ...out, face: { browRaise: 0.3 } };
+  const out = addLayer(L, ctx.actor === "masha" ? { Spine: rz(Math.sin(lt * 6) * 0.05), LeftLeg: rx(0.25 * Math.abs(Math.sin(lt * 6))), RightLeg: rx(0.25 * Math.abs(Math.sin(lt * 6))) } : {});
+  return { ...out, lift: ctx.actor === "masha" ? Math.abs(Math.sin(lt * 6 + 0.6)) * 0.012 : 0, face: { browRaise: 0.3 } };
 };
 
 export const clap: VerbImpl = (lt, _p, ctx) => {
@@ -26,7 +26,7 @@ export const clap: VerbImpl = (lt, _p, ctx) => {
   const base = idleBase(ctx, 0.5);
   const arms = pose(arm("Left", 0.55, 1.05 - 0.35 * open, 0.85 + 0.25 * open, -0.6), arm("Right", 0.55, 1.05 - 0.35 * open, 0.85 + 0.25 * open, -0.6));
   const L = mask(base, { bones: arms, hipsOffset: [0, 0, 0] }, ARMS, k);
-  return { ...addLayer(L, {}, 1, [0, ctx.actor === "masha" ? Math.abs(Math.sin(lt * 5)) * 0.012 : 0, 0]), face: { emotion: "happy" } };
+  return { ...L, lift: ctx.actor === "masha" ? Math.abs(Math.sin(lt * 5)) * 0.015 : 0, face: { emotion: "happy" } };
 };
 
 /** Arm pointing toward a local-frame direction (from the shoulder). */
@@ -87,13 +87,26 @@ export const facepalm: VerbImpl = (lt, _p, ctx) => {
 
 export const hug: VerbImpl = (lt, _p, ctx) => {
   const u = lt / ctx.dur;
-  const k = window01(u, 0, 1, 0.2);
-  const squeeze = 0.12 * Math.sin(u * Math.PI * 3) * k;
-  const base = idleBase(ctx, 0.2);
-  // Bear bends down to Masha; Masha reaches up
-  const reachDown = ctx.actor === "bear" ? 0.45 : -0.35;
-  const arms = pose(arm("Left", reachDown * 0.8, 1.2, 1.1 + squeeze), arm("Right", reachDown * 0.8, 1.2, 1.1 + squeeze));
+  const k = window01(u, 0, 1, 0.22);
+  const base = idleBase(ctx, 0.15);
+  if (ctx.actor === "bear") {
+    // tender: he bends down slowly, wraps her in, rocks gently side to side, eyes closed, head resting on hers
+    const rock = Math.sin(lt * 2.2) * 0.07 * k;
+    const squeeze = 0.08 * Math.sin(u * Math.PI) * k;
+    const arms = pose(arm("Left", 0.55, 1.15, 1.25 + squeeze, -0.2), arm("Right", 0.55, 1.15, 1.25 + squeeze, -0.2));
+    const L = mask(base, { bones: arms, hipsOffset: [0, 0, 0] }, ARMS, k);
+    const out = addLayer(L, {
+      Spine: rx(0.32 * k), Spine1: qmul(rx(0.12 * k), rz(rock)), Spine2: rz(rock * 0.6),
+      Neck: rx(0.18 * k), Head: qmul(rz(0.28 * k), rx(0.1 * k)),
+      LeftLeg: rx(0.25 * k), RightLeg: rx(0.25 * k), LeftUpLeg: rx(-0.12 * k), RightUpLeg: rx(-0.12 * k),
+    });
+    return { ...out, face: { emotion: "happy", lidClose: 0.8 * k } };
+  }
+  // Masha reaches up on tiptoes and squeezes tight
+  const squeeze = 0.15 * Math.sin(u * Math.PI * 3) * k;
+  const arms = pose(arm("Left", -0.35, 1.15, 1.0 + squeeze), arm("Right", -0.35, 1.15, 1.0 + squeeze));
   const L = mask(base, { bones: arms, hipsOffset: [0, 0, 0] }, ARMS, k);
-  return { ...addLayer(L, { Spine: rx((ctx.actor === "bear" ? 0.4 : -0.1) * k), Head: rz(0.2 * k) }), face: { emotion: "happy", lidClose: 0.5 * k } };
+  const out = addLayer(L, { Spine: rx(-0.12 * k), Head: qmul(rz(0.22 * k), rx(-0.15 * k)), LeftFoot: rx(0.5 * k), RightFoot: rx(0.5 * k) });
+  return { ...out, face: { emotion: "happy", lidClose: 0.6 * k } };
 };
 
