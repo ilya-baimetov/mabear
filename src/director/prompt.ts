@@ -138,7 +138,15 @@ const SOUND = `- Keep the child's quoted words VERBATIM as the line of the right
 
 // ---------- Few-shot examples ----------
 
-interface Shot { lang: Lang; text: string; beatScript: BeatScript; episode?: string }
+interface Shot {
+  lang: Lang;
+  text: string;
+  beatScript: BeatScript;
+  /** the paragraph before this one (fixture examples from mid-episode), shown for continuity */
+  previous?: string;
+  /** what the example demonstrates (shown to the model as a one-line note) */
+  shows: string;
+}
 
 type BeatT = BeatScript["beats"][number];
 /** Beat builder with the canonical key order (the examples are shown as JSON). */
@@ -147,99 +155,111 @@ const b = (p: Partial<BeatT> & Pick<BeatT, "actor" | "verb" | "emotion">): BeatT
   sfx: p.sfx ?? null, emotion: p.emotion, with_previous: p.with_previous ?? false, delay_s: p.delay_s ?? 0, shot: p.shot ?? "auto",
 });
 
-/** Built-in examples: used when the fixtures are unavailable, plus one canon example that is always shown. */
-export const BUILTIN_EXAMPLES: Record<"nap_en" | "ball_ru" | "canon_en", Shot> = {
-  nap_en: {
+/** Hand-written terse examples ("a few words express a lot"): the fixtures are all fairly detailed, so these cover
+ *  terse → rich expansion (EN + RU) and the canon rule (a Bear quote → emote + gesture + bear_silent hit).
+ *  Topics deliberately differ from tests/golden/prompts.json so the eval isn't answered by the examples. */
+export const BUILTIN_EXAMPLES: Record<"honey_en" | "hide_ru", Shot> = {
+  honey_en: {
     lang: "en",
-    text: "Bear naps. Masha wakes him.",
+    text: 'Masha finds Bear\'s honey. Bear says, "Hey, that\'s mine!"',
+    shows: "a terse paragraph expanded into rich in-character staging; a quote given to Bear becomes a grunt + gesture with a bear_silent rule hit",
     beatScript: {
-      summary: "Masha wakes napping Bear — and he tumbles right out of the hammock!",
+      summary: "Masha sneaks Bear's honey — he grumbles, she shares, and they end with a hug",
       time_of_day: null, mood: "playful",
-      music: { mood: "sleepy", intensity: "soft", change: "start" },
-      ambience: ["birds_day", "forest_wind"],
+      music: { mood: "playful", intensity: "medium", change: "start" },
+      ambience: ["birds_day", "bees"],
       beats: [
-        b({ actor: "bear", verb: "sleep", target: "hammock", emote: "snore", emotion: "sleepy", shot: "wide" }),
-        b({ actor: "masha", verb: "tiptoe_to", target: "hammock", emote: "giggle", emotion: "mischievous", with_previous: true, delay_s: 1 }),
-        b({ actor: "masha", verb: "wave", target: "bear", line: "Bear! Wake up! It's morning!", emotion: "excited", shot: "close" }),
-        b({ actor: "bear", verb: "surprised", emote: "gasp", emotion: "surprised", with_previous: true, delay_s: 0.8 }),
-        b({ actor: "bear", verb: "fall_down", emote: "grunt", sfx: "boing", emotion: "surprised" }),
-        b({ actor: "bear", verb: "facepalm", emote: "sigh", emotion: "annoyed" }),
+        b({ actor: "masha", verb: "run_to", target: "beehive", emote: "wheee", emotion: "excited", shot: "wide" }),
+        b({ actor: "masha", verb: "take", target: "honey_pot", item: "honey_pot", emote: "giggle", emotion: "mischievous" }),
+        b({ actor: "masha", verb: "eat", item: "honey_pot", line: "Mmm! Bear's honey is the yummiest!", emotion: "happy", shot: "close" }),
+        b({ actor: "bear", verb: "walk_to", target: "masha", emote: "huff", emotion: "surprised", with_previous: true, delay_s: 0.5 }),
+        b({ actor: "bear", verb: "point_at", target: "masha", emote: "grunt", emotion: "annoyed", shot: "medium" }),
+        b({ actor: "masha", verb: "give", target: "bear", item: "honey_pot", emote: "giggle", emotion: "happy" }),
+        b({ actor: "bear", verb: "facepalm", emote: "sigh", emotion: "annoyed", with_previous: true, delay_s: 0.6 }),
+        b({ actor: "bear", verb: "hug", target: "masha", emote: "chuckle", emotion: "happy", shot: "medium" }),
+      ],
+      rule_hits: [
+        { rule: "bear_silent", original: 'Bear says, "Hey, that\'s mine!"', replacement: "Bear grunts and points at the honey", kid_message: RULES.bear_silent.kidMessage.en },
+      ],
+    },
+  },
+  hide_ru: {
+    lang: "ru",
+    text: "Маша прячется. Мишка её ищет.",
+    shows: "a terse paragraph in Russian expanded with parallel reactions and short invented Masha lines",
+    beatScript: {
+      summary: "Маша прячется в кустах, а Мишка ищет её по всему двору",
+      time_of_day: null, mood: "playful",
+      music: { mood: "playful", intensity: "soft", change: "start" },
+      ambience: ["birds_day"],
+      beats: [
+        b({ actor: "masha", verb: "run_to", target: "bush", emote: "giggle", emotion: "mischievous", shot: "wide" }),
+        b({ actor: "masha", verb: "hide", target: "bush", line: "Мишка, найди меня!", emotion: "mischievous" }),
+        b({ actor: "bear", verb: "walk_to", target: "clearing", emote: "hum", emotion: "curious", with_previous: true, delay_s: 1 }),
+        b({ actor: "bear", verb: "look_at", target: "big_tree", emotion: "curious" }),
+        b({ actor: "bear", verb: "shrug", emote: "grunt", emotion: "curious" }),
+        b({ actor: "masha", verb: "peek", target: "bear", line: "Ку-ку!", emote: "giggle", emotion: "mischievous", shot: "close" }),
+        b({ actor: "bear", verb: "surprised", emote: "gasp", emotion: "surprised", with_previous: true, delay_s: 0.4 }),
+        b({ actor: "bear", verb: "laugh", emote: "chuckle", emotion: "happy" }),
         b({ actor: "masha", verb: "laugh", emote: "laugh", emotion: "happy", with_previous: true }),
       ],
       rule_hits: [],
     },
   },
-  ball_ru: {
-    lang: "ru",
-    text: "Маша берёт мяч и кричит: «Мишка, давай играть!» Играет весёлая музыка.",
-    beatScript: {
-      summary: "Маша зовёт Мишку играть в мяч, а он только вздыхает",
-      time_of_day: null, mood: "playful",
-      music: { mood: "playful", intensity: "medium", change: "start" },
-      ambience: ["birds_day"],
-      beats: [
-        b({ actor: "masha", verb: "take", target: "ball", item: "ball", emote: "wheee", emotion: "excited" }),
-        b({ actor: "masha", verb: "jump", line: "Мишка, давай играть!", emotion: "excited", shot: "medium" }),
-        b({ actor: "bear", verb: "look_at", target: "masha", emotion: "curious", with_previous: true, delay_s: 0.5 }),
-        b({ actor: "bear", verb: "sigh", emote: "sigh", emotion: "annoyed" }),
-        b({ actor: "masha", verb: "throw", target: "bear", item: "ball", emote: "giggle", emotion: "mischievous" }),
-        b({ actor: "bear", verb: "shrug", emote: "chuckle", emotion: "happy", with_previous: true, delay_s: 0.6 }),
-      ],
-      rule_hits: [],
-    },
-  },
-  canon_en: {
-    lang: "en",
-    text: 'Bear says "Thank you, Masha!" and grabs a spoon.',
-    beatScript: {
-      summary: "Bear thanks Masha with a happy hum and a big nod",
-      time_of_day: null, mood: "calm",
-      music: { mood: "calm", intensity: "soft", change: "continue" },
-      ambience: null,
-      beats: [
-        b({ actor: "bear", verb: "walk_to", target: "masha", emotion: "happy" }),
-        b({ actor: "bear", verb: "nod", emote: "hum", emotion: "happy", shot: "medium" }),
-        b({ actor: "masha", verb: "clap", emote: "giggle", emotion: "happy", with_previous: true, delay_s: 0.3 }),
-        b({ actor: "bear", verb: "hug", target: "masha", emote: "chuckle", emotion: "happy" }),
-      ],
-      rule_hits: [
-        { rule: "bear_silent", original: "Bear says \"Thank you, Masha!\"", replacement: "Bear nods and hums happily", kid_message: RULES.bear_silent.kidMessage.en },
-      ],
-    },
-  },
 };
 
-const QUOTE_RE = /["«“]/;
-const SOUND_RE = /music|rain|thunder|storm|birds|crickets|music stops|музык|дожд|гром|гроз|птиц|сверч/i;
+const SOUND_RE = /music|rain|thunder|storm|birds|crickets|lullaby|музык|колыбельн|дожд|гром|гроз|птиц|сверч|кузнеч/i;
 
-/** Picks 3 fixture paragraphs deterministically — EN with dialogue, EN with sound requests, RU with dialogue —
- *  preferring a different example episode each time so the shots don't repeat one story. */
-export function pickFewShots(fixtures: FixtureEpisode[] = FIXTURES): Shot[] {
-  const all: Shot[] = [];
-  for (const ep of fixtures) for (const p of ep.paragraphs) all.push({ lang: ep.lang, text: p.text, beatScript: p.beatScript, episode: ep.id });
-  if (all.length === 0) return [BUILTIN_EXAMPLES.nap_en, BUILTIN_EXAMPLES.ball_ru];
-  const hasLine = (s: Shot) => s.beatScript.beats.some((x) => !!x.line);
-  const picked: Shot[] = [];
-  const take = (pred: (s: Shot) => boolean) => {
-    const used = new Set(picked.map((x) => x.episode));
-    const s = all.find((x) => !picked.includes(x) && !used.has(x.episode) && pred(x)) ?? all.find((x) => !picked.includes(x) && pred(x));
-    if (s) picked.push(s);
-  };
-  take((s) => s.lang === "en" && QUOTE_RE.test(s.text) && hasLine(s));
-  take((s) => s.lang === "en" && SOUND_RE.test(s.text));
-  take((s) => s.lang === "ru" && QUOTE_RE.test(s.text) && hasLine(s));
-  take((s) => s.lang === "ru");
-  for (const s of all) {
-    if (picked.length >= 3) break;
-    if (!picked.includes(s)) picked.push(s);
+type Flat = Shot & { episode: string; index: number };
+
+function flatten(fixtures: FixtureEpisode[]): Flat[] {
+  const out: Flat[] = [];
+  for (const ep of fixtures) {
+    ep.paragraphs.forEach((p, i) => {
+      out.push({ lang: ep.lang, text: p.text, beatScript: p.beatScript, episode: ep.id, index: i, previous: i > 0 ? ep.paragraphs[i - 1].text : undefined, shows: "" });
+    });
   }
-  return picked.slice(0, 3);
+  return out;
+}
+
+/** Two fixture examples chosen by what they demonstrate (§8.3.7), deterministically:
+ *  (1) EN quoted dialogue + an event sfx + `music.change: "continue"` (mid-episode, with the previous paragraph);
+ *  (2) RU explicit music/ambience requests (+ a time-of-day change when available), from a different episode. */
+export function pickFixtureShots(fixtures: FixtureEpisode[] = FIXTURES): Shot[] {
+  const all = flatten(fixtures);
+  const hasLine = (s: Flat) => s.beatScript.beats.some((x) => !!x.line);
+  const hasSfx = (s: Flat) => s.beatScript.beats.some((x) => !!x.sfx);
+  const out: Shot[] = [];
+  const first =
+    all.find((s) => s.lang === "en" && s.beatScript.music.change === "continue" && hasLine(s) && hasSfx(s)) ??
+    all.find((s) => s.lang === "en" && s.beatScript.music.change === "continue") ??
+    all.find((s) => s.lang === "en" && hasLine(s));
+  if (first) out.push({ ...first, shows: "quoted dialogue kept verbatim, an event sound (sfx), and the previous paragraph's music kept with change \"continue\" (ambience null = unchanged)" });
+  const soundy = (s: Flat) => s.lang === "ru" && s.beatScript.ambience !== null && s.beatScript.music.change === "start" && SOUND_RE.test(s.text) && hasLine(s);
+  const second =
+    all.find((s) => soundy(s) && s.episode !== first?.episode && s.beatScript.time_of_day !== null) ??
+    all.find((s) => soundy(s) && s.episode !== first?.episode) ??
+    all.find(soundy) ??
+    all.find((s) => s.lang === "ru");
+  if (second) out.push({ ...second, shows: "explicit music and background-sound requests mapped to music/ambience (plus time of day), Russian dialogue verbatim" });
+  return out;
+}
+
+/** All few-shot examples, in prompt order: fixture shots first, then the hand-written terse ones. */
+export function pickFewShots(fixtures: FixtureEpisode[] = FIXTURES): Shot[] {
+  return [...pickFixtureShots(fixtures), BUILTIN_EXAMPLES.honey_en, BUILTIN_EXAMPLES.hide_ru];
 }
 
 function examplesText(): string {
-  const shots = [...pickFewShots(), BUILTIN_EXAMPLES.canon_en];
-  return shots
-    .map((s, i) => `### Example ${i + 1} (requested language: ${s.lang})\nParagraph: ${s.text}\nBeatScript: ${JSON.stringify(s.beatScript)}`)
+  return pickFewShots()
+    .map((s, i) =>
+      [
+        `### Example ${i + 1} (requested language: ${s.lang}) — shows ${s.shows}`,
+        s.previous ? `Previous paragraph: ${s.previous}` : "Previous paragraph: (none; the yard's starting state)",
+        `Paragraph: ${s.text}`,
+        `BeatScript: ${JSON.stringify(s.beatScript)}`,
+      ].join("\n"),
+    )
     .join("\n\n");
 }
 
@@ -260,7 +280,7 @@ export function buildSystemPrompt(): string {
     section("Expansion guidance", EXPANSION),
     section("Canon and safety rules", rulesText()),
     section("Speech and sound", SOUND),
-    section("Examples (paragraph → BeatScript; the world state is the yard's starting state unless the story moved things)", examplesText()),
+    section("Examples (paragraph → BeatScript)", examplesText()),
     "Respond with exactly one BeatScript JSON object.",
   ].join("\n\n");
   return cached;

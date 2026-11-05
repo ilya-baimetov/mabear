@@ -31,12 +31,66 @@ export interface ActorStyle {
   shoulderHeight: number;
   breathRate: number;
   breathDepth: number;
+  /** leg proportions of the rig (metres; mirrors src/engine/characters/*.ts skeleton) for foot FK / ground lock */
+  leg: { x: number; y: number; thigh: number; shin: number; ankle: number; toe: number };
+  /** natural gait cadence (cycles/s = two steps) the stride length adapts to */
+  cadence: { walk: number; run: number; tiptoe: number };
 }
 
 export const STYLES: Record<ActorId, ActorStyle> = {
-  masha: { height: 1.0, hipHeight: 0.36, timeScale: 1.15, bounce: 1.0, stance: 0.02, armOut: 0.12, hipsDrop: 0, lieHeight: 0.1, shoulderHeight: 0.58, breathRate: 0.32, breathDepth: 0.8 },
-  bear: { height: 2.4, hipHeight: 0.72, timeScale: 0.8, bounce: 0.35, stance: 0.08, armOut: 0.22, hipsDrop: 0.02, lieHeight: 0.32, shoulderHeight: 1.62, breathRate: 0.2, breathDepth: 1.2 },
+  masha: {
+    height: 1.0, hipHeight: 0.36, timeScale: 1.15, bounce: 1.0, stance: 0.02, armOut: 0.14, hipsDrop: 0, lieHeight: 0.1,
+    shoulderHeight: 0.58, breathRate: 0.32, breathDepth: 0.8,
+    leg: { x: 0.062, y: -0.02, thigh: 0.15, shin: 0.14, ankle: 0.05, toe: 0.06 },
+    cadence: { walk: 1.6, run: 2.3, tiptoe: 1.1 },
+  },
+  bear: {
+    height: 2.4, hipHeight: 0.72, timeScale: 0.8, bounce: 0.35, stance: 0.09, armOut: 0.46, hipsDrop: 0.035, lieHeight: 0.32,
+    shoulderHeight: 1.62, breathRate: 0.2, breathDepth: 1.3,
+    leg: { x: 0.22, y: -0.03, thigh: 0.32, shin: 0.27, ankle: 0.1, toe: 0.15 },
+    cadence: { walk: 0.72, run: 1.15, tiptoe: 0.6 },
+  },
 };
+
+// ---------- leg forward kinematics (actor-local frame: x = left, y = up, z = forward) ----------
+
+/** Lowest sole point of each foot (heel / ball) for a pose, in the actor's local frame. */
+export function feetPoints(bones: Pose, hipsOffset: Vec3, style: ActorStyle): { left: Vec3[]; right: Vec3[] } {
+  const L = style.leg;
+  const H = bones.Hips ?? IDENTITY;
+  const hip: Vec3 = [hipsOffset[0], style.hipHeight + hipsOffset[1], hipsOffset[2]];
+  const side = (s: 1 | -1, n: "Left" | "Right"): Vec3[] => {
+    const add = (a: Vec3, q: Quat, v: Vec3): Vec3 => {
+      const r = qrotv(q, v);
+      return [a[0] + r[0], a[1] + r[1], a[2] + r[2]];
+    };
+    const up = add(hip, H, [s * L.x, L.y, 0]);
+    const R1 = qmul(H, bones[`${n}UpLeg`] ?? IDENTITY);
+    const knee = add(up, R1, [0, -L.thigh, 0]);
+    const R2 = qmul(R1, bones[`${n}Leg`] ?? IDENTITY);
+    const ankle = add(knee, R2, [0, -L.shin, 0]);
+    const R3 = qmul(R2, bones[`${n}Foot`] ?? IDENTITY);
+    return [add(ankle, R3, [0, -L.ankle, -0.35 * L.toe]), add(ankle, R3, [0, -L.ankle, L.toe])];
+  };
+  return { left: side(1, "Left"), right: side(-1, "Right") };
+}
+
+function qrotv(q: Quat, v: Vec3): Vec3 {
+  const [x, y, z, w] = q;
+  const ix = w * v[0] + y * v[2] - z * v[1];
+  const iy = w * v[1] + z * v[0] - x * v[2];
+  const iz = w * v[2] + x * v[1] - y * v[0];
+  const iw = -x * v[0] - y * v[1] - z * v[2];
+  return [ix * w - iw * x - iy * z + iz * y, iy * w - iw * y - iz * x + ix * z, iz * w - iw * z - ix * y + iy * x];
+}
+
+/** Height of the lowest sole point (0 = touching the ground). */
+export function lowestFoot(bones: Pose, hipsOffset: Vec3, style: ActorStyle): number {
+  const f = feetPoints(bones, hipsOffset, style);
+  let m = Infinity;
+  for (const p of [...f.left, ...f.right]) m = Math.min(m, p[1]);
+  return m;
+}
 
 /** Surface heights (m) an actor sits or lies on at a mark; everything else is the ground. */
 /** (Porch and pier are 0: the stage already raises actors standing on them — walkHeightAt.) */
@@ -181,31 +235,68 @@ export function armsDown(elbow = 0.15): Pose {
   return pose(arm("Left", 1.25, 0.05, elbow), arm("Right", 1.25, 0.05, elbow));
 }
 
-/** Standing base: the Mixamo idle clip, with Masha's fidget loop or Bear's slow sway layered on. */
+/** Smoothly stepped noise: holds a random value for ~`period` s, then eases to the next (looking around). */
+export function steppedNoise(t: number, period: number, seed: number): number {
+  const x = t / period;
+  const i = Math.floor(x);
+  const f = smooth(clamp01((x - i) / 0.35));
+  const a = hash1(i * 7.13 + seed * 31.7) * 2 - 1;
+  const b = hash1((i + 1) * 7.13 + seed * 31.7) * 2 - 1;
+  return a + (b - a) * f;
+}
+
+/** Standing base: the Mixamo idle clip, with Masha's fidget loop or Bear's slow, patient sway layered on. */
 export function idleBase(ctx: VerbCtx, amount = 1): PoseLayer {
   const { style, t, actor } = ctx;
-  let base = sampleClip("xbot_idle", t * (actor === "masha" ? 1.25 : 0.75), style, true);
+  let base = sampleClip("xbot_idle", t * (actor === "masha" ? 1.25 : 0.7), style, true);
   if (actor === "masha") {
-    // rocking on heels, weight shifts, looking around (a never-still fidget loop)
-    const rock = Math.sin(t * 2.6) * 0.06 * amount;
-    const shift = noise1(t * 0.7, 1) * 0.06 * amount;
-    const look = noise1(t * 0.45, 2) * 0.5 * amount;
-    const tilt = noise1(t * 0.6, 3) * 0.12 * amount;
+    // never still: rocking heel-to-toe, weight shifts, looking around with little head snaps, arms swinging along
+    const a = amount;
+    const rockW = 0.5 + 0.5 * noise1(t * 0.23, 5); // phases of rocking vs. looking around
+    const rock = Math.sin(t * 3.4) * rockW * a;
+    const shift = (0.6 * noise1(t * 0.6, 1) + 0.4 * Math.sin(t * 1.3)) * a;
+    const look = steppedNoise(t, 1.4, 2) * 0.55 * a;
+    const tilt = steppedNoise(t + 0.7, 1.9, 3) * 0.16 * a;
+    const armSwing = (Math.sin(t * 3.4 - 0.5) * 0.18 * rockW + noise1(t * 0.8, 6) * 0.1) * a;
     base = addLayer(base, {
-      Hips: qmul(rx(rock * 0.5), rz(shift)),
-      Spine: rz(-shift * 0.8),
-      Neck: ry(look * 0.4),
-      Head: qmul(ry(look * 0.6), rz(tilt)),
-      LeftFoot: rx(Math.max(0, rock) * 2),
-      RightFoot: rx(Math.max(0, rock) * 2),
-    }, 1, [0, Math.abs(Math.sin(t * 2.6)) * 0.008 * amount, 0]);
+      Hips: qmul(rx(0.03 * rock), rz(0.05 * shift)),
+      Spine: qmul(rz(-0.05 * shift), rx(-0.03 * rock)),
+      Spine2: ry(look * 0.15),
+      Neck: ry(look * 0.35),
+      Head: qmul(ry(look * 0.5), rz(tilt)),
+      LeftFoot: rx(Math.max(0, rock) * 0.45 - Math.max(0, -rock) * 0.2),
+      RightFoot: rx(Math.max(0, rock) * 0.45 - Math.max(0, -rock) * 0.2),
+      LeftLeg: rx(Math.max(0, -shift) * 0.25), RightLeg: rx(Math.max(0, shift) * 0.25),
+      LeftUpLeg: rx(-Math.max(0, -shift) * 0.12), RightUpLeg: rx(-Math.max(0, shift) * 0.12),
+    });
+    // arms swing with the rocking, elbows loose (pre-rotation about the body's x axis = forward/back)
+    base = preRotate(base, { LeftArm: rx(-armSwing), RightArm: rx(-armSwing * 0.8), LeftForeArm: ry(-0.15 - 0.1 * rockW * a), RightForeArm: ry(0.15 + 0.1 * rockW * a) });
+    // an occasional little bounce on the spot (knees dip, then a lift)
+    const hopPh = (t * 0.37) % 1;
+    const hop = hopPh > 0.9 ? Math.sin(((hopPh - 0.9) / 0.1) * Math.PI) * a : 0;
+    base = addLayer(base, { LeftLeg: rx(0.35 * hop), RightLeg: rx(0.35 * hop), LeftUpLeg: rx(-0.18 * hop), RightUpLeg: rx(-0.18 * hop) });
+    base.lift = (base.lift ?? 0) + Math.max(0, Math.sin(((hopPh - 0.9) / 0.1) * Math.PI * 2 - 0.6)) * 0.03 * a * (hopPh > 0.9 ? 1 : 0);
   } else {
-    // patient, heavy sway; head drifts slowly
-    const sway = Math.sin(t * 0.9) * 0.025 * amount;
-    const look = noise1(t * 0.25, 4) * 0.25 * amount;
-    base = addLayer(base, { Hips: rz(sway), Spine1: rz(-sway * 0.6), Head: ry(look) });
+    // patient and heavy: slow weight shift side to side, a settling sway, head drifting slowly
+    const sway = Math.sin(t * 0.8) * amount;
+    const look = steppedNoise(t, 3.2, 4) * 0.3 * amount;
+    base = addLayer(base, {
+      Hips: rz(0.03 * sway),
+      Spine1: rz(-0.022 * sway),
+      Spine2: rx(-0.02),
+      Neck: ry(look * 0.4),
+      Head: qmul(ry(look * 0.6), rz(0.04 * Math.sin(t * 0.37))),
+      LeftLeg: rx(0.08 * Math.max(0, -sway)), RightLeg: rx(0.08 * Math.max(0, sway)),
+    });
   }
   return base;
+}
+
+/** Pre-multiply rotations (in the parent's frame): swings a limb without changing its own bend. */
+export function preRotate(L: PoseLayer, pre: Pose): PoseLayer {
+  const bones: Pose = { ...L.bones };
+  for (const b of Object.keys(pre)) bones[b] = qmul(pre[b], bones[b] ?? IDENTITY);
+  return { ...L, bones };
 }
 
 /** Ramp in over `a` seconds and out over `b` seconds within a clip of length dur. */

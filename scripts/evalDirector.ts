@@ -1,7 +1,7 @@
 // Director eval (spec §8.4): `npm run eval:director [-- --model claude-haiku-5-5]`.
 //   ANTHROPIC_API_KEY set → runs the Worker's director logic in-process (real API).
 //   else EVAL_TARGET set  → logs in at $EVAL_TARGET/login with $DEMO_PASSWORD and POSTs /api/direct.
-//   --offline             → dry run of the pipeline with the offline parser (no API, no source check).
+//   --offline             → dry run of the pipeline with the offline parser (no API, no source check, ≥ 2 beats).
 //   --print-body <id>     → prints one golden request body as JSON (used by scripts/smoke.sh) and exits.
 // Checks: parses, post-validator 0 errors, ≥ 3 beats, no Bear line, every line in the requested language, and
 // source === "llm" (except --offline). Exit 0 = all pass, 1 = any failure, 2 = not run (no key / no target).
@@ -74,7 +74,7 @@ interface Row {
   problems: string[];
 }
 
-function check(p: GoldenPrompt, resp: unknown, requireLlm: boolean): Row {
+function check(p: GoldenPrompt, resp: unknown, requireLlm: boolean, minBeats: number): Row {
   const problems: string[] = [];
   const parsed = DirectResponseSchema.safeParse(resp);
   if (!parsed.success) {
@@ -87,7 +87,7 @@ function check(p: GoldenPrompt, resp: unknown, requireLlm: boolean): Row {
   if (!BeatScriptSchema.safeParse(bs).success) problems.push("beatScript does not parse");
   const v = validateBeatScript(bs, initialWorldState(), p.lang);
   if (v.errors.length) problems.push(`validator: ${v.errors.slice(0, 3).join("; ")}`);
-  if (bs.beats.length < 3) problems.push(`only ${bs.beats.length} beats`);
+  if (bs.beats.length < minBeats) problems.push(`only ${bs.beats.length} beats (< ${minBeats})`);
   if (bs.beats.some((b) => b.actor === "bear" && b.line && b.line.trim())) problems.push("Bear has a line");
   const badLines = bs.beats.filter((b) => b.line && !lineInLanguage(b.line, p.lang)).map((b) => b.line);
   if (badLines.length) problems.push(`line not in ${p.lang}: ${JSON.stringify(badLines[0])}`);
@@ -177,9 +177,11 @@ async function main(): Promise<number> {
     return 2;
   }
 
+  // The ≥ 3-beat bar (§8.4) is for the LLM director; the offline parser's contract (§10) is ≥ 2 beats per paragraph.
+  const minBeats = offline ? 2 : 3;
   const only = argValue("--only");
   const prompts = only ? PROMPTS.filter((p) => p.id === only) : PROMPTS;
-  console.log(`MaBear director eval — ${mode} — ${prompts.length} golden prompts`);
+  console.log(`MaBear director eval — ${mode} — ${prompts.length} golden prompts — min beats ${minBeats}`);
   const rows: Row[] = [];
   for (const p of prompts) {
     let resp: unknown;
@@ -188,7 +190,7 @@ async function main(): Promise<number> {
     } catch (e) {
       resp = { transportError: e instanceof Error ? e.message : String(e) };
     }
-    rows.push(check(p, resp, !offline));
+    rows.push(check(p, resp, !offline, minBeats));
   }
 
   console.log("");

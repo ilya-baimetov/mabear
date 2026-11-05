@@ -15,6 +15,11 @@ export interface PoseLayer {
   face?: { emotion?: Emotion; lidClose?: number; browRaise?: number; viseme?: Viseme; visemeWeight?: number };
   /** secondary-motion driver hints 0..1 */
   sway?: number;
+  /** extra height (m) added AFTER the ground lock (hops, jump flight) */
+  lift?: number;
+  /** "lock" = feet pinned to the ground (default for standing verbs); "floor" = only prevent sinking (runs with
+   *  flight phases); "free" = no ground contact handling (lying, sitting, airborne) */
+  ground?: "lock" | "floor" | "free";
 }
 
 export const IDENTITY: Quat = [0, 0, 0, 1];
@@ -160,6 +165,8 @@ export function blendLayers(a: PoseLayer, b: PoseLayer, t: number): PoseLayer {
     yawOffset: lerpAngle(a.yawOffset ?? 0, b.yawOffset ?? 0, t),
     face: t < 0.5 ? a.face : b.face,
     sway: lerp(a.sway ?? 0, b.sway ?? 0, t),
+    lift: lerp(a.lift ?? 0, b.lift ?? 0, t),
+    ground: t < 0.5 ? a.ground : b.ground,
   };
 }
 

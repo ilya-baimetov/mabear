@@ -3,6 +3,8 @@ import { BUILTIN_EXAMPLES, buildSystemPrompt, buildUserMessage, pickFewShots } f
 import { ACTOR_IDS, BeatScriptSchema, EMOTES, MARK_IDS, PROP_IDS, RULE_IDS, SFX_IDS, VERBS, type DirectRequest } from "../../src/shared/schema";
 import { initialWorldState } from "../../src/compiler/worldState";
 import { CHARACTERS } from "../../src/shared/bible/characters";
+import { validateBeatScript } from "../../src/compiler/validate";
+import golden from "../golden/prompts.json";
 
 describe("director system prompt", () => {
   const prompt = buildSystemPrompt();
@@ -42,9 +44,28 @@ describe("director system prompt", () => {
     expect(prompt).toContain("requested language: ru");
   });
 
-  it("built-in examples are valid BeatScripts", () => {
-    for (const ex of Object.values(BUILTIN_EXAMPLES)) expect(BeatScriptSchema.safeParse(ex.beatScript).success).toBe(true);
+  it("built-in examples are valid BeatScripts that pass the post-validator with 0 errors", () => {
+    for (const ex of Object.values(BUILTIN_EXAMPLES)) {
+      expect(BeatScriptSchema.safeParse(ex.beatScript).success).toBe(true);
+      expect(validateBeatScript(ex.beatScript, initialWorldState(), ex.lang).errors).toEqual([]);
+    }
     expect(pickFewShots([]).length).toBeGreaterThanOrEqual(2);
+  });
+
+  it("few-shots cover §8.3.7: EN+RU, dialogue, explicit sound, terse expansion, music continue, a Bear quote", () => {
+    const shots = pickFewShots();
+    expect(shots.length).toBe(4);
+    expect(new Set(shots.map((s) => s.lang))).toEqual(new Set(["en", "ru"]));
+    expect(shots.some((s) => s.beatScript.beats.some((b) => b.line) && /["«“]/.test(s.text))).toBe(true);
+    expect(shots.some((s) => s.beatScript.ambience !== null && /music|музык|колыбельн/i.test(s.text))).toBe(true);
+    expect(shots.some((s) => s.beatScript.music.change === "continue")).toBe(true);
+    expect(shots.some((s) => s.text.length < 70 && s.beatScript.beats.length >= 7)).toBe(true);
+    expect(shots.some((s) => s.beatScript.rule_hits.some((h) => h.rule === "bear_silent"))).toBe(true);
+    expect(shots.every((s) => !s.beatScript.beats.some((b) => b.actor === "bear" && b.line))).toBe(true);
+  });
+
+  it("does not contain the golden eval paragraphs", () => {
+    for (const g of golden as { paragraph: string }[]) expect(prompt).not.toContain(g.paragraph);
   });
 });
 
