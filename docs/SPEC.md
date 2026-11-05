@@ -201,7 +201,7 @@ docs/SPEC.md  docs/NOTES.md (decision log)  docs/STATUS.md (progress log)  docs/
 src/shared/   schema.ts  grammar.ts  rules.ts  pricing.ts  bible/{characters.ts, set.ts, props.ts}
 src/compiler/ compile.ts  worldState.ts  validate.ts  camera.ts  dialogue.ts  audioCues.ts
 src/director/ client.ts  offline/{parser.ts, lexicon.en.ts, lexicon.ru.ts}  fixtures/{*.json}  prompt.ts
-src/engine/   stage.ts  toon.ts  assets.ts  set/bearsYard.ts  characters/{rig.ts, masha.ts, bear.ts, face.ts}
+src/engine/   stage.ts  look.ts  assets.ts  set/bearsYard.ts  characters/{rig.ts, masha.ts, bear.ts, face.ts}
               props/props.ts  motion/retarget.ts
 public/assets/  (downloaded open motion clips and models; licenses in docs/ASSETS.md)
               motion/{library.ts, verbs/*.ts, blend.ts}  player/{player.ts, evaluate.ts}  fx/fx.ts
