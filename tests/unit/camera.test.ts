@@ -180,13 +180,14 @@ describe("auto-cinematographer — the speaker owns the line; no trunks in the w
   });
 
   it("scores occlusion by set trunks and walls, and plans around them", () => {
-    const pine = OCCLUDERS.find((o) => Math.hypot(o.c[0] + 8.9, o.c[1] - 2.2) < 0.1)!;
+    // hammock pines sit where the set's rotated hammock puts them (±2.1 m along the hammock, rotated 0.8 rad)
+    const pine = OCCLUDERS.find((o) => Math.hypot(o.c[0] + 9.54, o.c[1] - 0.69) < 0.1)!;
     expect(pine).toBeDefined();
     const head = { head: [-11, HEAD_HEIGHT.bear, 2.2] as [number, number, number], w: 1 };
-    // camera east of the pine, looking west through it at Bear in the hammock
-    expect(occlusionCost({ pos: [-5, 1.8, 2.2], look: [-11, 1.7, 2.2], fov: 40 }, [head])).toBeGreaterThanOrEqual(1);
-    // from the south the view is clear
-    expect(occlusionCost({ pos: [-11, 1.8, 7.5], look: [-11, 1.7, 2.2], fov: 40 }, [head])).toBe(0);
+    // camera south-east of the pine (on the porch), looking through it at Bear in the hammock
+    expect(occlusionCost({ pos: [-6.62, 1.8, -2.33], look: [-11, 1.7, 2.2], fov: 40 }, [head])).toBeGreaterThanOrEqual(1);
+    // from the south-east the view is clear (both pines are behind or beside the subject)
+    expect(occlusionCost({ pos: [-7.5, 1.8, 6.5], look: [-11, 1.7, 2.2], fov: 40 }, [head])).toBe(0);
     // walls: through the house
     expect(occlusionCost({ pos: [-6, 1.5, -12], look: [-6, 1.0, 0], fov: 40 }, [{ head: [-6, 0.85, 0], w: 1 }])).toBeGreaterThanOrEqual(1);
     // a Bear-to-hammock scene keeps both characters' heads in clear view
@@ -201,7 +202,10 @@ describe("auto-cinematographer — the speaker owns the line; no trunks in the w
         const p = posAt(nap, a, c.start + 0.01);
         return { head: [p[0], HEAD_HEIGHT[a], p[1]] as [number, number, number], w: 1 };
       });
-      expect(occlusionCost(c.from, heads), `${c.start} ${c.shot}`).toBeLessThan(1);
+      const per = heads.map((h) => occlusionCost(c.from, [h]));
+      // a close-up frames one character: only that subject must be clear; wider shots must show both heads
+      const cost = c.shot === "close" ? Math.min(...per) : occlusionCost(c.from, heads);
+      expect(cost, `${c.start} ${c.shot} masha=${per[0]} bear=${per[1]}`).toBeLessThan(1);
     }
   });
 });

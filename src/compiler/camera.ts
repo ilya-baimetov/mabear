@@ -284,6 +284,14 @@ export function planCamera(input: CameraPlanInput): CameraCue[] {
       const cost = occlusionCost(fr.from, h0) + occlusionCost(fr.to, h1);
       if (cost < bestCost - 1e-6) { best = fr; bestCost = cost; }
     }
+    // still blocked (e.g. a trunk right beside the subject): swing further round, still on the 180° side
+    for (const dlt of [1.45, -1.45, 1.6, -1.6]) {
+      if (bestCost < 1) break;
+      const a = Math.max(-1.6, Math.min(1.6, angle + dlt));
+      const fr = framing(s.kind, s.subject, s.start, s.end, a, side, posAt, visibleAt, rnd, input.headY);
+      const cost = occlusionCost(fr.from, h0) + occlusionCost(fr.to, h1);
+      if (cost < bestCost - 1e-6) { best = fr; bestCost = cost; }
+    }
     const { from, to } = best;
     return { start: r3(s.start), dur: r3(s.end) - r3(s.start), shot: shotName(s.kind), from, to, overridden: s.overridden };
   });
@@ -321,8 +329,9 @@ function lineSide(m: Vec2, b: Vec2): Vec2 {
 /** Tall static occluders: set obstacle circles (trunks, bush) plus trees the set dresses (hammock pines, swing oak). */
 export const OCCLUDERS: { c: Vec2; r: number; h: number }[] = [
   ...OBSTACLES.circles.filter((c) => c.id !== "pond" && c.id !== "table").map((c) => ({ c: c.c, r: c.r, h: c.id === "bush" ? 1.3 : 12 })),
-  { c: [-13.1, 2.2], r: 0.45, h: 12 }, // hammock pines
-  { c: [-8.9, 2.2], r: 0.45, h: 12 },
+  // hammock pines: hammock at (-11, 2.2) rotated 0.8 rad (set element), pines at local x = ±2.1
+  { c: [-9.54, 0.69], r: 0.45, h: 12 },
+  { c: [-12.46, 3.71], r: 0.45, h: 12 },
   { c: [8.6, -0.6], r: 0.6, h: 12 }, // swing oak
 ];
 const OCC_BOXES = OBSTACLES.boxes.map((b) => ({ min: b.min, max: b.max, h: b.id === "house" ? 7.5 : 2.6 }));
