@@ -236,7 +236,7 @@ export function addPine(bag: GeoBag, height: number, seed: number, m: THREE.Matr
     }
     const top = new THREE.Color(0x5f9c48), bot = new THREE.Color(0x2c6236);
     bag.add(mat, g, 0x3f7d3f, xf([0, y, 0], [0, r() * 6, 0]).premultiply(m), {
-      capColor: 0x1d4527,
+      capColor: 0x2a5e34,
       colorFn: (p, n, out) => {
         if (n.y < -0.8) return;
         const t = clamp01(p.y / ch + 0.5);
@@ -263,12 +263,8 @@ export function addBirch(bag: GeoBag, height: number, seed: number, m: THREE.Mat
     const rr = h * (0.17 + r() * 0.06) * (lod ? 1.25 : 1.1);
     const y = h * (0.58 + i * 0.1);
     const ox = (r() - 0.5) * h * 0.18, oz = (r() - 0.5) * h * 0.18;
-    const light = new THREE.Color(0x9ccc4e), dark = new THREE.Color(0x4f8e30);
-    bag.add(mat, blob(rr, seed * 7 + i, 0.14, lod ? 0 : 1), 0x86b84a, xf([ox, y, oz], [0, 0, 0], [1, 1.25, 1]).premultiply(m), {
-      colorFn: (_p, nn, out) => out.copy(dark).lerp(light, clamp01(nn.y * 0.6 + 0.5)),
-      jitter: 0.12,
-      seed: seed + 31 * i,
-    });
+    // one colour per blob: lighting + puffy normals do the shading (vertex-colour gradients on coarse meshes read as facets)
+    bag.add(mat, blob(rr, seed * 7 + i, 0.14, lod ? 0 : 1, 0.7), [0x7fb446, 0x8cbf4c, 0x74ab40][i % 3], xf([ox, y, oz], [0, 0, 0], [1, 1.25, 1]).premultiply(m));
   }
 }
 
@@ -641,17 +637,12 @@ function buildOakSwing(c: BuildCtx): void {
     const { g, m } = beam(a, e, rr, rr * 0.6, 8);
     b.add("bark", g, barkC, m);
   }
-  const dark = new THREE.Color(0x3f7a32), light = new THREE.Color(0x8cc455);
   const blobs: [number, number, number, number][] = [
     [0, 5.6, 0.2, 2.0], [1.6, 5.1, -0.4, 1.5], [-1.5, 5.2, -0.5, 1.5], [0.4, 5.0, 1.7, 1.4], [-0.8, 6.4, 0.3, 1.3],
     [1.0, 6.3, 0.6, 1.2], [-0.6, 4.9, 2.2, 1.0], [0.2, 5.2, -1.5, 1.3],
   ];
   blobs.forEach(([x, y, z, r], i) => {
-    b.add("foliage", blob(r, 10 + i, 0.13, 2), 0x5f9b3a, xf([x, y, z], [0, 0, 0], [1, 0.82, 1]), {
-      colorFn: (_p, n, out) => out.copy(dark).lerp(light, clamp01(n.y * 0.55 + 0.45)),
-      jitter: 0.1,
-      seed: i,
-    });
+    b.add("foliage", blob(r, 10 + i, 0.11, 2, 0.65), [0x5f9b3a, 0x6aa63f, 0x578f36][i % 3], xf([x, y, z], [0, 0, 0], [1, 0.82, 1]));
   });
   // swing: pivot under the branch; ropes + seat move as one object
   const pivot = new THREE.Group();
@@ -865,12 +856,9 @@ function buildBigPine(c: BuildCtx): void {
 
 function buildBush(c: BuildCtx): void {
   const b = c.bag;
-  const dark = new THREE.Color(0x3c7a30), light = new THREE.Color(0x77b348);
   const blobs: [number, number, number, number][] = [[0, 0.75, 0, 0.85], [0.6, 0.55, 0.2, 0.6], [-0.6, 0.55, 0.15, 0.62], [0.1, 0.5, 0.6, 0.55], [-0.1, 0.55, -0.55, 0.6]];
   blobs.forEach(([x, y, z, r], i) => {
-    b.add("foliage", blob(r, 60 + i, 0.14, 2), 0x55923c, xf([x, y, z]), {
-      colorFn: (_p, n, out) => out.copy(dark).lerp(light, clamp01(n.y * 0.5 + 0.5)), jitter: 0.1, seed: i,
-    });
+    b.add("foliage", blob(r, 60 + i, 0.12, 2, 0.65), [0x55923c, 0x5f9d40, 0x4f8a38][i % 3], xf([x, y, z]));
   });
   const r = rng(61);
   for (let i = 0; i < 14; i++) {

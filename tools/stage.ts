@@ -24,7 +24,11 @@ const CAMS: Record<string, CamKey> = {
   top: { pos: [0, 45, 12], look: [0, 0, 0], fov: 55 },
   robot: { pos: [0.9, 1.3, 3.6], look: [0.6, 0.75, 0], fov: 40 },
 };
-const cam = CAMS[q.get("cam") ?? "wide"] ?? CAMS.wide;
+const vec = (k: string): Vec3 | null => {
+  const v = (q.get(k) ?? "").split(",").map(Number);
+  return v.length === 3 && v.every(Number.isFinite) ? (v as Vec3) : null;
+};
+const cam: CamKey = vec("campos") && vec("camlook") ? { pos: vec("campos")!, look: vec("camlook")!, fov: Number(q.get("fov") ?? 45) } : CAMS[q.get("cam") ?? "wide"] ?? CAMS.wide;
 
 const face = { emotion: "happy" as const, lidClose: 0, viseme: "rest" as const, visemeWeight: 0, lookAt: null, browRaise: 0 };
 function actor(x: number, z: number, yaw: number, holding: PropId | null = null): ActorFrame {

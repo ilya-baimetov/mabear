@@ -4,6 +4,8 @@
 // Motion filmstrip (motion feel): motion=<fixture index> char=masha|bear t0=<s> dt=<s> n=<frames> cols=<n>
 //   compiles the fixture episode with the real compiler, samples evaluate() and renders a grid of tiles with a
 //   camera tracking the chosen character (both characters are in the scene).
+// In-app render: stage=<fixture index> t=<s> [focus=masha|bear] renders the REAL engine stage (set, look, props, fx)
+//   at time t of the compiled fixture; focus overrides the camera with a ¾ medium close-up on that character.
 import * as THREE from "three";
 import { buildMasha } from "../src/engine/characters/masha";
 import { buildBear } from "../src/engine/characters/bear";
@@ -13,6 +15,7 @@ import { DEFAULT_REMIX, type Emotion, type Viseme } from "../src/shared/schema";
 import { FIXTURES } from "../src/director/fixtures";
 import { compileEpisode } from "../src/compiler/episode";
 import { evaluate } from "../src/engine/player/evaluate";
+import { createStage } from "../src/engine/stage";
 
 const q = new URLSearchParams(location.search);
 const char = q.get("char") === "bear" ? "bear" : "masha";
@@ -39,8 +42,52 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(sil ? "#ffffff" : "#a9cbe6");
 
 const motionIdx = q.get("motion");
-if (motionIdx !== null) runMotion(Number(motionIdx));
+const stageIdx = q.get("stage");
+if (stageIdx !== null) void runStage(Number(stageIdx));
+else if (motionIdx !== null) runMotion(Number(motionIdx));
 else runStills();
+
+async function runStage(idx: number): Promise<void> {
+  renderer.domElement.style.display = "none";
+  const fx = FIXTURES[idx] ?? FIXTURES[0];
+  const { timeline } = compileEpisode(
+    fx.paragraphs.map((p, i) => ({ paragraphId: `p${i}`, version: 1, beatScript: p.beatScript, remix: { ...DEFAULT_REMIX } })),
+    fx.lang,
+  );
+  const canvas = document.createElement("canvas");
+  canvas.style.width = "1280px";
+  canvas.style.height = "720px";
+  document.body.appendChild(canvas);
+  const stage = await createStage(canvas);
+  stage.setAdaptive(false);
+  stage.resize(1280, 720);
+  await Promise.race([stage.assetsReady, new Promise((r) => setTimeout(r, 8000))]);
+  const t = Math.min(timeline.duration - 1e-3, Number(q.get("t") ?? 1));
+  let fr = evaluate(timeline, t);
+  const focus = q.get("focus") as "masha" | "bear" | null;
+  if (focus && fr.actors[focus]) {
+    const a = fr.actors[focus];
+    const hh = focus === "bear" ? 2.4 : 1.0;
+    const yaw = a.yaw + 0.45;
+    const dist = hh * 1.7;
+    const look: [number, number, number] = [a.pos[0], a.pos[1] + hh * 0.7, a.pos[2]];
+    fr = { ...fr, camera: { pos: [look[0] + Math.sin(yaw) * dist, look[1] + hh * 0.1, look[2] + Math.cos(yaw) * dist], look, fov: 35 } };
+  }
+  let n = 0;
+  const tick = (): void => {
+    stage.render(fr);
+    if (++n < 12) requestAnimationFrame(tick);
+    else {
+      // capture in the same task as the render (the stage's drawing buffer is not preserved)
+      (window as unknown as { __png: string }).__png = canvas.toDataURL("image/png");
+      const st = stage.stats();
+      console.log(`stage ${fx.id} t=${t.toFixed(2)} calls=${st.drawCalls} tris=${st.triangles} :: ` +
+        Object.entries(fr.actors).map(([id, a]) => `${id}:${a.verb}/${a.face.emotion}`).join(" "));
+      (window as unknown as { __ready: boolean }).__ready = true;
+    }
+  };
+  requestAnimationFrame(tick);
+}
 
 function runMotion(idx: number): void {
   const fx = FIXTURES[idx] ?? FIXTURES[0];

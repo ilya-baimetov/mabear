@@ -3,9 +3,11 @@
 // docs/likeness/pass<N>-<char>-<shot>.png (front, three-quarter, face close-up, black silhouette).
 // Motion filmstrips (motion feel): --motion <fixture>:<char>:<t0>:<dt>:<n> (repeatable) renders evaluate() frames of a
 // compiled fixture episode → docs/likeness/pass<N>-motion-f<fixture>-<char>-<t0>.png (stills are skipped).
+// In-app check: --app <fixture chip id> plays that example in the real app (vite dev, no director needed for
+// fixtures) and saves 6 playback frames + both close-ups → docs/likeness/pass<N>-app-<id>-*.png.
 import { chromium } from "@playwright/test";
 import { spawn, type ChildProcess } from "node:child_process";
-import { mkdirSync } from "node:fs";
+import { mkdirSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 const PORT = 5180;
@@ -17,6 +19,8 @@ const argOf = (k: string): string | undefined => {
 const pass = Number(argOf("--pass") ?? 1);
 const chars = argOf("--char") ? [argOf("--char") as string] : ["masha", "bear"];
 const motions = args.flatMap((a, i) => (a === "--motion" && args[i + 1] ? [args[i + 1]] : []));
+const apps = args.flatMap((a, i) => (a === "--app" && args[i + 1] ? [args[i + 1]] : []));
+const stages = args.flatMap((a, i) => (a === "--stage" && args[i + 1] ? [args[i + 1]] : []));
 const base = `http://127.0.0.1:${PORT}/tools/likeness.html`;
 
 const SHOTS: Array<{ name: string; query: string }> = [
@@ -55,7 +59,7 @@ async function main(): Promise<void> {
     const page = await browser.newPage({ viewport: { width: 800, height: 800 } });
     page.on("pageerror", (e) => console.error("pageerror:", e.message));
     page.on("console", (m) => {
-      if (motions.length || m.type() === "error" || m.type() === "warning") console.log("page:", m.type(), m.text().slice(0, 300));
+      if (motions.length || stages.length || m.type() === "error") console.log("page:", m.type(), m.text().slice(0, 300));
     });
     for (const spec of motions) {
       const [f, c, t0, dt, n] = spec.split(":");
@@ -66,7 +70,45 @@ async function main(): Promise<void> {
       await page.screenshot({ path: file });
       console.log("saved", file);
     }
-    for (const c of motions.length ? [] : chars) {
+    for (const spec of stages) {
+      // --stage <fixture>:<t>[:<focus>] → the real engine stage (set + look) at time t
+      const [f, t, focus] = spec.split(":");
+      await page.setViewportSize({ width: 1280, height: 720 });
+      await page.goto(`${base}?stage=${f}&t=${t}${focus ? `&focus=${focus}` : ""}`);
+      await page.waitForFunction(() => (window as unknown as { __ready?: boolean }).__ready === true, null, { timeout: 180_000 });
+      const file = `${outDir}/pass${pass}-stage-f${f}-${t}${focus ? `-${focus}` : ""}.png`;
+      const png = await page.evaluate(() => (window as unknown as { __png: string }).__png);
+      writeFileSync(file, Buffer.from(png.split(",")[1], "base64"));
+      console.log("saved", file);
+    }
+    for (const id of apps) {
+      await page.setViewportSize({ width: 1280, height: 720 });
+      await page.goto(`http://127.0.0.1:${PORT}/`);
+      await page.evaluate(() => localStorage.clear());
+      await page.goto(`http://127.0.0.1:${PORT}/`);
+      await page.waitForFunction(() => !!(window as unknown as { __mabear?: unknown }).__mabear, null, { timeout: 60_000 });
+      await page.getByTestId(`chip-${id}`).click();
+      await page.waitForTimeout(4000);
+      await page.getByTestId("play-all").click();
+      for (let i = 0; i < 6; i++) {
+        await page.waitForTimeout(i === 0 ? 1500 : 3500);
+        const file = `${outDir}/pass${pass}-app-${id}-${i}.png`;
+        await page.getByTestId("stage-canvas").screenshot({ path: file });
+        console.log("saved", file);
+      }
+      const st = await page.evaluate(() => (window as unknown as { __mabear: { stats(): unknown } }).__mabear.stats());
+      console.log("stats", JSON.stringify(st));
+      await page.getByTestId("pause").click().catch(() => undefined);
+      await page.addStyleTag({ content: ".tap-hint { display: none !important; }" });
+      for (const [who, ang] of [["masha", 0.35], ["bear", -0.35]] as const) {
+        await page.evaluate(([w, a]) => (window as unknown as { __mabear: { closeup(w: string, a: number): void } }).__mabear.closeup(w, a), [who, ang] as const);
+        await page.waitForTimeout(1500);
+        const file = `${outDir}/pass${pass}-app-${id}-closeup-${who}.png`;
+        await page.getByTestId("stage-canvas").screenshot({ path: file });
+        console.log("saved", file);
+      }
+    }
+    for (const c of motions.length || apps.length || stages.length ? [] : chars) {
       for (const s of SHOTS) {
         await page.goto(`${base}?char=${c}&${s.query}&label=0`);
         await page.waitForFunction(() => (window as unknown as { __ready?: boolean }).__ready === true, null, { timeout: 90_000 });

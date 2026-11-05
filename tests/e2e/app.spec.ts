@@ -222,6 +222,8 @@ test("8. close-up screenshots + performance (FPS > 10 headless, draw calls < 200
   await page.getByTestId("pause").click().catch(() => undefined);
   await page.getByTestId("new-story").click();
   await page.waitForTimeout(500);
+  // the likeness close-ups show the characters only: hide the "tap Masha or Bear" pill that overlays the canvas
+  await page.addStyleTag({ content: ".tap-hint { display: none !important; }" });
   await page.evaluate(() => window.__mabear!.closeup("masha", 0.35));
   await page.waitForTimeout(1200);
   await page.getByTestId("stage-canvas").screenshot({ path: `${SHOTS}/masha-closeup.png` });

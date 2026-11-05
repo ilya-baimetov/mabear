@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { compile } from "../../src/compiler/compile";
 import { EMPTY_CARRY } from "../../src/compiler/audioCues";
-import { SHOT_MAX, SHOT_MIN, clampCam, mulberry32 } from "../../src/compiler/camera";
+import { HEAD_HEIGHT, OCCLUDERS, SHOT_MAX, SHOT_MIN, cameraAt, clampCam, mulberry32, occlusionCost } from "../../src/compiler/camera";
 import { initialWorldState } from "../../src/compiler/worldState";
 import { OBSTACLES, SET_BOUNDS } from "../../src/shared/bible/set";
 import { DEFAULT_REMIX, type ActorId, type Beat, type BeatScript, type Segment, type Vec2 } from "../../src/shared/schema";
@@ -123,6 +123,85 @@ describe("auto-cinematographer — 180° rule", () => {
       if (Math.abs(cross) < 0.5) continue;
       if (sign === 0) sign = Math.sign(cross);
       expect(Math.sign(cross)).toBe(sign);
+    }
+  });
+});
+
+describe("auto-cinematographer — the speaker owns the line; no trunks in the way", () => {
+  const TALK = BS([
+    B({ actor: "masha", verb: "run_to", target: "table" }),
+    B({ actor: "masha", verb: "wave", target: "bear", line: "Bear, Bear! I'm making you the biggest pancakes in the whole forest!" }),
+    B({ actor: "bear", verb: "fall_down", with_previous: true, delay_s: 0.8 }),
+    B({ actor: "bear", verb: "yawn_stretch" }),
+    B({ actor: "masha", verb: "jump", line: "Hooray! Pancakes for everyone!" }),
+    B({ actor: "bear", verb: "facepalm" }),
+  ]);
+
+  it("frames the speaker for the WHOLE dialogue cue; the listener's reaction comes after the line", () => {
+    for (const seed of [0, 3, 9]) {
+      const s = run(TALK, false, seed);
+      expect(s.dialogue.length).toBe(2);
+      for (const d of s.dialogue) {
+        for (let t = d.start + 0.05; t < d.start + d.dur - 0.05; t += 0.1) {
+          const cam = cameraAt(s.camera, t)!;
+          const sp = posAt(s, d.actor, t);
+          expect(Math.hypot(cam.look[0] - sp[0], cam.look[2] - sp[1]), `seed ${seed} t=${t.toFixed(2)}`).toBeLessThan(1.5);
+        }
+        // a cut inside a line (only when a shot must be split at 6 s) stays on the speaker — never to the listener
+        for (const c of s.camera.filter((q) => q.start > d.start + 0.05 && q.start < d.start + d.dur - 0.05)) {
+          const sp = posAt(s, d.actor, c.start + 0.01);
+          expect(Math.hypot(c.from.look[0] - sp[0], c.from.look[2] - sp[1])).toBeLessThan(1.5);
+        }
+      }
+    }
+  });
+
+  it("gives Masha, the star, the most screen time when both act", () => {
+    const s = run(BS([
+      B({ actor: "bear", verb: "walk_to", target: "bench" }),
+      B({ actor: "masha", verb: "spin", with_previous: true, delay_s: 1 }),
+      B({ actor: "masha", verb: "dance", with_previous: true }),
+      B({ actor: "bear", verb: "sit", target: "bench" }),
+      B({ actor: "masha", verb: "clap" }),
+    ]), false);
+    let masha = 0;
+    let bear = 0;
+    for (let t = 0.05; t < s.duration; t += 0.1) {
+      const cam = cameraAt(s.camera, t)!;
+      const m = posAt(s, "masha", t);
+      const b = posAt(s, "bear", t);
+      const dm = Math.hypot(cam.look[0] - m[0], cam.look[2] - m[1]);
+      const db = Math.hypot(cam.look[0] - b[0], cam.look[2] - b[1]);
+      const both = Math.hypot(m[0] - b[0], m[1] - b[1]) < 8 && dm < 4.5 && db < 4.5;
+      if (dm < 1.5 || both) masha += 0.1;
+      if (db < 1.5 || both) bear += 0.1;
+    }
+    expect(masha).toBeGreaterThanOrEqual(bear);
+  });
+
+  it("scores occlusion by set trunks and walls, and plans around them", () => {
+    const pine = OCCLUDERS.find((o) => Math.hypot(o.c[0] + 8.9, o.c[1] - 2.2) < 0.1)!;
+    expect(pine).toBeDefined();
+    const head = { head: [-11, HEAD_HEIGHT.bear, 2.2] as [number, number, number], w: 1 };
+    // camera east of the pine, looking west through it at Bear in the hammock
+    expect(occlusionCost({ pos: [-5, 1.8, 2.2], look: [-11, 1.7, 2.2], fov: 40 }, [head])).toBeGreaterThanOrEqual(1);
+    // from the south the view is clear
+    expect(occlusionCost({ pos: [-11, 1.8, 7.5], look: [-11, 1.7, 2.2], fov: 40 }, [head])).toBe(0);
+    // walls: through the house
+    expect(occlusionCost({ pos: [-6, 1.5, -12], look: [-6, 1.0, 0], fov: 40 }, [{ head: [-6, 0.85, 0], w: 1 }])).toBeGreaterThanOrEqual(1);
+    // a Bear-to-hammock scene keeps both characters' heads in clear view
+    const nap = run(BS([
+      B({ actor: "bear", verb: "walk_to", target: "hammock" }),
+      B({ actor: "masha", verb: "run_to", target: "porch", with_previous: true }),
+      B({ actor: "bear", verb: "sleep", target: "hammock" }),
+      B({ actor: "masha", verb: "peek", target: "bear", line: "Bear is sleeping? Not for long!" }),
+    ]), true);
+    for (const c of nap.camera) {
+      const heads = (["masha", "bear"] as const).map((a) => {
+        const p = posAt(nap, a, c.start + 0.01);
+        return { head: [p[0], HEAD_HEIGHT[a], p[1]] as [number, number, number], w: 1 };
+      });
+      expect(occlusionCost(c.from, heads), `${c.start} ${c.shot}`).toBeLessThan(1);
     }
   });
 });

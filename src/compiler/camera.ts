@@ -32,6 +32,8 @@ export interface CameraPlanInput {
   beats: CameraBeatInfo[];
   /** actor ground position at time t (segment-local) */
   posAt: (actor: ActorId, t: number) => Vec2;
+  /** head height of an actor at time t (sitting / carried); defaults to HEAD_HEIGHT */
+  headY?: (actor: ActorId, t: number) => number;
   /** actor visible (not offstage) at time t */
   visibleAt: (actor: ActorId, t: number) => boolean;
   /** dialogue windows, for fillers */
@@ -103,9 +105,10 @@ export function planCamera(input: CameraPlanInput): CameraCue[] {
   if (input.isFirst) props.push({ start: 0, want: 2.5, prio: 5, kind: "wide", subject: null, overridden: false, establishing: true });
 
   // Priorities: beat hint 6 > the speaker for the WHOLE line 5.5 > episode establishing 5 > reaction 4.5 >
-  // cluster establishing 3.5 > tracking 3 (Masha) / 2.5 (Bear) > low angle 2 > two-shot for parallel action 1.6 >
-  // medium 1.3 (Masha, the star) / 1 (Bear).
+  // cluster establishing 3.5 > Masha (the star) acting: tracking 3.2, low angle 2.6, two-shot/medium 2.4 >
+  // Bear acting: tracking 2.2, low angle 2, two-shot 1.6, medium 1.
   const near = (t: number) => visibleAt("masha", t) && visibleAt("bear", t) && dist(posAt("masha", t), posAt("bear", t)) < 8;
+  const close6 = (t: number) => visibleAt("masha", t) && visibleAt("bear", t) && dist(posAt("masha", t), posAt("bear", t)) < 6;
   const parallel = (b: CameraBeatInfo) =>
     beats.some((o) => o.actor !== b.actor && o.start < b.start + b.dur - 0.3 && o.start + o.dur > b.start + 0.3);
   for (const b of beats) {
@@ -117,14 +120,16 @@ export function planCamera(input: CameraPlanInput): CameraCue[] {
     } else if (b.hasLine) {
       props.push({ start: b.lineStart, want: Math.max(SHOT_MIN, b.lineDur), prio: 5.5, kind: "close", subject: b.actor, overridden: false, line: true });
     } else if (isLoco && b.dur > 2) {
-      props.push({ start: b.start, want: b.dur, prio: star ? 3 : 2.5, kind: "tracking", subject: b.actor, overridden: false });
+      // Bear walking past a nearby Masha → keep both in a moving two-shot (the star stays on screen)
+      const pair = !star && close6(b.start + 0.1) && close6(b.start + b.dur - 0.1);
+      props.push({ start: b.start, want: b.dur, prio: star ? 3.2 : 2.2, kind: pair ? "two" : "tracking", subject: pair ? null : b.actor, overridden: false });
     } else if ((star && b.emotion === "mischievous") || (b.actor === "bear" && ["angry_stomp", "chase", "carry", "angry"].some((v) => v === b.verb || v === b.emotion))) {
-      props.push({ start: b.start, want: Math.max(SHOT_MIN, b.dur), prio: 2, kind: rnd() < 0.65 ? "low_angle" : "medium", subject: b.actor, overridden: false });
+      props.push({ start: b.start, want: Math.max(SHOT_MIN, b.dur), prio: star ? 2.6 : 2, kind: rnd() < 0.65 ? "low_angle" : "medium", subject: b.actor, overridden: false });
     } else if (parallel(b) && near(b.start + 0.1)) {
-      props.push({ start: b.start, want: Math.max(SHOT_MIN, b.dur), prio: 1.6, kind: "two", subject: null, overridden: false });
+      props.push({ start: b.start, want: Math.max(SHOT_MIN, b.dur), prio: star ? 2.4 : 1.6, kind: "two", subject: null, overridden: false });
     } else {
       const two = near(b.start) && dist(posAt("masha", b.start), posAt("bear", b.start)) < 5 && rnd() < 0.35;
-      props.push({ start: b.start, want: Math.max(SHOT_MIN, b.dur), prio: star ? 1.3 : 1, kind: two ? "two" : "medium", subject: two ? null : b.actor, overridden: false });
+      props.push({ start: b.start, want: Math.max(SHOT_MIN, b.dur), prio: star ? 2.4 : 1, kind: two ? "two" : "medium", subject: two ? null : b.actor, overridden: false });
     }
     // arriving in a new cluster → establish it
     if (isLoco && visibleAt(b.actor, b.start + b.dur) && !known.has(clusterAt(b.to))) {
@@ -158,7 +163,9 @@ export function planCamera(input: CameraPlanInput): CameraCue[] {
       last.line = last.line || p.line;
       continue;
     }
-    const protectedEnd = last.start + (last.prio > p.prio ? Math.max(hold(last), last.want) : hold(last));
+    // lines, hints, establishing and reaction shots protect their whole window; plain action shots up to 3 s
+    const fullProtect = last.line || last.overridden || last.establishing || last.prio >= 4.5;
+    const protectedEnd = last.start + (last.prio > p.prio ? Math.max(hold(last), fullProtect ? last.want : Math.min(last.want, 3)) : hold(last));
     if (p.start >= protectedEnd - 1e-6) { cuts.push(p); continue; }
     if (p.prio > last.prio) {
       if (last.establishing && last.start === 0 && input.isFirst) {
@@ -180,7 +187,6 @@ export function planCamera(input: CameraPlanInput): CameraCue[] {
   }
   if (cuts.length === 0) cuts.push({ start: 0, want: duration, prio: 0, kind: "two", subject: null, overridden: false });
 
-  if (process.env.CAMDBG) console.log("PROPS", JSON.stringify(props.map((p) => [p.start.toFixed(2), p.kind, p.subject, p.prio, p.want.toFixed(2)])), "CUTS", JSON.stringify(cuts.map((p) => [p.start.toFixed(2), p.kind, p.subject, p.prio, p.want.toFixed(2)])));
   // 3. fillers where a shot outlives its purpose (the speaker first, then Masha when she is acting)
   const filled: Proposal[] = [];
   for (let i = 0; i < cuts.length; i++) {
@@ -195,7 +201,7 @@ export function planCamera(input: CameraPlanInput): CameraCue[] {
       const subj = speaker?.actor ?? active?.actor ?? null;
       const bothActive = activeAll.some((b) => b.actor === "masha") && activeAll.some((b) => b.actor === "bear");
       const kind: Kind = speaker ? "close"
-        : active && LOCO.has(active.verb) && active.start + active.dur - t > 2 ? "tracking"
+        : active && LOCO.has(active.verb) && active.start + active.dur - t > 2 ? (active.actor === "bear" && close6(t) && close6(Math.min(next, t + 4) - 0.05) ? "two" : "tracking")
         : bothActive && near(t) ? "two"
         : subj && rnd() < 0.6 ? "medium" : "two";
       const want = Math.min(4, next - t);
@@ -214,7 +220,7 @@ export function planCamera(input: CameraPlanInput): CameraCue[] {
     const next = i + 1 < shots.length ? shots[i + 1] : null;
     const need = SHOT_MIN - (shots[i].end - shots[i].start);
     // borrow time from a neighbour that can spare it, so a strong short shot survives
-    if (prev && prev.end - prev.start - need >= SHOT_MIN && (shots[i].prio >= prev.prio || !next)) { prev.end -= need; shots[i].start = prev.end; continue; }
+    if (prev && prev.end - prev.start - need >= SHOT_MIN && shots[i].prio >= prev.prio) { prev.end -= need; shots[i].start = prev.end; continue; }
     if (next && next.end - next.start - need >= SHOT_MIN && shots[i].prio >= next.prio) { next.start += need; shots[i].end = next.start; continue; }
     // otherwise merge with the neighbour; the stronger shot keeps the screen
     const nb = prev && (!next || prev.prio >= next.prio || !next) ? prev : next!;
@@ -227,13 +233,26 @@ export function planCamera(input: CameraPlanInput): CameraCue[] {
   for (const sh of shots) {
     const len = sh.end - sh.start;
     if (len <= SHOT_MAX) { split.push(sh); continue; }
-    const n = Math.ceil(len / 5);
-    for (let k = 0; k < n; k++) {
+    // cut points: prefer dialogue boundaries (never cut inside a line if avoidable), else even parts ≤ 5 s
+    const bounds = input.dialogue.flatMap((d) => [d.start, d.start + d.dur]).filter((x) => x > sh.start + SHOT_MIN && x < sh.end - SHOT_MIN).sort((a, b) => a - b);
+    const cutsAt: number[] = [];
+    let cur = sh.start;
+    while (sh.end - cur > SHOT_MAX) {
+      const cand = bounds.filter((x) => x >= cur + SHOT_MIN && x <= cur + SHOT_MAX && sh.end - x >= SHOT_MIN);
+      const inLine = (x: number) => input.dialogue.some((d) => x > d.start + 0.05 && x < d.start + d.dur - 0.05);
+      const good = cand.filter((x) => !inLine(x));
+      const rest = sh.end - cur;
+      const next = good.length ? good[good.length - 1] : cur + Math.min(5, rest / Math.ceil(rest / 5));
+      cutsAt.push(next);
+      cur = next;
+    }
+    const edges = [sh.start, ...cutsAt, sh.end];
+    for (let k = 0; k + 1 < edges.length; k++) {
       // a long line stays on the speaker (close ↔ medium); other long shots alternate framing
       const alt: Kind = sh.kind === "tracking" ? "tracking" : sh.kind === "close" ? "medium" : sh.kind === "medium" ? "two" : sh.kind === "low_angle" ? "medium" : "medium";
       const kind: Kind = k % 2 === 0 ? sh.kind : alt;
       const subject = kind === "two" ? null : sh.subject ?? (sh.kind === "two" || sh.kind === "wide" ? "masha" : sh.subject);
-      split.push({ ...sh, kind, subject, start: sh.start + (len * k) / n, end: sh.start + (len * (k + 1)) / n });
+      split.push({ ...sh, kind, subject, start: edges[k], end: edges[k + 1] });
     }
   }
 
@@ -242,7 +261,30 @@ export function planCamera(input: CameraPlanInput): CameraCue[] {
   return split.map((s) => {
     if (visibleAt("masha", s.start) && visibleAt("bear", s.start)) side = continueSide(posAt("masha", s.start), posAt("bear", s.start), side);
     const angle = (rnd() - 0.5) * (s.kind === "wide" ? 0.8 : 1.1);
-    const { from, to } = framing(s.kind, s.subject, s.start, s.end, angle, side, posAt, visibleAt, rnd);
+    // occlusion: try yaw nudges around the subject (staying on the 180° side) until no trunk / wall blocks the view
+    const framedAt = (t: number): { head: Vec3; w: number }[] => {
+      const out: { head: Vec3; w: number }[] = [];
+      for (const a of ["masha", "bear"] as ActorId[]) {
+        if (!visibleAt(a, t)) continue;
+        const p = posAt(a, t);
+        const w = s.kind === "wide" || s.kind === "two" || a === s.subject || s.subject === null ? 1 : 0.5;
+        out.push({ head: [p[0], input.headY ? input.headY(a, t) : HEAD_HEIGHT[a], p[1]], w });
+      }
+      return out;
+    };
+    const h0 = framedAt(s.start + 0.01);
+    const h1 = framedAt(Math.max(s.start, s.end - 0.01));
+    let best = framing(s.kind, s.subject, s.start, s.end, angle, side, posAt, visibleAt, rnd, input.headY);
+    let bestCost = occlusionCost(best.from, h0) + occlusionCost(best.to, h1);
+    for (const dlt of [0.35, -0.35, 0.7, -0.7, 1.05, -1.05]) {
+      if (bestCost === 0) break;
+      const a = angle + dlt;
+      if (Math.abs(a) > 1.3) continue;
+      const fr = framing(s.kind, s.subject, s.start, s.end, a, side, posAt, visibleAt, rnd, input.headY);
+      const cost = occlusionCost(fr.from, h0) + occlusionCost(fr.to, h1);
+      if (cost < bestCost - 1e-6) { best = fr; bestCost = cost; }
+    }
+    const { from, to } = best;
     return { start: r3(s.start), dur: r3(s.end) - r3(s.start), shot: shotName(s.kind), from, to, overridden: s.overridden };
   });
 }
@@ -276,6 +318,59 @@ function lineSide(m: Vec2, b: Vec2): Vec2 {
   return p[1] >= 0 ? p : [-p[0], -p[1]];
 }
 
+/** Tall static occluders: set obstacle circles (trunks, bush) plus trees the set dresses (hammock pines, swing oak). */
+export const OCCLUDERS: { c: Vec2; r: number; h: number }[] = [
+  ...OBSTACLES.circles.filter((c) => c.id !== "pond" && c.id !== "table").map((c) => ({ c: c.c, r: c.r, h: c.id === "bush" ? 1.3 : 12 })),
+  { c: [-13.1, 2.2], r: 0.45, h: 12 }, // hammock pines
+  { c: [-8.9, 2.2], r: 0.45, h: 12 },
+  { c: [8.6, -0.6], r: 0.6, h: 12 }, // swing oak
+];
+const OCC_BOXES = OBSTACLES.boxes.map((b) => ({ min: b.min, max: b.max, h: b.id === "house" ? 7.5 : 2.6 }));
+
+/** How badly static set pieces block a camera key: line of sight to each framed head (weighted), plus big trunks
+ *  standing in frame in front of the subject. 0 = clear. */
+export function occlusionCost(key: CamKey, heads: { head: Vec3; w: number }[]): number {
+  const cam = key.pos;
+  let cost = 0;
+  for (const { head, w } of heads) {
+    const dx = head[0] - cam[0];
+    const dz = head[2] - cam[2];
+    const L2 = dx * dx + dz * dz;
+    for (const o of OCCLUDERS) {
+      const t = L2 === 0 ? 0 : Math.max(0, Math.min(1, ((o.c[0] - cam[0]) * dx + (o.c[1] - cam[2]) * dz) / L2));
+      if (t <= 0.02 || t >= 0.97) continue;
+      const px = cam[0] + dx * t;
+      const pz = cam[2] + dz * t;
+      const y = cam[1] + (head[1] - cam[1]) * t;
+      if (Math.hypot(px - o.c[0], pz - o.c[1]) < o.r + 0.25 && y < o.h) cost += w;
+    }
+    const n = Math.max(4, Math.ceil(Math.sqrt(L2) / 0.25));
+    for (const b of OCC_BOXES) {
+      for (let i = 1; i < n - 1; i++) {
+        const t = i / n;
+        const x = cam[0] + dx * t;
+        const z = cam[2] + dz * t;
+        const y = cam[1] + (head[1] - cam[1]) * t;
+        if (x > b.min[0] - 0.1 && x < b.max[0] + 0.1 && z > b.min[1] - 0.1 && z < b.max[1] + 0.1 && y < b.h) { cost += w; break; }
+      }
+    }
+  }
+  // trunks filling the frame in front of the subject
+  const f = norm([key.look[0] - cam[0], key.look[2] - cam[2]]);
+  const subjDist = Math.hypot(key.look[0] - cam[0], key.look[2] - cam[2]);
+  const hfov = 2 * Math.atan(Math.tan((key.fov * Math.PI) / 360) * (16 / 9));
+  for (const o of OCCLUDERS) {
+    if (o.h < 3) continue;
+    const v: Vec2 = [o.c[0] - cam[0], o.c[1] - cam[2]];
+    const d = Math.hypot(v[0], v[1]);
+    if (d < 0.3 || d > subjDist - 0.3) continue;
+    const ang = Math.acos(Math.max(-1, Math.min(1, (v[0] * f[0] + v[1] * f[1]) / d)));
+    const wAng = Math.atan(o.r / d);
+    if (ang - wAng < hfov / 2) cost += Math.min(1, wAng * 6);
+  }
+  return Math.round(cost * 1000) / 1000;
+}
+
 /** Perpendicular to the current masha→bear line, on the same side as the previous shot. */
 function continueSide(m: Vec2, b: Vec2, prev: Vec2): Vec2 {
   const l: Vec2 = [b[0] - m[0], b[1] - m[1]];
@@ -288,6 +383,7 @@ function continueSide(m: Vec2, b: Vec2, prev: Vec2): Vec2 {
 function framing(
   kind: Kind, subject: ActorId | null, t0: number, t1: number, angle: number, side: Vec2,
   posAt: CameraPlanInput["posAt"], visibleAt: CameraPlanInput["visibleAt"], rnd: () => number,
+  headY?: CameraPlanInput["headY"],
 ): { from: CamKey; to: CamKey } {
   const m0 = posAt("masha", t0);
   const b0 = posAt("bear", t0);
@@ -295,7 +391,13 @@ function framing(
   const bv = visibleAt("bear", t0);
   const mid: Vec2 = mv && bv ? [(m0[0] + b0[0]) / 2, (m0[1] + b0[1]) / 2] : mv ? m0 : bv ? b0 : [0, 0];
   const subj = subject ?? (mv ? "masha" : "bear");
-  const sp = posAt(subj, t0);
+  let sp: Vec2 = posAt(subj, t0);
+  // a subject that moves during a single shot is followed: pick the (from, to) look targets that keep the eased
+  // camera closest to the subject over the shot (static at the start, static at the end, or a follow dolly)
+  const [spA, sp1] = followTargets(subj, t0, t1, posAt);
+  sp = spA;
+  const hy0 = headY ? headY(subj, t0) : HEAD_HEIGHT[subj];
+  const hy1 = headY ? headY(subj, t1) : HEAD_HEIGHT[subj];
   const op = posAt(subj === "masha" ? "bear" : "masha", t0);
   const dir = rot(side, angle);
 
@@ -310,37 +412,47 @@ function framing(
       break;
     }
     case "two": {
-      const span = mv && bv ? dist(m0, b0) : 0;
+      // follows the pair's midpoint when they move during the shot
+      const m1 = posAt("masha", t1);
+      const b1 = posAt("bear", t1);
+      const mv1 = visibleAt("masha", t1);
+      const bv1 = visibleAt("bear", t1);
+      const mid1: Vec2 = mv1 && bv1 ? [(m1[0] + b1[0]) / 2, (m1[1] + b1[1]) / 2] : mv1 ? m1 : bv1 ? b1 : mid;
+      const span = Math.max(mv && bv ? dist(m0, b0) : 0, mv1 && bv1 ? dist(m1, b1) : 0);
       const d = Math.max(5.5, span * 1.3 + 3.5);
       from = key(mid, dir, d, 2.2, 1.0, 45);
-      to = key(mid, dir, d * 0.95, 2.1, 1.0, 45);
+      to = key(dist(mid, mid1) > 1 ? mid1 : mid, dir, d * 0.95, 2.1, 1.0, 45);
       break;
     }
     case "medium": {
       const d = subj === "bear" ? 5.6 : 4.0;
       const dd = faceDir(sp, op, dir, side);
-      from = key(sp, dd, d, CHEST[subj] + 0.9, CHEST[subj], 40);
-      to = key(sp, dd, d * 0.93, CHEST[subj] + 0.85, CHEST[subj], 40);
+      const cy = hy0 - (HEAD_HEIGHT[subj] - CHEST[subj]);
+      const cy1 = hy1 - (HEAD_HEIGHT[subj] - CHEST[subj]);
+      from = key(sp, dd, d, cy + 0.9, cy, 40);
+      to = key(sp1, dd, d * 0.93, cy1 + 0.85, cy1, 40);
       break;
     }
     case "close": {
       const d = subj === "bear" ? 3.6 : 2.5;
       const dd = faceDir(sp, op, dir, side);
-      from = key(sp, dd, d, HEAD_HEIGHT[subj] + 0.1, HEAD_HEIGHT[subj] - 0.05, 35);
-      to = key(sp, dd, d * 0.92, HEAD_HEIGHT[subj] + 0.1, HEAD_HEIGHT[subj] - 0.05, 35);
+      from = key(sp, dd, d, hy0 + 0.1, hy0 - 0.05, 35);
+      to = key(sp1, dd, d * 0.92, hy1 + 0.1, hy1 - 0.05, 35);
       break;
     }
     case "low_angle": {
       const d = subj === "bear" ? 4.2 : 3.0;
       const dd = faceDir(sp, op, dir, side);
-      from = key(sp, dd, d, 0.35, HEAD_HEIGHT[subj], 50);
-      to = key(sp, dd, d * 0.92, 0.4, HEAD_HEIGHT[subj], 50);
+      from = key(sp, dd, d, 0.35, hy0, 50);
+      to = key(sp1, dd, d * 0.92, 0.4, hy1, 50);
       break;
     }
     case "over_shoulder": {
       const back = norm([op[0] - sp[0], op[1] - sp[1]]);
       const o: ActorId = subj === "masha" ? "bear" : "masha";
-      const pos: Vec2 = [op[0] + back[0] * 1.2 + side[0] * 0.6, op[1] + back[1] * 1.2 + side[1] * 0.6];
+      // lateral offset varies with the (occlusion-nudged) angle but never crosses the 180° line
+      const lat = Math.max(0.25, 0.6 + angle * 0.9);
+      const pos: Vec2 = [op[0] + back[0] * (1.2 + Math.abs(angle) * 0.4) + side[0] * lat, op[1] + back[1] * (1.2 + Math.abs(angle) * 0.4) + side[1] * lat];
       const h = HEAD_HEIGHT[o] * 0.95;
       from = { pos: clampCam([pos[0], h, pos[1]]), look: [sp[0], HEAD_HEIGHT[subj] * 0.9, sp[1]], fov: 40 };
       to = { pos: clampCam([pos[0] - back[0] * 0.15, h, pos[1] - back[1] * 0.15]), look: from.look, fov: 40 };
@@ -362,6 +474,27 @@ function framing(
   return { from, to };
 }
 
+function followTargets(subj: ActorId, t0: number, t1: number, posAt: CameraPlanInput["posAt"]): [Vec2, Vec2] {
+  const p0 = posAt(subj, t0);
+  const p1 = posAt(subj, t1);
+  if (dist(p0, p1) < 0.5) return [p0, p0];
+  const pm = posAt(subj, (t0 + t1) / 2);
+  const cands: [Vec2, Vec2][] = [[p0, p1], [p1, p1], [p0, p0], [pm, p1], [p0, pm], [pm, pm]];
+  let best = cands[0];
+  let bestErr = Infinity;
+  for (const [a, b] of cands) {
+    let err = 0;
+    for (let k = 0; k <= 20; k++) {
+      const u = k / 20;
+      const e = u * u * (3 - 2 * u);
+      const q = posAt(subj, t0 + (t1 - t0) * u);
+      err += Math.hypot(a[0] + (b[0] - a[0]) * e - q[0], a[1] + (b[1] - a[1]) * e - q[1]);
+    }
+    if (err < bestErr - 1e-6) { bestErr = err; best = [a, b]; }
+  }
+  return best;
+}
+
 /** Direction from subject to camera for single shots: 3/4 front of the subject, on the 180° side. */
 function faceDir(sp: Vec2, op: Vec2, dir: Vec2, side: Vec2): Vec2 {
   const towardOther = norm([op[0] - sp[0], op[1] - sp[1]]);
@@ -378,6 +511,13 @@ function key(target: Vec2, dir: Vec2, d: number, h: number, lookY: number, fov: 
 /** Keep the camera inside the set bounds, above ground, out of the house box and trunk/bush footprints. */
 export function clampCam(p: Vec3): Vec3 {
   let [x, y, z] = p;
+  // stay inside the yard clearing (the forest ring is dense) — the open meadow to the south is fine
+  const e = (x / 17.5) ** 2 + ((z - 1) / 15.5) ** 2;
+  if (e > 0.92 && !(z > 9 && Math.abs(x) < 24)) {
+    const k = Math.sqrt(0.92 / e);
+    x *= k;
+    z = 1 + (z - 1) * k;
+  }
   x = Math.max(SET_BOUNDS.minX + 1, Math.min(SET_BOUNDS.maxX - 1, x));
   z = Math.max(SET_BOUNDS.minZ + 1, Math.min(SET_BOUNDS.maxZ - 1, z));
   y = Math.max(0.3, Math.min(14, y));

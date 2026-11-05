@@ -7,3 +7,4 @@ refs/
 test-results/
 playwright-report/
 .secrets.env
+.e2e-dist/

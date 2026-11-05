@@ -356,6 +356,58 @@ performance) and motion feel for both (3.5; scored from `evaluate()` filmstrips;
 motion layer: stiff arms and no squash in Masha's run, Bear's forearms clipping the belly). Re-score motion feel in
 the integrated app once it runs.
 
+### Pass 10 — 2026-11-05 05:24 UTC (Bear fur material)
+
+Bear's fur gets a procedural strand texture in the fragment shader (`furMaterial` in `rig.ts`): fine anisotropic
+value flecks plus a derivative-based bump (0.0012 m) from the same mesh-local noise. It fades out when a strand
+gets smaller than a pixel, so wide shots stay clean, and needs no UVs or textures. It costs no draw calls and no
+triangles; per fragment it adds one 3D value-noise evaluation. The first try was far too strong (bump scaled in
+noise units instead of metres) and read as a dirty carpet; scaled to metres it reads as soft plush fur in
+close-ups. The brows can now take a custom material (`FaceConfig.brows.material`), and Bear's are fur.
+
+| Bear | Silhouette | Proportions | Face | Colors | Materials | Motion feel |
+|---|---|---|---|---|---|---|
+| pass 10 | 4 | 4 | 4 | 4 | 4 | 3.5 |
+
+### Pass 11 — 2026-11-05 05:30 UTC (QA art review fixes)
+
+QA review (main thread) and fixes:
+
+- Masha: the kerchief **ballooned into a puffy hood** (worst when the head turns, since the cape is rigid on the
+  head). Fix: shell 1.10 → 1.06 × skull radius, cape flare 0.45 → 0.18, cape drop 0.26 → 0.20 m. It hugs the
+  skull now and still falls to the shoulders.
+- Masha (and Bear): **pupils converged** (each eye aimed at a near target separately). Fix: parallel gaze from one
+  world direction taken between the eyes, plus 0.02 rad of divergence; with no look-at the eyes follow the head's
+  forward direction.
+- Masha: **white speck on the dress under the knot** (the blouse V). Fix: removed. Simpler is cleaner.
+- Bear: **white sclera rings look startled** (spec: small dark eyes with highlights). Fix: r 0.033 → 0.03, iris
+  0.6 → 0.82 of the eye, warm off-white sclera, lids lower (-0.55 → -0.38). Now dark eyes with a thin rim and
+  the highlight.
+- Bear: **inner ears brown** → tan `#C8955E` (spec).
+- Bear: **seams at the neck and shoulders, dark bib under the head**. Fix: chest, both shoulder caps and a neck
+  ruff are now one surface. It is a smooth union of ellipsoids, ray-cast along every icosphere direction from the
+  chest centre, so there is no crease. The caps are spheres around the arm joints, so the arms turn inside them
+  without exposing a seam. The head, nose and ears no longer cast shadows onto the chest. That removes the hard
+  "bib"; the body still casts the ground shadow.
+
+Triangles: Masha 26.2k, Bear 26.2k; meshes 26 / 27 (≤ 44 draw calls each including shadow casters).
+
+**Masha** — `pass11-masha-*.png`
+
+| Silhouette | Proportions | Face | Colors | Materials | Motion feel |
+|---|---|---|---|---|---|
+| 4 | 4 | 4 | 4.5 | 4 | 3.5 |
+
+**Bear** — `pass11-bear-*.png`
+
+| Silhouette | Proportions | Face | Colors | Materials | Motion feel |
+|---|---|---|---|---|---|
+| 4 | 4 | 4 | 4 | 4 | 3.5 |
+
+- Bear's face now reads calm instead of startled. The head sits in a fur ruff on sloping shoulders, with no
+  stacked-primitive joints in front, ¾ or close-up views. Motion feel is re-scored after 06:15 once the motion
+  owner's arm fixes land.
+
 ## 5. Next pass checklist (append new passes below)
 
 1. `npx tsx scripts/likenessShots.ts --pass N` (vite on port 5180 is started automatically).

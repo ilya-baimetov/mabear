@@ -584,7 +584,7 @@ function compileImpl(inputBs: BeatScript, startState: WorldState, opts: CompileO
 
   function fillAmbient(a: ActorId): ActorClip[] {
     const o = otherActor(a);
-    const clips = [...tracks[a].clips].sort((x, y) => x.start - y.start);
+    const clips = [...tracks[a].clips].sort((x, y) => x.start - y.start).map((c) => (a === "masha" && c.params.posture === "carried" ? rideAlong(c) : c));
     const out: ActorClip[] = [];
     let t = 0;
     for (const c of clips) {
@@ -610,6 +610,25 @@ function compileImpl(inputBs: BeatScript, startState: WorldState, opts: CompileO
       last.dur = r3(duration - last.start);
     }
     return rounded;
+  }
+
+  /** A clip Masha plays on Bear's shoulders follows Bear's path over the clip's interval. */
+  function rideAlong(c: ActorClip): ActorClip {
+    const t0 = c.start;
+    const t1 = c.start + c.dur;
+    const p0 = posAt("bear", t0);
+    const p1 = posAt("bear", t1);
+    const params = { ...c.params, from: [r3(p0[0]), r3(p0[1])] as Vec2 };
+    if (dist(p0, p1) > 0.05) {
+      const pts: Vec2[] = [];
+      for (let k = 0; k <= 4; k++) { const q = posAt("bear", t0 + ((t1 - t0) * k) / 4); pts.push([r3(q[0]), r3(q[1])]); }
+      params.to = pts[pts.length - 1];
+      params.path = pts;
+    } else {
+      delete params.to;
+      delete params.path;
+    }
+    return { ...c, params };
   }
 
   function ambientSpan(a: ActorId, o: ActorId, s: number, e: number): ActorClip[] {
@@ -678,7 +697,7 @@ function compileImpl(inputBs: BeatScript, startState: WorldState, opts: CompileO
     });
   });
   const camera = planCamera({
-    duration, beats: camBeats, posAt, visibleAt: (x, tt) => postureAt(x, tt) !== "offstage",
+    duration, beats: camBeats, posAt, visibleAt: (x, tt) => postureAt(x, tt) !== "offstage", headY: (x, tt) => headAt(x, tt)[1],
     dialogue: dialogue.map((d) => ({ start: d.start, dur: d.dur, actor: d.actor })), isFirst: opts.isFirst, cameraSeed: opts.remix.cameraSeed,
   });
 
