@@ -6,6 +6,7 @@ export const ru: Strings = {
   pause: "Пауза",
   newStory: "Новая",
   examples: "Примеры",
+  replaceStory: "Начать заново? Твоя история будет заменена.",
   volume: "Звук",
   mute: "Выключить звук",
   unmute: "Включить звук",

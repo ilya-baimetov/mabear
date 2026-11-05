@@ -202,7 +202,7 @@ export function buildBear(): CharacterRig {
     const top = d.y > 0 ? 1 : 0.85;
     out.set(d.x * 0.088, d.y * 0.058 * top, d.z * 0.064 - 0.012 * d.y * d.y).add(noseAt);
   });
-  attach(B.Head, noseGeom, nose, "nose");
+  attach(B.Head, noseGeom, nose, "nose", false);
   geoms.push(noseGeom);
 
   // ---- ears: round, dark, cupped, with a tan-brown inner; each in a group for wiggle
@@ -223,7 +223,7 @@ export function buildBear(): CharacterRig {
       const inner = smoothstep(0.08, 0.06, Math.hypot(p.x, p.y + 0.01)) * smoothstep(-0.02, 0.01, p.z);
       out.copy(cFurDark).lerp(cEarIn, inner);
     });
-    attach(eg, g, fur, "ear");
+    attach(eg, g, fur, "ear", false);
     B.Head.add(eg);
     ears.push(eg);
     geoms.push(g);

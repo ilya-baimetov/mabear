@@ -26,13 +26,13 @@ export function TopBar() {
         ) : (
           <button className="btn btn-primary" data-testid="play-all" disabled={s.timeline.duration === 0} onClick={() => playback.playAll()}>▶ {t.playAll}</button>
         )}
-        <button className="btn" data-testid="new-story" onClick={() => store.newStory()}>⟲ {t.newStory}</button>
+        <button className="btn" data-testid="new-story" onClick={() => { if (!store.hasOwnWriting() || window.confirm(t.replaceStory)) store.newStory(); }}>⟲ {t.newStory}</button>
         <div className="dropdown" ref={ddRef}>
           <button className="btn" data-testid="examples" onClick={() => setOpen(!open)}>{t.examples} ▾</button>
           {open && (
             <div className="menu" role="menu">
               {FIXTURE_IDS.map((id) => (
-                <button key={id} role="menuitem" data-testid={`example-${id}`} onClick={() => { store.loadFixtureById(id); setOpen(false); }}>{t.fixtures[id]}</button>
+                <button key={id} role="menuitem" data-testid={`example-${id}`} onClick={() => { setOpen(false); if (!store.hasOwnWriting() || window.confirm(t.replaceStory)) store.loadFixtureById(id); }}>{t.fixtures[id]}</button>
               ))}
             </div>
           )}

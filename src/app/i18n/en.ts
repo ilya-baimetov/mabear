@@ -5,6 +5,7 @@ export const en = {
   pause: "Pause",
   newStory: "New",
   examples: "Examples",
+  replaceStory: "Start over? Your story will be replaced.",
   volume: "Sound",
   mute: "Mute",
   unmute: "Unmute",

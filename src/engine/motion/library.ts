@@ -77,12 +77,12 @@ function shuffle(L: PoseLayer, ctx: VerbCtx): PoseLayer {
   const rate = Math.abs(ctx.turnRate ?? 0);
   if (rate < 0.15) return L;
   const w = clamp01((rate - 0.15) / 1.2);
-  const stepAngle = ctx.actor === "bear" ? 0.4 : 0.5;
+  const stepAngle = ctx.actor === "bear" ? 0.9 : 0.75;
   const p = (ctx.turned ?? 0) / stepAngle;
   const i = Math.floor(p);
   const lift = Math.sin((p - i) * Math.PI) * w;
   const side = i % 2 === 0 ? "Left" : "Right";
-  return addLayer(L, { [`${side}UpLeg`]: rx(-0.35 * lift), [`${side}Leg`]: rx(0.7 * lift), [`${side}Foot`]: rx(0.2 * lift) });
+  return addLayer(L, { [`${side}UpLeg`]: rx(-0.25 * lift), [`${side}Leg`]: rx(0.5 * lift), [`${side}Foot`]: rx(0.15 * lift) });
 }
 
 /**

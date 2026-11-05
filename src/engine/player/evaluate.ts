@@ -231,7 +231,7 @@ function kinematics(r: Resolved, lt: number): Kin {
   }
   // in-place turns take longer the further they go (Bear turns slower than Masha)
   const dYaw = Math.abs(wrapAngle(r.endYaw - r.startYaw));
-  const turnS = clamp((dYaw / Math.PI) * (clip.params.ambient ? 0.9 : 0.6) * (r.heavy ? 1.5 : 1), 0.2, Math.max(0.2, clip.dur));
+  const turnS = clamp((dYaw / Math.PI) * (clip.params.ambient ? 1.0 : 0.7) * (r.heavy ? 1.8 : 1), 0.2, Math.max(0.2, clip.dur));
   const x = clamp01(lt / turnS);
   const k = smooth(x);
   return { pos: r.startPos, yaw: lerpAngle(r.startYaw, r.endYaw, k), dist: 0, turned: dYaw * k, turnRate: (dYaw * 6 * x * (1 - x)) / turnS };

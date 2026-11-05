@@ -471,6 +471,11 @@ class Store {
     this.persist();
   }
 
+  /** true when the story has paragraphs the player wrote (not just an unchanged example) */
+  hasOwnWriting(): boolean {
+    return this.state.paragraphs.some((p) => p.text.trim() && p.versions[p.current]?.source !== "fixture");
+  }
+
   loadFixtureById(id: FixtureEpisode["id"]): void {
     const fx = FIXTURES.find((f) => f.id === id && f.lang === this.state.lang) ?? FIXTURES.find((f) => f.id === id);
     if (fx) this.loadFixture(fx);
