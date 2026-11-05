@@ -22,6 +22,9 @@ export class Player {
   private lastFrame: FrameState | null = null;
   /** idle clock after the end (final frame holds with idle motion) */
   private idleT = 0;
+  /** play() was asked to run to the end of the timeline (extend endT when the timeline grows) */
+  private toEnd = false;
+  private lastNow = 0;
   /** debug/screenshot hook: replaces the compiled camera (e.g. a character close-up) */
   cameraOverride: ((frame: FrameState) => CamKey) | null = null;
 
@@ -37,11 +40,10 @@ export class Player {
     this.lang = lang;
     if (this.t > tl.duration) this.t = tl.duration;
     if (changed && wasPlaying) {
-      // timeline edited during playback: restart audio from the current time
-      this.opts.audio?.stop();
+      // timeline edited during playback: re-schedule from the current time (the engine keeps lines/music running)
       this.opts.audio?.play(tl, this.t, lang);
     }
-    if (this.endT > tl.duration || !wasPlaying) this.endT = tl.duration;
+    if (this.endT > tl.duration || !wasPlaying || this.toEnd) this.endT = tl.duration;
   }
 
   get time(): number {
@@ -56,6 +58,7 @@ export class Player {
 
   play(from: number, to?: number): void {
     this.t = Math.max(0, Math.min(from, this.timeline.duration));
+    this.toEnd = to === undefined;
     this.endT = Math.min(to ?? this.timeline.duration, this.timeline.duration);
     this.playing = true;
     this.tStart = this.t;
@@ -81,6 +84,8 @@ export class Player {
 
   private loop(now: number): void {
     this.raf = requestAnimationFrame(this.loop);
+    const dt = this.lastNow ? Math.min(0.1, Math.max(0, (now - this.lastNow) / 1000)) : 1 / 60;
+    this.lastNow = now;
     if (this.playing) {
       this.t = this.tStart + (now - this.wallStart) / 1000;
       if (this.t >= this.endT) {
@@ -93,7 +98,7 @@ export class Player {
         this.opts.onTime?.(this.t, true);
       }
     } else {
-      this.idleT += 1 / 60;
+      this.idleT += dt;
     }
     // After the end, hold the final frame with idle motion: evaluate slightly past the end (evaluate clamps + idles).
     const atEnd = !this.playing && this.timeline.duration > 0 && this.t >= this.timeline.duration - 1e-3;

@@ -46,6 +46,8 @@ export const VIOLENCE_WORDS: Record<Lang, { stem: string; replacement: string }[
   ru: [
     { stem: "убий", replacement: "щекочет" }, { stem: "убив", replacement: "щекочет" }, { stem: "убил", replacement: "пощекотал" },
     { stem: "зарез", replacement: "напугал" }, { stem: "застрел", replacement: "обрызгал" }, { stem: "стреля", replacement: "брызгает" },
+    { stem: "убью", replacement: "пощекочу" }, { stem: "убить", replacement: "пощекотать" },
+    { stem: "бьет", replacement: "стукает подушкой" }, { stem: "бьёт", replacement: "стукает подушкой" },
     { stem: "ударил", replacement: "легонько стукнул подушкой" }, { stem: "бьёт", replacement: "стукает подушкой" }, { stem: "избил", replacement: "защекотал" },
   ],
 };
@@ -110,6 +112,8 @@ export const BRAND_GENERIC: Record<string, Record<Lang, string>> = {
 export const SAFE_WORD_PREFIXES = [
   "diet", "diesel", "hitch", "dumbbell", "gunny", "foolproof", "deadline", "skill",
   "мечт", "кроват", "ножк", "трупп", "умерен", "гранатов", "копыт",
+  "дурачи", "дурача", "дураш", "ударился", "ударилась", "ударились", "мечет", "мечут", "автоматич", "бомбоч", "ножниц",
+  "fooling", "fooled",
 ];
 
 const LETTER = "\\p{L}";
@@ -137,7 +141,8 @@ function inflectLike(suffix: string, replacement: string): string {
 
 /** Name pattern that tolerates Russian case endings (нутелла → нутеллу). */
 function namePattern(name: string): string {
-  const stem = /[\u0400-\u04FF][аяоеуыи]$/i.test(name) ? name.slice(0, -1) : name;
+  // strip only a feminine -а/-я ending (нутелла → нутелл-у); "лего" must not become "лег" (легла, легко)
+  const stem = /[\u0400-\u04FF][ая]$/i.test(name) ? name.slice(0, -1) : name;
   return `(?<![${LETTER}\\d])${escapeRe(stem)}${LETTER}{0,3}(?![${LETTER}\\d])`;
 }
 

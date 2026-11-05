@@ -4,6 +4,7 @@ import { store, type Paragraph } from "../store";
 import { useStore, useStrings } from "../useStore";
 import { playback } from "../playback";
 import { RemixButtons } from "./RemixButtons";
+import { MAX_PARAGRAPH_CHARS } from "../../shared/schema";
 
 const CHIP: Record<Paragraph["status"], string> = { draft: "✏️", directing: "⏳", ready: "✅", adjusted: "✨", error: "⚠️" };
 const DEBOUNCE_MS = 1500;
@@ -59,7 +60,7 @@ export function ParagraphCard({ p, index, active, selected, count }: { p: Paragr
     >
       <div className="card-head">
         <button className="idx" title="▶" onClick={(e) => { e.stopPropagation(); store.select(p.id); playback.playParagraph(p.id); }}>{index + 1}</button>
-        <span className={`status-chip chip-${p.status}`} data-testid="status-chip" title={p.status === "adjusted" ? tooltip : p.error ?? ""}>
+        <span className={`status-chip chip-${p.status}`} data-testid="status-chip" title={p.status === "adjusted" ? tooltip : p.status === "error" ? t.errorTip : ""}>
           {CHIP[p.status]} {t.status[p.status]}
         </span>
         {dur > 0 && <span className="dur">{dur.toFixed(1)}{t.seconds}</span>}
@@ -80,6 +81,7 @@ export function ParagraphCard({ p, index, active, selected, count }: { p: Paragr
         ref={ta}
         rows={2}
         data-testid="paragraph-text"
+        maxLength={MAX_PARAGRAPH_CHARS}
         value={p.text}
         placeholder={t.paragraphPlaceholder}
         onChange={(e) => { store.editText(p.id, e.target.value); schedule(); }}

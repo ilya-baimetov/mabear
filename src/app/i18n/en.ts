@@ -15,6 +15,7 @@ export const en = {
   emptyHint: "Write what Masha and Bear do — or try an example:",
   status: { draft: "Writing", directing: "Making it…", ready: "Ready", adjusted: "Changed a bit", error: "Oops" },
   retry: "Try again",
+  errorTip: "The story helper is busy — this is a quick version. Try again!",
   version: "v",
   seconds: "s",
   lines: "lines",

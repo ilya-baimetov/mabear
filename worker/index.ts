@@ -71,6 +71,7 @@ async function readPassword(req: Request): Promise<{ password: string; wantsJson
 }
 
 async function handleLoginPost(req: Request, env: Env, deps: WorkerDeps): Promise<Response> {
+  const pitch = new URL(req.url).searchParams.get("pitch") === "1";
   const limiter = deps.loginLimiter ?? loginLimiter;
   const decision = limiter.check(clientKey(req), deps.now?.());
   if (!decision.ok) return rateLimitResponse(decision);
@@ -78,10 +79,10 @@ async function handleLoginPost(req: Request, env: Env, deps: WorkerDeps): Promis
   const ok = password.length > 0 && password.length <= 512 && (await checkPassword(env, password));
   const value = ok ? await signSession(env, deps.now?.()) : null;
   if (!value) {
-    return wantsJson ? jsonResponse({ ok: false, error: "invalid_password" }, 401) : redirect("/login?error=1", 303);
+    return wantsJson ? jsonResponse({ ok: false, error: "invalid_password" }, 401) : redirect(pitch ? "/login?error=1&pitch=1" : "/login?error=1", 303);
   }
   const cookie = sessionCookieHeader(req, value);
-  return wantsJson ? jsonResponse({ ok: true }, 200, { "set-cookie": cookie }) : redirect("/", 303, { "set-cookie": cookie });
+  return wantsJson ? jsonResponse({ ok: true }, 200, { "set-cookie": cookie }) : redirect(pitch ? "/?pitch=1" : "/", 303, { "set-cookie": cookie });
 }
 
 async function route(req: Request, env: Env, deps: WorkerDeps): Promise<Response> {
@@ -97,7 +98,7 @@ async function route(req: Request, env: Env, deps: WorkerDeps): Promise<Response
   if (path === "/login") {
     if (req.method === "POST") return handleLoginPost(req, env, deps);
     if (req.method === "GET" || req.method === "HEAD") {
-      return htmlResponse(loginPage({ error: url.searchParams.has("error"), configured: !!env.DEMO_PASSWORD }));
+      return htmlResponse(loginPage({ error: url.searchParams.has("error"), configured: !!env.DEMO_PASSWORD, pitch: url.searchParams.get("pitch") === "1" }));
     }
     return jsonResponse({ error: "method_not_allowed" }, 405, { allow: "GET, POST" });
   }
@@ -109,7 +110,7 @@ async function route(req: Request, env: Env, deps: WorkerDeps): Promise<Response
   const authed = await isAuthenticated(req, env, deps.now?.());
   if (!authed) {
     if (path.startsWith("/api/")) return jsonResponse({ error: "unauthorized", login: "/login" }, 401);
-    return redirect("/login", 302);
+    return redirect(url.searchParams.get("pitch") === "1" ? "/login?pitch=1" : "/login", 302);
   }
 
   if (path === "/api/direct") {

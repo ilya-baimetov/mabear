@@ -18,6 +18,7 @@ export const playback = {
     return audio;
   },
   playAll() {
+    if (!player) return;
     void audio?.unlock();
     const s = store.getState();
     player?.setTimeline(s.timeline, s.lang);

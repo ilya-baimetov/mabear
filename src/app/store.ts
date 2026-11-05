@@ -2,6 +2,7 @@
 import { BIBLE_VERSION } from "../shared/bible/characters";
 import {
   DEFAULT_REMIX,
+  MAX_PARAGRAPH_CHARS,
   type BeatScript,
   type BeatScriptSource,
   type DirectorModel,
@@ -340,7 +341,7 @@ class Store {
     const idx = this.state.paragraphs.findIndex((x) => x.id === id);
     const p = this.state.paragraphs[idx];
     if (!p) return;
-    const text = normalizeText(p.text);
+    const text = normalizeText(p.text).slice(0, MAX_PARAGRAPH_CHARS);
     if (!text) return;
     const cur = p.versions[p.current];
     if (!force && cur && normalizeText(cur.text) === text) return;

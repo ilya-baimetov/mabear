@@ -16,6 +16,7 @@ export const ru: Strings = {
   emptyHint: "Напиши, что делают Маша и Мишка — или выбери пример:",
   status: { draft: "Пишем", directing: "Готовим…", ready: "Готово", adjusted: "Чуть изменили", error: "Ой" },
   retry: "Ещё раз",
+  errorTip: "Помощник занят — это быстрая версия. Попробуй ещё раз!",
   version: "в.",
   seconds: "с",
   lines: "реплик",

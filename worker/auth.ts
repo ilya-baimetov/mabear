@@ -111,7 +111,7 @@ export async function isAuthenticated(req: Request, env: AuthEnv, nowMs: number 
 
 // ---------- /login page (minimal, branded, EN/RU, no JS) ----------
 
-export function loginPage(opts: { error: boolean; configured: boolean }): string {
+export function loginPage(opts: { error: boolean; configured: boolean; pitch?: boolean }): string {
   const msg = !opts.configured
     ? `<p class="err" role="alert">The password gate is not configured yet. · Вход пока не настроен.</p>`
     : opts.error
@@ -152,7 +152,7 @@ export function loginPage(opts: { error: boolean; configured: boolean }): string
   <h1>Ma<span>Bear</span></h1>
   <p class="sub">Write a story, watch it come alive! · Напиши сказку — и она оживёт!</p>
   ${msg}
-  <form method="post" action="/login">
+  <form method="post" action="/login${opts.pitch ? "?pitch=1" : ""}">
     <label for="password">Password · Пароль</label>
     <input id="password" name="password" type="password" autocomplete="current-password" required autofocus>
     <button type="submit">Let's play! · Играть!</button>
