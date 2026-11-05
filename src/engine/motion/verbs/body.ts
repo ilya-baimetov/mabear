@@ -74,7 +74,7 @@ function transition(from: PoseLayer, to: PoseLayer, k: number): PoseLayer {
 
 export const idle: VerbImpl = (_lt, _p, ctx) => idleBase(ctx);
 
-export const jump: VerbImpl = (lt, _p, ctx) => ({ ...jumpPose(lt, ctx), ground: "free" });
+export const jump: VerbImpl = (lt, _p, ctx) => jumpPose(lt, ctx);
 function jumpPose(lt: number, ctx: VerbCtx): PoseLayer {
   const u = lt / ctx.dur;
   const h = ctx.style.hipHeight;
@@ -83,10 +83,13 @@ function jumpPose(lt: number, ctx: VerbCtx): PoseLayer {
   const air = u > 0.32 && u < 0.76 ? Math.sin(((u - 0.32) / 0.44) * Math.PI) : 0;
   const base = mask(idleBase(ctx, 0.3), { bones: pose(arm("Left", -0.9, 0.3, 0.3), arm("Right", -0.9, 0.3, 0.3)), hipsOffset: [0, 0, 0] }, ["LeftArm", "LeftForeArm", "RightArm", "RightForeArm"], air);
   const tuck = air * 0.6;
-  return addLayer(base, pose(
+  const L0 = addLayer(base, pose(
     leg("Left", 0.6 * crouch + tuck, 1.2 * crouch + tuck * 1.2), leg("Right", 0.6 * crouch + tuck, 1.2 * crouch + tuck * 1.2),
     { Spine: rx(0.25 * crouch - 0.1 * air), LeftArm: rz(-0.3 * crouch), RightArm: rz(0.3 * crouch) },
-  ), 1, [0, -0.22 * h * crouch + peak * air, 0]);
+  ));
+  // crouch and landing are ground-locked (knees bent lower the hips); the flight is a lift on top
+  void h;
+  return { ...L0, ground: "lock", lift: peak * air };
 }
 
 export const spin: VerbImpl = (lt, _p, ctx) => {
@@ -119,8 +122,10 @@ export const dance: VerbImpl = (lt, _p, ctx) => {
 };
 
 export const sit: VerbImpl = (lt, _p, ctx) => {
-  const from = ctx.fromPosture === "sit" ? sitPose(ctx) : standPose(ctx);
-  return transition(from, sitPose(ctx), lt / Math.min(0.9, ctx.dur));
+  const seated = ctx.fromPosture === "sit";
+  const from = seated ? sitPose(ctx) : standPose(ctx);
+  const k = lt / Math.min(0.9, ctx.dur);
+  return { ...transition(from, sitPose(ctx), k), groundW: seated ? 0 : 1 - easeInOut(k) };
 };
 
 export const stand_up: VerbImpl = (lt, _p, ctx) => {
@@ -128,7 +133,7 @@ export const stand_up: VerbImpl = (lt, _p, ctx) => {
   const from = ctx.fromPosture === "sleep" ? liePose(ctx) : ctx.fromPosture === "sit" ? sitPose(ctx) : sitPose({ ...ctx, seat: 0 });
   const L = transition(from, standPose(ctx), lt / ctx.dur);
   // a push-up effort lean forward halfway
-  return addLayer(L, { Spine: rx(0.35 * window01(lt / ctx.dur, 0, 1, 0.4)) });
+  return { ...addLayer(L, { Spine: rx(0.35 * window01(lt / ctx.dur, 0, 1, 0.4)) }), groundW: easeInOut(lt / ctx.dur) };
 };
 
 export const fall_down: VerbImpl = (lt, _p, ctx) => {
@@ -149,14 +154,14 @@ export const fall_down: VerbImpl = (lt, _p, ctx) => {
   const daze = window01(u, 0.4, 0.85, 0.08);
   L = addLayer(L, { Head: qmul(rz(Math.sin(lt * 9) * 0.2 * daze), rx(0.1 * daze)) }, 1, [0, Math.max(0, Math.sin((u - 0.4) * 30)) * 0.03 * h * daze, 0]);
   if (getUp > 0) L = blendLayers(L, stand, getUp);
-  return { ...L, face: { browRaise: 0.6 * daze } };
+  return { ...L, groundW: (1 - fallK) * (1 - getUp) + getUp, face: { browRaise: 0.6 * daze } };
 };
 
 export const sleep: VerbImpl = (lt, _p, ctx) => {
   const from = ctx.fromPosture === "sleep" ? liePose(ctx) : ctx.fromPosture === "sit" ? sitPose(ctx) : standPose(ctx);
   const k = ctx.fromPosture === "sleep" ? 1 : lt / Math.min(1.4, ctx.dur * 0.4);
   const L = transition(from, liePose(ctx), k);
-  return { ...L, face: { lidClose: smooth(k), emotion: "sleepy" } };
+  return { ...L, groundW: ctx.fromPosture === "stand" ? 1 - easeInOut(k) : 0, face: { lidClose: smooth(k), emotion: "sleepy" } };
 };
 
 export const wake_up: VerbImpl = (lt, _p, ctx) => {
@@ -167,7 +172,8 @@ export const wake_up: VerbImpl = (lt, _p, ctx) => {
   let L = u < 0.45 ? transition(lie, sitUp, u / 0.45) : transition(sitUp, stand, (u - 0.45) / 0.4);
   const stretch = window01(u, 0.55, 1, 0.15);
   L = addLayer(L, { LeftArm: rz(2.4 * stretch), RightArm: rz(-2.4 * stretch), Spine1: rx(-0.2 * stretch), Head: rx(-0.25 * stretch) });
-  return { ...L, face: { lidClose: 1 - smooth(u / 0.4), emotion: "sleepy", viseme: "o", visemeWeight: stretch } };
+  const gw = ctx.fromPosture === "sleep" ? (u < 0.45 ? 0 : easeInOut((u - 0.45) / 0.4)) : 1;
+  return { ...L, groundW: gw, face: { lidClose: 1 - smooth(u / 0.4), emotion: "sleepy", viseme: "o", visemeWeight: stretch } };
 };
 
 export const yawn_stretch: VerbImpl = (lt, _p, ctx) => {

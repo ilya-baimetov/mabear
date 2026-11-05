@@ -20,6 +20,7 @@ export const playback = {
   playAll() {
     void audio?.unlock();
     const s = store.getState();
+    player?.setTimeline(s.timeline, s.lang);
     player?.play(0);
     store.setPlayback(true, 0);
     if (s.paragraphs[0]) store.select(s.paragraphs[0].id);
@@ -28,6 +29,7 @@ export const playback = {
     void audio?.unlock();
     const r = store.segmentRange(id);
     if (!r || !player) return;
+    player.setTimeline(store.getState().timeline, store.getState().lang);
     player.play(r.start, r.end);
     store.setPlayback(true, r.start);
   },
@@ -36,6 +38,7 @@ export const playback = {
     store.setPlayback(false);
   },
   seek(t: number) {
+    player?.setTimeline(store.getState().timeline, store.getState().lang);
     player?.seek(t);
     store.setPlayback(false, t);
   },

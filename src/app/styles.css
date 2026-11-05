@@ -170,3 +170,4 @@ summary { cursor: pointer; font-weight: 800; color: var(--honey); }
 .staged-by { margin-top: 8px; color: #c9d4c5; }
 .staged-by b { color: #fff; }
 .stage-error { position: absolute; inset: 0; display: grid; place-items: center; font-weight: 900; font-size: 18px; color: #8a3b1e; text-align: center; padding: 20px; }
+.tap-hint { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); background: rgba(255, 255, 255, 0.88); color: var(--forest); font-weight: 900; padding: 6px 16px; border-radius: 999px; box-shadow: var(--shadow); pointer-events: none; font-size: 15px; }

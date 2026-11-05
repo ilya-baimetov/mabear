@@ -21,7 +21,7 @@
 | D6 | EN ⇄ RU | e2e 6 (3 labels switch, RU example loads); unit fixtures.test.ts (Cyrillic RU lines) |
 | D10 | Sound in the script | e2e 7b (rain ambience + spooky music compiled; dialogue/foley/music scheduled); unit audioCues.test.ts + audio.test.ts |
 
-## M7 (part 1) — Deployed + smoke test + director eval (05:27 UTC)
+## M7 (part 1) — Deployed + smoke test + director eval (05:24 UTC)
 - **Done:** `.deploy-ready` committed; Workers Builds `0fe5b521` (d3c733f) and `54dfa2b9` (13e4a5b) both **success**. §12 smoke test against https://mabear.ilya-baimetov.workers.dev all green: health 200, noindex header, `/` → login, `/api/direct` 401 without cookie, login → cookie, two golden prompts → `source=llm` (9 and 7 beats, Opus). The owner-set `ANTHROPIC_API_KEY` is present.
 - **Director eval (deployed Worker, §8.4), round 1 — both models 6/6:**
 

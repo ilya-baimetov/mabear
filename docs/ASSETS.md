@@ -53,3 +53,11 @@ ground) are generated at runtime. Swapping any stand-in for an official Animacco
 | Asset | Source URL | Author | License | Use |
 |---|---|---|---|---|
 | `public/assets/models/RobotExpressive.glb` | https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/models/gltf/RobotExpressive/RobotExpressive.glb | Tomás Laulhé (Quaternius), modifications by Don McCurdy; distributed in the three.js examples | CC0 1.0 (public domain) | Manifest entry `robot_test`: a hidden glTF test character that proves the glTF path (loaded with `GLTFLoader`, bones exposed under Mixamo names through `ROBOT_SKELETON_MAP`). Shown only on `tools/stage.html?robot=1` |
+
+## Fonts
+| Asset | Source | Author | License | Use |
+|---|---|---|---|---|
+| Nunito (weights 400–900) | https://fonts.google.com/specimen/Nunito (loaded from Google Fonts at runtime, not bundled) | Vernon Adams, Cyreal, Jacques Le Bailly | SIL Open Font License 1.1 | Player UI and login page type |
+
+## Likeness references (not shipped)
+Three reference images (2019 Russian postage stamps featuring Masha and the Bear, from Wikimedia Commons) were viewed locally in the git-ignored `refs/` folder to measure proportions and sample colours (`docs/LIKENESS.md`). They are Animaccord IP, are **not** committed, and are absent from `public/` and `dist/`. The characters themselves are Animaccord IP; the in-code stand-ins exist only to demonstrate the system to Animaccord and its funders.

@@ -3,7 +3,7 @@
 // arm swing; Bear's heavy footfalls and arms carried clear of his belly. Root motion comes from the compiled path.
 import { SPEEDS } from "../../../shared/grammar";
 import type { ActorId } from "../../../shared/schema";
-import { IDENTITY, addLayer, clamp, lerp, qslerp, smooth, type Pose, type PoseLayer } from "../blend";
+import { addLayer, clamp, lerp, qpow, qslerp, smooth, type Pose, type PoseLayer } from "../blend";
 import { CLIPS } from "../clips.generated";
 import {
   LOWER, STYLES, UPPER, arm, feetPoints, idleBase, mask, poseClip, pose, rx, ry, rz, sampleClip,
@@ -20,7 +20,7 @@ const CLIP_OF: Record<Gait, string> = { walk: "xbot_walk", run: "xbot_run", tipt
 function scaleLegs(bones: Pose, s: number): Pose {
   if (Math.abs(s - 1) < 1e-3) return bones;
   const out: Pose = { ...bones };
-  for (const b of ["LeftUpLeg", "RightUpLeg", "LeftLeg", "RightLeg"]) if (out[b]) out[b] = qslerp(IDENTITY, out[b], b.endsWith("UpLeg") ? s : Math.sqrt(s));
+  for (const b of ["LeftUpLeg", "RightUpLeg", "LeftLeg", "RightLeg"]) if (out[b]) out[b] = qpow(out[b], b.endsWith("UpLeg") ? s : Math.sqrt(s));
   return out;
 }
 
@@ -28,48 +28,62 @@ const SAMPLES = 48;
 const strideMemo = new Map<string, number>();
 const contactMemo = new Map<string, number[]>();
 
-/** Ground distance covered by one gait cycle of `clip` on this rig with leg scale s (stance-foot sweep, by FK). */
+/** Per-frame foot samples of a clip cycle on this rig: sole height and fore-aft position of each foot. */
+function footTrack(actor: ActorId, clip: string, s: number): { h: [number, number]; z: [number, number] }[] {
+  const style = STYLES[actor];
+  const c = CLIPS[clip];
+  const out: { h: [number, number]; z: [number, number] }[] = [];
+  for (let i = 0; i < SAMPLES; i++) {
+    const L = sampleClip(clip, (i / SAMPLES) * c.dur, style, true);
+    const f = feetPoints(scaleLegs(L.bones, s), [0, 0, 0], style);
+    out.push({
+      h: [Math.min(f.left[0][1], f.left[1][1]), Math.min(f.right[0][1], f.right[1][1])],
+      z: [(f.left[0][2] + f.left[1][2]) / 2, (f.right[0][2] + f.right[1][2]) / 2],
+    });
+  }
+  return out;
+}
+
+/**
+ * Ground distance covered by one gait cycle of `clip` on this rig with leg scale s: the backward sweep speed of
+ * a planted foot (relative to the hips) × one cycle — playing the cycle at distance/D keeps planted feet still.
+ */
 export function cycleDistance(actor: ActorId, clip: string, s: number): number {
   const key = `${actor}|${clip}|${s.toFixed(2)}`;
   const hit = strideMemo.get(key);
   if (hit !== undefined) return hit;
   const style = STYLES[actor];
-  const c = CLIPS[clip];
-  let total = 0;
-  let prev: { foot: number; z: number } | null = null;
-  for (let i = 0; i <= SAMPLES; i++) {
-    const L = sampleClip(clip, (i / SAMPLES) * c.dur, style, true);
-    const f = feetPoints(scaleLegs(L.bones, s), [0, 0, 0], style);
-    const yl = Math.min(f.left[0][1], f.left[1][1]);
-    const yr = Math.min(f.right[0][1], f.right[1][1]);
-    const foot = yl <= yr ? 0 : 1;
-    const pts = foot === 0 ? f.left : f.right;
-    const z = (pts[0][2] + pts[1][2]) / 2;
-    if (prev && prev.foot === foot) total += Math.max(0, prev.z - z);
-    prev = { foot, z };
+  const tr = footTrack(actor, clip, s);
+  const eps = 0.012 * style.height;
+  const v: number[] = [];
+  for (let i = 0; i < SAMPLES; i++) {
+    const a = tr[i];
+    const b = tr[(i + 1) % SAMPLES];
+    const low = Math.min(a.h[0], a.h[1]);
+    for (const f of [0, 1]) {
+      if (a.h[f] - low < eps && b.h[f] - Math.min(b.h[0], b.h[1]) < eps) {
+        const dz = (a.z[f] - b.z[f]) * SAMPLES; // backward sweep per cycle
+        if (dz > 0) v.push(dz);
+      }
+    }
   }
-  const d = Math.max(total, 0.05 * style.hipHeight);
+  v.sort((x, y) => x - y);
+  const d = Math.max(v.length ? v[Math.floor(v.length / 2)] : 0, 0.1 * style.hipHeight);
   strideMemo.set(key, d);
   return d;
 }
 
-/** Phases (0..1) in the clip's cycle where a foot takes over the weight (touch-down). */
+/** Phases (0..1) of the two heel strikes in the clip's cycle (each foot at its most forward point). */
 export function contactPhases(actor: ActorId, clip: string): number[] {
   const key = `${actor}|${clip}`;
   const hit = contactMemo.get(key);
   if (hit) return hit;
-  const style = STYLES[actor];
-  const c = CLIPS[clip];
-  const out: number[] = [];
-  let prev = -1;
-  for (let i = 0; i <= SAMPLES; i++) {
-    const L = sampleClip(clip, (i / SAMPLES) * c.dur, style, true);
-    const f = feetPoints(L.bones, [0, 0, 0], style);
-    const foot = Math.min(f.left[0][1], f.left[1][1]) <= Math.min(f.right[0][1], f.right[1][1]) ? 0 : 1;
-    if (prev >= 0 && foot !== prev && i < SAMPLES) out.push(i / SAMPLES);
-    prev = foot;
-  }
-  const res = out.length ? out : [0, 0.5];
+  const tr = footTrack(actor, clip, 1);
+  const res = [0, 1].map((f) => {
+    let best = 0;
+    for (let i = 1; i < SAMPLES; i++) if (tr[i].z[f] > tr[best].z[f]) best = i;
+    return best / SAMPLES;
+  }).sort((x, y) => x - y);
   contactMemo.set(key, res);
   return res;
 }
@@ -83,6 +97,22 @@ function impact(ph: number, contacts: number[], width: number): number {
   }
   return v;
 }
+/** Flight driver: 0 through the stance after each contact, rising to 1 in the airborne part before the next. */
+function flight(ph: number, contacts: number[], stance: number): number {
+  let best = 1;
+  let gap = 0.5;
+  for (let i = 0; i < contacts.length; i++) {
+    const d = (((ph - contacts[i]) % 1) + 1) % 1;
+    if (d < best) {
+      best = d;
+      const next = contacts[(i + 1) % contacts.length];
+      gap = ((((next - contacts[i]) % 1) + 1) % 1) || 0.5;
+    }
+  }
+  const u = Math.min(1, best / gap);
+  return u < stance ? 0 : Math.sin(((u - stance) / (1 - stance)) * Math.PI);
+}
+
 /** 0 at contacts, 1 halfway to the next contact (flight / bounce driver). */
 function between(ph: number, contacts: number[]): number {
   let best = 1;
@@ -122,7 +152,7 @@ function gait(kind0: Gait, ctx: VerbCtx, localT: number): PoseLayer {
   const cyc = ctx.dist / D + ctx.turned / (actor === "bear" ? 1.6 : 1.2);
   const ph = cyc - Math.floor(cyc);
   const base = sampleClip(clip, ph * c.dur, style, true);
-  let L: PoseLayer = { bones: scaleLegs(base.bones, s), hipsOffset: base.hipsOffset, ground: kind === "run" ? "floor" : "lock" };
+  let L: PoseLayer = { bones: scaleLegs(base.bones, s), hipsOffset: base.hipsOffset, ground: "lock" };
   const contacts = contactPhases(actor, clip);
   const imp = impact(ph, contacts, kind === "run" ? 0.06 : 0.08);
   const air = between(ph, contacts);
@@ -145,7 +175,8 @@ function gait(kind0: Gait, ctx: VerbCtx, localT: number): PoseLayer {
       Head: qmul2(rx(0.06 * sq), rz(0.05 * Math.sin(ph * Math.PI * 2))),
       LeftFoot: rx(0.2 * air), RightFoot: rx(0.2 * air),
     });
-    L.lift = (kind === "run" ? 0.05 : kind === "walk" ? 0.018 : 0.008) * air * style.bounce;
+    // little hops: flight between run contacts (a walk's bob comes from the legs alone)
+    L.lift = kind === "run" ? 0.05 * flight(ph, contacts, 0.4) * style.bounce : 0;
   } else {
     // heavy footfalls: knees absorb each contact, the torso and head settle a beat later
     const settle = impact(ph - 0.06, contacts, 0.12);
@@ -163,7 +194,7 @@ function gait(kind0: Gait, ctx: VerbCtx, localT: number): PoseLayer {
       LeftLeg: rx(0.1 + 0.18 * imp), RightLeg: rx(0.1 + 0.18 * imp),
       LeftUpLeg: rx(-0.05 - 0.08 * imp), RightUpLeg: rx(-0.05 - 0.08 * imp),
     });
-    if (kind === "run") L.lift = 0.03 * air;
+    if (kind === "run") L.lift = 0.025 * flight(ph, contacts, 0.45);
   }
   if (kind === "tiptoe") {
     // sneaky: crouched upper body from the Mixamo sneak pose, high knees, up on the toes

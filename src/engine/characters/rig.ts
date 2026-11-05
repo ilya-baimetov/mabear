@@ -350,8 +350,15 @@ export function fabricMaterial(color: string, sheenColor: string, vertexColors =
   });
 }
 
+/**
+ * Fur: soft sheen plus a procedural strand texture in the fragment shader (spec §7.1 "soft normal-mapped noise"):
+ * fine anisotropic value flecks and a derivative-based bump from the same noise, in mesh-local space so it sticks
+ * to the body. It fades out when a strand gets smaller than a pixel (no sparkle in wide shots). No UVs or textures needed.
+ */
+export const FUR_STRANDS = { freq: 150, stretch: 0.3, value: 0.16, bump: 0.55 };
+
 export function furMaterial(sheenColor: string): THREE.MeshPhysicalMaterial {
-  return new THREE.MeshPhysicalMaterial({
+  const m = new THREE.MeshPhysicalMaterial({
     color: 0xffffff,
     vertexColors: true,
     roughness: 0.93,
@@ -360,6 +367,64 @@ export function furMaterial(sheenColor: string): THREE.MeshPhysicalMaterial {
     sheenColor: col(sheenColor),
     sheenRoughness: 0.75,
   });
+  m.onBeforeCompile = (shader) => {
+    shader.uniforms.furFreq = { value: FUR_STRANDS.freq };
+    shader.uniforms.furStretch = { value: FUR_STRANDS.stretch };
+    shader.uniforms.furValue = { value: FUR_STRANDS.value };
+    shader.uniforms.furBump = { value: FUR_STRANDS.bump };
+    shader.vertexShader = shader.vertexShader
+      .replace("#include <common>", "#include <common>\nvarying vec3 vFurPos;")
+      .replace("#include <begin_vertex>", "#include <begin_vertex>\nvFurPos = position;");
+    shader.fragmentShader = shader.fragmentShader
+      .replace(
+        "#include <common>",
+        `#include <common>
+varying vec3 vFurPos;
+uniform float furFreq;
+uniform float furStretch;
+uniform float furValue;
+uniform float furBump;
+float furHash(vec3 p) {
+  p = fract(p * 0.3183099 + 0.1);
+  p *= 17.0;
+  return fract(p.x * p.y * p.z * (p.x + p.y + p.z));
+}
+float furNoise(vec3 x) {
+  vec3 i = floor(x);
+  vec3 f = fract(x);
+  f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(mix(furHash(i + vec3(0, 0, 0)), furHash(i + vec3(1, 0, 0)), f.x),
+                 mix(furHash(i + vec3(0, 1, 0)), furHash(i + vec3(1, 1, 0)), f.x), f.y),
+             mix(mix(furHash(i + vec3(0, 0, 1)), furHash(i + vec3(1, 0, 1)), f.x),
+                 mix(furHash(i + vec3(0, 1, 1)), furHash(i + vec3(1, 1, 1)), f.x), f.y), f.z);
+}`,
+      )
+      .replace(
+        "#include <color_fragment>",
+        `#include <color_fragment>
+vec3 furP = vFurPos * furFreq * vec3(1.0, furStretch, 1.0);
+float furH = furNoise(furP);
+float furFoot = length(fwidth(furP));
+float furFade = 1.0 - smoothstep(0.35, 0.9, furFoot);
+diffuseColor.rgb *= 1.0 + furValue * furFade * (furH - 0.5) * 2.0;`,
+      )
+      .replace(
+        "#include <normal_fragment_maps>",
+        `#include <normal_fragment_maps>
+{
+  vec2 dH = vec2(dFdx(furH), dFdy(furH)) * furBump * furFade;
+  vec3 sX = dFdx(-vViewPosition);
+  vec3 sY = dFdy(-vViewPosition);
+  vec3 r1 = cross(sY, normal);
+  vec3 r2 = cross(normal, sX);
+  float det = dot(sX, r1) * faceDirection;
+  vec3 grad = sign(det) * (dH.x * r1 + dH.y * r2);
+  normal = normalize(abs(det) * normal - grad);
+}`,
+      );
+  };
+  m.customProgramCacheKey = () => "mabear-fur-v1";
+  return m;
 }
 
 // ---------------------------------------------------------------------------------------------

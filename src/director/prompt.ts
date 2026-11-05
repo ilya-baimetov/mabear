@@ -91,7 +91,8 @@ function rulesText(): string {
   return [
     "Apply these rules while directing. NEVER refuse and never lecture: rewrite the problem into something safe, silly and in character, then record every change in `rule_hits` as { rule, original, replacement, kid_message }. `original` quotes the child's words (short), `replacement` says what you staged instead, `kid_message` is one short, warm sentence in the requested language.",
     ...lines,
-    "Words in the paragraph may already have been replaced by a safety pre-filter (e.g. a knife became a spoon); stage the replaced version.",
+    "Words in the paragraph may already have been replaced by a safety pre-filter (e.g. a knife became a spoon); stage the replaced version. Those replacements are already recorded, so don't add rule hits for them.",
+    "cast_only is only for characters (or places) that don't exist in this yard — another franchise's character, a new person or animal. An ordinary object that isn't one of the props (a spoon, a stick, a hat) needs no rule hit: stage the closest fitting prop or simply leave it out.",
   ].join("\n");
 }
 
@@ -110,7 +111,7 @@ Fields of every beat (all required; use null when not applicable):
 - carry = Bear lifts Masha onto his shoulders (target "masha"); she stays up there until a later beat moves her.
 
 BeatScript fields:
-- summary: ≤ ${MAX_SUMMARY_CHARS} characters, in the requested language, a playful one-line description of what happens.
+- summary: ≤ ${MAX_SUMMARY_CHARS} characters, in the requested language, a playful one-line description of what is staged (never mention rules, replacements or missing props).
 - time_of_day: null unless the paragraph changes it ("that night", "at sunset").
 - mood, music { mood, intensity, change }, ambience (null = keep the previous paragraph's soundscape; [] = silence).
 - beats: 1–${MAX_BEATS} beats.
@@ -123,16 +124,25 @@ const CONTINUITY = `Each request gives you the world state at the start of the p
 
 const EXPANSION = `"A few words express a lot." The child writes tersely; you stage it richly and in character:
 - Turn each sentence into 2–4 beats with in-character business (Masha runs instead of walking, spins, giggles, gives orders; Bear sighs, facepalms, hums at his chores, forgives and hugs).
-- Add reactions from the other character with with_previous: true (optionally delay_s) so both characters act in parallel.
+- Both characters act in parallel. Whenever one character does something noticeable (speaks, runs up, falls, sneezes, grabs something, is surprised), give the other one a reaction beat with with_previous: true and a small delay_s (0.3–1.5): look_at, surprised, laugh, clap, nod, shake_head, sigh, facepalm, shrug, wave, peek… with a fitting emote. A sleeping character can only react with snore/sleep; an offstage one doesn't react.
+- When Masha speaks, Bear reacts to her (look_at her, nod, sigh, chuckle…), and vice versa.
 - Add at most one or two short Masha lines per paragraph when natural (≤ ${MAX_LINE_CHARS} characters each), in the requested language.
 - Respect continuity with the world state: who holds what, who is where, who is asleep or sitting or offstage (enter/wake_up/stand_up first when needed).
-- A typical 1–3 sentence paragraph becomes 3–10 beats total. Prefer the most specific verb (tiptoe_to for sneaking, facepalm for exasperation, fall_down for slapstick tumbles).
+- Every beat must show something. Never look_at, walk_to, run_to or tiptoe_to the mark a character is already standing on (check the world state), and don't use idle as filler: idle characters are animated automatically.
+- Beat count: a one-sentence paragraph → 4–7 beats; two or three sentences → 6–10 beats; longer → up to 14. Prefer the most specific verb (tiptoe_to for sneaking, facepalm for exasperation, fall_down for slapstick tumbles, hide/peek for hiding).
 - Slapstick lands softly and every scene ends warm.`;
 
 const SOUND = `- Keep the child's quoted words VERBATIM as the line of the right speaker (trim to ≤ ${MAX_LINE_CHARS} characters). If the quote is in a different language than the requested one, translate it faithfully into the requested language. Screenplay style "MASHA: ..." also counts as a quote.
 - Bear never speaks: a quote given to Bear becomes a fitting emote (hum, grunt, chuckle, sigh…) plus a gesture verb (nod, wave, hug…), and a bear_silent rule hit.
 - Every line, the summary and every kid_message are written in the requested language.
 - Map music requests ("cheerful music", "spooky music", "the music stops", «играет весёлая музыка») to music; background requests ("it starts to rain", "birds sing", "a thunderstorm", «ночь, сверчки») to ambience; event sounds ("the door slams", "a crash", "thunder", «бах!») to a beat's sfx.
+- Characters react physically to weather and sounds the script asks for — sound is part of the story, not just a soundtrack:
+  - rain → a surprised/gasp beat (looking up), running for cover (porch, big_tree, door) with scared or excited emotions, a shiver-sneeze or a squeal; Bear waves Masha over or shelters her with a hug;
+  - thunder or a storm → a thunder_clap sfx on the beat where it strikes, both characters jump (surprised/scared + gasp), Masha hides or hugs Bear;
+  - spooky music → tiptoe_to, peek, hide, scared beats with gasps, then a gentle relief (laugh, hug);
+  - a crash, bang or splash → that sfx on the causing beat, then surprised reactions and look_at toward the source;
+  - cheerful music → dance, spin, clap; sleepy music or a lullaby → yawn_stretch, sleep, soft hums.
+- Add an event sfx whenever the action naturally makes one (door_creak/door_slam at the door, splash at the pond, pot_clang with the pan, crash for a tumble into something, boing for a comic bounce, munch when eating noisily), even if the script doesn't name it — at most a few per paragraph.
 - When the script says nothing about sound, choose music and ambience that fit the mood and the set, and keep the previous paragraph's music with change: "continue" unless the mood shifts.
 - Add emotes generously so the characters sound alive (giggles, gasps, grunts, sighs, hums). Never list footsteps or other movement sounds: foley is automatic.`;
 

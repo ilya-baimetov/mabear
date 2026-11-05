@@ -4,6 +4,8 @@ import { useStore, useStrings } from "../useStore";
 import { playback } from "../playback";
 import type { StageHandle, AudioEngine } from "../../engine/api";
 import type { Player } from "../../engine/player/player";
+import type { ActorId } from "../../shared/schema";
+import { reactionTimeline } from "../react";
 
 declare global {
   interface Window {
@@ -18,16 +20,19 @@ export function Stage() {
   const t = useStrings();
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
-  const handles = useRef<{ stage: StageHandle; player: Player; audio: AudioEngine | null } | null>(null);
+  const handles = useRef<{ stage: StageHandle; player: Player; audio: AudioEngine | null; pick: (u: number, v: number) => ActorId | null } | null>(null);
+  const down = useRef<{ x: number; y: number } | null>(null);
+  const reactCount = useRef(0);
 
   useEffect(() => {
     let disposed = false;
     let ro: ResizeObserver | null = null;
     (async () => {
-      const [{ createStage }, { Player }, audioMod] = await Promise.all([
+      const [{ createStage }, { Player }, audioMod, { pickActor }] = await Promise.all([
         import("../../engine/stage"),
         import("../../engine/player/player"),
         import("../../engine/audio/index").catch(() => null),
+        import("../../engine/pick"),
       ]);
       if (disposed || !canvas.current) return;
       const stage = await createStage(canvas.current);
@@ -48,7 +53,7 @@ export function Stage() {
           else store.setTime(time);
         },
       });
-      handles.current = { stage, player, audio };
+      handles.current = { stage, player, audio, pick: (u, v) => pickActor(stage, u, v) };
       playback.attach(player, audio);
       const st = store.getState();
       player.setTimeline(st.timeline, st.lang);
@@ -113,7 +118,28 @@ export function Stage() {
 
   return (
     <div className="stage-wrap" ref={wrap} data-testid="stage">
-      <canvas ref={canvas} data-testid="stage-canvas" />
+      <canvas
+        ref={canvas}
+        data-testid="stage-canvas"
+        onPointerDown={(e) => {
+          down.current = { x: e.clientX, y: e.clientY };
+        }}
+        onPointerUp={(e) => {
+          const h = handles.current;
+          const d = down.current;
+          down.current = null;
+          if (!h || !d || Math.hypot(e.clientX - d.x, e.clientY - d.y) > 6 || h.player.isPlaying) return;
+          const r = e.currentTarget.getBoundingClientRect();
+          const actor = h.pick((e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height);
+          if (!actor) return;
+          void h.audio?.unlock();
+          const st = store.getState();
+          const rt = reactionTimeline(st, actor, reactCount.current++);
+          h.player.setTimeline(rt.timeline, st.lang);
+          h.player.play(rt.start, rt.end);
+        }}
+      />
+      {ready && !s.playing && (s.timeline.duration === 0 || s.t >= s.timeline.duration - 0.05) && <div className="tap-hint">👆 {t.tapToReact}</div>}
       {!ready && !failed && <div className="stage-loading">{t.loading}</div>}
       {failed && <div className="stage-error">{t.stageError}</div>}
     </div>

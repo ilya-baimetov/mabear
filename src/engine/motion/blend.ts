@@ -20,6 +20,8 @@ export interface PoseLayer {
   /** "lock" = feet pinned to the ground (default for standing verbs); "floor" = only prevent sinking (runs with
    *  flight phases); "free" = no ground contact handling (lying, sitting, airborne) */
   ground?: "lock" | "floor" | "free";
+  /** 0..1 how much of the ground lock applies (transitions between lying/sitting and standing) */
+  groundW?: number;
 }
 
 export const IDENTITY: Quat = [0, 0, 0, 1];
@@ -110,6 +112,17 @@ export function qfromTo(a: Vec3, b: Vec3): Quat {
   return qnorm([c[0], c[1], c[2], 1 + d]);
 }
 
+/** Rotation raised to a power: same axis, angle × s (s may exceed 1 — extrapolates, unlike qslerp). */
+export function qpow(q: Quat, s: number): Quat {
+  const w = Math.max(-1, Math.min(1, q[3]));
+  const sign = w < 0 ? -1 : 1;
+  const half = Math.acos(w * sign);
+  const sinHalf = Math.sin(half);
+  if (sinHalf < 1e-6) return IDENTITY;
+  const k = (Math.sin(half * s) / sinHalf) * sign;
+  return [q[0] * k, q[1] * k, q[2] * k, Math.cos(half * s)];
+}
+
 /** Scale a rotation's angle (t=0 → identity, t=1 → q). Used for additive weights. */
 export function qscale(q: Quat, t: number): Quat {
   return qslerp(IDENTITY, q, t);
@@ -167,6 +180,7 @@ export function blendLayers(a: PoseLayer, b: PoseLayer, t: number): PoseLayer {
     sway: lerp(a.sway ?? 0, b.sway ?? 0, t),
     lift: lerp(a.lift ?? 0, b.lift ?? 0, t),
     ground: t < 0.5 ? a.ground : b.ground,
+    groundW: lerp(a.groundW ?? 1, b.groundW ?? 1, t),
   };
 }
 

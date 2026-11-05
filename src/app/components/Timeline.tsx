@@ -43,9 +43,9 @@ export function Timeline() {
             </div>
           );
         })}
-        {dur > 0 && <div className="playhead" data-testid="playhead" data-t={s.t.toFixed(2)} style={{ left: `${(s.t / dur) * 100}%` }} />}
+        {dur > 0 && <div className="playhead" data-testid="playhead" data-t={s.t.toFixed(2)} style={{ left: `${(Math.min(s.t, dur) / dur) * 100}%` }} />}
       </div>
-      <div className="time">{s.t.toFixed(1)} / {dur.toFixed(1)}s</div>
+      <div className="time">{Math.min(s.t, dur).toFixed(1)} / {dur.toFixed(1)}s</div>
     </div>
   );
 }

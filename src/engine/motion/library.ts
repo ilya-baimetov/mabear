@@ -122,16 +122,18 @@ export function evaluatePose(verb: Verb, localT: number, params: ClipParams, ctx
     const top = impl(localT, params, ctx);
     L = { ...mask(base, top, UPPER), face: top.face, yawOffset: 0 };
   }
-  const standing = upright && !FREE_VERBS.has(verb);
+  const getsUpFromStanding = (verb === "stand_up" || verb === "wake_up") && (held === "stand" || held === "offstage");
+  const standing = upright && (!FREE_VERBS.has(verb) || getsUpFromStanding);
   L = applyStyle(L, ctx, standing);
   if (standing && !LOCOMOTION_VERBS.includes(verb)) L = shuffle(L, ctx);
   const br = breathingPose(ctx.t, ctx.style.breathRate, ctx.style.breathDepth);
   L = addLayer(L, br.pose);
   // ground contact: pin the lowest sole to the floor (or only keep it from sinking during run flight phases)
-  const mode = L.ground ?? (standing ? "lock" : "free");
+  const mode = L.ground ?? (standing ? "lock" : L.groundW !== undefined ? "lock" : "free");
   if (mode !== "free") {
     const low = lowestFoot(L.bones, L.hipsOffset, ctx.style);
-    if (mode === "lock" || low < 0) L = { ...L, hipsOffset: [L.hipsOffset[0], L.hipsOffset[1] - low, L.hipsOffset[2]] };
+    const w = L.groundW ?? 1;
+    if (mode === "lock" || low < 0) L = { ...L, hipsOffset: [L.hipsOffset[0], L.hipsOffset[1] - low * w, L.hipsOffset[2]] };
   }
   if (L.lift) L = { ...L, hipsOffset: [L.hipsOffset[0], L.hipsOffset[1] + L.lift, L.hipsOffset[2]] };
   return { layer: L, breathe: br.breathe };
