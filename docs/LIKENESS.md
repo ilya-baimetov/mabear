@@ -332,6 +332,30 @@ bigger button nose; wider, lower mouth. Bear: legs shorter (hips 0.72 → 0.66 m
 - Materials are held at 3.5: shell fur (spec P1) would lift it, but it multiplies fur draw calls and fill cost, which
   conflicts with the headless/integrated-GPU budget. Deferred deliberately.
 
+### Pass 9 — 2026-11-05 05:17 UTC
+
+Masha gets her signature expression. A new `FaceConfig.mouth.smirk` adds a one-sided smile to every emotion; it fades
+out while visemes play. Masha uses 0.35, Bear 0. The closed-mouth line is thicker and darker so it reads in wide
+shots. The mouth sits closer to the nose (as in the reference) with a stronger corner lift. Bear is unchanged from
+pass 8 (re-rendered for a complete set).
+
+**Masha** — `pass9-masha-*.png`
+
+| Silhouette | Proportions | Face | Colors | Materials | Motion feel |
+|---|---|---|---|---|---|
+| 4 | 4 | 4 | 4.5 | 4 | 3.5 |
+
+- The knowing half-smile is the single most "Masha" cue the face was missing; with the low wide kerchief, big
+  green irises and rosy cheeks she now reads as the character in the front, ¾ and close-up views. Caveat: eyes stay
+  larger than in the reference, because the spec asks for ~⅓ of face width.
+
+**Bear** — `pass9-bear-*.png`: unchanged scores from pass 8 (4 / 4 / 4 / 4 / 3.5 / 3.5).
+
+**Status after 9 passes:** every rubric score is ≥ 4 except Bear materials (3.5; shell fur deferred for
+performance) and motion feel for both (3.5; scored from `evaluate()` filmstrips; the remaining issues are in the
+motion layer: stiff arms and no squash in Masha's run, Bear's forearms clipping the belly). Re-score motion feel in
+the integrated app once it runs.
+
 ## 5. Next pass checklist (append new passes below)
 
 1. `npx tsx scripts/likenessShots.ts --pass N` (vite on port 5180 is started automatically).
