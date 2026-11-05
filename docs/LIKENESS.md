@@ -571,3 +571,46 @@ Budgets (final): Masha 26.3k triangles / 8 meshes / 12 draw calls incl. shadow; 
 24.6k / 3 / 4. The whole cast is 25 draw calls (was ~88). In-stage totals measured by the bench: 64–76 draw calls
 for the full scene with all four characters. B11: character materials are fade-stable (no program change at the
 first fade); covered by `tests/unit/characters.test.ts`.
+
+### Pass 15 — 2026-11-05 (Wolves only: "stick-thin generic humanoids" in the lineup)
+
+Same files overwritten: `after-a5-wolves-{front,three,face,silhouette,closeup}.png`, `after-a5-wolves-b-closeup.png`
+and `after-a5-lineup-*.png`. Four iterations (front / ¾ / silhouette / in-stage each time; intermediates discarded).
+
+What changed (`src/engine/characters/wolf.ts`; the rest pose is still a T-pose, so all of the "wolf" read comes from
+mass, not posture):
+- **Fur clumps.** A new `tuft()` helper makes a soft leaf-shaped clump (an 8-sided lathe, ~80 triangles) that droops
+  toward its tip and is coloured base → tip. Clumps merge into the fur skinned mesh, so they add no draw calls. The
+  body carries ~50 of them:
+  - a 4-row chest ruff with deterministic jitter. It is pale only at the front centre. The centre clumps lie flat,
+    the side clumps stand out and break the front silhouette, and the ruff is noise-roughened so it reads as fur.
+  - a mane on the nape.
+  - four clumps per shoulder, on the arm bone so they follow the arm down.
+  - two clumps behind each elbow.
+  - one clump on each outer hip.
+  - three swept-back cheek tufts per side and a small crest between the ears.
+- **Volume:** deeper chest (0.195 → 0.225 half-width) with a pigeon-chest mass under the ruff. Bigger shoulder caps.
+  Wider pelvis flowing into thick thighs (radius 0.072 → 0.11) that taper to thin shins (0.034 at the ankle).
+- **Feet** look digitigrade: a raised heel knob, a sloping metatarsal and a big dark paw with three toes.
+- **Arms** are longer (upper 0.29 → 0.31, fore 0.27 → 0.30) and fuller at the top. Hands are about 1.3× bigger.
+- **Tail** is bushier (max radius 0.10 → 0.15, shaggy lobes, lighter tip). It hangs a little to the character's left,
+  so it shows beside the leg in the front view.
+- **Ears** are bigger (0.17 → 0.205 long, wider) with a larger pink inner.
+- **Detail trimmed** where it doesn't show (torso, cranium, snout, limbs) to pay for the clumps.
+
+| | Silhouette | Proportions | Face | Colors | Materials | Motion feel |
+|---|---|---|---|---|---|---|
+| Wolves — pass 14 | 3.5 | 3.5 | 4 | 4 | 3.5 | 3.5 |
+| **Wolves — pass 15** | 4 | 4 | 4 | 4 | 4 | 4 |
+
+Adversarial notes (honest):
+- **Silhouette now reads "wolf" in black-on-white from the front:** pointed ears, cheek tufts, a shaggy ruff and
+  shoulders, a tail beside the leg, thick thighs on thin shins, paws.
+- **Materials score 4 at in-yard distances.** In tight close-ups the ruff clumps still hint at "feathers" or scales
+  (regular leaf shapes with shadow gaps); real shell fur or cards would fix that.
+- **Motion feel** is judged on the idle in the stage (motion layer: bent arms, a slight hunch) plus the tail sway and
+  ear wiggle. No fixture animates the Wolves beyond idle yet, so this is thin evidence.
+- **The neck front** under the snout is a little lumpy where the top ruff row meets the throat.
+
+Budgets: each Wolf is 25.8k triangles / 3 meshes / 4 draw calls incl. shadow. The cast total is unchanged at 25 draw
+calls. In-stage frame: 64–66 draw calls with all four characters.

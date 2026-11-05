@@ -9,7 +9,7 @@ import { buildFace, type FaceConfig } from "./face";
 import {
   blob, bump, buildSkeleton, col, dir, extraBone, eyeMaterial, frontSurface, furMaterial, limb, makeRig, materialSet, mergeSame,
   noise3, paintVertices, profile, restWorld, roughen, sdEllipsoid, sdfBlob, skinBody, smin, smoothstep, toLocal,
-  type SkeletonProportions, type SkinPart, type Weights,
+  welded, type SkeletonProportions, type SkinPart, type Weights,
 } from "./rig";
 
 export type WolfVariant = "a" | "b";
@@ -26,8 +26,8 @@ const WOLF_SKELETON: SkeletonProportions = {
   head: 0.07,
   shoulder: [0.07, 0.11],
   clavicle: 0.12,
-  upperArm: 0.29,
-  foreArm: 0.27,
+  upperArm: 0.31,
+  foreArm: 0.3,
   upLeg: [0.1, -0.05],
   upperLeg: 0.44,
   lowerLeg: 0.41,
@@ -92,6 +92,40 @@ function tube(curve: THREE.Curve<THREE.Vector3>, r: (t: number) => number, detai
   });
 }
 
+/**
+ * A pointed fur clump (7-sided lathe, ~60 triangles): base at `base`, growing along `direction`, drooping under
+ * gravity toward the tip, coloured from `cBase` to `cTip`. Dozens of these break the silhouette (ruff, shoulders,
+ * cheeks, elbows) and merge into the fur mesh, so they cost no draw calls.
+ */
+function tuft(
+  base: THREE.Vector3, direction: THREE.Vector3, len: number, r0: number, cBase: THREE.Color, cTip: THREE.Color, droop = 0.3,
+): THREE.BufferGeometry {
+  // soft leaf-shaped clump: full body, rounded shoulders, a short point
+  const pts = [
+    new THREE.Vector2(0.0001, -0.4 * r0),
+    new THREE.Vector2(r0 * 0.8, -0.15 * r0),
+    new THREE.Vector2(r0, 0.2 * len),
+    new THREE.Vector2(r0 * 0.88, 0.45 * len),
+    new THREE.Vector2(r0 * 0.38, 0.75 * len),
+    new THREE.Vector2(0.0001, len),
+  ];
+  const g = welded(new THREE.LatheGeometry(pts, 8));
+  g.scale(1, 1, 0.75); // clumps are a little flat
+  const dn = direction.clone().normalize();
+  g.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dn));
+  const pos = g.getAttribute("position") as THREE.BufferAttribute;
+  const ts: number[] = [];
+  for (let i = 0; i < pos.count; i++) {
+    const t = Math.max(0, (pos.getX(i) * dn.x + pos.getY(i) * dn.y + pos.getZ(i) * dn.z) / len);
+    ts.push(t);
+    pos.setXYZ(i, pos.getX(i) + base.x, pos.getY(i) + base.y - droop * len * t * t, pos.getZ(i) + base.z);
+  }
+  g.computeVertexNormals();
+  let i = 0;
+  paintVertices(g, (_p, out) => out.copy(cBase).lerp(cTip, smoothstep(0.2, 1, ts[i++])));
+  return g;
+}
+
 export function buildWolf(variant: WolfVariant): CharacterRig {
   const V = WOLF_LOOK.variants[variant];
   const C = { ...WOLF_LOOK.colors, ...V.colors };
@@ -127,8 +161,9 @@ export function buildWolf(variant: WolfVariant): CharacterRig {
   headS.scale.setScalar(k);
   // tail: three bones off the back of the hips, drooping
   const tail0 = extraBone(B.Hips, "tail0", 0, -0.02 * k, -0.11 * k);
-  const tail1 = extraBone(tail0, "tail1", 0, -0.13 * k, -0.1 * k);
-  const tail2 = extraBone(tail1, "tail2", 0, -0.16 * k, -0.04 * k);
+  // the tail hangs a little to the character's left so it shows beside the leg from the front
+  const tail1 = extraBone(tail0, "tail1", 0.07 * k, -0.13 * k, -0.11 * k);
+  const tail2 = extraBone(tail1, "tail2", 0.07 * k, -0.17 * k, -0.02 * k);
   root.updateMatrixWorld(true);
   const parts: SkinPart[] = [];
 
@@ -149,13 +184,14 @@ export function buildWolf(variant: WolfVariant): CharacterRig {
   // ---- torso + neck: one thin sculpted surface (narrow chest, slight pot belly, bony shoulders, long neck)
   {
     const core = [
-      { c: v(0, 1.36, -0.01), r: v(0.195 * g8, 0.2, 0.14 * g8) }, // chest: the widest part (lean, slightly hunched)
-      { c: v(0, 1.13, 0.025), r: v(0.14 * g8, 0.2, 0.14 * g8) }, // narrow waist, a little pot belly
-      { c: v(0, 0.96, -0.02), r: v(0.15 * g8, 0.11, 0.12 * g8) }, // bony pelvis
+      { c: v(0, 1.37, -0.01), r: v(0.225 * g8, 0.22, 0.16 * g8) }, // deep chest: the widest part
+      { c: v(0, 1.43, 0.05), r: v(0.15 * g8, 0.11, 0.12 * g8) }, // pigeon chest under the ruff
+      { c: v(0, 1.13, 0.025), r: v(0.15 * g8, 0.2, 0.145 * g8) }, // narrow waist, a little pot belly
+      { c: v(0, 0.96, -0.02), r: v(0.18 * g8, 0.12, 0.13 * g8) }, // pelvis flowing into thick thighs
     ];
     const extras = [
-      { c: v(0.165, 1.475, -0.02), r: v(0.07, 0.065, 0.062) },
-      { c: v(-0.165, 1.475, -0.02), r: v(0.07, 0.065, 0.062) },
+      { c: v(0.19, 1.49, -0.02), r: v(0.085, 0.075, 0.075) },
+      { c: v(-0.19, 1.49, -0.02), r: v(0.085, 0.075, 0.075) },
       { c: v(0, 1.6, -0.005), r: v(0.068, 0.14, 0.068) }, // neck column
     ];
     const sdf = (p0: THREE.Vector3): number => {
@@ -165,15 +201,54 @@ export function buildWolf(variant: WolfVariant): CharacterRig {
       for (const e of extras) d = smin(d, sdEllipsoid(p, e.c, e.r), 0.07);
       return d * k;
     };
-    const g = sdfBlob(13, v(0, 1.25 * k, 0), sdf, 0.9 * k, (d, out) => {
-      // scalloped throat/chest ruff: pointed tufts whose tips hang over the chest (breaks the tube silhouette)
-      const y = out.y / k;
-      const phi = Math.atan2(out.x, out.z);
-      const front = smoothstep(1.25, 0.5, Math.abs(phi));
-      const band = smoothstep(1.36, 1.44, y) * smoothstep(1.62, 1.5, y);
-      const tuft = Math.pow(Math.max(0, Math.cos(phi * 7 + 0.4)), 3) * smoothstep(1.5, 1.4, y);
-      out.addScaledVector(d, (0.03 + 0.045 * tuft) * band * front * k);
+    const g = sdfBlob(11, v(0, 1.25 * k, 0), sdf, 0.9 * k);
+    // fur tufts on the body surface: a two-row chest ruff (light), a mane on the nape (fur)
+    const surf = (o: THREE.Vector3, dn: THREE.Vector3): THREE.Vector3 => {
+      let lo = 0;
+      let hi = 0.6 * k;
+      const q = new THREE.Vector3();
+      for (let it = 0; it < 24; it++) {
+        const mid = (lo + hi) / 2;
+        if (sdf(q.copy(dn).multiplyScalar(mid).add(o)) < 0) lo = mid;
+        else hi = mid;
+      }
+      return dn.clone().multiplyScalar(lo - 0.012 * k).add(o);
+    };
+    const ruff: THREE.BufferGeometry[] = [];
+    const cLightTip = cLight.clone().multiplyScalar(1.08);
+    const rows: Array<[number, number, number, number]> = [
+      // [y, phi half-range, count, length] — overlapping, irregular clumps (deterministic jitter)
+      [1.57, 1.3, 7, 0.1],
+      [1.49, 1.1, 7, 0.12],
+      [1.42, 0.8, 5, 0.12],
+      [1.36, 0.45, 3, 0.09],
+    ];
+    let jit = variant === "a" ? 1.3 : 4.1;
+    const rnd = () => ((jit = (jit * 9301 + 49297) % 233280) / 233280) * 2 - 1;
+    rows.forEach(([y, half, n, len], ri) => {
+      for (let j = 0; j < n; j++) {
+        const phi = -half + (2 * half * (j + 0.5 * (ri % 2))) / Math.max(1, n - 1 + (ri % 2)) + rnd() * 0.08;
+        const o = v(0, (y + rnd() * 0.012) * k, 0.02 * k);
+        const dn = v(Math.sin(phi), 0, Math.cos(phi));
+        const b = surf(o, dn);
+        // pale only at the front centre of the bib; the sides blend into the grey. Centre clumps lie flatter on the
+        // chest (fewer dark gaps → reads as fur, not feathers); side clumps stand out to break the silhouette.
+        const centre = smoothstep(0.9, 0.2, Math.abs(phi));
+        const dirv = dn.clone().multiplyScalar(0.55 - 0.3 * centre + 0.12 * rnd()).add(v(rnd() * 0.15, -0.85, 0));
+        b.addScaledVector(dn, -0.012 * k * centre);
+        const cb = cFur.clone().lerp(cLight, 0.15 + 0.55 * centre);
+        ruff.push(tuft(b, dirv, len * k * (0.85 + 0.3 * Math.abs(rnd())), 0.058 * k, cb, cb.clone().lerp(cLightTip, 0.25), 0.45));
+      }
     });
+    for (let j = 0; j < 5; j++) {
+      const phi = Math.PI + (j - 2) * 0.32;
+      const dn = v(Math.sin(phi), 0, Math.cos(phi));
+      const b = surf(v(0, 1.57 * k, -0.01 * k), dn);
+      ruff.push(tuft(b, dn.clone().multiplyScalar(0.7).add(v(0, -0.5, 0)), 0.1 * k, 0.035 * k, cFur, cDark, 0.2));
+    }
+    const ruffG = mergeSame(ruff);
+    roughen(ruffG, 0.006 * k, 60 / k, 5.3); // break the clean leaf edges into scruffy fur
+    parts.push({ geom: toLocal(ruffG, chest), bone: chest, material: fur });
     fuzz(g);
     const nrm = g.getAttribute("normal");
     let i = 0;
@@ -235,10 +310,10 @@ export function buildWolf(variant: WolfVariant): CharacterRig {
       0.06 * (bump(d, dir(0.3, 0.42, 0.85), 0.22) + bump(d, dir(-0.3, 0.42, 0.85), 0.22)) - // brow ridge
       0.06 * bump(d, dir(0, 1, 0), 0.5) +
       0.08 * bump(d, dir(0, 0.2, -1), 0.6)); // long skull at the back
-  const cranium = blob(11, (d, out) => {
+  const cranium = blob(9, (d, out) => {
     out.copy(d).multiplyScalar(craniumR(d)).add(hc);
   });
-  const snout = blob(9, (d, out) => {
+  const snout = blob(7, (d, out) => {
     const fz = (d.z + 1) / 2; // 0 back .. 1 tip
     const taper = 1 - 0.3 * fz * fz; // blunt tip: room for the nose and a mouth under it
     // flat-ish top bridge, rounder jaw underneath
@@ -265,6 +340,24 @@ export function buildWolf(variant: WolfVariant): CharacterRig {
   });
   paintVertices(noseGeom, (_p, out) => out.copy(col(C.nose)));
   parts.push({ geom: noseGeom, bone: headS, material: eyeMat, shadow: false });
+  {
+    // scruffy head: three pointed cheek tufts per side sweeping back, a little crest between the ears
+    const tufts: THREE.BufferGeometry[] = [];
+    const cl = cLight.clone();
+    for (const s of [1, -1]) {
+      for (const [dy, dz, len] of [[-0.3, 0.12, 0.085], [-0.45, -0.05, 0.1], [-0.6, -0.22, 0.08]] as const) {
+        const d = dir(0.9 * s, dy, dz);
+        const b = d.clone().multiplyScalar(craniumR(d) * 0.94).add(hc);
+        tufts.push(tuft(b, v(0.85 * s, dy * 0.6 - 0.15, -0.45), len, 0.03, cFur.clone().lerp(cl, 0.7), cl, 0.3));
+      }
+    }
+    for (const [x, len] of [[-0.03, 0.06], [0.0, 0.075], [0.03, 0.055]] as const) {
+      const d = dir(x * 4, 1, 0.25);
+      const b = d.clone().multiplyScalar(craniumR(d) * 0.94).add(hc);
+      tufts.push(tuft(b, v(x * 3, 1, 0.55), len, 0.022, cFur, cDark, 0.35));
+    }
+    parts.push({ geom: mergeSame(tufts), bone: headS, material: fur });
+  }
 
   // ---- ears: tall, pointed, slightly cupped, pinkish-grey inside; on bones for wiggle
   const cEarIn = col(C.earInner);
@@ -276,12 +369,12 @@ export function buildWolf(variant: WolfVariant): CharacterRig {
     eb.rotation.set(-0.12, 0.3 * s, -0.28 * s);
     const g = blob(4, (d, out) => {
       const t = (d.y + 1) / 2; // 0 base .. 1 tip
-      const w = 0.058 * Math.pow(1 - t, 0.85) + 0.004;
-      const cup = d.z > 0 ? 0.014 * (1 - d.x * d.x) * (1 - t) : 0;
-      out.set(d.x * w, t * 0.17, d.z * 0.022 * (1 - 0.5 * t) - cup);
+      const w = 0.07 * Math.pow(1 - t, 0.8) + 0.004;
+      const cup = d.z > 0 ? 0.017 * (1 - d.x * d.x) * (1 - t) : 0;
+      out.set(d.x * w, t * 0.205, d.z * 0.025 * (1 - 0.5 * t) - cup);
     });
     paintVertices(g, (q, out) => {
-      const inner = smoothstep(0.0, 0.012, q.z + 0.006) * smoothstep(0.045, 0.02, Math.abs(q.x) + q.y * 0.25) * smoothstep(0.15, 0.08, q.y);
+      const inner = smoothstep(0.0, 0.012, q.z + 0.006) * smoothstep(0.055, 0.025, Math.abs(q.x) + q.y * 0.25) * smoothstep(0.18, 0.1, q.y);
       out.copy(cDark).lerp(cEarIn, inner * 0.85);
     });
     ears.push(eb);
@@ -349,17 +442,18 @@ export function buildWolf(variant: WolfVariant): CharacterRig {
   // ---- arms: long and thin, smooth-skinned across the elbow; hands with a thumb and finger lumps
   const armLen = skel.upperArm + skel.foreArm;
   const armR = profile([
-    [0, 0.05],
-    [0.15, 0.052],
-    [0.4, 0.05],
-    [0.52, 0.042],
-    [0.66, 0.048],
-    [1, 0.036],
+    [0, 0.062],
+    [0.12, 0.066],
+    [0.35, 0.055],
+    [0.5, 0.042],
+    [0.62, 0.05],
+    [0.85, 0.04],
+    [1, 0.035],
   ]);
   for (const side of ["Left", "Right"] as const) {
     const s = side === "Left" ? 1 : -1;
     const x0 = -0.045 * k;
-    const g = limb(v(x0 * s, 0, 0), v(armLen * s, 0, 0), (t) => armR(t) * k * g8, { detail: 7, sq: 0.92 });
+    const g = limb(v(x0 * s, 0, 0), v(armLen * s, 0, 0), (t) => armR(t) * k * g8, { detail: 6, sq: 0.92 });
     // elbow tuft: a soft point of fur at the back of the elbow
     {
       const pos = g.getAttribute("position") as THREE.BufferAttribute;
@@ -386,7 +480,7 @@ export function buildWolf(variant: WolfVariant): CharacterRig {
         [fore, smoothstep(ex - bw, ex + bw, p.x)],
       ],
     });
-    const palm = blob(4, (d, out) => {
+    const palm = blob(3, (d, out) => {
       out.set((0.045 + d.x * 0.05) * s, d.y * 0.022, d.z * 0.042);
     });
     const fingers: THREE.BufferGeometry[] = [palm];
@@ -403,23 +497,38 @@ export function buildWolf(variant: WolfVariant): CharacterRig {
       }),
     );
     const hg = mergeSame(fingers);
-    hg.scale(1.3 * k, 1.3 * k, 1.3 * k);
+    hg.scale(1.75 * k, 1.6 * k, 1.6 * k); // big hands
     paintVertices(hg, (_p, out) => out.copy(cDark));
     parts.push({ geom: hg, bone: B[`${side}Hand`], material: fur });
+    // shaggy shoulders (on the arm: they follow it down) and an elbow tuft
+    const sh: THREE.BufferGeometry[] = [];
+    for (const [x, dx, dy, dz, len] of [
+      [-0.01, 0.2, 1, -0.1, 0.12], [0.04, 0.6, 0.8, 0.15, 0.14], [0.03, 0.5, 0.75, -0.6, 0.13], [0.08, 0.9, 0.5, -0.2, 0.12],
+    ] as const) {
+      sh.push(tuft(v(x * k * s, 0.04 * k, 0), v(dx * s, dy, dz), len * k * 0.9, 0.05 * k, cFur, cFur.clone().lerp(cLight, 0.15), 0.35));
+    }
+    parts.push({ geom: mergeSame(sh), bone: upper, material: fur });
+    const el = [
+      tuft(v(-0.01 * k * s, 0, -0.03 * k), v(0.45 * s, -0.1, -1), 0.08 * k, 0.026 * k, cFur, cDark, 0.15),
+      tuft(v(0.02 * k * s, -0.01 * k, -0.025 * k), v(0.7 * s, -0.3, -0.8), 0.065 * k, 0.022 * k, cFur, cDark, 0.15),
+    ];
+    parts.push({ geom: mergeSame(el), bone: fore, material: fur });
   }
 
   // ---- legs: long, thin, one piece across the knee; long dark feet
   const legLen = skel.upperLeg + skel.lowerLeg;
   const legR = profile([
-    [0, 0.072],
-    [0.28, 0.068],
-    [0.5, 0.05],
-    [0.64, 0.058],
-    [0.85, 0.042],
-    [1, 0.036],
+    [0, 0.11],
+    [0.2, 0.106],
+    [0.4, 0.08],
+    [0.52, 0.056],
+    [0.6, 0.054],
+    [0.72, 0.048],
+    [0.88, 0.037],
+    [1, 0.034],
   ]);
   for (const side of ["Left", "Right"] as const) {
-    const g = limb(v(0, 0.02 * k, 0), v(0, -legLen, 0), (t) => legR(t) * k * g8, { detail: 7 });
+    const g = limb(v(0, 0.02 * k, 0), v(0, -legLen, 0), (t) => legR(t) * k * g8, { detail: 6 });
     fuzz(g, 0.6);
     paintVertices(g, (_p, out) => out.copy(cFur));
     const up = B[`${side}UpLeg`];
@@ -433,14 +542,26 @@ export function buildWolf(variant: WolfVariant): CharacterRig {
         [lo, smoothstep(ky + bw, ky - bw, p.y)],
       ],
     });
-    const ft = blob(4, (d, out) => {
-      const fz = (d.z + 1) / 2;
-      const yy = d.y < -0.3 ? -0.3 - (d.y + 0.3) * 0.2 : d.y;
-      out.set(d.x * 0.055 * (0.85 + 0.35 * fz), -0.045 + yy * 0.04 * (1 - 0.3 * fz), 0.06 + d.z * 0.13);
+    // digitigrade-looking foot: a raised heel knob, a sloping metatarsal and a big paw with three toes
+    const meta = limb(v(0, 0.012, -0.004), v(0, -0.046, 0.088), (t) => 0.036 + 0.008 * t, { detail: 3 });
+    paintVertices(meta, (_p, out) => out.copy(cFur));
+    const heel = blob(2, (d, out) => out.set(d.x * 0.03, 0.006 + d.y * 0.03, -0.022 + d.z * 0.028));
+    paintVertices(heel, (_p, out) => out.copy(cFur));
+    const paw = blob(3, (d, out) => {
+      const yy = d.y < -0.2 ? -0.2 - (d.y + 0.2) * 0.25 : d.y; // flat sole
+      out.set(d.x * 0.066, -0.05 + yy * 0.032, 0.12 + d.z * 0.072);
     });
-    ft.scale(k, k, k);
-    paintVertices(ft, (_p, out) => out.copy(cDark));
-    parts.push({ geom: ft, bone: B[`${side}Foot`], material: fur });
+    const toes = [-0.038, 0, 0.038].map((x) =>
+      blob(2, (d, out) => out.set(x + d.x * 0.024, -0.052 + d.y * 0.024, 0.178 - Math.abs(x) * 0.3 + d.z * 0.03)),
+    );
+    const pawG = mergeSame([paw, ...toes]);
+    paintVertices(pawG, (_p, out) => out.copy(cDark));
+    const ftG = mergeSame([meta, heel, pawG]);
+    ftG.scale(k, k, k);
+    parts.push({ geom: ftG, bone: B[`${side}Foot`], material: fur });
+    // a tuft on the outer hip so the thigh mass reads in the front silhouette
+    const s = side === "Left" ? 1 : -1;
+    parts.push({ geom: tuft(v(0.075 * k * s, -0.05 * k, -0.01 * k), v(s, -0.9, -0.2), 0.09 * k, 0.035 * k, cFur, cDark, 0.15), bone: up, material: fur });
   }
 
   // ---- tail: bushy, drooping from the back of the hips, lighter tip; smooth-skinned along three bones
@@ -448,18 +569,18 @@ export function buildWolf(variant: WolfVariant): CharacterRig {
     const t0 = restWorld(tail0);
     const t1 = restWorld(tail1);
     const t2 = restWorld(tail2);
-    const end = t2.clone().add(v(0, -0.14 * k, 0.02 * k));
+    const end = t2.clone().add(v(0.03 * k, -0.17 * k, 0.03 * k));
     const start = t0.clone().add(v(0, 0.05 * k, 0.07 * k));
     const curve = new THREE.CatmullRomCurve3([start, t0, t1, t2, end]);
     const tr = profile([
-      [0, 0.03],
-      [0.15, 0.05],
-      [0.5, 0.1],
-      [0.75, 0.095],
-      [0.92, 0.055],
+      [0, 0.035],
+      [0.15, 0.065],
+      [0.45, 0.14],
+      [0.72, 0.15],
+      [0.9, 0.09],
       [1, 0.0],
     ]);
-    const g = tube(curve, (t) => tr(t) * k * (1 + 0.12 * Math.sin(t * 40)), 7);
+    const g = tube(curve, (t) => tr(t) * k * (1 + 0.1 * Math.sin(t * 40)), 6);
     g.computeVertexNormals();
     // bushy breakup: big soft tufts + fine noise
     const pos = g.getAttribute("position") as THREE.BufferAttribute;
@@ -468,7 +589,8 @@ export function buildWolf(variant: WolfVariant): CharacterRig {
       const x = pos.getX(i);
       const y = pos.getY(i);
       const z = pos.getZ(i);
-      const n = noise3(x * 30, y * 30 + 2.1, z * 30) * 0.012 * k;
+      // shaggy: lobes of fur along the length + fine breakup
+      const n = (noise3(x * 30, y * 30 + 2.1, z * 30) * 0.016 + Math.max(0, noise3(x * 70 + 3, y * 70, z * 70)) * 0.02) * k;
       pos.setXYZ(i, x + nrm.getX(i) * n, y + nrm.getY(i) * n, z + nrm.getZ(i) * n);
     }
     g.computeVertexNormals();
@@ -488,7 +610,7 @@ export function buildWolf(variant: WolfVariant): CharacterRig {
     };
     paintVertices(g, (p, out) => {
       const t = tAt(p);
-      out.copy(cFur).lerp(cDark, 0.25 * smoothstep(0.3, 0.6, t)).lerp(cLight, smoothstep(0.84, 0.95, t));
+      out.copy(cFur).lerp(cDark, 0.2 * smoothstep(0.3, 0.6, t)).lerp(cLight, smoothstep(0.78, 0.92, t));
     });
     parts.push({
       geom: toLocal(g, B.Hips),
