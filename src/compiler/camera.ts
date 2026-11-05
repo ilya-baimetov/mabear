@@ -292,8 +292,22 @@ export function planCamera(input: CameraPlanInput): CameraCue[] {
       const cost = occlusionCost(fr.from, h0) + occlusionCost(fr.to, h1);
       if (cost < bestCost - 1e-6) { best = fr; bestCost = cost; }
     }
+    // still blocked (camera boxed in by trunks): fall back to a static medium, then a wide, from the clearest yaw
+    let kind = s.kind;
+    if (bestCost >= 1 && !s.overridden) {
+      for (const alt of ["medium", "wide"] as Kind[]) {
+        if (alt === s.kind) continue;
+        for (const dlt of [0, 0.35, -0.35, 0.7, -0.7, 1.05, -1.05]) {
+          const fr = framing(alt, s.subject, s.start, s.end, Math.max(-1.3, Math.min(1.3, angle + dlt)), side, posAt, visibleAt, rnd, input.headY);
+          const cost = occlusionCost(fr.from, h0) + occlusionCost(fr.to, h1);
+          if (cost < bestCost - 1e-6) { best = fr; bestCost = cost; kind = alt; }
+          if (bestCost < 1) break;
+        }
+        if (bestCost < 1) break;
+      }
+    }
     const { from, to } = best;
-    return { start: r3(s.start), dur: r3(s.end) - r3(s.start), shot: shotName(s.kind), from, to, overridden: s.overridden };
+    return { start: r3(s.start), dur: r3(s.end) - r3(s.start), shot: shotName(kind), from, to, overridden: s.overridden };
   });
 }
 
