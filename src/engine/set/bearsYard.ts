@@ -7,7 +7,7 @@ import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeom
 import { mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { MARKS } from "../../shared/bible/set";
 import type { MarkId, Vec2 } from "../../shared/schema";
-import { GeoBag, bagToSingle, lumpy, rng, xf, type LookMaterials, type MatKey } from "../look";
+import { GeoBag, bagToSingle, lumpy, paint, rng, xf, type LookMaterials, type MatKey } from "../look";
 
 // ---------------------------------------------------------------------------------------------------------------
 // Element registry (ids + placement). Placement mirrors src/shared/bible/set.ts marks.
@@ -194,14 +194,14 @@ const V = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);
 export function addPine(bag: GeoBag, height: number, seed: number, m: THREE.Matrix4, mat: MatKey = "foliage", lod = 0, clear = 0): void {
   const r = rng(seed);
   const h = height;
-  bag.add("bark", cyl(0.025 * h, 0.04 * h, 0.5 * h, lod ? 5 : 7), 0x6b4428, xf([0, 0.25 * h, 0]).premultiply(m), { aoBottom: 0.3 });
-  const tiers = 4;
+  bag.add("bark", new THREE.CylinderGeometry(0.025 * h, 0.04 * h, 0.5 * h, lod ? 4 : 6, 1, true), 0x6b4428, xf([0, 0.25 * h, 0]).premultiply(m), { aoBottom: 0.3 });
+  const tiers = lod ? 3 : 4;
   for (let i = 0; i < tiers; i++) {
     const ch = h * (0.36 - i * 0.045);
     const cr = h * (0.2 - i * 0.036) * (0.9 + r() * 0.2);
     const y0 = Math.max(h * 0.2, clear);
-    const y = y0 + (h - y0) * (i * 0.205) + ch / 2;
-    const g = new THREE.ConeGeometry(cr, ch, lod ? 7 : 10, lod ? 1 : 2, false);
+    const y = y0 + (h - y0) * (i * (0.82 / tiers)) + ch / 2;
+    const g = new THREE.ConeGeometry(cr * (lod ? 1.1 : 1), ch * (lod ? 1.2 : 1), lod ? 6 : 9, 1, lod > 0);
     // soften: droop the rim slightly and jitter
     const pos = g.attributes.position;
     for (let k = 0; k < pos.count; k++) {
@@ -230,15 +230,15 @@ export function addPine(bag: GeoBag, height: number, seed: number, m: THREE.Matr
 export function addBirch(bag: GeoBag, height: number, seed: number, m: THREE.Matrix4, mat: MatKey = "foliage", lod = 0): void {
   const r = rng(seed);
   const h = height;
-  bag.add("bark", cyl(0.028 * h, 0.04 * h, 0.75 * h, lod ? 5 : 8, lod ? 6 : 14), 0xeeeae0, xf([0, 0.375 * h, 0]).premultiply(m), {
+  bag.add("bark", new THREE.CylinderGeometry(0.028 * h, 0.04 * h, 0.75 * h, lod ? 4 : 6, lod ? 2 : 7, true), 0xeeeae0, xf([0, 0.375 * h, 0]).premultiply(m), {
     colorFn: (p, _n, out) => {
       const a = Math.atan2(p.z, p.x);
       if (Math.sin(p.y * 9 + a * 2 + seed) > 0.82 || Math.sin(p.y * 4.1 - a + seed * 2) > 0.93) out.setHex(0x37322d);
     },
   });
-  const n = 4;
+  const n = lod ? 2 : 3;
   for (let i = 0; i < n; i++) {
-    const rr = h * (0.16 + r() * 0.06);
+    const rr = h * (0.17 + r() * 0.06) * (lod ? 1.25 : 1.1);
     const y = h * (0.58 + i * 0.1);
     const ox = (r() - 0.5) * h * 0.18, oz = (r() - 0.5) * h * 0.18;
     const light = new THREE.Color(0x9ccc4e), dark = new THREE.Color(0x4f8e30);
@@ -289,11 +289,11 @@ function buildHouse(c: BuildCtx): void {
     const col = logCols[i % 3];
     // front/back (along x)
     for (const z of [D / 2, -D / 2]) {
-      b.add("wood", cyl(r, r, W + 0.55, 12), col, xf([0, y, z], [0, 0, Math.PI / 2]), { capColor: endGrain, capAxis: "y", jitter: 0.06, seed: i });
+      b.add("wood", cyl(r, r, W + 0.55, 9), col, xf([0, y, z], [0, 0, Math.PI / 2]), { capColor: endGrain, capAxis: "y", jitter: 0.06, seed: i });
     }
     // sides (along z), half a step higher (interlocking corners)
     for (const x of [W / 2, -W / 2]) {
-      b.add("wood", cyl(r, r, D + 0.55, 12), col, xf([x, y + step / 2, 0], [Math.PI / 2, 0, 0]), { capColor: endGrain, capAxis: "y", jitter: 0.06, seed: i + 50 });
+      b.add("wood", cyl(r, r, D + 0.55, 9), col, xf([x, y + step / 2, 0], [Math.PI / 2, 0, 0]), { capColor: endGrain, capAxis: "y", jitter: 0.06, seed: i + 50 });
     }
   }
   const wallTop = base + rows * step + 0.1;
@@ -430,9 +430,9 @@ function addWindow(b: GeoBag, x: number, y: number, z: number, w: number, h: num
   b.add("paint", new THREE.ExtrudeGeometry(crown, { depth: 0.06, bevelEnabled: false }), white, xf([x, y + h / 2 + f, z]));
   // open shutters
   for (const s of [-1, 1]) {
-    b.add("paint", box(w / 2, h, 0.05), blue, xf([x + s * (w / 2 + f + w / 4 + 0.02), y, z + 0.02]), {
-      colorFn: (p, _n, out) => { if (Math.abs(p.y) < h * 0.08 || Math.abs(p.y) > h * 0.42) out.setHex(white); },
-    });
+    const sx = x + s * (w / 2 + f + w / 4 + 0.02);
+    b.add("paint", box(w / 2, h, 0.05), blue, xf([sx, y, z + 0.02]));
+    for (const yy of [-0.4, 0, 0.4]) b.add("paint", box(w / 2 + 0.02, 0.05, 0.06), white, xf([sx, y + yy * h, z + 0.04]));
   }
 }
 
@@ -509,10 +509,10 @@ function buildGarden(c: BuildCtx): void {
 
 function addCabbage(b: GeoBag, x: number, y: number, z: number, seed: number): void {
   const r = rng(seed);
-  b.add("foliage", blob(0.16, seed, 0.08, 2), 0xb5dc7a, xf([x, y + 0.13, z]), { jitter: 0.08, seed });
+  b.add("foliage", blob(0.16, seed, 0.08, 1), 0xb5dc7a, xf([x, y + 0.13, z]), { jitter: 0.08, seed });
   for (let i = 0; i < 5; i++) {
     const a = (i / 5) * Math.PI * 2 + r();
-    b.add("foliage", sph(0.16, 10, 6), 0x7fbf55, xf([x + Math.cos(a) * 0.12, y + 0.08, z + Math.sin(a) * 0.12], [Math.sin(a) * 0.9, 0, -Math.cos(a) * 0.9], [1, 0.25, 0.8]), { jitter: 0.1, seed: seed + i });
+    b.add("foliage", sph(0.16, 7, 4), 0x7fbf55, xf([x + Math.cos(a) * 0.12, y + 0.08, z + Math.sin(a) * 0.12], [Math.sin(a) * 0.9, 0, -Math.cos(a) * 0.9], [1, 0.25, 0.8]), { jitter: 0.1, seed: seed + i });
   }
 }
 
@@ -521,7 +521,7 @@ function addCarrotTop(b: GeoBag, x: number, y: number, z: number, seed: number):
   b.add("paint", cyl(0.045, 0.03, 0.06, 8), 0xf07f2a, xf([x, y + 0.02, z]));
   for (let i = 0; i < 4; i++) {
     const a = (i / 4) * Math.PI * 2 + r();
-    b.add("foliage", new THREE.ConeGeometry(0.035, 0.28, 5), 0x4f9e3a, xf([x + Math.cos(a) * 0.03, y + 0.17, z + Math.sin(a) * 0.03], [Math.sin(a) * 0.35, 0, -Math.cos(a) * 0.35]));
+    b.add("foliage", new THREE.ConeGeometry(0.035, 0.28, 3, 1, true), 0x4f9e3a, xf([x + Math.cos(a) * 0.03, y + 0.17, z + Math.sin(a) * 0.03], [Math.sin(a) * 0.35, 0, -Math.cos(a) * 0.35]));
   }
 }
 
@@ -681,6 +681,14 @@ function buildHammock(c: BuildCtx): void {
   g.setIndex(idx);
   g.computeVertexNormals();
   b.addPainted("fabric", g);
+  // underside (flipped winding + normals) instead of a DoubleSide material
+  const under = g.clone();
+  const ui = under.index!.array as Uint16Array | Uint32Array;
+  for (let i = 0; i < ui.length; i += 3) { const t = ui[i + 1]; ui[i + 1] = ui[i + 2]; ui[i + 2] = t; }
+  const un = under.attributes.normal;
+  for (let i = 0; i < un.count; i++) un.setXYZ(i, -un.getX(i), -un.getY(i), -un.getZ(i));
+  under.translate(0, -0.006, 0);
+  b.addPainted("fabric", under);
   for (const s of [-1, 1]) {
     for (const zz of [-0.12, 0.12]) {
       const { g: rg, m } = beam(V(s * 1.5, 1.05, zz * 0.6), V(s * 2.0, 1.45, 0), 0.015, 0.015, 4);
@@ -968,19 +976,19 @@ function buildFlowers(c: BuildCtx): void {
   const clusters: [number, number, number, number][] = [
     [-9.9, -3.4, 0.8, 9], [-2.3, -3.2, 0.7, 8], [2.6, -4.6, 0.6, 7], [3.4, 3.9, 0.7, 8], [7.4, 6.6, 0.7, 8],
     [-3.9, 12.2, 0.8, 9], [1.8, 11.2, 0.6, 7], [-1.9, 11.6, 0.6, 7], [-12.6, 3.6, 0.8, 8], [9.6, 0.6, 0.7, 7],
-    [-13.6, -2.8, 0.7, 7], [12.4, -6.2, 0.7, 7], [6.4, 10.4, 0.8, 8], [-6.4, -1.0, 0.5, 6], [8.8, -3.4, 0.6, 7],
+    [-13.6, -2.8, 0.7, 7], [12.4, -6.2, 0.7, 7], [6.4, 10.4, 0.8, 8], [-9.2, -0.9, 0.5, 6], [8.8, -3.4, 0.6, 7],
   ];
   const plant = (x: number, z: number, k: number) => {
     const h = 0.18 + r() * 0.22;
     const lean: [number, number, number] = [(r() - 0.5) * 0.3, 0, (r() - 0.5) * 0.3];
-    b.add("foliage", cyl(0.008, 0.01, h, 4), 0x4f8f3a, xf([x, h / 2, z], lean));
+    b.add("foliage", new THREE.CylinderGeometry(0.008, 0.01, h, 3, 1, true), 0x4f8f3a, xf([x, h / 2, z], lean));
     const hc = heads[k % heads.length];
     const hx = x - lean[2] * h * 0.5, hz = z + lean[0] * h * 0.5;
     if (hc === 0xffffff || hc === 0xffd84a) {
-      b.add("foliage", cyl(0.055, 0.055, 0.012, 10), hc, xf([hx, h, hz], lean));
-      b.add("foliage", sph(0.022, 6, 4), hc === 0xffffff ? 0xffc93a : 0xd08a20, xf([hx, h + 0.01, hz]));
+      b.add("foliage", new THREE.CylinderGeometry(0.055, 0.055, 0.012, 7, 1), hc, xf([hx, h, hz], lean));
+      b.add("foliage", sph(0.022, 5, 3), hc === 0xffffff ? 0xffc93a : 0xd08a20, xf([hx, h + 0.01, hz]));
     } else {
-      b.add("foliage", sph(0.045, 7, 5), hc, xf([hx, h + 0.01, hz], [0, 0, 0], [1, 0.75, 1]));
+      b.add("foliage", sph(0.045, 6, 4), hc, xf([hx, h + 0.01, hz], [0, 0, 0], [1, 0.75, 1]));
     }
   };
   for (const [cx, cz, rad, n] of clusters) {
@@ -991,7 +999,7 @@ function buildFlowers(c: BuildCtx): void {
   }
   for (let i = 0; i < 70; i++) {
     const x = (r() - 0.5) * 34, z = (r() - 0.5) * 30 + 1;
-    if (!openGround(x, z, 0.8)) continue;
+    if (!openGround(x, z, 0.8) || (x > -8 && x < 1 && z > -2.4 && z < 3)) continue;
     plant(x, z, Math.floor(r() * 7));
   }
 }
@@ -1072,8 +1080,8 @@ function buildForest(c: BuildCtx): void {
       });
       im.instanceMatrix.needsUpdate = true;
       im.computeBoundingSphere();
-      im.castShadow = cast;
-      im.receiveShadow = true;
+      im.castShadow = false; // perf: trees don't render into the shadow map
+      im.receiveShadow = cast;
       c.dyn.push(im);
     }
   }
@@ -1097,7 +1105,7 @@ export function groundY(x: number, z: number): number {
 }
 
 function buildGround(c: BuildCtx): void {
-  const size = 200, seg = 110;
+  const size = 200, seg = 50;
   const g = new THREE.PlaneGeometry(size, size, seg, seg);
   g.rotateX(-Math.PI / 2);
   const pos = g.attributes.position;
@@ -1109,8 +1117,9 @@ function buildGround(c: BuildCtx): void {
     uv.setXY(i, (x + T / 2) / T, 1 - (z + T / 2) / T);
   }
   g.computeVertexNormals();
+  paint(g, 0xffffff); // white vertex colours: same shader program as the vertex-coloured, textured set materials
   const tex = groundTexture(T);
-  const mat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 1, map: tex ?? undefined });
+  const mat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 1, vertexColors: true, ...(tex ? { map: tex } : {}) });
   if (!tex) mat.color.setHex(0x7fb24a);
   if (tex) {
     tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
@@ -1127,10 +1136,11 @@ function buildGround(c: BuildCtx): void {
 function groundTexture(T: number): THREE.Texture | null {
   if (typeof document === "undefined") return null;
   // Paint the low-frequency layers on a small canvas (cheap), upscale smoothly (free blur), then add fine grain.
-  const L = 512, S = 2048;
+  const L = 512, S = 1024;
   const lo = document.createElement("canvas");
   lo.width = lo.height = L;
-  const ctx = lo.getContext("2d");
+  // CPU-backed canvas: no GPU readback, no canvas filters (both are very slow under SwiftShader)
+  const ctx = lo.getContext("2d", { willReadFrequently: true });
   if (!ctx) return null;
   const px = L / T;
   const X = (x: number) => (x + T / 2) * px;
@@ -1153,7 +1163,6 @@ function groundTexture(T: number): THREE.Texture | null {
   grd.addColorStop(1, "rgba(84,128,48,1)");
   ctx.fillStyle = grd;
   ctx.fillRect(0, 0, L, L);
-  ctx.filter = "blur(3px)";
   // sun-dried worn clearing
   ctx.fillStyle = "rgba(168,172,84,0.35)";
   ctx.beginPath();
@@ -1198,26 +1207,58 @@ function groundTexture(T: number): THREE.Texture | null {
   const cs = creekSamples();
   strokePath(cs, 2.8, "rgba(80,118,50,0.7)");
   strokePath(cs, 1.7, "rgba(140,118,78,0.9)");
-  ctx.filter = "none";
-  const cv = document.createElement("canvas");
-  cv.width = cv.height = S;
-  const big = cv.getContext("2d")!;
-  big.imageSmoothingEnabled = true;
-  big.imageSmoothingQuality = "high";
-  big.drawImage(lo, 0, 0, S, S);
-  // fine grain: blade-like speckles (grass detail near the camera)
-  const img = big.getImageData(0, 0, S, S);
-  const d = img.data;
-  for (let i = 0; i < d.length; i += 4) {
-    const n = 1 + (r() - 0.5) * 0.2;
-    d[i] = Math.min(255, d[i] * n);
-    d[i + 1] = Math.min(255, d[i + 1] * n);
-    d[i + 2] = Math.min(255, d[i + 2] * n);
+  // soften (separable box blur, radius 2) and upsample bilinearly with fine grain into a DataTexture
+  const src = ctx.getImageData(0, 0, L, L).data;
+  const tmp = new Float32Array(L * L * 3);
+  const sm = new Float32Array(L * L * 3);
+  const R = 2;
+  for (let y = 0; y < L; y++) for (let x = 0; x < L; x++) {
+    let r0 = 0, g0 = 0, b0 = 0, n = 0;
+    for (let k = -R; k <= R; k++) {
+      const xx = Math.min(L - 1, Math.max(0, x + k));
+      const i = (y * L + xx) * 4;
+      r0 += src[i]; g0 += src[i + 1]; b0 += src[i + 2]; n++;
+    }
+    const o = (y * L + x) * 3;
+    tmp[o] = r0 / n; tmp[o + 1] = g0 / n; tmp[o + 2] = b0 / n;
   }
-  big.putImageData(img, 0, 0);
-  const tex = new THREE.CanvasTexture(cv);
+  for (let y = 0; y < L; y++) for (let x = 0; x < L; x++) {
+    let r0 = 0, g0 = 0, b0 = 0, n = 0;
+    for (let k = -R; k <= R; k++) {
+      const yy = Math.min(L - 1, Math.max(0, y + k));
+      const i = (yy * L + x) * 3;
+      r0 += tmp[i]; g0 += tmp[i + 1]; b0 += tmp[i + 2]; n++;
+    }
+    const o = (y * L + x) * 3;
+    sm[o] = r0 / n; sm[o + 1] = g0 / n; sm[o + 2] = b0 / n;
+  }
+  const out = new Uint8Array(S * S * 4);
+  const f = L / S;
+  for (let y = 0; y < S; y++) {
+    const sy = Math.min(L - 1.001, y * f);
+    const y0 = Math.floor(sy), ty = sy - y0;
+    for (let x = 0; x < S; x++) {
+      const sx = Math.min(L - 1.001, x * f);
+      const x0 = Math.floor(sx), tx = sx - x0;
+      const i00 = (y0 * L + x0) * 3, i10 = i00 + 3, i01 = i00 + L * 3, i11 = i01 + 3;
+      const nz = 1 + (r() - 0.5) * 0.2;
+      // DataTexture rows go bottom-up (flipY is not applied): row y=0 is v=0 (south edge, z=+T/2)
+      const o = ((S - 1 - y) * S + x) * 4;
+      for (let c = 0; c < 3; c++) {
+        const top = sm[i00 + c] * (1 - tx) + sm[i10 + c] * tx;
+        const bot = sm[i01 + c] * (1 - tx) + sm[i11 + c] * tx;
+        out[o + c] = Math.min(255, (top * (1 - ty) + bot * ty) * nz);
+      }
+      out[o + 3] = 255;
+    }
+  }
+  const tex = new THREE.DataTexture(out, S, S, THREE.RGBAFormat);
   tex.colorSpace = THREE.SRGBColorSpace;
+  tex.magFilter = THREE.LinearFilter;
+  tex.minFilter = THREE.LinearMipmapLinearFilter;
+  tex.generateMipmaps = true;
   tex.anisotropy = 8;
+  tex.needsUpdate = true;
   return tex;
 }
 
@@ -1226,27 +1267,21 @@ function buildGrass(c: BuildCtx): void {
   const pos: number[] = [], col: number[] = [], idx: number[] = [];
   const base = new THREE.Color(0x5f9f36), tip = new THREE.Color(0xa9dc62), cc = new THREE.Color();
   let v = 0;
-  const blades = 9;
+  // one triangle per blade (perf: ~6 triangles per tuft)
+  const blades = 6;
   for (let b = 0; b < blades; b++) {
     const a = (b / blades) * Math.PI * 2 + (b % 2) * 0.4;
     const dx = Math.cos(a), dz = Math.sin(a);
-    const w = 0.09;
-    const hgt = 0.55 + 0.45 * ((b * 37) % 7) / 7;
-    const segs = 2;
-    for (let s2 = 0; s2 <= segs; s2++) {
-      const t = s2 / segs;
-      const bend = 0.12 + t * t * 0.45;
-      const y = t * hgt;
-      const ww = w * (1 - t * 0.85);
-      cc.copy(base).lerp(tip, t);
-      pos.push(dx * bend * t - dz * ww, y, dz * bend * t + dx * ww, dx * bend * t + dz * ww, y, dz * bend * t - dx * ww);
-      col.push(cc.r, cc.g, cc.b, cc.r, cc.g, cc.b);
-    }
-    for (let s2 = 0; s2 < segs; s2++) {
-      const o = v + s2 * 2;
-      idx.push(o, o + 1, o + 2, o + 1, o + 3, o + 2);
-    }
-    v += (segs + 1) * 2;
+    const w = 0.1;
+    const hgt = 0.6 + 0.4 * ((b * 37) % 7) / 7;
+    const lean = 0.35 + 0.2 * (b % 3);
+    pos.push(dx * 0.05 - dz * w, 0, dz * 0.05 + dx * w, dx * 0.05 + dz * w, 0, dz * 0.05 - dx * w, dx * lean, hgt, dz * lean);
+    cc.copy(base);
+    col.push(cc.r, cc.g, cc.b, cc.r, cc.g, cc.b);
+    cc.copy(tip);
+    col.push(cc.r, cc.g, cc.b);
+    idx.push(v, v + 1, v + 2);
+    v += 3;
   }
   const g = new THREE.BufferGeometry();
   g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
@@ -1256,13 +1291,14 @@ function buildGrass(c: BuildCtx): void {
   const n = new Float32Array(pos.length);
   for (let i = 0; i < n.length; i += 3) n[i + 1] = 1;
   g.setAttribute("normal", new THREE.BufferAttribute(n, 3));
-  const mat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, side: THREE.DoubleSide });
+  // FrontSide: blades fan in all directions, so about half face the camera; shares the forest's shader program
+  const mat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95 });
   mat.name = "set:grass";
   const r = rng(808);
   const mats: THREE.Matrix4[] = [];
-  for (let i = 0; i < 16000 && mats.length < 5200; i++) {
+  for (let i = 0; i < 16000 && mats.length < 3600; i++) {
     const x = (r() - 0.5) * 46, z = (r() - 0.5) * 44 + 3;
-    const s = 0.09 + r() * 0.12;
+    const s = 0.12 + r() * 0.14;
     const rot = r() * Math.PI * 2;
     if (!openGround(x, z, 0.1)) continue;
     // clumpy: denser along edges, fences, house, trees; sparse in the worn clearing and on the path
@@ -1332,7 +1368,12 @@ export interface BuildSetOptions {
   merge?: boolean;
   /** elements NOT to build procedurally (e.g. replaced by a glTF via the manifest) */
   skip?: readonly SetElementId[];
+  /** if given, filled with build time (ms) per element + "merge" */
+  timings?: Record<string, number>;
 }
+
+/** Elements whose static geometry renders into the shadow map (perf: everything else only receives). */
+export const SHADOW_CASTERS: ReadonlySet<SetElementId> = new Set<SetElementId>(["house", "van", "oak_swing", "table", "bench", "beehive", "woodpile", "samovar", "big_pine"]);
 
 export function buildBearsYard(mats: LookMaterials, opts: BuildSetOptions = {}): SetHandle {
   const merge = opts.merge ?? true;
@@ -1341,6 +1382,7 @@ export function buildBearsYard(mats: LookMaterials, opts: BuildSetOptions = {}):
   root.name = "set:bears_yard";
   const extra: SetExtras = { disposables: [] };
   const global = new GeoBag();
+  const globalNoCast = new GeoBag();
   const elements = {} as Record<SetElementId, THREE.Group>;
   for (const id of SET_ELEMENT_IDS) {
     const def = SET_ELEMENTS[id];
@@ -1353,25 +1395,30 @@ export function buildBearsYard(mats: LookMaterials, opts: BuildSetOptions = {}):
     elements[id] = anchor;
     if (skip.has(id)) continue;
     const ctx: BuildCtx = { bag: new GeoBag(), dyn: [], mats, extra };
+    const t0 = performance.now();
     BUILDERS[id](ctx);
     for (const o of ctx.dyn) anchor.add(o);
     if (ctx.bag.parts.size) {
+      const cast = SHADOW_CASTERS.has(id);
       if (merge) {
         anchor.updateMatrix();
-        global.absorb(ctx.bag, anchor.matrix);
+        (cast ? global : globalNoCast).absorb(ctx.bag, anchor.matrix);
         anchor.userData.merged = true;
       } else {
-        anchor.add(ctx.bag.build(mats, `set:${id}:static`));
+        anchor.add(ctx.bag.build(mats, `set:${id}:static`, cast ? {} : { cast: false }));
       }
     }
     ctx.bag.dispose();
+    if (opts.timings) opts.timings[id] = Math.round(performance.now() - t0);
   }
+  const tm = performance.now();
   if (merge) {
-    const merged = global.build(mats, "set:merged_static");
-    // ground-level water receives but doesn't cast
-    root.add(merged);
+    root.add(global.build(mats, "set:merged_static"));
+    root.add(globalNoCast.build(mats, "set:merged_static_nocast", { cast: false }));
   }
   global.dispose();
+  globalNoCast.dispose();
+  if (opts.timings) opts.timings.merge = Math.round(performance.now() - tm);
   root.updateMatrixWorld(true);
 
   const smokeMat = extra.smoke?.material as THREE.ShaderMaterial | undefined;

@@ -3,7 +3,7 @@
 // across paragraphs (CarryAudio), ducking under dialogue. Gains are SOURCE loudness (the engine attenuates by
 // distance); pans are estimates relative to the planned camera.
 import { surfaceAt } from "../shared/bible/set";
-import { GRAMMAR, STRIDE, type FoleyRule } from "../shared/grammar";
+import { GRAMMAR, SPEEDS, STRIDE, STRIDE_SCALE, WALK_TO_RUN_SPEED_FACTOR, type FoleyRule, type Gait } from "../shared/grammar";
 import type {
   ActorClip, ActorId, Ambience, AmbienceCue, BeatScript, CameraCue, DialogueCue, DuckingCue, Emote, EmoteCue,
   FoleyCue, MusicMood, MusicTrackCue, SfxCue, SfxId, TimeOfDay, Vec2,
@@ -86,6 +86,14 @@ function clipPosAt(c: ActorClip, t: number): Vec2 {
   return p.from ?? p.to ?? [0, 0];
 }
 
+/** Gait of a locomotion clip (matches the engine's leg cycle): run_to/chase run, tiptoe_to tiptoes, the rest walk —
+ *  but a walk hurried past 1.7× the natural walk speed becomes a run. */
+export function gaitFor(actor: ActorId, verb: string, speed: number): Gait {
+  if (verb === "run_to" || verb === "chase") return "run";
+  if (verb === "tiptoe_to") return "tiptoe";
+  return speed > SPEEDS[actor].walk_to * WALK_TO_RUN_SPEED_FACTOR ? "run" : "walk";
+}
+
 /** Footsteps / foley for one clip from its verb's FoleyRules. */
 export function foleyForClip(actor: ActorId, c: ActorClip, camera: CameraCue[]): FoleyCue[] {
   if (c.params.ambient || c.params.posture === "carried" || c.params.posture === "offstage") return [];
@@ -100,7 +108,8 @@ export function foleyForClip(actor: ActorId, c: ActorClip, camera: CameraCue[]):
       const path = c.params.path;
       if (path && path.length > 1) {
         const len = pathLength(path);
-        const steps = Math.max(1, Math.round(len / STRIDE[actor]));
+        const stride = STRIDE[actor] * STRIDE_SCALE[gaitFor(actor, c.verb, len / Math.max(1e-6, c.dur))];
+        const steps = Math.max(1, Math.round(len / stride));
         for (let k = 0; k < steps; k++) {
           const f = (k + 0.5) / steps;
           const pos = pointAlong(path, f * len);

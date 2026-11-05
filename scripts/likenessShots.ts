@@ -1,6 +1,8 @@
 // Likeness screenshots (spec §7.3 step 4). Usage: npx tsx scripts/likenessShots.ts [--pass N] [--char masha|bear]
 // Starts (or reuses) a vite dev server on port 5180, renders tools/likeness.html in headless Chromium and saves
 // docs/likeness/pass<N>-<char>-<shot>.png (front, three-quarter, face close-up, black silhouette).
+// Motion filmstrips (motion feel): --motion <fixture>:<char>:<t0>:<dt>:<n> (repeatable) renders evaluate() frames of a
+// compiled fixture episode → docs/likeness/pass<N>-motion-f<fixture>-<char>-<t0>.png (stills are skipped).
 import { chromium } from "@playwright/test";
 import { spawn, type ChildProcess } from "node:child_process";
 import { mkdirSync } from "node:fs";
@@ -14,6 +16,7 @@ const argOf = (k: string): string | undefined => {
 };
 const pass = Number(argOf("--pass") ?? 1);
 const chars = argOf("--char") ? [argOf("--char") as string] : ["masha", "bear"];
+const motions = args.flatMap((a, i) => (a === "--motion" && args[i + 1] ? [args[i + 1]] : []));
 const base = `http://127.0.0.1:${PORT}/tools/likeness.html`;
 
 const SHOTS: Array<{ name: string; query: string }> = [
@@ -51,7 +54,19 @@ async function main(): Promise<void> {
   try {
     const page = await browser.newPage({ viewport: { width: 800, height: 800 } });
     page.on("pageerror", (e) => console.error("pageerror:", e.message));
-    for (const c of chars) {
+    page.on("console", (m) => {
+      if (motions.length) console.log("page:", m.text());
+    });
+    for (const spec of motions) {
+      const [f, c, t0, dt, n] = spec.split(":");
+      await page.setViewportSize({ width: 1600, height: 300 * Math.ceil(Number(n || 12) / 4) });
+      await page.goto(`${base}?motion=${f}&char=${c}&t0=${t0 ?? 0}&dt=${dt ?? ""}&n=${n ?? 12}&label=0`.replace("&dt=&", "&"));
+      await page.waitForFunction(() => (window as unknown as { __ready?: boolean }).__ready === true, null, { timeout: 120_000 });
+      const file = `${outDir}/pass${pass}-motion-f${f}-${c}-${t0 ?? 0}.png`;
+      await page.screenshot({ path: file });
+      console.log("saved", file);
+    }
+    for (const c of motions.length ? [] : chars) {
       for (const s of SHOTS) {
         await page.goto(`${base}?char=${c}&${s.query}&label=0`);
         await page.waitForFunction(() => (window as unknown as { __ready?: boolean }).__ready === true, null, { timeout: 90_000 });

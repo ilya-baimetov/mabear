@@ -72,6 +72,8 @@ export interface FaceConfig {
     lip: string;
     teeth: string;
     tongue: string;
+    /** character signature: one-sided smile added to every emotion (Masha's knowing smirk); 0 = symmetric */
+    smirk?: number;
   };
 }
 
@@ -109,7 +111,7 @@ const M = (w: number, smile: number, open: number, round = 0, teeth = 0, asym = 
 
 export const EMOTION_PRESETS: Record<Emotion, EmotionPreset> = {
   neutral: { browL: 0, browR: 0, tilt: 0, lid: 0, mouth: M(0.85, 0.35, 0) },
-  happy: { browL: 0.25, browR: 0.25, tilt: 0.1, lid: 0.05, mouth: M(1.05, 0.9, 0.4, 0, 0.7) },
+  happy: { browL: 0.25, browR: 0.25, tilt: 0.1, lid: 0.05, mouth: M(1.2, 0.9, 0.5, 0, 0.7) },
   excited: { browL: 0.55, browR: 0.55, tilt: 0.05, lid: -0.25, mouth: M(1.1, 0.8, 0.75, 0.15, 0.6) },
   mischievous: { browL: 0.35, browR: -0.2, tilt: -0.3, lid: 0.3, mouth: M(0.95, 0.65, 0.06, 0, 0, 0.6) },
   curious: { browL: 0.5, browR: 0.1, tilt: 0.15, lid: -0.15, mouth: M(0.6, 0.15, 0.2, 0.75) },
@@ -433,6 +435,7 @@ export function buildFace(cfg: FaceConfig, mats: MaterialSet): FaceRig {
   function update(p: FaceParams, sleeping: boolean): void {
     const pre = EMOTION_PRESETS[p.emotion] ?? EMOTION_PRESETS.neutral;
     const target = mouthShapeFor(p.emotion, p.viseme, p.visemeWeight);
+    target.asym += (Mo.smirk ?? 0) * (1 - Math.min(1, Math.max(0, p.visemeWeight)));
     const k = first ? 1 : 0.35;
     first = false;
     cur.browL = lerp(cur.browL, pre.browL, k);

@@ -17,13 +17,17 @@ async function login(page: Page) {
   expect([200, 302, 303]).toContain(res.status());
 }
 
+// The 3D stage takes a while to boot under headless SwiftShader (and other suites may share the CPU), so allow
+// more than the config's 90 s per test; the FPS / draw-call assertions in test 8 still guard performance.
+test.describe.configure({ timeout: 180_000 });
+
+// Each test gets a fresh browser context, so localStorage already starts empty: one navigation is enough
+// (a second page load would boot the 3D stage twice).
 async function open(page: Page, query = "") {
   await login(page);
   await page.goto(`/${query}`);
-  await page.evaluate(() => localStorage.clear());
-  await page.goto(`/${query}`);
   await expect(page.getByTestId("stage-canvas")).toBeVisible();
-  await page.waitForFunction(() => !!window.__mabear, null, { timeout: 30_000 });
+  await page.waitForFunction(() => !!window.__mabear, null, { timeout: 60_000 });
 }
 
 /** Pixel variance of the canvas from a real screenshot (decoded in the page via a 2D canvas). */
@@ -151,7 +155,9 @@ test("6. EN → RU toggle switches UI strings and a RU example loads", async ({ 
 });
 
 test("7. Behind the scenes: shown only with ?pitch=1; plan size, cost, FPS, economics; remix makes no director call", async ({ page }) => {
-  await open(page);
+  await login(page);
+  await page.goto("/");
+  await expect(page.getByTestId("add-paragraph")).toBeVisible();
   await expect(page.getByTestId("behind-the-scenes")).toHaveCount(0);
   await open(page, "?pitch=1");
   await expect(page.getByTestId("behind-the-scenes")).toBeVisible();

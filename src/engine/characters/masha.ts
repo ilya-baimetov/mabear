@@ -6,7 +6,7 @@ import type { CharacterRig } from "../api";
 import { buildFace, type FaceConfig } from "./face";
 import {
   attach, blob, buildSkeleton, bump, col, dir, fabricMaterial, lathe, limb, makeRig, materialSet, mergeSame,
-  paintVertices, skinMaterial, smoothstep, type SkeletonProportions,
+  paintVertices, skinMaterial, smoothstep, welded, type SkeletonProportions,
 } from "./rig";
 
 /** All colours and proportions in one object (easy tuning; production swap = a glTF via the asset manifest). */
@@ -20,21 +20,21 @@ export const MASHA_LOOK = {
     kerchiefSheen: "#F07DB8",
     dress: "#B8327A",
     dressSheen: "#F07DB8",
-    hemTrim: "#D9506A",
+    hemTrim: "#E8643C",
     sleeves: "#CFCDE8",
     sleevesSheen: "#FFFFFF",
     stockings: "#F2E2EA",
     shoes: "#7A2A5C",
-    soles: "#D99A4A",
-    hair: "#E2AE62",
-    hairDark: "#B57A3A",
-    iris: "#4E9A4A",
-    irisRim: "#1F4A24",
+    soles: "#E3B04A",
+    hair: "#DDAA68",
+    hairDark: "#A87440",
+    iris: "#5CB052",
+    irisRim: "#22542A",
     sclera: "#FFFFFF",
-    brows: "#7A4A2A",
+    brows: "#A0683F",
     lash: "#3A2018",
     mouthInterior: "#6A1E26",
-    lip: "#B85A5A",
+    lip: "#A04646",
     teeth: "#FFF8F0",
     tongue: "#E57A7A",
   },
@@ -58,16 +58,16 @@ export const MASHA_LOOK = {
     /** skull sphere centre in Head-bone space and radius */
     center: [0, 0.158, 0.008] as [number, number, number],
     radius: 0.168,
-    cheekBulge: 0.075,
+    cheekBulge: 0.11,
     /** kerchief shell radius factor, opening (elevation top/bottom, azimuth half width; radians) */
     kerchief: 1.1,
-    openTop: 0.8,
+    openTop: 0.7,
     openBottom: -1.02,
-    openHalfAz: 1.0,
+    openHalfAz: 1.08,
     /** how far the kerchief's cape falls below the skull centre at the back/sides (m) */
     capeDrop: 0.26,
   },
-  eyes: { x: 0.053, y: 0.134, r: 0.045, iris: 0.63, pupil: 0.47 },
+  eyes: { x: 0.059, y: 0.132, r: 0.04, iris: 0.72, pupil: 0.38 },
 } as const;
 
 type V3 = [number, number, number];
@@ -101,8 +101,8 @@ export function buildMasha(): CharacterRig {
   // ---- head (sculpted sphere: chubby cheeks, small chin) + nose button, cheek blush in vertex colours
   const H = L.head;
   const hc = new THREE.Vector3(...H.center);
-  const cheekL = dir(0.62, -0.4, 0.68);
-  const cheekR = dir(-0.62, -0.4, 0.68);
+  const cheekL = dir(0.64, -0.45, 0.64);
+  const cheekR = dir(-0.64, -0.45, 0.64);
   const chin = dir(0, -0.85, 0.5);
   const jaw = dir(0, -1, -0.1);
   const headR = (d: THREE.Vector3): number =>
@@ -119,14 +119,14 @@ export function buildMasha(): CharacterRig {
   const cCheek = col(C.cheeks);
   paintVertices(headGeom, (p, out) => {
     const d = p.clone().sub(hc).normalize();
-    const blush = Math.max(bump(d, dir(0.55, -0.32, 0.77), 0.2), bump(d, dir(-0.55, -0.32, 0.77), 0.2));
+    const blush = Math.max(bump(d, dir(0.58, -0.3, 0.76), 0.24), bump(d, dir(-0.58, -0.3, 0.76), 0.24));
     out.copy(cSkin).lerp(cCheek, smoothstep(0.04, 0.8, blush));
   });
   // nose: a small soft button
   const noseDir = dir(0, -0.24, 1);
   const noseAt = noseDir.clone().multiplyScalar(headR(noseDir) * 0.975).add(hc);
   const noseGeom = blob(3, (d, out) => {
-    out.set(d.x * 0.0145, d.y * 0.0125, d.z * 0.0125).add(noseAt);
+    out.set(d.x * 0.017, d.y * 0.0145, d.z * 0.014).add(noseAt);
   });
   paintVertices(noseGeom, (_p, out) => out.copy(cSkin).lerp(cCheek, 0.05));
   const headMesh = attach(B.Head, mergeSame([headGeom, noseGeom]), skin, "head");
@@ -164,9 +164,10 @@ export function buildMasha(): CharacterRig {
       for (const c of [-0.6, -0.26, 0.08, 0.42, 0.72]) {
         const off = ax - c;
         const w = off < 0 ? 0.3 : 0.17; // asymmetric locks: swept toward the character's left
-        tip = Math.max(tip, Math.pow(Math.max(0, 1 - Math.abs(off) / w), 1.25));
+        const u = Math.min(1, Math.abs(off) / w);
+        tip = Math.max(tip, Math.pow(Math.cos((u * Math.PI) / 2), 1.6)); // rounded lock tips
       }
-      const edge = 0.52 + 0.22 * a * a - 0.17 * tip;
+      const edge = 0.47 + 0.24 * a * a - 0.15 * tip;
       for (let j = 0; j <= rows; j++) {
         const v = j / rows;
         const ay = edge + (top - edge) * v;
@@ -204,42 +205,62 @@ export function buildMasha(): CharacterRig {
     const ay0 = (H.openTop + H.openBottom) / 2;
     const Bv = (H.openTop - H.openBottom) / 2;
     const A = H.openHalfAz;
-    const shell = blob(16, (d, out) => {
-      let ax = Math.atan2(d.x, d.z);
-      let ay = Math.asin(THREE.MathUtils.clamp(d.y, -1, 1));
-      let k = Math.hypot(ax / A, (ay - ay0) / Bv);
-      if (k < 1) {
-        // squeeze the inside of the opening into a thin band just outside it (keeps vertex order: no folds)
-        const kk = Math.max(k, 1e-3);
-        const k2 = 1 + 0.015 * kk;
-        ax = (ax / kk) * k2;
-        ay = ay0 + ((ay - ay0) / kk) * k2;
-        k = k2;
-      }
+    const shapeAt = (ax: number, ay: number, k: number, out: THREE.Vector3): void => {
       const dd = new THREE.Vector3(Math.cos(ay) * Math.sin(ax), Math.sin(ay), Math.cos(ay) * Math.cos(ax));
-      // tuck the rim toward the skin, with a rolled lip just outside it
+      // the rim dives just under the skin (edge reads as fabric lying on the face), rolled lip just outside it
       const tuck = smoothstep(1.0, 1.16, k);
       const roll = Math.exp(-(((k - 1.09) / 0.1) ** 2));
-      // inside the squeezed band the shell dives just under the skin, so the edge reads as fabric on the face
-      const skinR = headR(dd) * (0.985 + 0.027 * smoothstep(1.0, 1.04, k));
+      const skinR = headR(dd) * (0.985 + 0.027 * smoothstep(1.0, 1.05, k));
       let r = skinR + (Rk - skinR) * tuck + 0.011 * roll;
-      // soft puff on the crown and over the ears
+      // flatter crown, soft fullness low over the ears
       r += -0.012 * bump(dd, dir(0, 1, -0.1), 0.55) + 0.01 * (bump(dd, dir(1, -0.6, 0.0), 0.6) + bump(dd, dir(-1, -0.6, 0.0), 0.6));
       out.copy(dd).multiplyScalar(r).add(hc);
       // forward peak over the forehead
       const peak = Math.exp(-((ax / 0.4) ** 2)) * Math.exp(-(((ay - (H.openTop + 0.18)) / 0.22) ** 2));
       out.z += 0.022 * peak;
       out.y += 0.01 * peak;
-      // drape: back and sides fall to the shoulders and flare (bell silhouette)
-      // (the front under the chin keeps the head shape; sides and back become a cape over the shoulders)
+      // drape: sides and back become a bell cape over the shoulders; the front under the chin keeps the head shape
       if (ay < -0.05) {
         const t = (-0.05 - ay) / (Math.PI / 2 - 0.05); // 0 at the cheek line .. 1 at the bottom
         const w = smoothstep(A * 0.85, A * 1.45, Math.abs(ax)) * smoothstep(0, 0.3, t);
-        const bh = Rk * (1.0 + 0.3 * t) * Math.sqrt(Math.max(0, 1 - Math.pow(t, 8)));
-        const bell = new THREE.Vector3(hc.x + Math.sin(ax) * bh * 1.04, hc.y - 0.01 - t * L.head.capeDrop, hc.z + Math.cos(ax) * bh * 0.9);
+        const bh = Rk * (1.0 + 0.45 * t) * Math.sqrt(Math.max(0, 1 - Math.pow(t, 8)));
+        const backness = 0.5 - 0.5 * Math.cos(ax); // the cape comes to a soft point at the back
+        const drop = t * L.head.capeDrop * (0.9 + 0.25 * backness);
+        const bell = new THREE.Vector3(hc.x + Math.sin(ax) * bh * 1.04, hc.y - 0.01 - drop, hc.z + Math.cos(ax) * bh * 0.9);
         out.lerp(bell, w);
       }
-    });
+    };
+    // icosphere shell; triangles wholly inside the face opening are dropped, boundary vertices snap onto the oval
+    const shell = welded(new THREE.IcosahedronGeometry(1, 16));
+    {
+      const pos = shell.getAttribute("position") as THREE.BufferAttribute;
+      const inside: boolean[] = [];
+      const d = new THREE.Vector3();
+      const o = new THREE.Vector3();
+      for (let i = 0; i < pos.count; i++) {
+        d.fromBufferAttribute(pos, i).normalize();
+        let ax = Math.atan2(d.x, d.z);
+        let ay = Math.asin(THREE.MathUtils.clamp(d.y, -1, 1));
+        let k = Math.hypot(ax / A, (ay - ay0) / Bv);
+        inside.push(k < 1);
+        if (k < 1) {
+          const kk = Math.max(k, 1e-3);
+          ax /= kk;
+          ay = ay0 + (ay - ay0) / kk;
+          k = 1;
+        }
+        shapeAt(ax, ay, k, o);
+        pos.setXYZ(i, o.x, o.y, o.z);
+      }
+      const src = shell.index!.array;
+      const keep: number[] = [];
+      for (let t = 0; t < src.length; t += 3) {
+        if (inside[src[t]] && inside[src[t + 1]] && inside[src[t + 2]]) continue;
+        keep.push(src[t], src[t + 1], src[t + 2]);
+      }
+      shell.setIndex(keep);
+      shell.computeVertexNormals();
+    }
     paintVertices(shell, (p, out) => {
       // gentle fold shading (darker in the drape) — fabric sheen does the rest
       const s = 1 - 0.12 * smoothstep(0.0, -0.12, p.y - hc.y + 0.05);
@@ -289,22 +310,23 @@ export function buildMasha(): CharacterRig {
       toeOut: -0.2,
       lidColor: C.skin,
       lashColor: C.lash,
-      lidOpen: -0.8,
+      lidOpen: -0.66,
       lidCap: 1.25,
       lashFlick: true,
     },
-    brows: { color: C.brows, y: 0.06, dx: 0.004, length: 0.042, thickness: 0.0034, arch: 0.0065, range: 0.011 },
+    brows: { color: C.brows, y: 0.057, dx: 0.003, length: 0.04, thickness: 0.003, arch: 0.006, range: 0.011 },
     mouth: {
       surface: { center: H.center as V3, radius: H.radius, zAt: skinZ },
-      y: H.center[1] - 0.09,
-      halfWidth: 0.028,
+      y: H.center[1] - 0.084,
+      halfWidth: 0.031,
       height: 0.042,
-      line: 0.0036,
-      curve: 0.008,
+      line: 0.0052,
+      curve: 0.01,
       interior: C.mouthInterior,
       lip: C.lip,
       teeth: C.teeth,
       tongue: C.tongue,
+      smirk: 0.35,
     },
   };
   const face = buildFace(faceCfg, mats);
@@ -329,9 +351,15 @@ export function buildMasha(): CharacterRig {
         [0.05, 0.135],
         [0.0, 0.14],
       ],
-      { sq: 0.82, segments: 24, samples: 16 },
+      { sq: 0.82, segments: 32, samples: 22 },
     );
-    paintVertices(g, (_p, out) => out.copy(cDress));
+    // the pale blouse shows in a rounded V at the neckline (reference: white shape under the knot)
+    const cBlouse = col(C.sleeves);
+    paintVertices(g, (p, out) => {
+      const phi = Math.atan2(p.x, p.z);
+      const v = smoothstep(-0.005, 0.005, p.y - 0.104 - 0.12 * Math.abs(phi)) * smoothstep(0.2, 0.5, p.z / 0.1);
+      out.copy(cDress).lerp(cBlouse, v);
+    });
     attach(chest, g, fabric, "bodice");
     geoms.push(g);
   }
@@ -342,10 +370,12 @@ export function buildMasha(): CharacterRig {
   {
     const g = lathe(
       [
-        [0.17, -0.285],
-        [0.19, -0.29],
-        [0.2, -0.282],
-        [0.19, -0.265],
+        [0.178, -0.315],
+        [0.198, -0.32],
+        [0.207, -0.312],
+        [0.198, -0.293],
+        [0.188, -0.272],
+        [0.175, -0.235],
         [0.158, -0.2],
         [0.125, -0.12],
         [0.103, -0.04],
@@ -356,13 +386,13 @@ export function buildMasha(): CharacterRig {
       {
         sq: 0.86,
         segments: 36,
-        samples: 22,
+        samples: 30,
         ripple: (phi, y) => 1 + 0.04 * smoothstep(-0.06, -0.28, y) * Math.sin(phi * 9),
       },
     );
     paintVertices(g, (p, out) => {
       out.copy(cDress);
-      const band = Math.exp(-(((p.y + 0.262) / 0.007) ** 2)) + 0.7 * Math.exp(-(((p.y + 0.243) / 0.004) ** 2));
+      const band = Math.exp(-(((p.y + 0.292) / 0.006) ** 2)) + Math.exp(-(((p.y + 0.273) / 0.005) ** 2));
       out.lerp(cTrim, Math.min(1, band));
     });
     attach(skirt, g, fabric, "skirt");
@@ -404,9 +434,9 @@ export function buildMasha(): CharacterRig {
     attach(B[`${side}Leg`], sh, stocking, `${side}Shin`);
     const sg = blob(4, (d, out) => {
       const fz = (d.z + 1) / 2; // 0 heel .. 1 toe
-      const w = 0.036 * (0.85 + 0.3 * Math.sin(Math.PI * Math.min(1, fz * 1.1)));
+      const w = 0.041 * (0.85 + 0.3 * Math.sin(Math.PI * Math.min(1, fz * 1.1)));
       const yy = d.y < -0.3 ? -0.3 - (d.y + 0.3) * 0.25 : d.y; // flat-ish sole
-      out.set(d.x * w, -0.022 + yy * 0.03 * (1 - 0.3 * fz), 0.024 + d.z * 0.064);
+      out.set(d.x * w, -0.02 + yy * 0.032 * (1 - 0.3 * fz), 0.026 + d.z * 0.072);
     });
     paintVertices(sg, (p, out) => out.copy(cShoe).lerp(cSole, smoothstep(-0.041, -0.046, p.y)));
     attach(B[`${side}Foot`], sg, shoe, `${side}Shoe`);
@@ -428,8 +458,9 @@ export function buildMasha(): CharacterRig {
         fwd = Math.max(fwd, down.z);
         side += down.x;
       }
-      const sw = frame.secondary.sway;
-      skirt.rotation.set(-0.55 * Math.max(0, fwd) - sw * 0.05 * Math.cos(phase * 0.7), 0, side * 0.25 + sw * 0.07 * Math.sin(phase));
+      // sway is an oscillating driver in 0..1 (0.5 = rest) produced by evaluate(); the hem swings with it
+      const sw = (frame.secondary.sway - 0.5) * 2;
+      skirt.rotation.set(-0.55 * Math.max(0, fwd) - 0.035 * Math.abs(sw) + 0.01 * Math.sin(phase), 0, side * 0.25 + 0.08 * sw);
       const flare = 1 + 0.25 * Math.max(0, fwd);
       skirt.scale.set(1, 1 / Math.sqrt(flare), flare);
     },

@@ -342,11 +342,11 @@ export function fabricMaterial(color: string, sheenColor: string, vertexColors =
   return new THREE.MeshPhysicalMaterial({
     color: vertexColors ? 0xffffff : col(color),
     vertexColors,
-    roughness: 0.88,
+    roughness: 0.93,
     metalness: 0,
-    sheen: 1,
+    sheen: 0.9,
     sheenColor: col(sheenColor),
-    sheenRoughness: 0.55,
+    sheenRoughness: 0.82, // soft felted fabric rather than satin
   });
 }
 

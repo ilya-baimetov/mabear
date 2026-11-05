@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useOutsideClose } from "../useOutsideClose";
 import { store, type Paragraph } from "../store";
 import { useStore, useStrings } from "../useStore";
 import { playback } from "../playback";
 import { RemixButtons } from "./RemixButtons";
 
-const CHIP: Record<Paragraph["status"], string> = { draft: "✏️", directing: "⏳", ready: "✅", adjusted: "⚠️", error: "❌" };
+const CHIP: Record<Paragraph["status"], string> = { draft: "✏️", directing: "⏳", ready: "✅", adjusted: "✨", error: "⚠️" };
 const DEBOUNCE_MS = 1500;
 
 export function ParagraphCard({ p, index, active, selected, count }: { p: Paragraph; index: number; active: boolean; selected: boolean; count: number }) {
@@ -13,6 +14,7 @@ export function ParagraphCard({ p, index, active, selected, count }: { p: Paragr
   const ta = useRef<HTMLTextAreaElement>(null);
   const timer = useRef<number | null>(null);
   const [menu, setMenu] = useState(false);
+  const menuRef = useOutsideClose(menu, useCallback(() => setMenu(false), []));
   const v = p.versions[p.current];
   const si = s.segmentIds.indexOf(p.id);
   const result = si >= 0 ? s.results[si] : null;
@@ -50,7 +52,10 @@ export function ParagraphCard({ p, index, active, selected, count }: { p: Paragr
       data-status={p.status}
       data-version={v?.version ?? 0}
       data-active={active ? "1" : "0"}
-      onClick={() => store.select(p.id)}
+      onClick={(e) => {
+        store.select(p.id);
+        if (!(e.target as HTMLElement).closest("textarea,button,.menu,input") && store.segmentRange(p.id)) playback.playParagraph(p.id);
+      }}
     >
       <div className="card-head">
         <button className="idx" title="▶" onClick={(e) => { e.stopPropagation(); store.select(p.id); playback.playParagraph(p.id); }}>{index + 1}</button>
@@ -59,7 +64,7 @@ export function ParagraphCard({ p, index, active, selected, count }: { p: Paragr
         </span>
         {dur > 0 && <span className="dur">{dur.toFixed(1)}{t.seconds}</span>}
         <span className="ver" data-testid="version">{t.version}{v?.version ?? 0}</span>
-        <div className="card-menu">
+        <div className="card-menu" ref={menuRef}>
           <button className="btn icon small" data-testid="card-menu" onClick={(e) => { e.stopPropagation(); setMenu(!menu); }}>⋯</button>
           {menu && (
             <div className="menu right" onClick={(e) => e.stopPropagation()}>
@@ -106,7 +111,7 @@ export function ParagraphCard({ p, index, active, selected, count }: { p: Paragr
       {v && (
         <div className="card-foot">
           <div className="audio-chips">
-            {music && music !== "none" && <span className="achip" title="music">🎵 {t.musicMood[music]}</span>}
+            {music && music !== "none" && <span className="achip" title={t.remix.music}>🎵 {t.musicMood[music]}</span>}
             {amb.slice(0, 2).map((a) => (
               <span key={a} className="achip">{a === "rain" || a === "thunderstorm" ? "🌧" : a === "night_crickets" ? "🦗" : a === "bees" ? "🐝" : a === "creek" ? "💧" : "🌿"} {t.ambience[a]}</span>
             ))}

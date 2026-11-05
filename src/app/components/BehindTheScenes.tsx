@@ -1,6 +1,7 @@
 // Behind-the-scenes funder overlay (spec §4.4). Hidden by default; ?pitch=1 or Shift+B. Never shown to players.
 import { useEffect, useState } from "react";
-import { costUsd, VIDEO_BITRATE_LABEL, VIDEO_BYTES_PER_SECOND } from "../../shared/pricing";
+import { costUsd, MODEL_PRICES, VIDEO_BITRATE_LABEL, VIDEO_BYTES_PER_SECOND } from "../../shared/pricing";
+import type { LogEntry, Usage } from "../../shared/schema";
 import { DIRECTOR_MODELS, type DirectorModel } from "../../shared/schema";
 import { exportLog, store } from "../store";
 import { useStore, useStrings } from "../useStore";
@@ -9,6 +10,21 @@ import { playback } from "../playback";
 import { DataView } from "./DataView";
 import { Economics, bytes, usd } from "./Economics";
 import { SystemLayers } from "./SystemLayers";
+
+/** Mean usage of real director calls in the tracking log (null if none). */
+function meanLlmUsage(): Usage | null {
+  try {
+    const all = (JSON.parse(exportLog()) as LogEntry[]).filter((e) => e.source === "llm" && e.usage);
+    if (!all.length) return null;
+    const sum: Usage = { input_tokens: 0, output_tokens: 0, cache_read_input_tokens: 0, cache_creation_input_tokens: 0 };
+    for (const e of all) for (const k of Object.keys(sum) as (keyof Usage)[]) sum[k] += (e.usage as Usage)[k] / all.length;
+    return sum;
+  } catch {
+    return null;
+  }
+}
+/** Typical director call (assumption until a real call is logged): ~1.2k input, ~1.5k output, ~8k cached system prompt. */
+const TYPICAL_USAGE: Usage = { input_tokens: 1200, output_tokens: 1500, cache_read_input_tokens: 8000, cache_creation_input_tokens: 0 };
 
 function useStats() {
   const [stats, setStats] = useState<{ fps: number; drawCalls: number; triangles: number } | null>(null);
@@ -36,7 +52,13 @@ export function BehindTheScenes() {
   const result = si >= 0 ? s.results[si] : null;
   const seg = result?.segment ?? null;
   const planBytes = seg ? new TextEncoder().encode(JSON.stringify(seg)).length : 0;
-  const cost = v ? costUsd(v.model, v.usage) : 0;
+  const measured = v && v.usage && MODEL_PRICES[v.model] ? costUsd(v.model, v.usage) : null;
+  const cost = v?.cached ? 0 : measured ?? 0;
+  const estimate = costUsd(s.model ?? "claude-opus-5-5", meanLlmUsage() ?? TYPICAL_USAGE);
+  const why = v ? (v.cached ? t.bts.cache : v.source === "fixture" ? t.bts.stagedFixture : t.bts.stagedOffline) : "";
+  const econCost = measured !== null && !v?.cached ? measured : estimate;
+  const econNote = measured !== null && !v?.cached ? t.bts.measured : fmt(t.bts.estimated, { why });
+  const stagedBy = v ? (v.source === "llm" ? t.bts.stagedLlm : v.source === "fixture" ? t.bts.stagedFixture : t.bts.stagedOffline) : "";
   const counts = seg
     ? { dialogue: seg.dialogue.length, vocals: seg.emotes.length, foley: seg.foley.length, sfx: seg.sfx.length, ambience: seg.ambience.length, music: seg.music.length, ducking: seg.ducking.length }
     : null;
@@ -70,6 +92,7 @@ export function BehindTheScenes() {
             <div className="kpi" data-testid="cost">
               <div className="k">{t.bts.cost}</div>
               <div className="v">{usd(cost)}</div>
+              {v.cached && measured !== null && <div className="s">{fmt(t.bts.cachedNow, { cost: usd(measured) })}</div>}
               <div className="s">{v.model} · {t.bts.source}: {v.source.toUpperCase()}</div>
               <div className="s">{t.bts.latency}: {v.latencyMs} ms</div>
               {v.usage && <div className="s">{t.bts.tokens}: {v.usage.input_tokens} / {v.usage.output_tokens} / {v.usage.cache_read_input_tokens} / {v.usage.cache_creation_input_tokens}</div>}
@@ -88,7 +111,8 @@ export function BehindTheScenes() {
             ))}
           </div>
           {p.lastRemixMs !== null && <div className="remixed" data-testid="remixed">{fmt(t.bts.remixed, { ms: p.lastRemixMs })}</div>}
-          <Economics durationS={seg?.duration ?? 0} planBytes={planBytes} directorCost={cost} />
+          <div className="staged-by" data-testid="staged-by">{t.bts.stagedBy}: <b>{stagedBy}</b></div>
+          <Economics durationS={seg?.duration ?? 0} planBytes={planBytes} directorCost={econCost} costNote={econNote} />
           {seg && <DataView segment={seg} />}
           <section className="bts-sec" data-testid="rule-report">
             <h3>{t.bts.rules}</h3>
@@ -96,7 +120,7 @@ export function BehindTheScenes() {
               <p className="note">{t.bts.noRules}</p>
             ) : (
               <table className="rules">
-                <thead><tr><th>Rule</th><th>Original</th><th>Replacement</th><th>Explanation</th></tr></thead>
+                <thead><tr><th>{t.bts.rule}</th><th>{t.bts.original}</th><th>{t.bts.replacement}</th><th>{t.bts.explanation}</th></tr></thead>
                 <tbody>
                   {v.ruleHits.map((h, i) => (
                     <tr key={i}><td><code>{h.rule}</code></td><td>{h.original}</td><td>{h.replacement}</td><td>{h.kid_message}</td></tr>

@@ -170,6 +170,7 @@ export function createFx(): FxHandle {
   const geos = new Map<FxId, THREE.BufferGeometry>();
   const pools = new Map<FxId, Emitter[]>();
   let activeCount = 0;
+  const used = new Map<FxId, number>();
 
   const emitter = (id: FxId, slot: number): Emitter => {
     const pool = pools.get(id) ?? [];
@@ -211,7 +212,7 @@ export function createFx(): FxHandle {
     root,
     apply(fx, pointScale) {
       for (const pool of pools.values()) for (const e of pool) e.points.visible = false;
-      const used = new Map<FxId, number>();
+      used.clear();
       activeCount = 0;
       for (const f of fx) {
         const def = FX_DEFS[f.id];

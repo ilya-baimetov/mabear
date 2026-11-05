@@ -6,7 +6,7 @@ import type { ActorFrame, CharacterRig } from "../api";
 import { buildFace, type FaceConfig } from "./face";
 import {
   attach, blob, buildSkeleton, bump, col, dir, furMaterial, limb, makeRig, materialSet, mergeSame, paintVertices,
-  restWorld, roughen, smoothstep, type SkeletonProportions,
+  noise3, restWorld, roughen, smoothstep, type SkeletonProportions,
 } from "./rig";
 
 export const BEAR_LOOK = {
@@ -31,10 +31,10 @@ export const BEAR_LOOK = {
     pads: "#5A3424",
   },
   skeleton: {
-    hipsHeight: 0.72,
+    hipsHeight: 0.66,
     spine: 0.18,
-    spine1: 0.22,
-    spine2: 0.24,
+    spine1: 0.25,
+    spine2: 0.27,
     neck: 0.36,
     head: 0.14,
     shoulder: [0.12, 0.2],
@@ -42,8 +42,8 @@ export const BEAR_LOOK = {
     upperArm: 0.4,
     foreArm: 0.34,
     upLeg: [0.22, -0.03],
-    upperLeg: 0.32,
-    lowerLeg: 0.27,
+    upperLeg: 0.29,
+    lowerLeg: 0.25,
     toe: [0.07, 0.15],
   } satisfies SkeletonProportions,
   head: {
@@ -53,9 +53,9 @@ export const BEAR_LOOK = {
     snoutCenter: [0, 0.09, 0.2] as [number, number, number],
     snoutRadii: [0.15, 0.12, 0.235] as [number, number, number],
   },
-  belly: { centerY: 0.98, halfW: 0.37, halfH: 0.44 },
+  belly: { centerY: 1.0, halfW: 0.38, halfH: 0.5 },
   /** fur breakup: displacement amplitude (m) and spatial frequency (1/m) */
-  furNoise: { amp: 0.009, freq: 14 },
+  furNoise: { amp: 0.011, freq: 14 },
 } as const;
 
 type V3 = [number, number, number];
@@ -123,10 +123,10 @@ export function buildBear(): CharacterRig {
   {
     const g = blob(10, (d, out) => {
       const t = (d.y + 1) / 2;
-      const w = 0.47 - 0.07 * t * t;
+      const w = 0.5 - 0.07 * t * t;
       out.set(d.x * w * 1.06, 0.08 + d.y * 0.43, d.z * w * 0.84 - 0.02);
       // trapezius: shoulders slope up into the head (no visible neck)
-      out.y += 0.06 * bump(d, dir(0.5, 0.8, -0.2), 0.4) + 0.06 * bump(d, dir(-0.5, 0.8, -0.2), 0.4);
+      out.y += 0.08 * bump(d, dir(0.55, 0.75, -0.15), 0.42) + 0.08 * bump(d, dir(-0.55, 0.75, -0.15), 0.42);
       out.z += 0.03 * bump(d, dir(0, -0.3, 1), 0.6);
     });
     fuzz(g);
@@ -281,18 +281,18 @@ export function buildBear(): CharacterRig {
 
   // ---- legs: short, thick; big feet
   for (const side of ["Left", "Right"] as const) {
-    const th = limb(new THREE.Vector3(0, 0.06, 0), new THREE.Vector3(0, -0.32, 0), (t) => 0.235 - 0.045 * t, { detail: 5 });
+    const th = limb(new THREE.Vector3(0, 0.06, 0), new THREE.Vector3(0, -0.29, 0), (t) => 0.24 - 0.045 * t, { detail: 5 });
     fuzz(th);
     paintVertices(th, (_p, out) => out.copy(cFur));
     attach(B[`${side}UpLeg`], th, fur, `${side}Thigh`);
-    const sh = limb(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, -0.26, 0), (t) => 0.18 - 0.025 * t, { detail: 5 });
+    const sh = limb(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, -0.24, 0), (t) => 0.185 - 0.025 * t, { detail: 5 });
     fuzz(sh);
     paintVertices(sh, (_p, out) => out.copy(cFur));
     attach(B[`${side}Leg`], sh, fur, `${side}Shin`);
     const ft = blob(4, (d, out) => {
       const fz = (d.z + 1) / 2;
       const yy = d.y < -0.35 ? -0.35 - (d.y + 0.35) * 0.2 : d.y;
-      out.set(d.x * 0.145 * (0.9 + 0.2 * fz), -0.035 + yy * 0.075 * (1 - 0.25 * fz), 0.07 + d.z * 0.2);
+      out.set(d.x * 0.16 * (0.9 + 0.2 * fz), -0.035 + yy * 0.075 * (1 - 0.25 * fz), 0.07 + d.z * 0.2);
     });
     fuzz(ft, 0.5);
     paintVertices(ft, (p, out) => out.copy(cFur).lerp(cFurDark, smoothstep(-0.07, -0.095, p.y)));
@@ -303,16 +303,29 @@ export function buildBear(): CharacterRig {
   // ---- secondary motion: belly jiggle (lags the hips), ear wiggle
   const secondary = {
     update(frame: ActorFrame, phase: number): void {
-      const j = frame.secondary.jiggle;
+      // jiggle / sway are oscillating drivers in 0..1 (0.5 = rest) produced by evaluate()
+      const j = (frame.secondary.jiggle - 0.5) * 2;
+      const w = (frame.secondary.sway - 0.5) * 2;
       const hy = frame.hipsOffset[1];
-      const wob = Math.sin(phase * 2.1);
-      belly.position.set(0, -hy * 0.18 * j + 0.008 * j * wob, 0.004 * j * Math.cos(phase * 2.1));
-      belly.scale.set(1 + 0.012 * j * wob, 1 - 0.018 * j * wob, 1 + 0.012 * j * wob);
-      const w = frame.secondary.sway;
-      ears[0].rotation.z = -0.42 + w * 0.18 * Math.sin(phase * 3.0);
-      ears[1].rotation.z = 0.42 - w * 0.18 * Math.sin(phase * 3.0 + 0.8);
+      belly.position.set(0, -hy * 0.15 + 0.014 * j, 0.006 * j);
+      belly.scale.set(1 + 0.014 * j, 1 - 0.02 * j, 1 + 0.014 * j);
+      ears[0].rotation.z = -0.42 + 0.12 * w + 0.02 * Math.sin(phase);
+      ears[1].rotation.z = 0.42 + 0.12 * w * 0.8 - 0.02 * Math.sin(phase + 0.8);
     },
   };
+
+  // fur clumps: subtle value breakup in the vertex colours (darker in the noise valleys)
+  root.traverse((o) => {
+    const m = o as THREE.Mesh;
+    if (!m.isMesh || m.material !== fur) return;
+    const c = m.geometry.getAttribute("color") as THREE.BufferAttribute | undefined;
+    const p = m.geometry.getAttribute("position") as THREE.BufferAttribute;
+    if (!c) return;
+    for (let i = 0; i < c.count; i++) {
+      const k = 0.9 + 0.1 * noise3(p.getX(i) * 24, p.getY(i) * 24 + 1.7, p.getZ(i) * 24);
+      c.setXYZ(i, c.getX(i) * k, c.getY(i) * k, c.getZ(i) * k);
+    }
+  });
 
   return makeRig({
     id: "bear",

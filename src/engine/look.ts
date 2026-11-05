@@ -301,15 +301,32 @@ function applyParams(rig: LookRig, scene: THREE.Scene, renderer: THREE.WebGLRend
 }
 
 /** Apply a FrameState lighting blend to the look rig. Returns the blended params. */
+const _lastLighting = new WeakMap<LookRig, { from: TimeOfDay; to: TimeOfDay; k: number }>();
 export function applyLighting(
   rig: LookRig,
   scene: THREE.Scene,
   renderer: THREE.WebGLRenderer,
   lighting: { from: TimeOfDay; to: TimeOfDay; k: number },
 ): LightingParams {
+  // no work (and no allocation) while the lighting key is unchanged — the common case every frame
+  const last = _lastLighting.get(rig);
+  if (last && last.from === lighting.from && last.to === lighting.to && last.k === lighting.k) return rig.current;
   const p = blendLighting(lighting.from, lighting.to, lighting.k);
   applyParams(rig, scene, renderer, p);
+  if (last) {
+    last.from = lighting.from;
+    last.to = lighting.to;
+    last.k = lighting.k;
+  } else _lastLighting.set(rig, { from: lighting.from, to: lighting.to, k: lighting.k });
   return p;
+}
+
+/** Shadow map resolution (2048 at full quality; 1024 when adaptive resolution drops). */
+export function setShadowQuality(rig: LookRig, size: 1024 | 2048): void {
+  if (rig.key.shadow.mapSize.x === size) return;
+  rig.key.shadow.mapSize.set(size, size);
+  rig.key.shadow.map?.dispose();
+  (rig.key.shadow as unknown as { map: THREE.WebGLRenderTarget | null }).map = null;
 }
 
 /** Keep the sky centred on the camera (infinitely far). */
@@ -394,9 +411,10 @@ export function createMaterials(): LookMaterials {
     foliage: std({ roughness: 0.88 }),
     paint: std({ roughness: 0.55 }),
     metal: std({ roughness: 0.32, metalness: 0.65 }),
-    glass: new THREE.MeshStandardMaterial({ color: 0x6f8fb0, roughness: 0.15, metalness: 0.1, emissive: 0xffa040, emissiveIntensity: 0.05 }),
+    glass: new THREE.MeshStandardMaterial({ vertexColors: true, color: 0x6f8fb0, roughness: 0.15, metalness: 0.1, emissive: 0xffa040, emissiveIntensity: 0.05 }),
     water: std({ roughness: 0.18, metalness: 0.0, envMapIntensity: 1.1 }),
-    fabric: new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: 0.95, sheen: 0.6, sheenRoughness: 0.6, sheenColor: new THREE.Color(0xffffff), side: THREE.DoubleSide }),
+    // set fabric (hammock) is two-sided geometry; same shader program as paint (fewer programs to compile)
+    fabric: std({ roughness: 0.95 }),
     stone: std({ roughness: 0.92, map: stony }),
     soil: std({ roughness: 1.0, map: stony }),
   } as LookMaterials;
@@ -504,11 +522,15 @@ export function xf(
   return new THREE.Matrix4().compose(new THREE.Vector3(...pos), _q.clone(), _s.clone());
 }
 
+/** Materials that merge into another bucket (fewer draw calls: same shader, near-identical look). */
+const MAT_ALIAS: Partial<Record<MatKey, MatKey>> = { bark: "wood", soil: "stone" };
+
 export class GeoBag {
   readonly parts = new Map<MatKey, THREE.BufferGeometry[]>();
 
   /** Add a geometry (painted with `color`) under material `mat`, transformed by `m` (local to this bag). */
   add(mat: MatKey, g: THREE.BufferGeometry, color: THREE.ColorRepresentation, m?: THREE.Matrix4, o?: PaintOpts): this {
+    mat = MAT_ALIAS[mat] ?? mat;
     paint(g, color, o);
     normalize(g);
     if (m) g.applyMatrix4(m);
@@ -520,6 +542,7 @@ export class GeoBag {
 
   /** Add an already-painted geometry. */
   addPainted(mat: MatKey, g: THREE.BufferGeometry, m?: THREE.Matrix4): this {
+    mat = MAT_ALIAS[mat] ?? mat;
     normalize(g);
     if (m) g.applyMatrix4(m);
     const list = this.parts.get(mat) ?? [];

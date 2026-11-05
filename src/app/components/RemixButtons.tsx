@@ -25,7 +25,7 @@ export function RemixButtons({ p }: { p: Paragraph }) {
           replay();
         }}
       >
-        {TOD_ICON[(v.remix.timeOfDay ?? "day") as TimeOfDay]}
+        {TOD_ICON[(tod ?? "day") as TimeOfDay]}
       </button>
       <button
         className="rbtn"

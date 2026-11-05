@@ -3,7 +3,7 @@ import { useStrings } from "../useStore";
 
 type Tag = "Live" | "Stand-in" | "Placeholder";
 export const LAYERS: { layer: string; production: string; prototype: string; tag: Tag }[] = [
-  { layer: "Text → staging plan", production: "Model trained on Animaccord scripts aligned with episode timelines, plus the character bible", prototype: "Claude + a written character bible (prompt) → a validated beat script", tag: "Stand-in" },
+  { layer: "Text → staging plan", production: "Model trained on Animaccord scripts aligned with episode timelines, plus the character bible (the writers' implicit knowledge, made explicit and partly derivable from the footage)", prototype: "Claude + a written character bible (prompt) → a validated beat script", tag: "Stand-in" },
   { layer: "Plan → body motion", production: "Learned text-to-motion trained on episode character animation", prototype: "Open motion-capture/animation clip libraries retargeted onto the rigs, plus procedural layers", tag: "Stand-in" },
   { layer: "Faces, lip-sync, exclamations", production: "Learned from episode facial animation and audio", prototype: "Procedural face rig: emotions, blinks, visemes from text", tag: "Stand-in" },
   { layer: "Characters, sets, props", production: "Animaccord's existing production 3D sources", prototype: "Stand-in models built in code, as close to the originals as possible", tag: "Stand-in" },
@@ -19,7 +19,7 @@ export function SystemLayers() {
       <h3>{t.bts.layers}</h3>
       <table className="layers">
         <thead>
-          <tr><th>Layer</th><th>Production (what the funding builds)</th><th>Prototype (tonight)</th><th /></tr>
+          <tr><th>{t.bts.layer}</th><th>{t.bts.production}</th><th>{t.bts.prototype}</th><th /></tr>
         </thead>
         <tbody>
           {LAYERS.map((l) => (

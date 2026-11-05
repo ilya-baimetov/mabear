@@ -36,6 +36,8 @@ export interface ParagraphVersion {
   model: string;
   ruleHits: RuleHit[];
   remix: Remix;
+  /** served from the director cache: no API call, $0 */
+  cached?: boolean;
 }
 
 export interface Paragraph {
@@ -68,6 +70,8 @@ export interface AppState {
   pitch: boolean;
   model: DirectorModel | null;
   directorCalls: number;
+  /** example currently loaded (unchanged), so the EN/RU toggle can swap it without an AI call */
+  fixtureId: FixtureEpisode["id"] | null;
 }
 
 type Listener = () => void;
@@ -203,6 +207,7 @@ class Store {
       pitch: hasPitchParam(),
       model: null,
       directorCalls: 0,
+      fixtureId: null,
     };
     this.restore();
   }
@@ -248,7 +253,10 @@ class Store {
   // ---------- UI actions ----------
   setLang(lang: Lang): void {
     lsSet(LS.lang, lang);
+    const fid = this.state.fixtureId;
+    const untouched = fid && this.state.paragraphs.length > 0 && this.state.paragraphs.every((p) => p.versions[p.current]?.source === "fixture" && p.current === 0);
     this.set({ lang });
+    if (untouched && fid) this.loadFixtureById(fid);
   }
   setTitle(title: string): void {
     this.set({ title });
@@ -281,7 +289,7 @@ class Store {
   newStory(): void {
     for (const c of this.inflight.values()) c.abort();
     this.inflight.clear();
-    this.set({ episodeId: newId("e"), title: "", paragraphs: [], selectedId: null, timeline: emptyTimeline(), results: [], segmentIds: [], t: 0, playing: false });
+    this.set({ episodeId: newId("e"), title: "", paragraphs: [], selectedId: null, timeline: emptyTimeline(), results: [], segmentIds: [], t: 0, playing: false, fixtureId: null });
     this.persist();
   }
 
@@ -298,7 +306,7 @@ class Store {
   deleteParagraph(id: string): void {
     this.inflight.get(id)?.abort();
     this.setParagraphs(this.state.paragraphs.filter((p) => p.id !== id));
-    this.recompile();
+    this.recompile({ redirectBroken: true });
   }
 
   moveParagraph(id: string, dir: -1 | 1): void {
@@ -358,7 +366,7 @@ class Store {
     const key = directorCacheKey(text, lang, start, this.state.model);
     const hit = cacheGet(key);
     if (hit) {
-      this.applyDirectorResponse(id, version, hit, start, 0);
+      this.applyDirectorResponse(id, version, hit, start, 0, true);
       return;
     }
     this.inflight.get(id)?.abort();
@@ -409,7 +417,7 @@ class Store {
     this.patchParagraph(id, { status: "error", error, pendingVersion: null });
   }
 
-  private applyDirectorResponse(id: string, version: number, res: DirectResponse, start: WorldState, clientMs: number): void {
+  private applyDirectorResponse(id: string, version: number, res: DirectResponse, start: WorldState, clientMs: number, cached = false): void {
     const p = this.state.paragraphs.find((x) => x.id === id);
     if (!p || p.pendingVersion !== version) return;
     const vi = p.versions.findIndex((v) => v.version === version);
@@ -423,13 +431,15 @@ class Store {
       usage: res.usage,
       model: res.model,
       ruleHits: res.beatScript.rule_hits,
+      cached,
     };
     const versions = [...p.versions];
     versions[vi] = nv;
     const status: ParagraphStatus = res.error ? "error" : nv.ruleHits.length ? "adjusted" : "ready";
     this.patchParagraph(id, { versions, status, error: res.error ?? null, pendingVersion: null });
     appendLog({ episodeId: this.state.episodeId, paragraphId: id, version, text: nv.text, lang: nv.lang, beatScript: nv.beatScript, source: nv.source, latencyMs: nv.latencyMs, usage: nv.usage, ruleHits: nv.ruleHits, ts: Date.now() });
-    void start;
+    // directed against `start`: re-directing against the same start state can't help (§6.5.4)
+    this.redirected.add(`${id}:${directorCacheKey(nv.text, nv.lang, start, this.state.model)}`);
     this.recompile({ redirectBroken: true });
   }
 
@@ -456,7 +466,7 @@ class Store {
       const v: ParagraphVersion = { version: 1, text: fp.text, lang: fx.lang, beatScript: fp.beatScript, source: "fixture", latencyMs: 0, usage: null, model: "fixture", ruleHits: fp.beatScript.rule_hits, remix: { ...DEFAULT_REMIX } };
       return { id: newId(), text: fp.text, versions: [v], current: 0, status: fp.beatScript.rule_hits.length ? "adjusted" : "ready", error: null, pendingVersion: null, lastRemixMs: null };
     });
-    this.set({ episodeId: newId("e"), title: fx.title, paragraphs, selectedId: paragraphs[0]?.id ?? null, t: 0, playing: false });
+    this.set({ episodeId: newId("e"), title: fx.title, paragraphs, selectedId: paragraphs[0]?.id ?? null, t: 0, playing: false, fixtureId: fx.id });
     this.recompile();
     this.persist();
   }
@@ -514,7 +524,9 @@ class Store {
     if (opts.redirectBroken) {
       results.forEach((r, i) => {
         const p = playable[i];
-        const key = `${p.id}:${p.versions[p.current]?.version}`;
+        const v = p.versions[p.current];
+        const start = i === 0 ? initialWorldState() : results[i - 1].segment.endState;
+        const key = `${p.id}:${directorCacheKey(v.text, v.lang, start, this.state.model)}`;
         if (r.errors.length && p.pendingVersion === null && p.status !== "draft" && !this.redirected.has(key)) {
           this.redirected.add(key);
           // §6.5.4: not trivially repairable against the new start state → draft + re-direct

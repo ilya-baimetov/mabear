@@ -37,3 +37,19 @@ signature), hug, laugh, sulk, surprised, scared, angry_stomp, sneeze, sigh, take
 carry, water_plants. `VERB_KIND` in `src/engine/motion/library.ts` labels every verb `clip`, `clip+procedural` or
 `procedural` for the Behind-the-scenes data view. Quaternius' Universal Animation Library (CC0) was tried first but is
 only offered through itch.io's download flow, so it was skipped (time box).
+
+## Models
+
+Every character, set element and prop resolves through the asset manifest (`src/engine/assets.ts`, spec §7.3).
+In the prototype all of them are **procedural stand-ins built in code** (original project code, no third-party
+geometry or textures): the set "Bear's yard" (`src/engine/set/bearsYard.ts`: log cabin with porch, chimney smoke and
+carved windows, garden, beehive, oak with rope swing, hammock, pond + pier, creek + two footbridges, table + samovar,
+bench, woodpile, big pine, bush, the Wolves' ambulance van, picket fences, flowers, rocks, an instanced
+pine/birch forest, a painted ground texture and grass tufts), the props (`src/engine/props/props.ts`), the particle
+effects (`src/engine/fx/fx.ts`) and the series look (`src/engine/look.ts`). All textures (wood grain, stone noise,
+ground) are generated at runtime. Swapping any stand-in for an official Animaccord glTF export is a manifest change
+(`source: { gltf: url }`, plus `skeletonMap` for a rig with other bone names).
+
+| Asset | Source URL | Author | License | Use |
+|---|---|---|---|---|
+| `public/assets/models/RobotExpressive.glb` | https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/models/gltf/RobotExpressive/RobotExpressive.glb | Tomás Laulhé (Quaternius), modifications by Don McCurdy; distributed in the three.js examples | CC0 1.0 (public domain) | Manifest entry `robot_test`: a hidden glTF test character that proves the glTF path (loaded with `GLTFLoader`, bones exposed under Mixamo names through `ROBOT_SKELETON_MAP`). Shown only on `tools/stage.html?robot=1` |

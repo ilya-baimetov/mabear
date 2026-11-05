@@ -312,7 +312,9 @@ export function createProps(mats: LookMaterials): PropsHandle {
   const root = new THREE.Group();
   root.name = "props";
   const objects = {} as Record<PropId, THREE.Object3D>;
+  const cache = {} as Record<PropId, { x: number; y: number; z: number; p: THREE.Vector3; r: THREE.Euler }>;
   for (const id of PROP_IDS) {
+    cache[id] = { x: NaN, y: NaN, z: NaN, p: new THREE.Vector3(), r: new THREE.Euler(0, 0, 0, "YXZ") };
     const holder = new THREE.Group();
     holder.name = `prop:${id}:holder`;
     holder.rotation.order = "YXZ";
@@ -343,9 +345,18 @@ export function createProps(mats: LookMaterials): PropsHandle {
           o.position.copy(_wp).add(_off);
           o.rotation.set(g.rot[0], yaw + g.rot[1], g.rot[2]);
         } else {
-          const p = restPlacement(id, f.pos);
-          o.position.set(p.pos[0], p.pos[1], p.pos[2]);
-          o.rotation.set(p.rot[0], p.rot[1], p.rot[2]);
+          // cache: resting placement only changes when the player's position does (no per-frame allocation)
+          const c = cache[id];
+          if (c.x !== f.pos[0] || c.y !== f.pos[1] || c.z !== f.pos[2]) {
+            const p = restPlacement(id, f.pos);
+            c.x = f.pos[0];
+            c.y = f.pos[1];
+            c.z = f.pos[2];
+            c.p.set(p.pos[0], p.pos[1], p.pos[2]);
+            c.r.set(p.rot[0], p.rot[1], p.rot[2], "YXZ");
+          }
+          o.position.copy(c.p);
+          o.rotation.copy(c.r);
         }
       }
     },

@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
+import { useOutsideClose } from "../useOutsideClose";
 import { store } from "../store";
 import { useStore, useStrings } from "../useStore";
 import { playback } from "../playback";
@@ -9,6 +10,7 @@ export function TopBar() {
   const s = useStore();
   const t = useStrings();
   const [open, setOpen] = useState(false);
+  const ddRef = useOutsideClose(open, useCallback(() => setOpen(false), []));
   const muted = s.muted || s.volume === 0;
   return (
     <header className="topbar">
@@ -25,7 +27,7 @@ export function TopBar() {
           <button className="btn btn-primary" data-testid="play-all" disabled={s.timeline.duration === 0} onClick={() => playback.playAll()}>▶ {t.playAll}</button>
         )}
         <button className="btn" data-testid="new-story" onClick={() => store.newStory()}>⟲ {t.newStory}</button>
-        <div className="dropdown">
+        <div className="dropdown" ref={ddRef}>
           <button className="btn" data-testid="examples" onClick={() => setOpen(!open)}>{t.examples} ▾</button>
           {open && (
             <div className="menu" role="menu">

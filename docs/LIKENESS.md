@@ -206,6 +206,132 @@ is integrated (it is owned by the motion module).
   costume — the reference holds them slightly forward and bent (motion-layer rest pose); feet could be broader;
   shell fur (spec P1) would lift materials to 4; check the head can turn without exposing a gap at the shoulders.
 
+### Pass 5 — 2026-11-05 05:02 UTC (performance cut: ≤ ~25k triangles per character)
+
+The integrated app froze in headless SwiftShader (whole scene 871k triangles). Tessellation was cut everywhere,
+keeping the face densest: Masha **107,072 → 25,060** triangles, Bear **125,980 → 25,228** (meshes 26 / 27).
+Merged meshes now keep their index buffers (≈3× fewer vertices to shade). Sculpted head icospheres detail
+32 → 14 (Masha) / 28 → 13 (Bear), kerchief 34 → 16, bodies 26 → 10–11, limbs 10–14 → 4–6, eye spheres
+32×24 → 22×14, iris rings 40×14 → 32×9.
+
+**Masha** — `pass5-masha-*.png`
+
+| Silhouette | Proportions | Face | Colors | Materials | Motion feel |
+|---|---|---|---|---|---|
+| 4 | 3.5 | 3.5 | 4 | 3.5 | 2 |
+
+- No regression: silhouettes identical to pass 4, the face reads the same in the close-up.
+- The lower-resolution kerchief first showed crumpled slivers at the face opening (the "squeeze the inside into a
+  band" trick needs dense meshes). Rebuilt: triangles wholly inside the opening are dropped and boundary vertices
+  snap onto the oval, so the rim is now *cleaner* than in pass 4 at a quarter of the triangles.
+
+**Bear** — `pass5-bear-*.png`
+
+| Silhouette | Proportions | Face | Colors | Materials | Motion feel |
+|---|---|---|---|---|---|
+| 3.5 | 3.5 | 4 | 4 | 3.5 | 2 |
+
+- No visible regression (pass 4 vs pass 5 face close-ups side by side are near-identical; fur breakup is slightly
+  coarser, which reads fine at series viewing distance).
+
+### Pass 6 — 2026-11-05 05:06 UTC
+
+Changes: felted fabric (roughness 0.93, sheen roughness 0.82, so it reads as felt, not satin); rounder fringe lock tips;
+chubbier cheeks (0.075 → 0.088); wider happy mouth; the kerchief cape flares more and dips to a soft point at the
+back; the pale blouse shows in a small V under the knot; two orange hem stripes (`#E8643C`, denser hem rows so
+they resolve); yellow soles (`#E3B04A`). Bear: belly patch reaches higher onto the chest (centre 1.04 m, half-height
+0.5 m); broader feet. Secondary motion now reads `sway`/`jiggle` the way `evaluate()` produces them (oscillating
+0..1 signals, 0.5 = rest). Previously they were treated as amplitudes. Triangles: Masha 26.3k, Bear 25.2k.
+
+**Masha** — `pass6-masha-*.png`
+
+| Silhouette | Proportions | Face | Colors | Materials | Motion feel |
+|---|---|---|---|---|---|
+| 4 | 3.5 | 3.5 | 4.5 | 4 | n/s |
+
+- Fabric now has the soft matte look of the series; the hem stripes and yellow soles match the reference stamp.
+- Remaining: proportions. The reference torso is shorter and the dress starts right under the kerchief knot, while
+  ours shows a band of bodice. The face could still be wider relative to the eyes. Low-poly sleeves show faceted
+  shading at the elbow seam.
+
+**Bear** — `pass6-bear-*.png`
+
+| Silhouette | Proportions | Face | Colors | Materials | Motion feel |
+|---|---|---|---|---|---|
+| 3.5 | 3.5 | 4 | 4 | 3.5 | n/s |
+
+- Belly patch now spans chest to groin like the reference.
+- Remaining: in the reference the upper body is more massive and the arms rounder at the shoulder. Motion feel
+  will be scored in the integrated app (n/s = not scored yet).
+
+### Pass 7 — 2026-11-05 05:10 UTC (first motion-feel scoring)
+
+New in the bench: `tools/likeness.html?motion=<fixture>&char=<id>&t0=&dt=&n=` compiles a fixture episode with the
+real compiler, samples `evaluate()` and renders a filmstrip with a tracking ¾ camera (both characters in the scene);
+`npx tsx scripts/likenessShots.ts --pass N --motion <fixture>:<char>:<t0>:<dt>:<n>`. Strips:
+`pass7-motion-f0-masha-0.png` / `pass7-motion-f0-bear-0.png` (whole "Pancake morning", 12 samples) and
+`pass7-motion-f0-masha-0.2.png` (run, 0.1 s steps), `pass7-motion-f0-bear-37.png` (walk, 0.15 s steps).
+
+Look changes: Masha's hem 3 cm lower (legs visible 0.14 m ≈ reference 0.13), chunkier shoes, iris 0.63 → 0.655 of
+the sclera, lids open wider; Bear's upper body broader, fur breakup amplitude +20 % and a subtle clump value
+variation in the vertex colours.
+
+**Masha** — `pass7-masha-*.png`
+
+| Silhouette | Proportions | Face | Colors | Materials | Motion feel |
+|---|---|---|---|---|---|
+| 4 | 4 | 3.5 | 4.5 | 4 | 3.5 |
+
+- Proportions now match the reference sheet (head + kerchief 0.43, legs below the hem 0.14, chunky shoes).
+- Motion: the run reads quick and bouncy, the skirt swings and tilts with the leading thigh, blinks land, and the
+  wave/point/clap gestures are clear at a glance. Arms are a little stiff and the run has no squash (motion layer).
+- Face is still the weakest score: it reads "cute doll" more than Masha. The reference has a wider, flatter lower
+  face and a more mischievous mouth.
+
+**Bear** — `pass7-bear-*.png`
+
+| Silhouette | Proportions | Face | Colors | Materials | Motion feel |
+|---|---|---|---|---|---|
+| 3.5 | 3.5 | 4 | 4 | 3.5 | 3.5 |
+
+- Motion: the walk is weighty, with a wide stance and visible hip bob; yawn/facepalm/surprised poses read. In some
+  frames the forearms pass through the belly when the arms swing back. Suggestion for the motion layer: Bear's arm
+  poses need ~10–15° more abduction (rotate `LeftArm`/`RightArm` away from the body) to clear the belly.
+- Silhouette and proportions are held at 3.5: the reference shoulders are higher and rounder, and the legs even
+  shorter relative to the belly.
+
+### Pass 8 — 2026-11-05 05:15 UTC
+
+Masha's face was compared with both reference close-ups side by side (contact sheet of stamp 3, stamp 1 and the
+render). Changes: smaller eyes with a much bigger, brighter iris (r 0.045 → 0.04, iris 0.655 → 0.72 of the sclera,
+`#5CB052`) and the upper lid resting on the top of the iris, as in the reference; lighter, finer brows (`#A0683F`); the
+fringe comes lower; the kerchief opening is lower on the forehead and wider (top 0.8 → 0.7 rad, half-width
+1.0 → 1.08 rad) so the face reads wide and round; heavier toddler cheeks (bulge 0.088 → 0.11, lower); slightly
+bigger button nose; wider, lower mouth. Bear: legs shorter (hips 0.72 → 0.66 m) with the torso lengthened to keep
+2.4 m, higher rounder shoulder mass, belly lower. Triangles: Masha 26.3k, Bear 25.2k (unchanged).
+
+**Masha** — `pass8-masha-*.png`
+
+| Silhouette | Proportions | Face | Colors | Materials | Motion feel |
+|---|---|---|---|---|---|
+| 4 | 4 | 3.5 | 4.5 | 4 | 3.5 |
+
+- The face is now recognisably the same character family as the reference: round wide face in a low kerchief, big
+  green irises under resting lids, rosy cheeks. It stays at 3.5 because the reference's eyes are smaller relative
+  to the face and the expression is more knowing and mischievous; ours is still a little "anime doll". Spec §7.3 asks
+  for eyes ~⅓ of the face width, and we stay with the spec.
+
+**Bear** — `pass8-bear-*.png`
+
+| Silhouette | Proportions | Face | Colors | Materials | Motion feel |
+|---|---|---|---|---|---|
+| 4 | 4 | 4 | 4 | 3.5 | 3.5 |
+
+- The silhouette is now a clear pear: short thick legs, low heavy belly, high round shoulders, long arms (paws at
+  the bottom of the belly), small head sunk into the shoulders.
+- Materials are held at 3.5: shell fur (spec P1) would lift it, but it multiplies fur draw calls and fill cost, which
+  conflicts with the headless/integrated-GPU budget. Deferred deliberately.
+
 ## 5. Next pass checklist (append new passes below)
 
 1. `npx tsx scripts/likenessShots.ts --pass N` (vite on port 5180 is started automatically).

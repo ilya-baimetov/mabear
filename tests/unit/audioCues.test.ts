@@ -32,6 +32,29 @@ describe("audio cues", () => {
     expect(n8 / n4).toBeLessThan(2.3);
   });
 
+  it("contacts follow the gait stride (STRIDE × STRIDE_SCALE), incl. the hurried-walk → run switch", async () => {
+    const { STRIDE, STRIDE_SCALE } = await import("../../src/shared/grammar");
+    const { gaitFor } = await import("../../src/compiler/audioCues");
+    const count = (verb: Beat["verb"]) => {
+      const s = compile(BS([B({ actor: "masha", verb, target: "bench" })]), at(-6, 3), OPTS()).segment;
+      const clip = s.actorClips.masha.find((c) => c.verb === verb)!;
+      const p = clip.params.path!;
+      const len = p.slice(1).reduce((acc, q, i) => acc + Math.hypot(q[0] - p[i][0], q[1] - p[i][1]), 0);
+      return { n: s.foley.filter((f) => f.actor === "masha" && f.id === "footstep").length, len };
+    };
+    const w = count("walk_to");
+    const r = count("run_to");
+    const t = count("tiptoe_to");
+    expect(w.n).toBe(Math.round(w.len / (STRIDE.masha * STRIDE_SCALE.walk)));
+    expect(r.n).toBe(Math.round(r.len / (STRIDE.masha * STRIDE_SCALE.run)));
+    expect(t.n).toBe(Math.round(t.len / (STRIDE.masha * STRIDE_SCALE.tiptoe)));
+    expect(r.n).toBeLessThan(w.n);
+    expect(t.n).toBeGreaterThan(w.n);
+    expect(gaitFor("masha", "walk_to", 1.2)).toBe("walk");
+    expect(gaitFor("masha", "walk_to", 1.2 * 1.8)).toBe("run");
+    expect(gaitFor("bear", "enter", 1.0)).toBe("walk");
+  });
+
   it("surface switches to wood on the porch and the pier", () => {
     const s1 = compile(BS([B({ actor: "masha", verb: "walk_to", target: "porch" })]), initialWorldState(), OPTS()).segment;
     const m1 = s1.foley.filter((f) => f.actor === "masha" && f.id === "footstep");

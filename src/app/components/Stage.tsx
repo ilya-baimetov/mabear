@@ -17,6 +17,7 @@ export function Stage() {
   const s = useStore();
   const t = useStrings();
   const [ready, setReady] = useState(false);
+  const [failed, setFailed] = useState(false);
   const handles = useRef<{ stage: StageHandle; player: Player; audio: AudioEngine | null } | null>(null);
 
   useEffect(() => {
@@ -87,7 +88,10 @@ export function Stage() {
         timeline: () => store.getState().timeline,
       };
       setReady(true);
-    })().catch((err) => console.error("stage init failed", err));
+    })().catch((err) => {
+      console.error("stage init failed", err);
+      setFailed(true);
+    });
     return () => {
       disposed = true;
       ro?.disconnect();
@@ -110,7 +114,8 @@ export function Stage() {
   return (
     <div className="stage-wrap" ref={wrap} data-testid="stage">
       <canvas ref={canvas} data-testid="stage-canvas" />
-      {!ready && <div className="stage-loading">{t.loading}</div>}
+      {!ready && !failed && <div className="stage-loading">{t.loading}</div>}
+      {failed && <div className="stage-error">{t.stageError}</div>}
     </div>
   );
 }

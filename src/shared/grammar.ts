@@ -109,3 +109,10 @@ export const VERB_IMPLIED_PROP: Partial<Record<Verb, string>> = {
   fish: "fishing_rod",
   water_plants: "watering_can",
 };
+
+/** Metres per foot contact relative to STRIDE, per gait (additive). Shared by the engine's leg cycle and the
+ *  compiler's foley contacts so footsteps land on the feet. */
+export const STRIDE_SCALE = { walk: 1, run: 1.8, tiptoe: 0.6 } as const;
+export type Gait = keyof typeof STRIDE_SCALE;
+/** A walk hurried past this multiple of the actor's natural walk speed switches to a run gait (additive). */
+export const WALK_TO_RUN_SPEED_FACTOR = 1.7;

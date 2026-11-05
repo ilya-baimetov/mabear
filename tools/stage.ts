@@ -22,6 +22,7 @@ const CAMS: Record<string, CamKey> = {
   masha: { pos: [0, 0.82, 1.4], look: [0, 0.72, 0], fov: 35 },
   bear: { pos: [-5.2, 2.3, 0.4], look: [-6, 1.8, -2.6], fov: 40 },
   top: { pos: [0, 45, 12], look: [0, 0, 0], fov: 55 },
+  robot: { pos: [0.9, 1.3, 3.6], look: [0.6, 0.75, 0], fov: 40 },
 };
 const cam = CAMS[q.get("cam") ?? "wide"] ?? CAMS.wide;
 
@@ -76,8 +77,8 @@ if (q.get("robot") === "1") await stage.assetsReady;
 const robot = stage.testRig();
 if (robot && q.get("robot") === "1") {
   robot.root.visible = true;
-  robot.root.position.set(1.4, 0, 0.6);
-  robot.root.rotation.y = -0.3;
+  robot.root.position.set(1.2, 0, -0.1);
+  robot.root.rotation.y = -0.2;
 }
 let n = 0;
 // ?anim=1 keeps rendering (live FPS); otherwise render a few frames and go idle (fast headless screenshots)

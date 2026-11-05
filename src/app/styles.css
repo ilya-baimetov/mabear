@@ -167,3 +167,6 @@ table { width: 100%; border-collapse: collapse; }
 .tag-placeholder { background: #b0bec5; color: #263238; }
 .rules code { color: var(--honey); }
 summary { cursor: pointer; font-weight: 800; color: var(--honey); }
+.staged-by { margin-top: 8px; color: #c9d4c5; }
+.staged-by b { color: #fff; }
+.stage-error { position: absolute; inset: 0; display: grid; place-items: center; font-weight: 900; font-size: 18px; color: #8a3b1e; text-align: center; padding: 20px; }
