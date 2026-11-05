@@ -698,18 +698,26 @@ reaction beat for the other actor). It powers the instant preview, the no-key fa
   `run_worker_first = true` (so the password gate covers the assets too).
 - Scripts: `npm run build` (vite build → `dist/`), `npm run dev` (vite + `wrangler dev` or a vite proxy to a local
   mock), `npm run deploy` (`wrangler deploy`).
-- **Secrets file:** `.secrets.env` in the repo root (git-ignored, mode 600) holds `CLOUDFLARE_ACCOUNT_ID`,
-  `CLOUDFLARE_API_TOKEN`, `DEMO_PASSWORD` and `SESSION_SECRET`. Load it with `set -a; . ./.secrets.env; set +a`
-  before any wrangler command. Never print, commit or copy its values anywhere else.
-- **The Worker already exists**: `mabear` on account `2f26060a68f7297a6c57ca6b1b9704ca`, served at
-  https://mabear.ilya-baimetov.workers.dev (currently a 503 placeholder). `wrangler deploy` replaces it.
-- **`ANTHROPIC_API_KEY` is set by the owner directly in the Cloudflare dashboard** as a Worker secret. The run never
-  sets, overwrites, reads or deletes it. Set only `DEMO_PASSWORD` and `SESSION_SECRET`:
-  `printf %s "$DEMO_PASSWORD" | npx wrangler secret put DEMO_PASSWORD` (same for `SESSION_SECRET`).
-- **If `CLOUDFLARE_API_TOKEN` is empty:** try to mint one through the Cloudflare MCP connector — an account-owned
-  token (`POST /accounts/{account_id}/tokens`) with only *Workers Scripts Write* on this account, expiring 7 days from
-  now — and write it into `.secrets.env`. If the connector lacks the scope, complete everything else and record the
-  blocker and the finishing command in `STATUS.md`. Never ask for secrets in chat.
+- **Deployment is Cloudflare Workers Builds (git push → build → deploy); no API token is needed in this
+  environment.** A build trigger ("Deploy prototype branch", trigger `3d4e8714-763e-4964-a55b-bc20a7b2efe0`) on the
+  Worker `mabear` (account `2f26060a68f7297a6c57ca6b1b9704ca`) builds every push to `claude/keen-pascal-xwbndk`.
+  Its commands are gated on a repo-root file **`.deploy-ready`**:
+  build `if [ -f .deploy-ready ]; then npm ci && npm run build; else echo skip; fi`,
+  deploy `if [ -f .deploy-ready ]; then npx wrangler deploy; else echo skip; fi`.
+  **Create and commit `.deploy-ready` only once the password gate works and the unit and e2e tests pass** (M7). From
+  then on, every push deploys, so keep the branch green. `package-lock.json` must be committed (`npm ci`).
+- Follow builds through the Cloudflare MCP connector (`mcp__CloudFlare_API__execute`):
+  `GET /accounts/{account_id}/builds/workers/e7aad35669b44223a2dc22aa1bdf8934/builds` for the latest build,
+  `GET /accounts/{account_id}/builds/builds/{build_uuid}/logs` for its logs. To rebuild without a new commit:
+  `POST /accounts/{account_id}/builds/triggers/3d4e8714-763e-4964-a55b-bc20a7b2efe0/builds` with
+  `{ "branch": "claude/keen-pascal-xwbndk" }`. A failed build is a red CI: fix it and push.
+- **Worker secrets are already set**: `DEMO_PASSWORD` and `SESSION_SECRET` (their values are also in the git-ignored
+  `.secrets.env`; load with `set -a; . ./.secrets.env; set +a`; never print, commit or copy them).
+  **`ANTHROPIC_API_KEY` is added by the owner directly in the Cloudflare dashboard.** The run never sets, overwrites,
+  reads or deletes it. If it is missing, the deployed director answers `source: "offline"`; record that in `STATUS.md`.
+- The Worker is served at https://mabear.ilya-baimetov.workers.dev (a 503 placeholder until the first real deploy).
+- `wrangler.toml` must keep `name = "mabear"`, so the Builds deploy targets the existing Worker. Don't put secrets in
+  `[vars]`.
 - After deploying: smoke test with curl — `/api/health` → 200; `/` without the cookie → login page; a login POST with
   the password from env → cookie; `/api/direct` with the cookie on two golden prompts → `source: "llm"` and a valid
   BeatScript. Print the URL (the workers.dev URL is fine).
@@ -758,8 +766,8 @@ reaction beat for the other actor). It powers the instant preview, the no-key fa
 5. The director eval (§8.4) passes with real API calls, locally or against the deployed Worker — **or**, if no
    Anthropic key is available anywhere (the deployed Worker answers `source: "offline"`), `STATUS.md` says "director
    eval not run: key absent".
-6. Deployed to Cloudflare behind the password gate, with the §12 smoke test output printed — **or**, if Cloudflare
-   credentials are absent, `STATUS.md` names the missing variables and the one command that finishes the deploy.
+6. Deployed to Cloudflare via Workers Builds (`.deploy-ready` committed, latest build `success`), behind the
+   password gate, with the §12 smoke test output printed.
 7. `docs/ASSETS.md` lists the source, author and license of every third-party asset, and the Behind-the-scenes
    System layers legend matches the §0 table;
 8. `docs/DEMO_SCRIPT.md` (a 5-minute funder walkthrough mapping D1–D8 to clicks and lines to say) is written;
