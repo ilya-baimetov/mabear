@@ -9,7 +9,7 @@ import { SILENT, biquad, burst, clamp, gainNode, mulberry32, noiseBuffer, tone, 
 
 /** Relative level per layer (before the ambience bus). */
 export const LAYER_GAIN: Record<Ambience, number> = {
-  birds_day: 0.6, forest_wind: 0.7, creek: 0.55, rain: 0.75, thunderstorm: 0.85, night_crickets: 0.45, bees: 0.4, strong_wind: 0.8,
+  birds_day: 1.5, forest_wind: 0.7, creek: 0.55, rain: 0.75, thunderstorm: 0.85, night_crickets: 1.3, bees: 1.0, strong_wind: 0.8,
 };
 
 /** World position of positional layers ([x, z] from the set bible). */
@@ -154,8 +154,10 @@ class LayerVoice {
   private startedAt = 0;
   private fadeIn = 0.05;
   private stopping = false;
+  private stopAt = Infinity;
+  private released = false;
 
-  constructor(private o: Out | null, readonly span: AmbienceSpan, private toCtx: (ep: number) => number) {
+  constructor(private o: Out | null, public span: AmbienceSpan, private toCtx: (ep: number) => number) {
     this.rnd = mulberry32(Math.round(span.start * 100) + span.layer.length * 977);
   }
 
@@ -190,20 +192,45 @@ class LayerVoice {
   stop(atEp: number, fade: number): void {
     if (this.stopping) return;
     this.stopping = true;
+    const at = Math.max(atEp, this.startedAt + this.fadeIn);
+    this.stopAt = at;
     const g = this.gain;
     if (!g) return;
-    const at = Math.max(atEp, this.startedAt + this.fadeIn);
     const t = this.toCtx(at);
-    const f = Math.max(0.05, fade);
     g.gain.setValueAtTime(LAYER_GAIN[this.span.layer], t);
-    g.gain.linearRampToValueAtTime(SILENT, t + f);
+    g.gain.linearRampToValueAtTime(SILENT, t + Math.max(0.05, fade));
+  }
+
+  /** Free the continuous sources (after the fade-out has finished). */
+  release(atEp: number): void {
+    if (this.released || !this.o) return;
+    this.released = true;
+    const t = Math.max(this.o.ctx.currentTime, this.toCtx(atEp));
     for (const s of this.sources) {
       try {
-        s.stop(t + f + 0.05);
+        s.stop(t);
       } catch {
         /* already stopped */
       }
     }
+    this.sources = [];
+  }
+
+  get done(): boolean {
+    return this.released;
+  }
+
+  /** The span was extended (timeline grew): cancel a pending fade-out. */
+  retarget(span: AmbienceSpan, nowEp: number): void {
+    this.span = span;
+    if (!this.stopping || this.released || span.end <= this.stopAt) return;
+    this.stopping = false;
+    this.stopAt = Infinity;
+    const g = this.gain;
+    if (!g || !this.o) return;
+    const now = this.o.ctx.currentTime;
+    g.gain.cancelScheduledValues(Math.max(now, this.toCtx(Math.max(nowEp, this.startedAt + this.fadeIn))));
+    g.gain.setValueAtTime(LAYER_GAIN[span.layer], Math.max(now, this.toCtx(nowEp)));
   }
 
   /** Random events (chirps, droplets, thunder) with onsets in [fromEp, toEp). */
@@ -271,9 +298,29 @@ export class AmbienceDirector {
   layersStarted = 0;
   private voices = new Map<AmbienceSpan, LayerVoice>();
 
-  constructor(private o: Out | null, readonly spans: AmbienceSpan[], private toCtx: (ep: number) => number) {}
+  constructor(private o: Out | null, public spans: AmbienceSpan[], private toCtx: (ep: number) => number) {}
+
+  /** Timeline changed while playing: keep layers whose span still exists (same layer + start); fade the rest. */
+  retarget(spans: AmbienceSpan[], nowEp: number): void {
+    const next = new Map<AmbienceSpan, LayerVoice>();
+    for (const [sp, v] of this.voices) {
+      const match = spans.find((n) => n.layer === sp.layer && Math.abs(n.start - sp.start) < 1e-3 && !next.has(n));
+      if (match && match.end > nowEp && !v.done) {
+        v.retarget(match, nowEp);
+        next.set(match, v);
+      } else {
+        v.stop(nowEp, 0.6);
+        v.release(nowEp + 0.7);
+      }
+    }
+    this.voices = next;
+    this.spans = spans;
+  }
 
   update(fromEp: number, toEp: number, nowEp: number): void {
+    for (const [sp, v] of this.voices) {
+      if (!v.done && sp.end + sp.fadeOut < nowEp) v.release(nowEp);
+    }
     for (const sp of this.spans) {
       const tail = sp.end + sp.fadeOut;
       if (sp.start >= toEp || tail <= fromEp) continue;

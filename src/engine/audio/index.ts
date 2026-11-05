@@ -5,18 +5,19 @@
 // runs "dry": the same scheduling walk on the wall clock that only counts cues. Never throws.
 import type { AudioDebug, AudioEngine } from "../api";
 import type { ActorId, CamKey, Lang, Timeline, Vec3 } from "../../shared/schema";
+import { CHARACTERS } from "../../shared/bible/characters";
 import { AmbienceDirector } from "./ambience";
 import { MIX, createBuses, getSharedContext, masterLevel, mergeDuckWindows, resetDuck, scheduleDuck, setMaster, type Buses, type DuckWindow } from "./bus";
-import { renderFoley } from "./foley";
+import { FOLEY_LENGTH, renderFoley } from "./foley";
 import { MusicDirector } from "./music";
 import {
   LOOKAHEAD_S, TICK_MS, flattenTimeline, inWindow, planAmbienceSpans, planMusicSections, startLoop, stateAt,
   type FlatTimeline, type LookaheadLoop,
 } from "./scheduler";
-import { renderSfx } from "./sfx";
+import { SFX_LENGTH, renderSfx } from "./sfx";
 import { clamp, gainNode, type Out } from "./synth";
 import { Tts, interjection, profileFor } from "./tts";
-import { renderVocal } from "./vocals";
+import { renderVocal, vocalFor, vocalLength } from "./vocals";
 
 export { MIX } from "./bus";
 export { LOOKAHEAD_S, TICK_MS } from "./scheduler";
@@ -32,6 +33,13 @@ export interface AudioEngineOptions {
 
 /** Dialogue cues already in progress by more than this at play() are not spoken (can't start TTS mid-word). */
 export const DIALOGUE_LATE_S = 0.3;
+/**
+ * play() at (about) the current playhead while already playing is a timeline update (a paragraph was added or
+ * recompiled during playback): the session continues — music/ambience voices that still apply keep playing.
+ */
+export const SOFT_REPLAY_S = 0.25;
+/** How far back play() looks for one-shots still sounding (longest SFX is ~3.2 s). */
+const LATE_WINDOW_S = 3.5;
 /** Safety latency between scheduling and the first sound (s). */
 const START_LATENCY = 0.06;
 const ACTORS: ActorId[] = ["masha", "bear"];
@@ -61,7 +69,7 @@ interface Session {
   music: MusicDirector;
   amb: AmbienceDirector;
   duck: DuckWindow[];
-  duckDone: Set<number>;
+  duckDone: Set<string>;
   outs: SessionOuts | null;
   sources: Set<AudioScheduledSourceNode>;
   timers: Set<ReturnType<typeof setTimeout>>;
@@ -119,7 +127,18 @@ export function spatialize(cam: CamKey, p: Vec3): { pan: number; gain: number } 
 export function createAudioEngine(opts: AudioEngineOptions = {}): AudioEngine {
   const lookahead = opts.lookahead ?? LOOKAHEAD_S;
   const tickMs = opts.tickMs ?? TICK_MS;
-  const debug: AudioDebug = { scheduled: emptyCounts(), ttsAvailable: false, unlocked: false };
+  // AudioDebug plus two diagnostic extras (errors swallowed so playback never breaks)
+  const debug: AudioDebug & { errors: number; lastError: string } = {
+    scheduled: emptyCounts(), ttsAvailable: false, unlocked: false, errors: 0, lastError: "",
+  };
+  const safe = (fn: () => void): void => {
+    try {
+      fn();
+    } catch (e) {
+      debug.errors++;
+      debug.lastError = String((e as Error)?.message ?? e).slice(0, 200);
+    }
+  };
   lastDebug = debug;
   try {
     (globalThis as unknown as { __mabearAudio?: AudioDebug }).__mabearAudio = debug;
@@ -204,7 +223,7 @@ export function createAudioEngine(opts: AudioEngineOptions = {}): AudioEngine {
     const flat = flattenTimeline(tl);
     const t0 = Number.isFinite(fromT) ? Math.max(0, fromT) : 0;
     const anchorCtx = real && ctx ? ctx.currentTime + START_LATENCY : 0;
-    const toCtx = (ep: number): number => anchorCtx + (ep - t0);
+    const toCtx = (ep: number): number => Math.max(0, anchorCtx + (ep - t0));
     const sources = new Set<AudioScheduledSourceNode>();
     let outs: SessionOuts | null = null;
     let musicOut: Out | null = null;
@@ -264,7 +283,7 @@ export function createAudioEngine(opts: AudioEngineOptions = {}): AudioEngine {
     s.scheduledUntil = to;
     const first = s.firstTick;
     s.firstTick = false;
-    const toCtx = (ep: number): number => s.anchorCtx + (ep - s.fromT);
+    const toCtx = (ep: number): number => Math.max(0, s.anchorCtx + (ep - s.fromT));
     const at = (ep: number): number => (ctx ? Math.max(ctx.currentTime + 0.005, toCtx(ep)) : 0);
     const o = s.outs;
 
@@ -277,12 +296,13 @@ export function createAudioEngine(opts: AudioEngineOptions = {}): AudioEngine {
     }
     for (const c of inWindow(s.flat.music, from, to)) count(s, "music", c.i);
     for (const c of inWindow(s.flat.ambience, from, to)) count(s, "ambience", c.i);
-    s.music.update(from, to, now);
-    s.amb.update(from, to, now);
+    safe(() => s.music.update(from, to, now));
+    safe(() => s.amb.update(from, to, now));
 
     // ducking windows
     if (s.real && buses) {
-      s.duck.forEach((w, k) => {
+      s.duck.forEach((w) => {
+        const k = w.start.toFixed(3);
         if (s.duckDone.has(k) || w.start >= to || w.end <= now) return;
         s.duckDone.add(k);
         scheduleDuck(buses!, toCtx(w.start), toCtx(w.end), w.depth);
@@ -292,47 +312,59 @@ export function createAudioEngine(opts: AudioEngineOptions = {}): AudioEngine {
     // dialogue (TTS fires at the cue start; can't be sample-scheduled)
     for (const c of inWindow(s.flat.dialogue, first ? s.fromT - DIALOGUE_LATE_S : from, to)) {
       count(s, "dialogue", c.i);
-      if (!tts || muted) continue;
+      if (!tts || muted || !CHARACTERS[c.actor]?.speaks) continue; // canon guard: a non-speaking character never gets TTS
       const prof = profileFor(c.actor);
       const lang = c.lang ?? s.lang;
       const bcp = prof.lang[lang] ?? prof.lang.en;
       later(s, c.t - now, () => tts?.speak(c.text, bcp, prof.pitch, prof.rate, voiceVolume()));
     }
 
+    // One-shots already in progress at play(): scheduled at their true (past) ctx time, so the envelope automation
+    // is mid-way and the sound continues from the right offset; skipped when mostly over.
+    const oneShotFrom = first ? s.fromT - LATE_WINDOW_S : from;
+    const lateOk = (t: number, len: number): boolean => t >= s.fromT - 0.03 || s.fromT - t < len * 0.75;
+    const atLate = (ep: number): number => (ctx ? (ep < s.fromT ? Math.max(0, toCtx(ep)) : at(ep)) : 0);
+
     // vocal emotes
-    for (const c of inWindow(s.flat.emotes, from, to)) {
+    for (const c of inWindow(s.flat.emotes, oneShotFrom, to)) {
+      const voc = vocalFor(c.actor, c.emote);
+      const late = c.t < s.fromT - 0.03;
+      if (!lateOk(c.t, voc ? vocalLength(voc.syl) : 0)) continue;
       count(s, "emotes", c.i);
       const vo: Out | null = o && ctx ? { ctx, dest: o.vocals[c.actor] ?? o.vocals.masha, track: trackFor(s) } : null;
       const text = c.actor === "masha" ? interjection("masha", c.emote, s.lang) : null;
-      if (text && tts && tts.available) {
+      if (text && tts && tts.available && !late) {
         const prof = profileFor("masha");
         const bcp = prof.lang[s.lang] ?? prof.lang.en;
         later(s, c.t - now, () => {
           const spoke = !muted && !tts!.speaking && tts!.speak(text, bcp, Math.min(2, prof.pitch + 0.3), prof.rate + 0.05, voiceVolume());
-          if (!spoke && vo && ctx) renderVocal(vo, c.actor, c.emote, ctx.currentTime + 0.01);
+          if (!spoke && vo && ctx) safe(() => renderVocal(vo, c.actor, c.emote, ctx!.currentTime + 0.01));
         });
       } else if (vo) {
         if (!listener && channels[c.actor]) channels[c.actor]!.pan.pan.setValueAtTime(0, at(c.t));
-        renderVocal(vo, c.actor, c.emote, at(c.t));
+        safe(() => renderVocal(vo, c.actor, c.emote, atLate(c.t)));
       }
     }
 
     // foley (re-spatialized per actor channel)
-    for (const c of inWindow(s.flat.foley, from, to)) {
+    for (const c of inWindow(s.flat.foley, oneShotFrom, to)) {
+      if (!lateOk(c.t, FOLEY_LENGTH[c.id] ?? 0.3)) continue;
       count(s, "foley", c.i);
       if (!o || !ctx) continue;
       if (!listener && channels[c.actor] && Number.isFinite(c.pan)) channels[c.actor]!.pan.pan.setValueAtTime(clamp(c.pan, -1, 1), at(c.t));
-      renderFoley({ ctx, dest: o.foley[c.actor] ?? o.foley.masha, track: trackFor(s) }, c.id, c.surface, at(c.t), c.gain, c.actor === "bear");
+      const fo: Out = { ctx, dest: o.foley[c.actor] ?? o.foley.masha, track: trackFor(s) };
+      safe(() => renderFoley(fo, c.id, c.surface, atLate(c.t), c.gain, c.actor === "bear"));
     }
 
     // event SFX (cue pan)
-    for (const c of inWindow(s.flat.sfx, from, to)) {
+    for (const c of inWindow(s.flat.sfx, oneShotFrom, to)) {
+      if (!lateOk(c.t, SFX_LENGTH[c.id] ?? 0.5)) continue;
       count(s, "sfx", c.i);
       if (!o || !ctx) continue;
       const p = ctx.createStereoPanner();
       p.pan.value = clamp(Number.isFinite(c.pan) ? c.pan : 0, -1, 1);
       p.connect(o.sfx);
-      renderSfx({ ctx, dest: p, track: trackFor(s) }, c.id, at(c.t), c.gain);
+      safe(() => renderSfx({ ctx: ctx!, dest: p, track: trackFor(s) }, c.id, atLate(c.t), c.gain));
     }
 
     // past the end: stop looking ahead (scheduled tails finish on their own)
@@ -396,6 +428,27 @@ export function createAudioEngine(opts: AudioEngineOptions = {}): AudioEngine {
     return s;
   }
 
+  /** Swap the timeline of a running session without interrupting it (see SOFT_REPLAY_S). */
+  function updateSession(s: Session, tl: Timeline, lang: Lang): void {
+    const flat = flattenTimeline(tl);
+    const now = nowEp(s);
+    // cues before the scheduled horizon were already handled by the old timeline
+    const counted = new Set<string>();
+    const mark = (track: Track, list: { t: number; i: number }[]): void => {
+      for (const c of list) if (c.t < s.scheduledUntil) counted.add(`${track}:${c.i}`);
+    };
+    mark("dialogue", flat.dialogue); mark("emotes", flat.emotes); mark("foley", flat.foley);
+    mark("sfx", flat.sfx); mark("music", flat.music); mark("ambience", flat.ambience);
+    s.tl = tl;
+    s.flat = flat;
+    s.lang = lang;
+    s.counted = counted;
+    s.music.retarget(planMusicSections(flat.music, flat.duration), now);
+    s.amb.retarget(planAmbienceSpans(flat.ambience, flat.duration), now);
+    s.duck = mergeDuckWindows(flat.ducking);
+    if (!s.loop) s.loop = startLoop(() => tick(s), tickMs);
+  }
+
   function restartReal(): void {
     const s = session;
     if (!s) return;
@@ -422,6 +475,11 @@ export function createAudioEngine(opts: AudioEngineOptions = {}): AudioEngine {
 
     play(timeline: Timeline, fromT: number, lang: Lang): void {
       try {
+        const cur = session;
+        if (cur && timeline && Number.isFinite(fromT) && Math.abs(nowEp(cur) - fromT) < SOFT_REPLAY_S) {
+          updateSession(cur, timeline, lang);
+          return;
+        }
         endSession();
         tts?.cancel();
         Object.assign(debug.scheduled, emptyCounts());

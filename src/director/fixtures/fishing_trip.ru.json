@@ -4,9 +4,9 @@
   "title": "На рыбалке",
   "paragraphs": [
     {
-      "text": "Мишка идёт рыбачить на мостки. Играет спокойная музыка, журчит вода, поют птицы. Маша хватает мяч и бежит за ним: «Мишка, подожди меня!»",
+      "text": "Мишка берёт удочку и усаживается на мостках ждать поклёвки. Играет спокойная музыка, журчит вода, поют птицы. Маша хватает мяч и бежит за ним: «Мишка, подожди меня!»",
       "beatScript": {
-        "summary": "Мишка идёт на мостки порыбачить в тишине, а Маша бежит за ним с мячом.",
+        "summary": "Мишка устраивается на мостках порыбачить в тишине, а Маша бежит за ним с мячом.",
         "time_of_day": null,
         "mood": "calm",
         "music": {
@@ -86,8 +86,8 @@
           },
           {
             "actor": "bear",
-            "verb": "fish",
-            "target": null,
+            "verb": "sit",
+            "target": "pier",
             "item": null,
             "line": null,
             "emote": "hum",
@@ -150,7 +150,7 @@
             "sfx": "splash",
             "emotion": "surprised",
             "with_previous": true,
-            "delay_s": 0.7,
+            "delay_s": 0.8,
             "shot": "close"
           },
           {
@@ -347,12 +347,12 @@
         ],
         "beats": [
           {
-            "actor": "bear",
+            "actor": "masha",
             "verb": "sit",
             "target": "pier",
             "item": null,
             "line": null,
-            "emote": "sigh",
+            "emote": "hum",
             "sfx": null,
             "emotion": "happy",
             "with_previous": false,
@@ -360,12 +360,12 @@
             "shot": "wide"
           },
           {
-            "actor": "masha",
-            "verb": "sit",
-            "target": "pier",
+            "actor": "bear",
+            "verb": "look_at",
+            "target": "masha",
             "item": null,
             "line": null,
-            "emote": "hum",
+            "emote": "sigh",
             "sfx": null,
             "emotion": "happy",
             "with_previous": true,
@@ -387,8 +387,8 @@
           },
           {
             "actor": "bear",
-            "verb": "look_at",
-            "target": "masha",
+            "verb": "nod",
+            "target": null,
             "item": null,
             "line": null,
             "emote": "hum",

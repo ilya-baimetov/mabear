@@ -6,12 +6,12 @@ import { clamp, dbToGain } from "./synth";
 export const MIX = {
   master: 0.9,
   voice: 1.0,
-  fx: 0.85,
-  vocals: 0.9,
-  foley: 0.75,
-  sfx: 0.8,
-  ambience: 0.32,
-  music: 0.4,
+  fx: 1.0,
+  vocals: 1.0,
+  foley: 0.8,
+  sfx: 0.85,
+  ambience: 0.55,
+  music: 0.7,
 } as const;
 
 export const DUCK = { attack: 0.15, release: 0.4 } as const;

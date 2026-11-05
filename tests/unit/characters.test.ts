@@ -91,10 +91,16 @@ describe.each(builders)("%s rig", (id, build, height) => {
 
   it("stays within the draw-call budget (~25 meshes)", () => {
     let meshes = 0;
+    let tris = 0;
     rig.root.traverse((o) => {
-      if ((o as THREE.Mesh).isMesh) meshes++;
+      const m = o as THREE.Mesh;
+      if (!m.isMesh) return;
+      meshes++;
+      tris += (m.geometry.index ? m.geometry.index.count : m.geometry.getAttribute("position").count) / 3;
     });
+    console.log(`${id}: ${meshes} meshes, ${Math.round(tris)} triangles`);
     expect(meshes).toBeLessThanOrEqual(30);
+    expect(tris).toBeLessThan(250_000);
   });
 });
 

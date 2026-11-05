@@ -3,7 +3,7 @@
 import type { Quat } from "../../api";
 import { addLayer, blendLayers, easeInOut, qmul, smooth, window01, type PoseLayer } from "../blend";
 import {
-  UPPER, arm, idleBase, layer, leg, mask, noise1, pose, poseClip, rx, ry, rz,
+  UPPER, UPPER_NO_HEAD, arm, idleBase, layer, leg, mask, noise1, pose, poseClip, rx, ry, rz,
   sampleClip, type VerbCtx, type VerbImpl,
 } from "./common";
 
@@ -80,11 +80,11 @@ export const jump: VerbImpl = (lt, _p, ctx) => {
   const peak = ctx.actor === "masha" ? 0.28 : 0.2;
   const crouch = window01(u, 0, 0.36, 0.12) + window01(u, 0.7, 1, 0.12);
   const air = u > 0.32 && u < 0.76 ? Math.sin(((u - 0.32) / 0.44) * Math.PI) : 0;
-  const base = idleBase(ctx, 0.3);
+  const base = mask(idleBase(ctx, 0.3), { bones: pose(arm("Left", -0.9, 0.3, 0.3), arm("Right", -0.9, 0.3, 0.3)), hipsOffset: [0, 0, 0] }, ["LeftArm", "LeftForeArm", "RightArm", "RightForeArm"], air);
   const tuck = air * 0.6;
   return addLayer(base, pose(
     leg("Left", 0.6 * crouch + tuck, 1.2 * crouch + tuck * 1.2), leg("Right", 0.6 * crouch + tuck, 1.2 * crouch + tuck * 1.2),
-    { Spine: rx(0.25 * crouch - 0.1 * air), LeftArm: rz(1.6 * air - 0.3 * crouch), RightArm: rz(-1.6 * air + 0.3 * crouch) },
+    { Spine: rx(0.25 * crouch - 0.1 * air), LeftArm: rz(-0.3 * crouch), RightArm: rz(0.3 * crouch) },
   ), 1, [0, -0.22 * h * crouch + peak * air, 0]);
 };
 
@@ -110,7 +110,8 @@ export const dance: VerbImpl = (lt, _p, ctx) => {
     { Hips: rz(sway) },
     leg("Left", 0.25 * b, 0.5 * b, 0.06 - sway * 0.5), leg("Right", 0.25 * b, 0.5 * b, 0.06 + sway * 0.5),
   ), [Math.sin(lt * beat * Math.PI * 0.5) * 0.04 * ctx.style.hipHeight, -0.07 * ctx.style.hipHeight * b, 0]);
-  const L = mask(legs, top, UPPER);
+  const L = mask(legs, top, UPPER_NO_HEAD);
+  L.bones.Head = qmul(rz(Math.sin(lt * beat * Math.PI) * 0.18), rx(0.08 * b));
   if (ctx.actor === "bear") L.yawOffset = Math.sin(lt * 0.8) * 0.5; // the old circus routine: slow turns
   return L;
 };
@@ -121,6 +122,7 @@ export const sit: VerbImpl = (lt, _p, ctx) => {
 };
 
 export const stand_up: VerbImpl = (lt, _p, ctx) => {
+  if (ctx.fromPosture === "stand" || ctx.fromPosture === "offstage") return idleBase(ctx); // already up
   const from = ctx.fromPosture === "sleep" ? liePose(ctx) : ctx.fromPosture === "sit" ? sitPose(ctx) : sitPose({ ...ctx, seat: 0 });
   const L = transition(from, standPose(ctx), lt / ctx.dur);
   // a push-up effort lean forward halfway
@@ -169,11 +171,8 @@ export const wake_up: VerbImpl = (lt, _p, ctx) => {
 export const yawn_stretch: VerbImpl = (lt, _p, ctx) => {
   const u = lt / ctx.dur;
   const s = window01(u, 0.1, 0.9, 0.25);
-  const base = idleBase(ctx, 0.3);
-  const L = addLayer(base, pose(
-    arm("Left", -1.3 * s, 0.2, 0.4 * s), arm("Right", -1.3 * s, 0.2, 0.4 * s),
-    { Spine: rx(-0.15 * s), Spine1: rx(-0.1 * s), Head: rx(-0.3 * s) },
-  ), 1, [0, 0.02 * s * ctx.style.hipHeight, 0]);
+  const base = mask(idleBase(ctx, 0.3), { bones: pose(arm("Left", -1.25, 0.25, 0.5), arm("Right", -1.25, 0.25, 0.5)), hipsOffset: [0, 0, 0] }, ["LeftArm", "LeftForeArm", "RightArm", "RightForeArm"], s);
+  const L = addLayer(base, { Spine: rx(-0.15 * s), Spine1: rx(-0.1 * s), Head: rx(-0.3 * s) }, 1, [0, 0.02 * s * ctx.style.hipHeight, 0]);
   return { ...L, face: { viseme: "o", visemeWeight: s, lidClose: 0.6 * s } };
 };
 

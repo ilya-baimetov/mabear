@@ -82,22 +82,30 @@ export const fish: VerbImpl = (lt, _p, ctx) => {
   return addLayer(L, { Spine: rx(-0.15 * back + 0.15 * cast), Head: rx(0.15 * k) });
 };
 
+/** Rope swing geometry (matches the set: pivot 3.42 m up, 2.97 m ropes, seat at 0.45 m). */
+export const SWING_ROPE = 2.97;
+export const SWING_SEAT = 0.45;
+export const SWING_PERIOD = 2.4; // s — rope_creak every 1.2 s
+
+/** Pendulum angle (rad, + = toward the swinger's front) at clip-local time lt of a swing clip lasting dur. */
+export function swingAngle(lt: number, dur: number): number {
+  const k = smooth(lt / 0.8) * smooth((dur - lt) / 0.8 + 1e-4);
+  return Math.sin((lt / SWING_PERIOD) * Math.PI * 2) * 0.38 * k;
+}
+
 export const swing: VerbImpl = (lt, _p, ctx) => {
-  // seated on the rope swing; pendulum period 2.4 s (rope_creak every 1.2 s)
-  const k = smooth(lt / 0.6) * smooth((ctx.dur - lt) / 0.6 + 1e-4);
-  const a = Math.sin((lt / 2.4) * Math.PI * 2) * 0.5 * k;
+  // seated on the rope swing, riding the pendulum and pumping the legs
+  const a = swingAngle(lt, ctx.dur);
   const h = ctx.style.hipHeight;
-  const rope = 1.6;
-  const seat = 0.45;
   const bones = pose(
-    leg("Left", 1.4 - a * 0.6, 1.2 + a * 0.9, 0.05), leg("Right", 1.4 - a * 0.6, 1.2 + a * 0.9, 0.05),
+    leg("Left", 1.4 - a * 0.8, 1.2 + a * 1.1, 0.05), leg("Right", 1.4 - a * 0.8, 1.2 + a * 1.1, 0.05),
     arm("Left", -0.9, 0.5, 1.4, -1.2), arm("Right", -0.9, 0.5, 1.4, -1.2),
-    { Hips: rx(-a * 0.5), Spine: rx(a * 0.3), Head: rx(-a * 0.3) },
+    { Hips: rx(-a * 0.8), Spine: rx(a * 0.3), Head: rx(-a * 0.2) },
   );
-  const z = Math.sin(a) * rope;
-  const y = (1 - Math.cos(a)) * rope;
-  const swingL = layer(bones, [0, seat + 0.04 * h - h + y, -0.1 * h + z]);
-  return { ...blendLayers(idleBase(ctx, 0.3), swingL, smooth(lt / 0.4)), face: { emotion: "excited", viseme: a > 0.3 ? "open_wide" : "grin", visemeWeight: Math.abs(a) } };
+  const z = Math.sin(a) * SWING_ROPE;
+  const y = (1 - Math.cos(a)) * SWING_ROPE;
+  const swingL = layer(bones, [0, SWING_SEAT + 0.04 * h - h + y, -0.05 * h + z]);
+  return { ...blendLayers(idleBase(ctx, 0.3), swingL, smooth(lt / 0.4)), face: { emotion: "excited", viseme: a > 0.25 ? "open_wide" : "grin", visemeWeight: Math.min(1, Math.abs(a) * 2.5) } };
 };
 
 export const carry: VerbImpl = (lt, _p, ctx) => {

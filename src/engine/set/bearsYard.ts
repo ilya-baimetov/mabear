@@ -35,8 +35,9 @@ const PIER_DIR = new THREE.Vector2(-1, 2.6).normalize();
 const PIER_YAW = Math.atan2(PIER_DIR.x, PIER_DIR.y);
 const BRIDGE_YAW = 0.149;
 export const PORCH_HEIGHT = 0.32;
-export const TABLE_TOP = 0.755;
+export const TABLE_TOP = 0.78; // matches the player's PROP_REST_HEIGHT.table
 export const SAMOVAR_TOP = TABLE_TOP + 0.47;
+export const PIER_HEIGHT = 0.28;
 const SAMOVAR_XZ: Vec2 = [2.22, 1.28];
 
 /** Creek centreline [x, z] from the north-east forest, down the east edge (footbridge at (12, 9)), into the pond. */
@@ -96,7 +97,7 @@ export function walkHeightAt(x: number, z: number): number {
   // pier: local z along the pier from -0.3 (land) to 3.1
   {
     const [lx, lz] = toLocal(x, z, SET_ELEMENTS.pier);
-    if (Math.abs(lx) < 0.7 && lz > -0.6 && lz < 3.2) return 0.2 * clamp01((lz + 0.6) / 0.5);
+    if (Math.abs(lx) < 0.7 && lz > -0.6 && lz < 3.2) return PIER_HEIGHT * clamp01((lz + 0.6) / 0.6);
   }
   for (const id of ["footbridge", "path_bridge"] as const) {
     const [lx, lz] = toLocal(x, z, SET_ELEMENTS[id]);
@@ -190,16 +191,17 @@ function beam(a: THREE.Vector3, b: THREE.Vector3, r0: number, r1 = r0, seg = 8):
 const V = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);
 
 /** A stylized pine (trunk + 4 soft tiers) into `bag`, base at the origin of `m`. */
-export function addPine(bag: GeoBag, height: number, seed: number, m: THREE.Matrix4, mat: MatKey = "foliage"): void {
+export function addPine(bag: GeoBag, height: number, seed: number, m: THREE.Matrix4, mat: MatKey = "foliage", lod = 0, clear = 0): void {
   const r = rng(seed);
   const h = height;
-  bag.add("bark", cyl(0.025 * h, 0.04 * h, 0.5 * h, 7), 0x6b4428, xf([0, 0.25 * h, 0]).premultiply(m), { aoBottom: 0.3 });
+  bag.add("bark", cyl(0.025 * h, 0.04 * h, 0.5 * h, lod ? 5 : 7), 0x6b4428, xf([0, 0.25 * h, 0]).premultiply(m), { aoBottom: 0.3 });
   const tiers = 4;
   for (let i = 0; i < tiers; i++) {
     const ch = h * (0.36 - i * 0.045);
     const cr = h * (0.2 - i * 0.036) * (0.9 + r() * 0.2);
-    const y = h * (0.2 + i * 0.165) + ch / 2;
-    const g = new THREE.ConeGeometry(cr, ch, 10, 2, false);
+    const y0 = Math.max(h * 0.2, clear);
+    const y = y0 + (h - y0) * (i * 0.205) + ch / 2;
+    const g = new THREE.ConeGeometry(cr, ch, lod ? 7 : 10, lod ? 1 : 2, false);
     // soften: droop the rim slightly and jitter
     const pos = g.attributes.position;
     for (let k = 0; k < pos.count; k++) {
@@ -225,10 +227,10 @@ export function addPine(bag: GeoBag, height: number, seed: number, m: THREE.Matr
 }
 
 /** A birch (white trunk with dark marks + light leafy blobs). */
-export function addBirch(bag: GeoBag, height: number, seed: number, m: THREE.Matrix4, mat: MatKey = "foliage"): void {
+export function addBirch(bag: GeoBag, height: number, seed: number, m: THREE.Matrix4, mat: MatKey = "foliage", lod = 0): void {
   const r = rng(seed);
   const h = height;
-  bag.add("bark", cyl(0.028 * h, 0.04 * h, 0.75 * h, 8, 14), 0xeeeae0, xf([0, 0.375 * h, 0]).premultiply(m), {
+  bag.add("bark", cyl(0.028 * h, 0.04 * h, 0.75 * h, lod ? 5 : 8, lod ? 6 : 14), 0xeeeae0, xf([0, 0.375 * h, 0]).premultiply(m), {
     colorFn: (p, _n, out) => {
       const a = Math.atan2(p.z, p.x);
       if (Math.sin(p.y * 9 + a * 2 + seed) > 0.82 || Math.sin(p.y * 4.1 - a + seed * 2) > 0.93) out.setHex(0x37322d);
@@ -239,8 +241,8 @@ export function addBirch(bag: GeoBag, height: number, seed: number, m: THREE.Mat
     const rr = h * (0.16 + r() * 0.06);
     const y = h * (0.58 + i * 0.1);
     const ox = (r() - 0.5) * h * 0.18, oz = (r() - 0.5) * h * 0.18;
-    const light = new THREE.Color(0xa7cf5a), dark = new THREE.Color(0x5f9a3a);
-    bag.add(mat, blob(rr, seed * 7 + i, 0.14, 1), 0x86b84a, xf([ox, y, oz], [0, 0, 0], [1, 1.25, 1]).premultiply(m), {
+    const light = new THREE.Color(0x9ccc4e), dark = new THREE.Color(0x4f8e30);
+    bag.add(mat, blob(rr, seed * 7 + i, 0.14, lod ? 0 : 1), 0x86b84a, xf([ox, y, oz], [0, 0, 0], [1, 1.25, 1]).premultiply(m), {
       colorFn: (_p, nn, out) => out.copy(dark).lerp(light, clamp01(nn.y * 0.6 + 0.5)),
       jitter: 0.12,
       seed: seed + 31 * i,
@@ -276,8 +278,8 @@ interface SetExtras {
 
 function buildHouse(c: BuildCtx): void {
   const b = c.bag;
-  const W = 6.4, D = 4.8, r = 0.17, step = 0.31, base = 0.25;
-  const rows = 14;
+  const W = 6.4, D = 4.8, r = 0.2, step = 0.37, base = 0.25;
+  const rows = 16, groundRows = 9;
   // stone foundation
   b.add("stone", new RoundedBoxGeometry(W + 0.3, base, D + 0.3, 2, 0.06), 0x9a948a, xf([0, base / 2, 0]), { jitter: 0.1 });
   const logCols = [0xb8743f, 0xad6b39, 0xc07d46];
@@ -296,9 +298,9 @@ function buildHouse(c: BuildCtx): void {
   }
   const wallTop = base + rows * step + 0.1;
   // floor band between storeys
-  b.add("paint", box(W + 0.62, 0.12, 0.06), 0xf2ead8, xf([0, base + 7 * step + 0.12, D / 2 + r + 0.02]));
+  b.add("paint", box(W + 0.7, 0.12, 0.06), 0xf2ead8, xf([0, base + groundRows * step + 0.06, D / 2 + r + 0.02]));
   // gable roof: ridge along z, gable facing front (+z)
-  const half = W / 2 + 0.6, rise = 2.1, roofLen = D + 1.3;
+  const half = W / 2 + 0.6, rise = 2.4, roofLen = D + 1.3;
   const slope = Math.atan2(rise, half);
   const slant = Math.hypot(half, rise);
   const planks = 13;
@@ -326,17 +328,18 @@ function buildHouse(c: BuildCtx): void {
     b.add("paint", box(slant + 0.15, 0.16, 0.06), 0xf3ecdc, xf([side * half / 2, wallTop + rise / 2 + 0.02, roofLen / 2 + 0.01], [0, 0, -side * slope]));
   }
   // round attic window
-  addWindow(b, 0, wallTop + 0.95, D / 2 + 0.17, 0.55, 0.55, true);
+  addWindow(b, 0, wallTop + 0.85, D / 2 + 0.17, 0.62, 0.62, true);
   // windows: ground + upper floor (front), one each side
-  addWindow(b, -1.9, base + 1.25, D / 2 + r + 0.02, 0.8, 0.9);
-  addWindow(b, 1.9, base + 1.25, D / 2 + r + 0.02, 0.8, 0.9);
-  addWindow(b, -1.6, base + 3.25, D / 2 + r + 0.02, 0.7, 0.75);
-  addWindow(b, 1.6, base + 3.25, D / 2 + r + 0.02, 0.7, 0.75);
+  const gwY = base + 1.75, uwY = base + 4.75;
+  addWindow(b, -1.95, gwY, D / 2 + r + 0.02, 0.95, 1.1);
+  addWindow(b, 1.95, gwY, D / 2 + r + 0.02, 0.95, 1.1);
+  addWindow(b, -1.6, uwY, D / 2 + r + 0.02, 0.85, 0.95);
+  addWindow(b, 1.6, uwY, D / 2 + r + 0.02, 0.85, 0.95);
   for (const s of [-1, 1]) {
     const m = new THREE.Matrix4().makeRotationY((s * Math.PI) / 2);
     const wb = new GeoBag();
-    addWindow(wb, 0, base + 1.3, D / 2 + r + 0.02, 0.75, 0.85);
-    addWindow(wb, -0.9, base + 3.25, D / 2 + r + 0.02, 0.6, 0.7);
+    addWindow(wb, 0, gwY, D / 2 + r + 0.02, 0.85, 1.0);
+    addWindow(wb, 0, uwY, D / 2 + r + 0.02, 0.75, 0.85);
     // side windows sit on the side walls: rotate the front-wall layout by ±90° and scale z→x distance
     const fix = new THREE.Matrix4().makeTranslation(s * (W / 2 - D / 2), 0, 0);
     b.absorb(wb, fix.multiply(m));
@@ -344,18 +347,21 @@ function buildHouse(c: BuildCtx): void {
   }
   // door
   const dz = D / 2 + r + 0.04;
-  b.add("wood", box(1.05, 1.95, 0.08), 0x8a5230, xf([0, base + 0.98, dz]), {
-    colorFn: (p, _n, out) => { if (Math.abs(((p.x + 0.525) % 0.21) - 0.105) > 0.095) out.multiplyScalar(0.75); },
+  const doorH = 2.75, doorW = 1.4, db = PORCH_HEIGHT;
+  b.add("wood", box(doorW, doorH, 0.08), 0x8a5230, xf([0, db + doorH / 2, dz]), {
+    colorFn: (p, _n, out) => { if (Math.abs(((p.x + 0.7) % 0.28) - 0.14) > 0.125) out.multiplyScalar(0.75); },
   });
-  b.add("paint", box(1.3, 0.14, 0.1), 0xf3ecdc, xf([0, base + 2.02, dz + 0.02]));
-  for (const s of [-1, 1]) b.add("paint", box(0.12, 2.0, 0.1), 0xf3ecdc, xf([s * 0.6, base + 1.0, dz + 0.02]));
-  b.add("metal", sph(0.045, 8, 6), 0x2b2b2b, xf([0.36, base + 0.95, dz + 0.07]));
+  b.add("wood", box(doorW - 0.1, 0.1, 0.1), 0x74431f, xf([0, db + doorH * 0.75, dz + 0.04]));
+  b.add("wood", box(doorW - 0.1, 0.1, 0.1), 0x74431f, xf([0, db + doorH * 0.25, dz + 0.04]));
+  b.add("paint", box(doorW + 0.34, 0.16, 0.1), 0xf3ecdc, xf([0, db + doorH + 0.08, dz + 0.02]));
+  for (const s of [-1, 1]) b.add("paint", box(0.14, doorH, 0.1), 0xf3ecdc, xf([s * (doorW / 2 + 0.07), db + doorH / 2, dz + 0.02]));
+  b.add("metal", sph(0.06, 8, 6), 0x2b2b2b, xf([0.45, db + 1.3, dz + 0.08]));
   // chimney (stone) on the right slope, toward the back
-  b.add("stone", new RoundedBoxGeometry(0.7, 3.6, 0.7, 2, 0.05), 0xa39486, xf([1.9, wallTop + 1.3, -0.9]), {
+  b.add("stone", new RoundedBoxGeometry(0.75, 3.5, 0.75, 2, 0.05), 0xa39486, xf([1.9, wallTop + 1.25, -0.9]), {
     colorFn: (p, _n, out) => { if (Math.abs(((p.y + 10) % 0.3) - 0.15) < 0.018) out.multiplyScalar(0.7); },
     jitter: 0.12,
   });
-  b.add("stone", box(0.86, 0.14, 0.86), 0x7d726a, xf([1.9, wallTop + 3.12, -0.9]));
+  b.add("stone", box(0.92, 0.14, 0.92), 0x7d726a, xf([1.9, wallTop + 3.04, -0.9]));
   // porch: deck, steps, posts, canopy, back railings
   const pz0 = D / 2, pz1 = D / 2 + 2.0;
   b.add("wood", box(4.8, 0.1, 2.0), 0xb07a48, xf([0, PORCH_HEIGHT - 0.05, (pz0 + pz1) / 2]), {
@@ -367,7 +373,7 @@ function buildHouse(c: BuildCtx): void {
     b.add("wood", box(4.8, 0.06, 0.3), 0xb98250, xf([0, top - 0.03, pz1 + 0.15 + sI * 0.3]));
     b.add("wood", box(4.8, top - 0.06, 0.28), 0x8e5f36, xf([0, (top - 0.06) / 2, pz1 + 0.15 + sI * 0.3]));
   }
-  const postH = 2.55;
+  const postH = 3.0;
   for (const s of [-1, 1]) {
     b.add("wood", cyl(0.09, 0.1, postH, 10), 0xb07a48, xf([s * 2.25, PORCH_HEIGHT + postH / 2, pz1 - 0.15]), { capColor: endGrain, capAxis: "y" });
     // back railings
@@ -383,14 +389,19 @@ function buildHouse(c: BuildCtx): void {
   b.add("paint", box(5.25, 0.12, 0.05), 0xf3ecdc, xf([0, PORCH_HEIGHT + postH + 0.02, pz1 + 0.2]));
   // a little bench of flowers boxes under the front windows (charm)
   for (const s of [-1, 1]) {
-    b.add("wood", box(0.95, 0.16, 0.22), 0x9a6a3e, xf([s * 1.9, base + 0.74, D / 2 + r + 0.13]));
-    for (let k = 0; k < 5; k++) {
-      b.add("foliage", sph(0.075, 8, 6), [0xe8433a, 0xffd84a, 0xff8fc0, 0xffffff, 0xe8433a][k], xf([s * 1.9 - 0.36 + k * 0.18, base + 0.88, D / 2 + r + 0.13]));
+    const fy = gwY - 0.55 - 0.32;
+    b.add("wood", box(1.1, 0.18, 0.24), 0x9a6a3e, xf([s * 1.95, fy, D / 2 + r + 0.14]));
+    for (let k = 0; k < 6; k++) {
+      b.add("foliage", sph(0.08, 8, 6), [0xe8433a, 0xffd84a, 0xff8fc0, 0xffffff, 0xe8433a, 0xa070e0][k], xf([s * 1.95 - 0.45 + k * 0.18, fy + 0.13, D / 2 + r + 0.14]));
     }
   }
+  // porch lantern (glass glows at night; the look's point light sits here)
+  b.add("glass", box(0.18, 0.26, 0.18), 0xffffff, xf([1.3, PORCH_HEIGHT + postH - 0.45, D / 2 + 1.75]));
+  b.add("paint", box(0.24, 0.05, 0.24), 0x2a2a2a, xf([1.3, PORCH_HEIGHT + postH - 0.3, D / 2 + 1.75]));
+  b.add("paint", cyl(0.01, 0.01, 0.25, 4), 0x2a2a2a, xf([1.3, PORCH_HEIGHT + postH - 0.15, D / 2 + 1.75]));
 
   // smoke (deterministic, driven by t in update)
-  c.extra.smoke = makeSmoke(new THREE.Vector3(1.9, wallTop + 3.35, -0.9));
+  c.extra.smoke = makeSmoke(new THREE.Vector3(1.9, wallTop + 3.25, -0.9));
   c.dyn.push(c.extra.smoke);
 }
 
@@ -525,7 +536,7 @@ function addPickets(b: GeoBag, x0: number, z0: number, x1: number, z1: number, h
     const x = x0 + (x1 - x0) * t, z = z0 + (z1 - z0) * t;
     const lean = (r() - 0.5) * 0.08;
     const hh = h * (0.92 + r() * 0.12);
-    b.add("paint", box(w, hh, w * 0.4), col, xf([x, hh / 2, z], [lean, yaw, 0]), { aoBottom: 0.4, jitter: 0.08, seed: i });
+    b.add("paint", box(w * 0.4, hh, w), col, xf([x, hh / 2, z], [lean, yaw, 0]), { aoBottom: 0.4, jitter: 0.08, seed: i });
     b.add("paint", new THREE.ConeGeometry(w * 0.72, w * 1.1, 4), col, xf([x, hh + w * 0.5, z], [lean, yaw + Math.PI / 4, 0]));
   }
   for (const ry of [0.32, 0.78]) {
@@ -639,7 +650,7 @@ function buildOakSwing(c: BuildCtx): void {
 
 function buildHammock(c: BuildCtx): void {
   const b = c.bag;
-  for (const s of [-1, 1]) addPine(b, 8.5 + s * 0.6, 40 + s, xf([s * 2.1, 0, 0]));
+  for (const s of [-1, 1]) addPine(b, 9 + s * 0.6, 40 + s, xf([s * 2.1, 0, 0]), "foliage", 0, 2.9);
   // fabric: sagging striped grid
   const U = 24, Vn = 6, L = 3.0, Wd = 0.9;
   const pos: number[] = [], col: number[] = [], uv: number[] = [], idx: number[] = [];
@@ -652,7 +663,7 @@ function buildHammock(c: BuildCtx): void {
       const x = -L / 2 + u * L;
       const narrow = 0.35 + 0.65 * Math.sin(Math.PI * u);
       const z = (v - 0.5) * Wd * narrow;
-      const y = 0.98 - 0.45 * Math.sin(Math.PI * u) + 0.12 * Math.pow(2 * v - 1, 2) * narrow;
+      const y = 1.05 - 0.43 * Math.sin(Math.PI * u) + 0.12 * Math.pow(2 * v - 1, 2) * narrow;
       pos.push(x, y, z);
       cc.setHex(stripes[Math.min(stripes.length - 1, Math.floor(v * stripes.length * 0.999))]);
       col.push(cc.r, cc.g, cc.b);
@@ -672,7 +683,7 @@ function buildHammock(c: BuildCtx): void {
   b.addPainted("fabric", g);
   for (const s of [-1, 1]) {
     for (const zz of [-0.12, 0.12]) {
-      const { g: rg, m } = beam(V(s * 1.5, 0.98, zz * 0.6), V(s * 2.0, 1.4, 0), 0.015, 0.015, 4);
+      const { g: rg, m } = beam(V(s * 1.5, 1.05, zz * 0.6), V(s * 2.0, 1.45, 0), 0.015, 0.015, 4);
       b.add("wood", rg, 0xd2bc8e, m);
     }
   }
@@ -683,7 +694,7 @@ function buildPond(c: BuildCtx): void {
   // radial water mesh with a depth gradient
   const segs = 64, rings = [0, 0.4, 0.7, 0.88, 1.0];
   const pos: number[] = [], col: number[] = [], idx: number[] = [];
-  const deep = new THREE.Color(0x2c7d8c), shallow = new THREE.Color(0x86cfc8), cc = new THREE.Color();
+  const deep = new THREE.Color(0x1f6f86), shallow = new THREE.Color(0x6cc2c4), cc = new THREE.Color();
   pos.push(0, 0.03, 0);
   col.push(deep.r, deep.g, deep.b);
   for (let ri = 1; ri < rings.length; ri++) {
@@ -746,7 +757,7 @@ function buildPond(c: BuildCtx): void {
 
 function buildPier(c: BuildCtx): void {
   const b = c.bag;
-  const L0 = -0.4, L1 = 3.1, Wd = 1.2, H = 0.2;
+  const L0 = -0.4, L1 = 3.1, Wd = 1.2, H = PIER_HEIGHT;
   const n = 12;
   const plank = (L1 - L0) / n;
   for (let i = 0; i < n; i++) {
@@ -1029,7 +1040,7 @@ function buildForest(c: BuildCtx): void {
       if (creekDistance(x, z) < 2.2) continue;
       if (Math.abs(x - pathX(z)) < 3.2 && z > 8) continue;
       if (Math.hypot(x - 14, z + 1) < 4) continue;
-      if (dist > 40 && rk < (dist - 40) / 30) continue;
+      if (dist > 36 && rk < 0.25 + (dist - 36) / 30) continue;
       const birchP = dist < 26 ? 0.38 : 0.2;
       const kind = rt < birchP ? "birch" : rt < birchP + (1 - birchP) / 2 ? "pineA" : "pineB";
       const s = 0.75 + rs * 0.6 + (dist > 28 ? 0.25 : 0);
@@ -1042,17 +1053,18 @@ function buildForest(c: BuildCtx): void {
     const x = side * (20 + r() * 12), z = 12 + r() * 22;
     near.birch.push({ x, z, s: 0.8 + r() * 0.4, rot: r() * 6 });
   }
-  const protos: Record<"pineA" | "pineB" | "birch", THREE.BufferGeometry> = {
-    pineA: protoGeo((bag) => addPine(bag, 7.5, 11, xf())),
-    pineB: protoGeo((bag) => addPine(bag, 9, 12, xf(), "foliage")),
-    birch: protoGeo((bag) => addBirch(bag, 6.5, 13, xf())),
-  };
+  const protoSet = (lod: number): Record<"pineA" | "pineB" | "birch", THREE.BufferGeometry> => ({
+    pineA: protoGeo((bag) => addPine(bag, 7.5, 11, xf(), "foliage", lod)),
+    pineB: protoGeo((bag) => addPine(bag, 9, 12, xf(), "foliage", lod)),
+    birch: protoGeo((bag) => addBirch(bag, 6.5, 13, xf(), "foliage", lod)),
+  });
+  const protosNear = protoSet(0), protosFar = protoSet(1);
   const m4 = new THREE.Matrix4();
   for (const [set, cast, tag] of [[near, true, "near"], [far, false, "far"]] as const) {
     for (const kind of ["pineA", "pineB", "birch"] as const) {
       const spots = set[kind];
       if (!spots.length) continue;
-      const im = new THREE.InstancedMesh(protos[kind], c.mats.foliage, spots.length);
+      const im = new THREE.InstancedMesh((tag === "near" ? protosNear : protosFar)[kind], c.mats.foliage, spots.length);
       im.name = `set:forest:${kind}:${tag}`;
       spots.forEach((sp, i) => {
         m4.copy(xf([sp.x, groundY(sp.x, sp.z), sp.z], [0, sp.rot, 0], sp.s));
@@ -1065,7 +1077,7 @@ function buildForest(c: BuildCtx): void {
       c.dyn.push(im);
     }
   }
-  c.extra.disposables.push(...Object.values(protos));
+  c.extra.disposables.push(...Object.values(protosNear), ...Object.values(protosFar));
 }
 
 function protoGeo(fill: (bag: GeoBag) => void): THREE.BufferGeometry {
@@ -1114,53 +1126,50 @@ function buildGround(c: BuildCtx): void {
 
 function groundTexture(T: number): THREE.Texture | null {
   if (typeof document === "undefined") return null;
-  const S = 2048;
-  const px = S / T;
-  const cv = document.createElement("canvas");
-  cv.width = cv.height = S;
-  const ctx = cv.getContext("2d");
+  // Paint the low-frequency layers on a small canvas (cheap), upscale smoothly (free blur), then add fine grain.
+  const L = 512, S = 2048;
+  const lo = document.createElement("canvas");
+  lo.width = lo.height = L;
+  const ctx = lo.getContext("2d");
   if (!ctx) return null;
+  const px = L / T;
   const X = (x: number) => (x + T / 2) * px;
   const Z = (z: number) => (z + T / 2) * px;
   const r = rng(9);
-  ctx.fillStyle = "#86b84c";
-  ctx.fillRect(0, 0, S, S);
-  // large soft variation
-  ctx.filter = "blur(18px)";
-  const greens = ["#7aae45", "#93c457", "#6fa23f", "#8fbd4f", "#9cc95e"];
-  for (let i = 0; i < 380; i++) {
+  ctx.fillStyle = "#72b33f";
+  ctx.fillRect(0, 0, L, L);
+  const greens = ["#69a838", "#82c04c", "#5f9e34", "#7dbb45", "#8cc955", "#6aac3c"];
+  for (let i = 0; i < 520; i++) {
     ctx.fillStyle = greens[i % greens.length];
-    ctx.globalAlpha = 0.35;
+    ctx.globalAlpha = 0.28;
     ctx.beginPath();
-    ctx.arc(r() * S, r() * S, (1 + r() * 3.5) * px, 0, Math.PI * 2);
+    ctx.arc(r() * L, r() * L, (0.6 + r() * 3) * px, 0, Math.PI * 2);
     ctx.fill();
   }
   ctx.globalAlpha = 1;
   // forest-floor fade toward the border (matches the clamped edge)
-  const grd = ctx.createRadialGradient(S / 2, S / 2, 21 * px, S / 2, S / 2, 31 * px);
-  grd.addColorStop(0, "rgba(98,140,58,0)");
-  grd.addColorStop(1, "rgba(98,140,58,1)");
-  ctx.filter = "none";
+  const grd = ctx.createRadialGradient(L / 2, L / 2, 21 * px, L / 2, L / 2, 31 * px);
+  grd.addColorStop(0, "rgba(84,128,48,0)");
+  grd.addColorStop(1, "rgba(84,128,48,1)");
   ctx.fillStyle = grd;
-  ctx.fillRect(0, 0, S, S);
+  ctx.fillRect(0, 0, L, L);
+  ctx.filter = "blur(3px)";
   // sun-dried worn clearing
-  ctx.filter = "blur(24px)";
-  ctx.fillStyle = "rgba(176,170,96,0.45)";
+  ctx.fillStyle = "rgba(168,172,84,0.35)";
   ctx.beginPath();
   ctx.ellipse(X(-1.5), Z(-0.5), 5.5 * px, 3.8 * px, 0, 0, Math.PI * 2);
   ctx.fill();
   // under the house and porch, the woodpile, the garden
-  ctx.fillStyle = "rgba(92,104,58,0.8)";
-  ctx.fillRect(X(-9.8), Z(-9.2), 7.6 * px, 8.6 * px);
+  ctx.fillStyle = "rgba(82,100,50,0.85)";
+  ctx.fillRect(X(-9.8), Z(-9.2), 7.6 * px, 7.8 * px);
   ctx.fillStyle = "rgba(170,146,100,0.7)";
   ctx.beginPath();
   ctx.ellipse(X(-12.6), Z(-5.6), 1.9 * px, 1.6 * px, 0, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = "rgba(140,112,72,0.6)";
+  ctx.fillStyle = "rgba(130,104,66,0.55)";
   ctx.fillRect(X(2.7), Z(-9.1), 5.4 * px, 4.2 * px);
-  // dirt path from the south into the yard, and a worn trail to the porch
-  const strokePath = (pts: Vec2[], w: number, color: string, blur: number) => {
-    ctx.filter = `blur(${blur}px)`;
+  // dirt path from the south into the yard, and worn trails
+  const strokePath = (pts: Vec2[], w: number, color: string) => {
     ctx.strokeStyle = color;
     ctx.lineWidth = w * px;
     ctx.lineCap = "round";
@@ -1172,34 +1181,40 @@ function groundTexture(T: number): THREE.Texture | null {
   const path: Vec2[] = [];
   for (let z = 33; z >= 9; z -= 1) path.push([pathX(z), z]);
   path.push([0.2, 6], [-0.6, 3], [-2.6, 0.2], [-4.6, -1.2], [-6, -1.6]);
-  strokePath(path, 2.6, "rgba(160,128,84,0.9)", 10);
-  strokePath(path.slice(0, 26), 1.7, "rgba(196,160,108,0.9)", 6);
-  strokePath([[2, 0.2], [4.2, -2.4], [5, -4.6]], 1.0, "rgba(170,150,96,0.5)", 12);
-  strokePath([[-12.2, -5.0], [-10.5, -2.4], [-7.4, -1.6]], 0.9, "rgba(170,150,96,0.45)", 12);
-  // pond shore (mud + sand ring)
+  strokePath(path, 2.5, "rgba(164,126,78,0.9)");
+  strokePath(path.slice(0, 26), 1.6, "rgba(196,156,102,0.9)");
+  strokePath([[2, 0.2], [4.2, -2.4], [5, -4.6]], 1.0, "rgba(168,150,92,0.45)");
+  strokePath([[-12.2, -5.0], [-10.5, -2.4], [-7.4, -1.6]], 0.9, "rgba(168,150,92,0.4)");
+  // pond shore (wet grass, then a sandy rim)
   const ring: Vec2[] = [];
   for (let i = 0; i <= 64; i++) {
     const th = (i / 64) * Math.PI * 2;
     const rr = pondRadius(th);
     ring.push([POND_C[0] + Math.cos(th) * rr, POND_C[1] + Math.sin(th) * rr]);
   }
-  strokePath(ring, 1.6, "rgba(120,124,64,0.8)", 10);
-  strokePath(ring, 0.8, "rgba(170,150,100,0.9)", 5);
+  strokePath(ring, 1.8, "rgba(84,120,52,0.8)");
+  strokePath(ring, 0.8, "rgba(176,156,104,0.95)");
   // creek banks
   const cs = creekSamples();
-  strokePath(cs, 2.6, "rgba(96,128,58,0.7)", 12);
-  strokePath(cs, 1.6, "rgba(130,112,76,0.85)", 6);
+  strokePath(cs, 2.8, "rgba(80,118,50,0.7)");
+  strokePath(cs, 1.7, "rgba(140,118,78,0.9)");
   ctx.filter = "none";
-  // fine grain noise (grass detail)
-  const img = ctx.getImageData(0, 0, S, S);
+  const cv = document.createElement("canvas");
+  cv.width = cv.height = S;
+  const big = cv.getContext("2d")!;
+  big.imageSmoothingEnabled = true;
+  big.imageSmoothingQuality = "high";
+  big.drawImage(lo, 0, 0, S, S);
+  // fine grain: blade-like speckles (grass detail near the camera)
+  const img = big.getImageData(0, 0, S, S);
   const d = img.data;
   for (let i = 0; i < d.length; i += 4) {
-    const n = 1 + (r() - 0.5) * 0.16;
+    const n = 1 + (r() - 0.5) * 0.2;
     d[i] = Math.min(255, d[i] * n);
     d[i + 1] = Math.min(255, d[i + 1] * n);
     d[i + 2] = Math.min(255, d[i + 2] * n);
   }
-  ctx.putImageData(img, 0, 0);
+  big.putImageData(img, 0, 0);
   const tex = new THREE.CanvasTexture(cv);
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.anisotropy = 8;
@@ -1207,26 +1222,28 @@ function groundTexture(T: number): THREE.Texture | null {
 }
 
 function buildGrass(c: BuildCtx): void {
-  // tuft prototype: 5 curved blades, dark base → light tip
+  // tuft prototype: 7 soft blades fanning out, dark base -> sunlit tip (matches the ground palette)
   const pos: number[] = [], col: number[] = [], idx: number[] = [];
-  const base = new THREE.Color(0x4f8a30), tip = new THREE.Color(0xb6db6a), cc = new THREE.Color();
+  const base = new THREE.Color(0x5f9f36), tip = new THREE.Color(0xa9dc62), cc = new THREE.Color();
   let v = 0;
-  for (let b = 0; b < 5; b++) {
-    const a = (b / 5) * Math.PI * 2 + 0.3;
+  const blades = 9;
+  for (let b = 0; b < blades; b++) {
+    const a = (b / blades) * Math.PI * 2 + (b % 2) * 0.4;
     const dx = Math.cos(a), dz = Math.sin(a);
-    const w = 0.035;
-    const segs = 3;
-    for (let s = 0; s <= segs; s++) {
-      const t = s / segs;
-      const bend = t * t * 0.35;
-      const y = t;
-      const ww = w * (1 - t * 0.9);
+    const w = 0.09;
+    const hgt = 0.55 + 0.45 * ((b * 37) % 7) / 7;
+    const segs = 2;
+    for (let s2 = 0; s2 <= segs; s2++) {
+      const t = s2 / segs;
+      const bend = 0.12 + t * t * 0.45;
+      const y = t * hgt;
+      const ww = w * (1 - t * 0.85);
       cc.copy(base).lerp(tip, t);
-      pos.push(dx * bend - dz * ww, y, dz * bend + dx * ww, dx * bend + dz * ww, y, dz * bend - dx * ww);
+      pos.push(dx * bend * t - dz * ww, y, dz * bend * t + dx * ww, dx * bend * t + dz * ww, y, dz * bend * t - dx * ww);
       col.push(cc.r, cc.g, cc.b, cc.r, cc.g, cc.b);
     }
-    for (let s = 0; s < segs; s++) {
-      const o = v + s * 2;
+    for (let s2 = 0; s2 < segs; s2++) {
+      const o = v + s2 * 2;
       idx.push(o, o + 1, o + 2, o + 1, o + 3, o + 2);
     }
     v += (segs + 1) * 2;
@@ -1235,7 +1252,7 @@ function buildGrass(c: BuildCtx): void {
   g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
   g.setAttribute("color", new THREE.Float32BufferAttribute(col, 3));
   g.setIndex(idx);
-  // normals pointing up-ish so tufts light like the ground (soft, no harsh backfaces)
+  // normals pointing up so tufts light like the ground (soft, no harsh backfaces)
   const n = new Float32Array(pos.length);
   for (let i = 0; i < n.length; i += 3) n[i + 1] = 1;
   g.setAttribute("normal", new THREE.BufferAttribute(n, 3));
@@ -1243,14 +1260,16 @@ function buildGrass(c: BuildCtx): void {
   mat.name = "set:grass";
   const r = rng(808);
   const mats: THREE.Matrix4[] = [];
-  for (let i = 0; i < 9000 && mats.length < 5200; i++) {
-    const x = (r() - 0.5) * 44, z = (r() - 0.5) * 46 + 3;
-    const s = 0.16 + r() * 0.2;
+  for (let i = 0; i < 16000 && mats.length < 5200; i++) {
+    const x = (r() - 0.5) * 46, z = (r() - 0.5) * 44 + 3;
+    const s = 0.09 + r() * 0.12;
     const rot = r() * Math.PI * 2;
     if (!openGround(x, z, 0.1)) continue;
-    // sparser in the worn clearing
-    if (((x + 1.5) / 5.5) ** 2 + ((z + 0.5) / 3.8) ** 2 < 1 && r() < 0.7) continue;
-    mats.push(xf([x, groundY(x, z), z], [0, rot, 0], [s * 1.2, s * (0.8 + r() * 0.6), s * 1.2]));
+    // clumpy: denser along edges, fences, house, trees; sparse in the worn clearing and on the path
+    const worn = ((x + 1.5) / 6) ** 2 + ((z + 0.5) / 4.2) ** 2 < 1;
+    const clump = 0.5 + 0.5 * Math.sin(x * 0.9 + Math.cos(z * 0.7) * 2) * Math.cos(z * 1.1 - x * 0.3);
+    if (r() > (worn ? 0.12 : 0.25 + 0.75 * clump)) continue;
+    mats.push(xf([x, groundY(x, z), z], [0, rot, 0], [s * 1.3, s * (0.8 + r() * 0.5), s * 1.3]));
   }
   const im = new THREE.InstancedMesh(g, mat, mats.length);
   mats.forEach((m, i) => im.setMatrixAt(i, m));

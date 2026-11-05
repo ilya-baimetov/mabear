@@ -64,8 +64,8 @@ export const TOD_PRESETS: Record<TimeOfDay, LightingParams> = {
   },
   night: {
     skyTop: 0x0a1433, skyHorizon: 0x2b3f73, skyBottom: 0x1a2440,
-    sunDir: [-5, 10, 7], sunColor: 0x9fb8ff, sunIntensity: 0.75, sunGlow: 0.25,
-    hemiSky: 0x4c64a8, hemiGround: 0x1c2232, hemiIntensity: 0.7,
+    sunDir: [-5, 10, 7], sunColor: 0x9fb8ff, sunIntensity: 0.6, sunGlow: 0.25,
+    hemiSky: 0x40589c, hemiGround: 0x161c2c, hemiIntensity: 0.55,
     rimColor: 0x8fb0ff, rimIntensity: 0.9,
     fogColor: 0x1d2a4f, fogNear: 14, fogFar: 80,
     exposure: 1.15, envIntensity: 0.22, windowGlow: 1.0, stars: 1,
@@ -194,7 +194,7 @@ export function createLook(scene: THREE.Scene, renderer: THREE.WebGLRenderer): L
   scene.add(rim, rim.target);
 
   const lantern = new THREE.PointLight(0xffb060, 0, 9, 1.6);
-  lantern.position.set(-6, 2.3, -2.4);
+  lantern.position.set(-4.7, 2.85, -2.0); // the porch lantern of Bear's house
   scene.add(lantern);
 
   const skyMat = new THREE.ShaderMaterial({
@@ -386,19 +386,17 @@ function softNoise(ctx: CanvasRenderingContext2D, s: number, base: string, amp: 
 
 export function createMaterials(): LookMaterials {
   const grain = canvasTex(256, woodGrain);
-  const leafy = canvasTex(128, (c, s) => softNoise(c, s, "#e6e6e6", 0.25, 3));
   const stony = canvasTex(128, (c, s) => softNoise(c, s, "#dddddd", 0.3, 5));
-  if (leafy) leafy.repeat.set(3, 3);
   const std = (o: THREE.MeshStandardMaterialParameters) => new THREE.MeshStandardMaterial({ vertexColors: true, ...o });
   const mats = {
     wood: std({ roughness: 0.82, map: grain }),
     bark: std({ roughness: 0.95, map: grain }),
-    foliage: std({ roughness: 0.88, map: leafy }),
+    foliage: std({ roughness: 0.88 }),
     paint: std({ roughness: 0.55 }),
     metal: std({ roughness: 0.32, metalness: 0.65 }),
     glass: new THREE.MeshStandardMaterial({ color: 0x6f8fb0, roughness: 0.15, metalness: 0.1, emissive: 0xffa040, emissiveIntensity: 0.05 }),
-    water: std({ roughness: 0.08, metalness: 0.05, envMapIntensity: 1.6 }),
-    fabric: new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: 0.95, sheen: 0.6, sheenRoughness: 0.6, sheenColor: new THREE.Color(0xffffff) }),
+    water: std({ roughness: 0.18, metalness: 0.0, envMapIntensity: 1.1 }),
+    fabric: new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: 0.95, sheen: 0.6, sheenRoughness: 0.6, sheenColor: new THREE.Color(0xffffff), side: THREE.DoubleSide }),
     stone: std({ roughness: 0.92, map: stony }),
     soil: std({ roughness: 1.0, map: stony }),
   } as LookMaterials;
@@ -580,7 +578,7 @@ export function bagToSingle(bag: GeoBag): THREE.BufferGeometry {
 export function lumpy(g: THREE.BufferGeometry, amp: number, freq: number, seed = 1): THREE.BufferGeometry {
   const pos = g.attributes.position;
   const o = seed * 13.37;
-  // merge seams first so displacement doesn't tear spheres
+  // position-based noise: coincident vertices move together, so seams never tear
   for (let i = 0; i < pos.count; i++) {
     _p.fromBufferAttribute(pos, i);
     const len = _p.length() || 1;

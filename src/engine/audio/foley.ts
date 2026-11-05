@@ -7,6 +7,13 @@ import { biquad, burst, mulberry32, tone, SILENT, type Out } from "./synth";
 
 let stepSeed = 1;
 
+/** Approximate length (s) of each foley sound (mid-cue starts on play()). */
+export const FOLEY_LENGTH: Record<FoleyId, number> = {
+  footstep: 0.12, footstep_heavy: 0.2, ground_thump: 0.2, landing_thud: 0.25, body_fall: 0.4, cloth_rustle: 0.25,
+  prop_pickup: 0.2, prop_putdown: 0.1, rope_creak: 0.55, sizzle_loop: 2.0, munch: 0.6, splash_small: 0.35,
+  water_pour: 1.3, clap: 0.07,
+};
+
 /** Per-surface footstep recipe: filter centre (Hz), length (s), noise colour. Pure data. */
 export const SURFACE_STEP: Record<Surface, { f: number; dur: number; q: number; body: number }> = {
   grass: { f: 3200, dur: 0.09, q: 0.8, body: 0.2 },
@@ -19,7 +26,7 @@ export function footstep(o: Out, surface: Surface, t: number, gain: number, heav
   const s = SURFACE_STEP[surface] ?? SURFACE_STEP.grass;
   const rnd = mulberry32(stepSeed++);
   const k = heavy ? 0.6 : 1; // heavy steps are lower
-  const vol = gain * (heavy ? 1.5 : 1);
+  const vol = gain * (heavy ? 1.5 : 1.4);
   const jitter = 0.9 + rnd() * 0.2;
   const f = s.f * k * jitter;
   switch (surface) {
@@ -53,8 +60,8 @@ export function groundThump(o: Out, t: number, gain: number): void {
 
 export function clothRustle(o: Out, t: number, gain: number, dur = 0.25): void {
   // two overlapping band-passed noise swishes
-  burst(o, { color: "white", t, dur, a: dur * 0.3, filter: "bandpass", f: 3200, f2: 2200, q: 0.9, peak: gain * 0.25 });
-  burst(o, { color: "pink", t: t + dur * 0.2, dur: dur * 0.7, a: 0.02, filter: "bandpass", f: 1800, q: 1.2, peak: gain * 0.12 });
+  burst(o, { color: "white", t, dur, a: dur * 0.3, filter: "bandpass", f: 3200, f2: 2200, q: 0.9, peak: gain * 0.5 });
+  burst(o, { color: "pink", t: t + dur * 0.2, dur: dur * 0.7, a: 0.02, filter: "bandpass", f: 1800, q: 1.2, peak: gain * 0.25 });
 }
 
 function ropeCreak(o: Out, t: number, gain: number): void {
@@ -67,7 +74,7 @@ function ropeCreak(o: Out, t: number, gain: number): void {
   const bp = biquad(ctx, "bandpass", 1100, 9);
   const g = ctx.createGain();
   g.gain.setValueAtTime(SILENT, t);
-  g.gain.linearRampToValueAtTime(gain * 0.5, t + 0.08);
+  g.gain.linearRampToValueAtTime(gain * 2, t + 0.08);
   g.gain.exponentialRampToValueAtTime(SILENT, t + 0.55);
   osc.connect(bp).connect(g).connect(o.dest);
   osc.start(t);
@@ -113,8 +120,8 @@ export function renderFoley(o: Out, id: FoleyId, surface: Surface, t: number, ga
       clothRustle(o, t, g);
       return;
     case "prop_pickup":
-      burst(o, { color: "white", t, dur: 0.05, filter: "bandpass", f: 2500, q: 2, peak: g * 0.25 });
-      clothRustle(o, t + 0.03, g * 0.5, 0.15);
+      burst(o, { color: "white", t, dur: 0.05, filter: "bandpass", f: 2500, q: 2, peak: g * 0.8 });
+      clothRustle(o, t + 0.03, g * 1.2, 0.15);
       return;
     case "prop_putdown":
       tone(o, { type: "triangle", f: 320, f2: 220, glide: 0.03, t, dur: 0.1, peak: g * 0.35 });
@@ -130,15 +137,15 @@ export function renderFoley(o: Out, id: FoleyId, surface: Surface, t: number, ga
       munch(o, t, g * 0.8, stepSeed++);
       return;
     case "splash_small":
-      burst(o, { color: "white", t, dur: 0.35, a: 0.005, filter: "bandpass", f: 2200, f2: 800, q: 0.9, peak: g * 0.45 });
+      burst(o, { color: "white", t, dur: 0.35, a: 0.005, filter: "bandpass", f: 2200, f2: 800, q: 0.9, peak: g * 0.9 });
       tone(o, { type: "sine", f: 500, f2: 1100, glide: 0.06, t: t + 0.05, dur: 0.08, peak: g * 0.15 });
       return;
     case "water_pour":
       waterPour(o, t, g);
       return;
     case "clap":
-      burst(o, { color: "white", t, dur: 0.07, a: 0.001, filter: "bandpass", f: 1700, q: 1.3, peak: g * 0.8 });
-      burst(o, { color: "white", t: t + 0.006, dur: 0.05, a: 0.001, filter: "bandpass", f: 2600, q: 1.5, peak: g * 0.4 });
+      burst(o, { color: "white", t, dur: 0.07, a: 0.001, filter: "bandpass", f: 1700, q: 1.3, peak: g * 2 });
+      burst(o, { color: "white", t: t + 0.006, dur: 0.05, a: 0.001, filter: "bandpass", f: 2600, q: 1.5, peak: g * 1 });
       return;
   }
 }

@@ -205,9 +205,10 @@ export function planCamera(input: CameraPlanInput): CameraCue[] {
     }
   }
 
-  // 5. camera keys, 180° side fixed for the segment
-  const side = lineSide(posAt("masha", 0), posAt("bear", 0));
+  // 5. camera keys; 180° rule: the camera stays on the same side of the masha–bear line from shot to shot
+  let side = lineSide(posAt("masha", 0), posAt("bear", 0));
   return split.map((s) => {
+    if (visibleAt("masha", s.start) && visibleAt("bear", s.start)) side = continueSide(posAt("masha", s.start), posAt("bear", s.start), side);
     const angle = (rnd() - 0.5) * (s.kind === "wide" ? 0.8 : 1.1);
     const { from, to } = framing(s.kind, s.subject, s.start, s.end, angle, side, posAt, visibleAt, rnd);
     return { start: r3(s.start), dur: r3(s.end) - r3(s.start), shot: shotName(s.kind), from, to, overridden: s.overridden };
@@ -241,6 +242,15 @@ function lineSide(m: Vec2, b: Vec2): Vec2 {
   if (Math.hypot(l[0], l[1]) < 0.5 || Math.hypot(l[0], l[1]) > 16) return [0, 1];
   const p = norm([-l[1], l[0]]);
   return p[1] >= 0 ? p : [-p[0], -p[1]];
+}
+
+/** Perpendicular to the current masha→bear line, on the same side as the previous shot. */
+function continueSide(m: Vec2, b: Vec2, prev: Vec2): Vec2 {
+  const l: Vec2 = [b[0] - m[0], b[1] - m[1]];
+  const len = Math.hypot(l[0], l[1]);
+  if (len < 0.5 || len > 16) return prev;
+  const p = norm([-l[1], l[0]]);
+  return p[0] * prev[0] + p[1] * prev[1] >= 0 ? p : [-p[0], -p[1]];
 }
 
 function framing(

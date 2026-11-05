@@ -25,6 +25,8 @@ export interface FaceConfig {
     /** non-uniform eye shape */
     scaleX: number;
     scaleY: number;
+    /** eyeball flattening along its forward axis (1 = sphere; < 1 sits flatter in the face) */
+    scaleZ: number;
     /** how deep the sclera centre sits below the surface, as a fraction of r (0 = centre on surface) */
     depth: number;
     /** iris radius / r, pupil radius / iris radius */
@@ -180,7 +182,9 @@ export function buildFace(cfg: FaceConfig, mats: MaterialSet): FaceRig {
   const E = cfg.eyes;
 
   // ---- materials
-  const scleraMat = mats.add(new THREE.MeshStandardMaterial({ color: col(E.sclera), roughness: 0.32, metalness: 0 }));
+  const scleraMat = mats.add(
+    new THREE.MeshStandardMaterial({ color: col(E.sclera), roughness: 0.4, metalness: 0, emissive: col(E.sclera), emissiveIntensity: 0.22 }),
+  );
   const irisMat = mats.add(
     new THREE.MeshPhysicalMaterial({ color: 0xffffff, vertexColors: true, roughness: 0.35, clearcoat: 1, clearcoatRoughness: 0.08 }),
   );
@@ -211,14 +215,14 @@ export function buildFace(cfg: FaceConfig, mats: MaterialSet): FaceRig {
     const x = side * E.x;
     const n = surfNormal(E.surface, x, E.y);
     const surf = new THREE.Vector3(x, E.y, surfZ(E.surface, x, E.y));
-    const centre = surf.clone().addScaledVector(n, -E.depth * E.r);
+    const centre = surf.clone().addScaledVector(n, -E.depth * E.r * E.scaleZ);
     const g = new THREE.Group();
     g.name = side === 1 ? "eyeL" : "eyeR";
     g.position.copy(centre);
     const yaw = Math.atan2(n.x, n.z) + side * E.toeOut;
     const pitch = -Math.asin(Math.max(-1, Math.min(1, n.y)));
     g.rotation.set(pitch, yaw, 0, "YXZ");
-    g.scale.set(E.scaleX, E.scaleY, 1);
+    g.scale.set(E.scaleX, E.scaleY, E.scaleZ);
     group.add(g);
     g.updateMatrix();
 
@@ -238,11 +242,16 @@ export function buildFace(cfg: FaceConfig, mats: MaterialSet): FaceRig {
     for (let i = 0; i < ipos.count; i++) {
       const px = ipos.getX(i);
       const py = ipos.getY(i);
-      const z = Math.sqrt(Math.max(E.r * E.r * 1.0009 - px * px - py * py, 0));
+      const z = Math.sqrt(Math.max(E.r * E.r * 1.025 - px * px - py * py, 0)); // stands off the sclera (no z-fight)
       ipos.setZ(i, z);
     }
     ig.deleteAttribute("uv");
-    ig.computeVertexNormals();
+    // analytic sphere normals (the ring centre is degenerate for computeVertexNormals)
+    const inrm = ig.getAttribute("normal") as THREE.BufferAttribute;
+    for (let i = 0; i < ipos.count; i++) {
+      const nv = new THREE.Vector3(ipos.getX(i), ipos.getY(i), ipos.getZ(i)).normalize();
+      inrm.setXYZ(i, nv.x, nv.y, nv.z);
+    }
     paintVertices(ig, (p, out) => {
       const rr = Math.hypot(p.x, p.y);
       const t = rr / ri;
@@ -265,7 +274,7 @@ export function buildFace(cfg: FaceConfig, mats: MaterialSet): FaceRig {
       hg.deleteAttribute("uv");
       const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), d);
       hg.applyQuaternion(q);
-      hg.translate(d.x * E.r * 1.012, d.y * E.r * 1.012, d.z * E.r * 1.012);
+      hg.translate(d.x * E.r * 1.035, d.y * E.r * 1.035, d.z * E.r * 1.035);
       hg.applyMatrix4(g.matrix);
       hiGeoms.push(hg);
     };
@@ -284,10 +293,7 @@ export function buildFace(cfg: FaceConfig, mats: MaterialSet): FaceRig {
       const lash = smoothstep(capCos + 0.22, capCos + 0.02, c);
       out.copy(lidColor).lerp(lashColor, lash);
     });
-    const lm = new THREE.Mesh(lg, lidMat);
-    lm.name = "lidMesh";
-    lid.add(lm);
-    geoms.push(lg);
+    let lidGeom: THREE.BufferGeometry = lg;
     if (E.lashFlick) {
       // small outer-corner lash flick (attached to the lid so it closes with it)
       const fl = blob(3, (d, out) => {
@@ -298,10 +304,12 @@ export function buildFace(cfg: FaceConfig, mats: MaterialSet): FaceRig {
       const ang = E.lidCap;
       fl.translate(side * E.r * 1.07 * Math.sin(ang) * 0.95, E.r * 1.07 * Math.cos(ang) + E.r * 0.06, E.r * 0.25);
       paintVertices(fl, (_p, out) => out.copy(lashColor));
-      const fm = new THREE.Mesh(fl, lidMat);
-      lid.add(fm);
-      geoms.push(fl);
+      lidGeom = mergeSame([lg, fl]);
     }
+    const lm = new THREE.Mesh(lidGeom, lidMat);
+    lm.name = "lidMesh";
+    lid.add(lm);
+    geoms.push(lidGeom);
     eyes.push({ g, rot, lid, side });
   }
   const scleraGeom = mergeSame(scleraGeoms);

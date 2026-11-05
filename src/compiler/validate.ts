@@ -213,6 +213,7 @@ export function validateBeatScript(bs: BeatScript, startState: WorldState, lang:
       hit("bear_silent", line, replacement);
       line = null;
       if (emote == null) emote = replacement;
+      if (b.verb === "idle") b.verb = "nod"; // a fitting gesture instead of words
     }
     if (line != null) {
       const f = preFilter(line, "auto", lang);

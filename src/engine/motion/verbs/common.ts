@@ -35,11 +35,12 @@ export interface ActorStyle {
 
 export const STYLES: Record<ActorId, ActorStyle> = {
   masha: { height: 1.0, hipHeight: 0.36, timeScale: 1.15, bounce: 1.0, stance: 0.02, armOut: 0.12, hipsDrop: 0, lieHeight: 0.1, shoulderHeight: 0.58, breathRate: 0.32, breathDepth: 0.8 },
-  bear: { height: 2.4, hipHeight: 0.92, timeScale: 0.8, bounce: 0.35, stance: 0.08, armOut: 0.22, hipsDrop: 0.035, lieHeight: 0.32, shoulderHeight: 1.72, breathRate: 0.2, breathDepth: 1.2 },
+  bear: { height: 2.4, hipHeight: 0.72, timeScale: 0.8, bounce: 0.35, stance: 0.08, armOut: 0.22, hipsDrop: 0.02, lieHeight: 0.32, shoulderHeight: 1.62, breathRate: 0.2, breathDepth: 1.2 },
 };
 
 /** Surface heights (m) an actor sits or lies on at a mark; everything else is the ground. */
-export const SEAT_HEIGHT: Record<string, number> = { bench: 0.45, porch: 0.3, hammock: 0.62, swing: 0.45, table: 0.45, woodpile: 0.4 };
+/** (Porch and pier are 0: the stage already raises actors standing on them — walkHeightAt.) */
+export const SEAT_HEIGHT: Record<string, number> = { bench: 0.45, hammock: 0.62, swing: 0.45, woodpile: 0.4 };
 
 export interface VerbCtx {
   actor: ActorId;
@@ -53,6 +54,8 @@ export interface VerbCtx {
   dist: number;
   /** radians turned so far during the turn-in-place (locomotion) */
   turned: number;
+  /** mean path speed of the locomotion clip (m/s); 0 when unknown */
+  speed?: number;
   /** posture before the clip and after it */
   fromPosture: Posture;
   posture: Posture;
@@ -106,6 +109,8 @@ export function poseClip(name: string, style: ActorStyle): PoseLayer {
 }
 
 export const UPPER = ["Spine", "Spine1", "Spine2", "Neck", "Head", "LeftShoulder", "LeftArm", "LeftForeArm", "LeftHand", "RightShoulder", "RightArm", "RightForeArm", "RightHand"];
+/** Upper body without the head: RobotExpressive's head moves are robotic (full head spins), so heads stay procedural. */
+export const UPPER_NO_HEAD = UPPER.filter((b) => b !== "Head" && b !== "Neck");
 export const LOWER = ["Hips", "LeftUpLeg", "LeftLeg", "LeftFoot", "LeftToeBase", "RightUpLeg", "RightLeg", "RightFoot", "RightToeBase"];
 export const ARMS = ["LeftShoulder", "LeftArm", "LeftForeArm", "LeftHand", "RightShoulder", "RightArm", "RightForeArm", "RightHand"];
 

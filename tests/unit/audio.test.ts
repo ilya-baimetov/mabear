@@ -18,7 +18,7 @@ const WS: WorldState = {
     masha: { pos: [0, 0], facing: 0, mark: "clearing", holding: null, posture: "stand" },
     bear: { pos: [-6, -2.6], facing: 0, mark: "porch", holding: null, posture: "stand" },
   },
-  props: {},
+  props: {} as WorldState["props"],
 };
 
 function seg(id: string, duration: number, over: Partial<Segment> = {}): Segment {
@@ -118,6 +118,21 @@ describe("createAudioEngine (node, no AudioContext)", () => {
     e.stop();
   });
 
+  it("long one-shots still sounding at play() are joined mid-way; short ones that are over are skipped", () => {
+    const tl = timeline(seg("x", 6, {
+      sfx: [{ start: 0.2, id: "thunder_clap", gain: 1, pan: 0 }, { start: 0.9, id: "pop", gain: 1, pan: 0 }],
+      foley: [{ start: 0.5, actor: "bear", id: "sizzle_loop", surface: "wood", gain: 1, pan: 0 }],
+      emotes: [{ start: 0.6, dur: 2, actor: "bear", emote: "snore" }, { start: 0.6, dur: 0.5, actor: "masha", emote: "giggle" }],
+    }));
+    const e = make({ lookahead: 0.5 });
+    e.play(tl, 1.0, "en");
+    const d = getAudioDebug()!;
+    expect(d.scheduled.sfx).toBe(1); // thunder (3.2 s) yes, pop (0.12 s) no
+    expect(d.scheduled.foley).toBe(1);
+    expect(d.scheduled.emotes).toBe(1); // snore yes, giggle over
+    e.stop();
+  });
+
   it("a whole look-ahead window covering the episode counts every cue", () => {
     const e = make({ lookahead: 100 });
     e.play(TL, 0, "ru");
@@ -189,6 +204,30 @@ describe("music", () => {
     for (let t = 7; t < 10; t += 0.25) dir.update(t, t + 0.25, t);
     expect(dir.voicesStarted).toBe(1);
     expect(dir.activeMoods(8)).toEqual(["playful"]);
+  });
+
+  it("timeline growth while playing keeps the same voice (retarget cancels the pending fade-out)", () => {
+    const short = flattenTimeline(timeline(TL.segments[0].segment));
+    const dir = new MusicDirector(null, planMusicSections(short.music, short.duration), (t) => t);
+    for (let t = 0; t < 5.5; t += 0.5) dir.update(t, t + 1.5, t); // window reached the end: fade-out scheduled
+    const long = flattenTimeline(TL);
+    dir.retarget(planMusicSections(long.music, long.duration), 5.5);
+    for (let t = 5.5; t < 8.5; t += 0.5) dir.update(t + 1.5, t + 2, t); // stays before the spooky cue at 11
+    expect(dir.voicesStarted).toBe(1);
+    expect(dir.activeMoods(8)).toEqual(["playful"]);
+  });
+
+  it("engine: play() at the current playhead is a timeline update (counts continue, no reset)", () => {
+    const e = make({ lookahead: 1.5 });
+    e.play(timeline(TL.segments[0].segment), 0, "en");
+    const d = getAudioDebug()!;
+    expect(d.scheduled.foley).toBe(2);
+    e.play(TL, 0.05, "en");
+    expect(d.scheduled.foley).toBe(2);
+    expect(d.scheduled.dialogue).toBe(1);
+    e.play(TL, 5, "en"); // a jump → real restart
+    expect(d.scheduled.dialogue).toBe(0);
+    e.stop();
   });
 
   it("'none' mood is silence", () => {

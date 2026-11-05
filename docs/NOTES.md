@@ -21,3 +21,10 @@ One line per decision: date — decision — why.
 - 2026-11-05 — SDK 1.5's zod→JSON-schema transform drops enums into descriptions; the worker re-inserts the enums, falling back to the SDK schema on a 400 — keeps verbs/ids constrained.
 - 2026-11-05 — Refusal fallback beta sent on non-Haiku models; a 400 switches to the next request shape (remembered per isolate) — spec §8.2's 15-minute box, no live verification possible without a key here.
 - 2026-11-05 — Validator errors surviving a second pass count as invalid output → one repair retry → offline — spec §8.1.
+- 2026-11-05 — Audio is 100% synthesized (no samples) — faster than the 20-min sample hunt, zero licensing risk; ASSETS.md records "no samples".
+- 2026-11-05 — Audio before unlock / without AudioContext does a "dry" pass that only counts cues, switching to real playback once the context runs — headless e2e can assert scheduled counts.
+- 2026-11-05 — A dialogue line > 0.3 s in progress at play() is not spoken (TTS can't start mid-word); `speaks:false` characters never get TTS even if a line slips through — canon guard in the engine too.
+- 2026-11-05 — Fixtures: grasshoppers/crickets → `night_crickets` even by day; `take` sets both target and item; `cook`/`fish` always preceded by an explicit take; `fish` always lands a catch (rod→fish) — matches the compiler's state rules so fixtures need 0 repairs.
+- 2026-11-05 — Likeness references: only 3 images (2019 Russian stamps, Wikimedia Commons) obtainable — Wikimedia rate-limited (429), Fandom 403; not circumvented. Colours sampled from them (Masha's sleeves pale lilac #CFCDE8, not spec pink) — spec says replace defaults with sampled values.
+- 2026-11-05 — Character modules export `buildMasha()`/`buildBear()` (not `build()`); the asset manifest maps to them.
+- 2026-11-05 — Bear fur = soft geometric noise (shell fur, P1, deferred).

@@ -1,6 +1,6 @@
 // Locomotion verbs: Mixamo walk/run cycles (Xbot clips) driven by distance travelled, plus procedural
 // personality layers (Masha's bounce, Bear's waddle, tiptoe crouch). Root motion comes from the compiled path.
-import { STRIDE } from "../../../shared/grammar";
+import { SPEEDS, STRIDE } from "../../../shared/grammar";
 import { addLayer, lerp, smooth } from "../blend";
 import { CLIPS } from "../clips.generated";
 import {
@@ -23,7 +23,10 @@ function phase(dist: number, stride: number): number {
   return p - Math.floor(p);
 }
 
-function gait(kind: "walk" | "run" | "tiptoe", ctx: VerbCtx, localT: number) {
+function gait(kind0: "walk" | "run" | "tiptoe", ctx: VerbCtx, localT: number) {
+  // a walk hurried well past its natural speed (long paths squeezed in time) becomes a run
+  const natural = SPEEDS[ctx.actor].walk_to;
+  const kind = kind0 === "walk" && (ctx.speed ?? 0) > natural * 1.7 ? "run" : kind0;
   const stride = STRIDE[ctx.actor] * STRIDE_SCALE[kind];
   // turning in place before moving: shuffle the feet proportionally to the turn
   const d = ctx.dist + ctx.turned * 0.25 * ctx.style.hipHeight;
@@ -64,10 +67,12 @@ function gait(kind: "walk" | "run" | "tiptoe", ctx: VerbCtx, localT: number) {
       ...pose(arm("Left", 0.6, 0.9, 1.2, -1.2), arm("Right", 0.6, 0.9, 1.2, -1.2)),
     }, 0.6, [0, -0.08 * ctx.style.hipHeight, 0]);
   }
-  if (startW < 1) {
+  // …and settle back into idle as the path eases to a stop
+  const w = Math.min(startW, smooth((ctx.dur - localT) / 0.3));
+  if (w < 1) {
     const idle = idleBase(ctx);
-    const out = mask(idle, L, [...UPPER, ...LOWER], startW);
-    out.hipsOffset = [lerp(idle.hipsOffset[0], L.hipsOffset[0], startW), lerp(idle.hipsOffset[1], L.hipsOffset[1], startW), lerp(idle.hipsOffset[2], L.hipsOffset[2], startW)];
+    const out = mask(idle, L, [...UPPER, ...LOWER], w);
+    out.hipsOffset = [lerp(idle.hipsOffset[0], L.hipsOffset[0], w), lerp(idle.hipsOffset[1], L.hipsOffset[1], w), lerp(idle.hipsOffset[2], L.hipsOffset[2], w)];
     return out;
   }
   return L;

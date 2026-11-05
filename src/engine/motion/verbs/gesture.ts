@@ -2,7 +2,7 @@
 // the rest (clap, point, shrug, Bear's signature facepalm, hug) are procedural on the idle base.
 import { addLayer, clamp, qfromTo, qmul, window01, type PoseLayer } from "../blend";
 import {
-  ARMS, UPPER, arm, idleBase, mask, pose, rx, ry, rz, sampleClip, type VerbCtx, type VerbImpl,
+  ARMS, UPPER, UPPER_NO_HEAD, arm, idleBase, mask, pose, rx, ry, rz, sampleClip, type VerbCtx, type VerbImpl,
 } from "./common";
 
 /** Play a gesture clip over the idle lower body. Bear plays clips slower. */
@@ -14,7 +14,7 @@ function gestureClip(name: string, lt: number, ctx: VerbCtx, bones = UPPER, loop
 
 export const wave: VerbImpl = (lt, _p, ctx) => {
   // the robot wave raises the right arm; loop the clip's middle (the waving part) for long beats
-  const L = gestureClip("robot_wave", lt, ctx, UPPER, true);
+  const L = gestureClip("robot_wave", lt, ctx, UPPER_NO_HEAD, true);
   const out = addLayer(L, ctx.actor === "masha" ? { Spine: rz(Math.sin(lt * 6) * 0.05) } : {}, 1, [0, ctx.actor === "masha" ? Math.abs(Math.sin(lt * 6)) * 0.015 : 0, 0]);
   return { ...out, face: { browRaise: 0.3 } };
 };

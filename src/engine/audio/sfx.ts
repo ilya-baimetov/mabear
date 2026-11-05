@@ -83,19 +83,19 @@ export function renderSfx(o: Out, id: SfxId, t: number, gain = 1): void {
   const p = (v: number): number => v * g;
   switch (id) {
     case "door_creak":
-      creak(o, t, 0.95, 28, 55, 22, p(0.5), 3);
+      creak(o, t, 0.95, 28, 55, 22, p(1.2), 3);
       return;
     case "door_slam":
-      thud(o, t, p(0.9), 70, 0.4);
-      woodHit(o, t, p(0.7), 160);
+      thud(o, t, p(0.65), 70, 0.4);
+      woodHit(o, t, p(0.5), 160);
       burst(o, { color: "white", t: t + 0.02, dur: 0.25, filter: "bandpass", f: 3000, q: 2, peak: p(0.2) }); // rattle
       return;
     case "knock":
       [0, 0.17, 0.34].forEach((d) => woodHit(o, t + d, p(0.7), 240));
       return;
     case "crash": {
-      burst(o, { color: "white", t, dur: 1.2, a: 0.003, filter: "highpass", f: 1500, peak: p(0.55) });
-      thud(o, t, p(0.7), 90, 0.4);
+      burst(o, { color: "white", t, dur: 1.2, a: 0.003, filter: "highpass", f: 1500, peak: p(0.4) });
+      thud(o, t, p(0.5), 90, 0.4);
       const rnd = mulberry32(17);
       for (let i = 0; i < 7; i++) {
         const tt = t + 0.03 + rnd() * 0.6;
@@ -104,7 +104,7 @@ export function renderSfx(o: Out, id: SfxId, t: number, gain = 1): void {
       return;
     }
     case "splash":
-      splashy(o, t, p(0.7), 0.9, 21);
+      splashy(o, t, p(1.4), 0.9, 21);
       return;
     case "thunder_clap":
       burst(o, { color: "white", t, dur: 0.25, a: 0.002, filter: "highpass", f: 1200, peak: p(0.5) });
@@ -138,7 +138,7 @@ export function renderSfx(o: Out, id: SfxId, t: number, gain = 1): void {
       return;
     }
     case "whoosh":
-      burst(o, { color: "pink", t, dur: 0.6, a: 0.3, sustain: false, filter: "bandpass", f: 300, f2: 2600, q: 1.5, peak: p(0.8) });
+      burst(o, { color: "pink", t, dur: 0.6, a: 0.3, sustain: false, filter: "bandpass", f: 300, f2: 2600, q: 1.5, peak: p(3) });
       return;
     case "bell":
       partials(o, { f: 660, ratios: [1, 2.0, 2.76, 5.4, 8.93], amps: [1, 0.5, 0.45, 0.25, 0.12], t, dur: 2.2, peak: p(0.35) });
@@ -151,7 +151,7 @@ export function renderSfx(o: Out, id: SfxId, t: number, gain = 1): void {
       sizzle(o, t, 1.5, p(0.8));
       return;
     case "munch":
-      munch(o, t, p(0.8));
+      munch(o, t, p(1.6));
       return;
     case "glass_clink":
       partials(o, { f: 2100, ratios: [1, 2.45, 3.8], amps: [1, 0.6, 0.3], t, dur: 0.6, peak: p(0.25) });

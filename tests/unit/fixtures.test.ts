@@ -147,6 +147,12 @@ function simulate(e: FixtureEpisode): { problems: string[]; startStates: WorldSt
         case "fish":
           if (me.mark !== "pier") fail(`fishes away from the pier (at ${me.mark})`);
           if (me.holding !== "fishing_rod") fail(`fishes without the rod (holds ${me.holding})`);
+          if (ws.props.fish.at === "hidden") {
+            // the catch: the rod is put down at the pier and the fish is held
+            if (me.holding) ws.props[me.holding] = { at: me.mark ?? "pier" };
+            me.holding = "fish";
+            ws.props.fish = { at: b.actor };
+          }
           break;
         case "swing": if (me.mark !== "swing") fail("swings away from the swing"); break;
         case "carry":

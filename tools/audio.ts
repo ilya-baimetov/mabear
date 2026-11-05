@@ -22,7 +22,7 @@ const WS: WorldState = {
     masha: { pos: [0, 0], facing: 0, mark: "clearing", holding: null, posture: "stand" },
     bear: { pos: [-6, -2.6], facing: 0, mark: "porch", holding: null, posture: "stand" },
   },
-  props: {},
+  props: {} as WorldState["props"],
 };
 function seg(duration: number, over: Partial<Segment>): Segment {
   return {
@@ -150,3 +150,4 @@ document.getElementById("selftest")!.onclick = async () => {
   log(r.stats.map((s) => `${s.name.padEnd(32)} peak ${s.peak} rms ${s.rms}${s.nan ? " NaN!" : ""}`).join("\n"));
 };
 (window as unknown as { __audioSelfTest: typeof selfTest }).__audioSelfTest = selfTest;
+(window as unknown as { __bench: unknown }).__bench = { createAudioEngine, getAudioDebug, engine };

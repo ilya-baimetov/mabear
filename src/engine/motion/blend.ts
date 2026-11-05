@@ -133,6 +133,10 @@ export function window01(t: number, a: number, b: number, r: number): number {
   if (t <= a || t >= b) return 0;
   return Math.min(smooth((t - a) / r), smooth((b - t) / r));
 }
+/** Interpolate angles along the shortest arc (a spin's 2π end blends to 0 without unwinding). */
+export function lerpAngle(a: number, b: number, t: number): number {
+  return a + Math.atan2(Math.sin(b - a), Math.cos(b - a)) * t;
+}
 export function lerp3(a: Vec3, b: Vec3, t: number): Vec3 {
   return [lerp(a[0], b[0], t), lerp(a[1], b[1], t), lerp(a[2], b[2], t)];
 }
@@ -153,7 +157,7 @@ export function blendLayers(a: PoseLayer, b: PoseLayer, t: number): PoseLayer {
   return {
     bones,
     hipsOffset: lerp3(a.hipsOffset, b.hipsOffset, t),
-    yawOffset: lerp(a.yawOffset ?? 0, b.yawOffset ?? 0, t),
+    yawOffset: lerpAngle(a.yawOffset ?? 0, b.yawOffset ?? 0, t),
     face: t < 0.5 ? a.face : b.face,
     sway: lerp(a.sway ?? 0, b.sway ?? 0, t),
   };
@@ -200,7 +204,11 @@ export function breathingPose(t: number, rate: number, depth: number): { pose: P
 export function lookAtPose(dirLocal: Vec3, weight: number): Pose {
   if (weight <= 0) return {};
   const horiz = Math.hypot(dirLocal[0], dirLocal[2]);
-  const yaw = clamp(Math.atan2(dirLocal[0], dirLocal[2]), -1.22, 1.22) * weight;
+  const rawYaw = Math.atan2(dirLocal[0], dirLocal[2]);
+  // targets behind the actor fade out instead of flipping the head from one shoulder to the other
+  weight *= smooth((2.4 - Math.abs(rawYaw)) / 0.9);
+  if (weight <= 0) return {};
+  const yaw = clamp(rawYaw, -1.22, 1.22) * weight;
   const pitch = clamp(-Math.atan2(dirLocal[1], horiz || 1e-6), -0.52, 0.52) * weight;
   const neck = qmul(qaxis([0, 1, 0], yaw * 0.4), qaxis([1, 0, 0], pitch * 0.4));
   const head = qmul(qaxis([0, 1, 0], yaw * 0.6), qaxis([1, 0, 0], pitch * 0.6));

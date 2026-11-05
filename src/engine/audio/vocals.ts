@@ -175,6 +175,6 @@ export function renderVocal(o: Out, actor: ActorId, emote: Emote, t: number, gai
   const rnd = mulberry32(Math.floor(t * 1000));
   const vary = 0.94 + rnd() * 0.12; // slight per-take pitch variation
   const voice = { pitch: r.voice.pitch * vary, formant: r.voice.formant };
-  for (const x of r.syl) renderSyllable(o, x, voice, t + x.at, gain * (actor === "bear" ? 0.55 : 0.4));
+  for (const x of r.syl) renderSyllable(o, x, voice, t + x.at, gain * (actor === "bear" ? 1.6 : 1.25));
   return vocalLength(r.syl);
 }

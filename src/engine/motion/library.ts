@@ -92,6 +92,10 @@ export function evaluatePose(verb: Verb, localT: number, params: ClipParams, ctx
   let L: PoseLayer;
   if (POSTURE_VERBS.has(verb) || held === "stand" || held === "offstage") {
     L = impl(localT, params, ctx);
+  } else if (held === "sleep" && ctx.posture !== "sleep") {
+    // startled awake (surprised / scared while asleep): get up like wake_up, keeping the verb's face
+    const w = VERB_IMPLS.wake_up(localT, params, ctx);
+    L = { ...w, face: { ...w.face, ...impl(localT, params, ctx).face, lidClose: w.face?.lidClose } };
   } else if (held === "sleep") {
     L = body.liePose(ctx);
   } else {

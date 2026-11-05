@@ -253,11 +253,11 @@ function compileImpl(inputBs: BeatScript, startState: WorldState, opts: CompileO
   }
 
   // ---------- beats ----------
-  const queue: { beat: Beat; inserted: boolean }[] = bs0.beats.map((b) => ({ beat: { ...b }, inserted: false }));
+  const queue: { beat: Beat; orig: number }[] = bs0.beats.map((b, i) => ({ beat: { ...b }, orig: i }));
   let idx = 0;
   let prevTiming: BeatTiming | null = null;
   while (idx < queue.length) {
-    const { beat: b } = queue[idx];
+    const { beat: b, orig } = queue[idx];
     const a = b.actor;
     const o = otherActor(a);
     const st = ws.actors[a];
@@ -268,7 +268,7 @@ function compileImpl(inputBs: BeatScript, startState: WorldState, opts: CompileO
     if (st.posture === "offstage" && b.verb !== "enter") {
       if (b.verb === "exit") { repairs.push(`${a} is already offstage: exit skipped`); continue; }
       const enter: Beat = { ...b, verb: "enter", target: null, item: null, line: null, emote: null, sfx: null, shot: "auto" };
-      queue.splice(origIndex, 0, { beat: enter, inserted: true });
+      queue.splice(origIndex, 0, { beat: enter, orig: -1 });
       b.with_previous = false; b.delay_s = 0;
       idx = origIndex;
       repairs.push(`inserted enter: ${a} comes back before "${b.verb}"`);
@@ -281,7 +281,7 @@ function compileImpl(inputBs: BeatScript, startState: WorldState, opts: CompileO
         b.verb = "point_at"; b.target = o; b.item = null;
       } else {
         const take: Beat = { ...b, verb: "take", target: b.item, item: b.item, line: null, emote: null, sfx: null, shot: "auto" };
-        queue.splice(origIndex, 0, { beat: take, inserted: true });
+        queue.splice(origIndex, 0, { beat: take, orig: -1 });
         b.with_previous = false; b.delay_s = 0;
         idx = origIndex;
         repairs.push(`inserted take: ${a} picks up the ${b.item} before "${b.verb}"`);
@@ -397,7 +397,7 @@ function compileImpl(inputBs: BeatScript, startState: WorldState, opts: CompileO
         dest = ap ?? v2(st.pos);
         if (isMark(b.target)) faceAfter = MARKS[b.target].facing;
         else if (isActor(b.target)) faceAfter = yawTo(dest, posAt(b.target, t), st.facing);
-        toDoor = b.target === "door" && lastBeatIdx[a] === bs0.beats.indexOf(queue[origIndex]?.beat ?? b) && b.sfx !== "knock";
+        toDoor = b.target === "door" && orig >= 0 && lastBeatIdx[a] === orig && b.sfx !== "knock";
       } else dest = v2(st.pos);
       t = locomote(a, t, b.verb, dest, b.emotion, b.verb === "exit" ? "path_entry" : b.target, faceAfter, path);
       mainDur = t - mainStart;
@@ -549,7 +549,8 @@ function compileImpl(inputBs: BeatScript, startState: WorldState, opts: CompileO
 
     // dialogue
     const lineStart = mainStart;
-    if (lineText) dialogue.push(makeDialogueCue(r3(lineStart), a, lineText, opts.lang));
+    // TTS voice follows the script of the words (a child may quote Russian with an English UI), else the UI language
+    if (lineText) dialogue.push(makeDialogueCue(r3(lineStart), a, lineText, /[\u0400-\u04FF]/.test(lineText) ? "ru" : /[A-Za-z]/.test(lineText) ? "en" : opts.lang));
 
     // fx tied to the beat
     const head = headAt(a, mainStart);

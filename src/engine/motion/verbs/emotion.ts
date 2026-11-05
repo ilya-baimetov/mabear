@@ -15,7 +15,7 @@ export const laugh: VerbImpl = (lt, _p, ctx) => {
   const out = addLayer(L, {
     Spine: rx(0.08 * bob - 0.06 * k),
     Spine2: rx(-0.08 * k),
-    Head: rx(-0.25 * k + 0.08 * bob),
+    Head: rx(-0.15 * k + 0.08 * bob),
     LeftShoulder: rz(0.06 * bob), RightShoulder: rz(-0.06 * bob),
   }, 1, [0, Math.abs(bob) * (ctx.actor === "masha" ? 0.02 : 0.015), 0]);
   return { ...out, face: { emotion: "happy", viseme: "open_wide", visemeWeight: 0.5 + 0.5 * Math.abs(bob), lidClose: 0.45 * k } };
@@ -23,13 +23,13 @@ export const laugh: VerbImpl = (lt, _p, ctx) => {
 
 export const cry: VerbImpl = (lt, _p, ctx) => {
   const k = window01(lt, 0, ctx.dur, 0.3);
-  const sad = mask(idleBase(ctx, 0.2), poseClip("xbot_sad", ctx.style), UPPER, 0.5);
+  const sad = mask(idleBase(ctx, 0.2), poseClip("xbot_sad", ctx.style), UPPER, 0.3);
   const sob = Math.max(0, Math.sin(lt * 9)) * k;
   // fists to eyes
   const arms = pose(arm("Left", 0.6, 1.2, 2.2, -1.4), arm("Right", 0.6, 1.2, 2.2, -1.4));
   const L = mask(sad, { bones: arms, hipsOffset: [0, 0, 0] }, ARMS, k);
   return {
-    ...addLayer(L, { Spine2: rx(0.1 * sob), LeftShoulder: rz(0.12 * sob), RightShoulder: rz(-0.12 * sob), Head: rx(0.15 * k) }),
+    ...addLayer(L, { Spine2: rx(0.1 * sob), LeftShoulder: rz(0.12 * sob), RightShoulder: rz(-0.12 * sob), Head: rx(0.05 * k) }),
     face: { emotion: "sad", viseme: "frown", visemeWeight: 0.7 * k },
   };
 };

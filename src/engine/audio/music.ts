@@ -84,10 +84,13 @@ export function composeBar(mood: PlayableMood, intensity: Intensity, bar: number
   const bpb = spec.beatsPerBar;
   const lvl = INTENSITY_LEVEL[intensity];
   const deg = spec.progression[((bar % spec.progression.length) + spec.progression.length) % spec.progression.length];
-  const chord = chordTones(spec, deg);
-  const chordLow = chordTones(spec, deg, -1);
-  const bassRoot = degreeToMidi(spec, deg, -2);
-  const bassFifth = degreeToMidi(spec, deg + 4, -2);
+  // registers: bass ~D2–A2, accompaniment ~D3–E4, melody ~D4–D6 (keeps the strums out of the melody's way)
+  const accOct = spec.root >= 62 ? -1 : 0;
+  const bassOct = spec.root >= 60 ? -2 : -1;
+  const chord = chordTones(spec, deg, accOct);
+  const chordLow = chord;
+  const bassRoot = degreeToMidi(spec, deg, bassOct);
+  const bassFifth = degreeToMidi(spec, deg + 4, bassOct);
   const ev: NoteEvent[] = [];
   const add = (beat: number, dur: number, inst: Inst, midi: number, vel: number): void => {
     ev.push({ beat, dur, inst, midi, vel });
@@ -388,12 +391,14 @@ class MusicVoice {
   private startedAt = 0;
   private fadeIn = 0.05;
   private stopping = false;
+  private stopAt = Infinity;
+  private lfo: OscillatorNode | null = null;
   private scheduledTo = -Infinity;
   private seed: number;
 
   constructor(
     private o: Out | null,
-    readonly sec: MusicSection,
+    public sec: MusicSection,
     private toCtx: (ep: number) => number,
   ) {
     this.spec = MOOD_SPECS[sec.mood as PlayableMood];
@@ -420,6 +425,7 @@ class MusicVoice {
     lfo.connect(depth).connect(trem.gain);
     lfo.start(t);
     o.track(lfo);
+    this.lfo = lfo;
     const padPan = ctx.createStereoPanner();
     padPan.pan.value = INST_PAN.pad;
     trem.connect(padPan).connect(g);
@@ -429,12 +435,37 @@ class MusicVoice {
   stop(atEp: number, fade: number): void {
     if (this.stopping) return;
     this.stopping = true;
+    const at = Math.max(atEp, this.startedAt + this.fadeIn);
+    this.stopAt = at;
     const g = this.gain;
     if (!g || !this.o) return;
-    const at = Math.max(atEp, this.startedAt + this.fadeIn);
     const t = this.toCtx(at);
+    const end = t + Math.max(0.05, fade);
     g.gain.setValueAtTime(1, t);
-    g.gain.linearRampToValueAtTime(SILENT, t + Math.max(0.05, fade));
+    g.gain.linearRampToValueAtTime(SILENT, end);
+    try {
+      this.lfo?.stop(end + 0.1);
+    } catch {
+      /* ignore */
+    }
+  }
+
+  /** The section was extended (timeline grew): cancel a pending fade-out and keep playing. */
+  retarget(sec: MusicSection, nowEp: number): void {
+    this.sec = sec;
+    if (!this.stopping || sec.end <= this.stopAt) return;
+    this.stopping = false;
+    this.stopAt = Infinity;
+    const g = this.gain;
+    if (!g || !this.o) return;
+    const now = this.o.ctx.currentTime;
+    g.gain.cancelScheduledValues(Math.max(now, this.toCtx(Math.max(nowEp, this.startedAt + this.fadeIn))));
+    g.gain.setValueAtTime(1, Math.max(now, this.toCtx(nowEp)));
+    try {
+      this.lfo?.stop(now + 1e6);
+    } catch {
+      /* ignore */
+    }
   }
 
   private out(inst: Inst): Out | null {
@@ -506,9 +537,26 @@ export class MusicDirector {
 
   constructor(
     private o: Out | null,
-    readonly sections: MusicSection[],
+    public sections: MusicSection[],
     private toCtx: (ep: number) => number,
   ) {}
+
+  /**
+   * The timeline changed while playing (e.g. a paragraph was appended): adopt the new sections, keeping every voice
+   * whose section still exists (same mood, same start) so the music continues seamlessly; others fade out.
+   */
+  retarget(sections: MusicSection[], nowEp: number): void {
+    const next = new Map<MusicSection, MusicVoice>();
+    for (const [sec, v] of this.voices) {
+      const match = sections.find((n) => n.mood === sec.mood && Math.abs(n.start - sec.start) < 1e-3 && !next.has(n));
+      if (match && match.end > nowEp) {
+        v.retarget(match, nowEp);
+        next.set(match, v);
+      } else v.stop(nowEp, 0.6);
+    }
+    this.voices = next;
+    this.sections = sections;
+  }
 
   /** Look-ahead step: [fromEp, toEp) is the window being scheduled; nowEp the playhead. */
   update(fromEp: number, toEp: number, nowEp: number): void {

@@ -176,6 +176,33 @@ export function blob(detail: number, shape: (d: THREE.Vector3, out: THREE.Vector
   return g;
 }
 
+/** Smooth deterministic 3D noise in [-1, 1] (sum of oriented sines; no tables, no randomness). */
+export function noise3(x: number, y: number, z: number): number {
+  return (
+    (Math.sin(x * 1.0 + y * 1.7 + 0.3) * Math.sin(y * 1.3 - z * 0.9 + 1.1) +
+      Math.sin(z * 1.9 + x * 0.6 + 2.3) * Math.sin(x * 1.1 - y * 0.8 + z * 0.4) +
+      0.5 * Math.sin(x * 2.9 - z * 2.3 + y * 0.5 + 0.7)) /
+    2.5
+  );
+}
+
+/** Soft fur breakup: displace along the vertex normals by two octaves of noise, then re-smooth the normals. */
+export function roughen(g: THREE.BufferGeometry, amp: number, freq: number, seed = 0): THREE.BufferGeometry {
+  if (!g.getAttribute("normal")) g.computeVertexNormals();
+  const pos = g.getAttribute("position") as THREE.BufferAttribute;
+  const nrm = g.getAttribute("normal") as THREE.BufferAttribute;
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i);
+    const y = pos.getY(i);
+    const z = pos.getZ(i);
+    const n =
+      noise3(x * freq + seed, y * freq, z * freq) * 0.7 + noise3(x * freq * 2.7, y * freq * 2.7 + seed, z * freq * 2.7) * 0.3;
+    pos.setXYZ(i, x + nrm.getX(i) * amp * n, y + nrm.getY(i) * amp * n, z + nrm.getZ(i) * amp * n);
+  }
+  g.computeVertexNormals();
+  return g;
+}
+
 /** Gaussian bump on the unit sphere around direction `c` (angular width ~ `w` radians). */
 export function bump(d: THREE.Vector3, c: THREE.Vector3, w: number): number {
   const dot = Math.min(1, Math.max(-1, d.dot(c)));

@@ -1,0 +1,303 @@
+// Asset manifest (spec §7.3): every character, set element and prop resolves through one entry.
+// Replacing a procedural stand-in with an official Animaccord glTF export needs ONLY a manifest change
+// (`source: { gltf: url }`, plus `skeletonMap` when the official rig doesn't use Mixamo bone names).
+// The `robot_test` entry is a working glTF example (three.js RobotExpressive.glb, CC0) loaded as a hidden character.
+import * as THREE from "three";
+import { ACTOR_IDS, PROP_IDS, type Vec3 } from "../shared/schema";
+import type { ActorFrame, CharacterRig } from "./api";
+import { SET_ELEMENT_IDS, SET_ELEMENTS, type SetElementId } from "./set/bearsYard";
+
+export type AssetKind = "character" | "set" | "prop";
+export type AssetSource = "procedural" | { gltf: string };
+
+export interface AssetEntry {
+  id: string;
+  kind: AssetKind;
+  source: AssetSource;
+  /** Mixamo bone name → bone name in the source rig (glTF characters whose rig uses other names) */
+  skeletonMap?: Record<string, string>;
+  /** uniform scale applied to the loaded asset (after `height` normalization, if any) */
+  scale: number;
+  /** local offset [x, y, z] (pivot correction of an exported asset) */
+  offset: Vec3;
+  /** glTF characters: normalize the model to this height (m) before `scale` */
+  height?: number;
+  /** loaded but not shown (test entries) */
+  hidden?: boolean;
+  /** what this stands in for (honesty label, shown in the behind-the-scenes overlay) */
+  label: string;
+}
+
+export const TEST_GLTF_ID = "robot_test";
+/** Path relative to the site root (files live in public/). */
+export const TEST_GLTF_URL = "assets/models/RobotExpressive.glb";
+
+/** RobotExpressive bone names (GLTFLoader strips '.') mapped from Mixamo names. */
+export const ROBOT_SKELETON_MAP: Record<string, string> = {
+  Hips: "Hips", Spine: "Abdomen", Spine1: "Torso", Neck: "Neck", Head: "Head",
+  LeftShoulder: "ShoulderL", LeftArm: "UpperArmL", LeftForeArm: "LowerArmL", LeftHand: "Palm2L",
+  RightShoulder: "ShoulderR", RightArm: "UpperArmR", RightForeArm: "LowerArmR", RightHand: "Palm2R",
+  LeftUpLeg: "UpperLegL", LeftLeg: "LowerLegL", LeftFoot: "FootL",
+  RightUpLeg: "UpperLegR", RightLeg: "LowerLegR", RightFoot: "FootR",
+};
+
+const CHARACTER_LABELS: Record<string, string> = {
+  masha: "Masha — procedural stand-in for the production character rig",
+  bear: "Bear — procedural stand-in for the production character rig",
+};
+
+function buildManifest(): Record<string, AssetEntry> {
+  const m: Record<string, AssetEntry> = {};
+  const put = (e: AssetEntry) => {
+    if (m[e.id]) throw new Error(`duplicate asset id ${e.id}`);
+    m[e.id] = e;
+  };
+  for (const id of ACTOR_IDS) put({ id, kind: "character", source: "procedural", scale: 1, offset: [0, 0, 0], label: CHARACTER_LABELS[id] ?? id });
+  put({
+    id: TEST_GLTF_ID, kind: "character", source: { gltf: TEST_GLTF_URL }, skeletonMap: ROBOT_SKELETON_MAP,
+    scale: 1, offset: [0, 0, 0], height: 1.6, hidden: true,
+    label: "glTF path proof: three.js RobotExpressive (CC0), hidden test character",
+  });
+  for (const id of SET_ELEMENT_IDS) {
+    put({ id: `set:${id}`, kind: "set", source: "procedural", scale: 1, offset: [0, 0, 0], label: `${SET_ELEMENTS[id].description} — procedural stand-in` });
+  }
+  for (const id of PROP_IDS) put({ id: `prop:${id}`, kind: "prop", source: "procedural", scale: 1, offset: [0, 0, 0], label: `${id} — procedural stand-in` });
+  return m;
+}
+
+/** The manifest. Keys: actor ids, "robot_test", "set:<element>", "prop:<propId>". */
+export const ASSET_MANIFEST: Record<string, AssetEntry> = buildManifest();
+
+export function manifestEntry(id: string, manifest: Record<string, AssetEntry> = ASSET_MANIFEST): AssetEntry | undefined {
+  return manifest[id];
+}
+
+export function isGltf(src: AssetSource): src is { gltf: string } {
+  return typeof src === "object" && src !== null && typeof src.gltf === "string";
+}
+
+/** Set elements whose manifest entry points at a glTF (they are not built procedurally). */
+export function gltfSetElements(manifest: Record<string, AssetEntry> = ASSET_MANIFEST): SetElementId[] {
+  return SET_ELEMENT_IDS.filter((id) => {
+    const e = manifest[`set:${id}`];
+    return !!e && isGltf(e.source);
+  });
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Loading
+// ---------------------------------------------------------------------------------------------------------------
+
+export interface AssetStatus {
+  id: string;
+  source: "procedural" | "gltf";
+  ok: boolean;
+  error?: string;
+}
+const status = new Map<string, AssetStatus>();
+/** Load status of every asset resolved so far (debug / behind-the-scenes). */
+export function assetStatus(): AssetStatus[] {
+  return [...status.values()];
+}
+
+function resolveUrl(url: string): string {
+  if (/^(https?:|data:|blob:|\/)/.test(url)) return url;
+  const base = (import.meta.env?.BASE_URL as string | undefined) ?? "/";
+  return base.replace(/\/?$/, "/") + url;
+}
+
+/** Load a glTF/GLB (GLTFLoader is imported lazily so the manifest stays light). */
+export async function loadGltf(url: string): Promise<{ scene: THREE.Group; animations: THREE.AnimationClip[] }> {
+  const { GLTFLoader } = await import("three/examples/jsm/loaders/GLTFLoader.js");
+  const gltf = await new GLTFLoader().loadAsync(resolveUrl(url));
+  return { scene: gltf.scene, animations: gltf.animations };
+}
+
+/** Resolve a character through the manifest: procedural builder or glTF. Never throws (falls back to a capsule). */
+export async function loadCharacter(id: string, manifest: Record<string, AssetEntry> = ASSET_MANIFEST): Promise<CharacterRig> {
+  const entry = manifest[id];
+  try {
+    if (!entry) throw new Error(`no manifest entry for ${id}`);
+    let rig: CharacterRig;
+    if (isGltf(entry.source)) {
+      const g = await loadGltf(entry.source.gltf);
+      rig = gltfRig(id, g.scene, entry);
+    } else if (id === "masha") {
+      rig = (await import("./characters/masha")).buildMasha();
+    } else if (id === "bear") {
+      rig = (await import("./characters/bear")).buildBear();
+    } else {
+      throw new Error(`no procedural builder for ${id}`);
+    }
+    if (!isGltf(entry.source) && (entry.scale !== 1 || entry.offset.some((v) => v !== 0))) {
+      // wrap so apply() (which positions rig.root) keeps the manifest correction
+      const inner = rig.root.children.slice();
+      const wrap = new THREE.Group();
+      wrap.scale.setScalar(entry.scale);
+      wrap.position.set(...entry.offset);
+      for (const c of inner) wrap.add(c);
+      rig.root.add(wrap);
+    }
+    if (entry.hidden) rig.root.visible = false;
+    rig.root.userData.asset = { id, source: isGltf(entry.source) ? "gltf" : "procedural", label: entry.label };
+    status.set(id, { id, source: isGltf(entry.source) ? "gltf" : "procedural", ok: true });
+    return rig;
+  } catch (err) {
+    status.set(id, { id, source: entry && isGltf(entry.source) ? "gltf" : "procedural", ok: false, error: String(err) });
+    const h = id === "bear" ? 2.4 : 1.0;
+    const rig = standInRig(id, h, id === "bear" ? 0x7a4a2b : 0xc7317d);
+    if (entry?.hidden) rig.root.visible = false;
+    return rig;
+  }
+}
+
+/** Load glTF replacements of set elements into their named anchors (non-blocking for the caller). */
+export async function loadSetOverrides(anchors: Record<SetElementId, THREE.Group>, manifest: Record<string, AssetEntry> = ASSET_MANIFEST): Promise<void> {
+  await Promise.all(
+    gltfSetElements(manifest).map(async (id) => {
+      const e = manifest[`set:${id}`]!;
+      try {
+        const g = await loadGltf((e.source as { gltf: string }).gltf);
+        g.scene.scale.setScalar(e.scale);
+        g.scene.position.set(...e.offset);
+        g.scene.traverse((o) => {
+          if ((o as THREE.Mesh).isMesh) {
+            o.castShadow = true;
+            o.receiveShadow = true;
+          }
+        });
+        anchors[id].add(g.scene);
+        status.set(e.id, { id: e.id, source: "gltf", ok: true });
+      } catch (err) {
+        status.set(e.id, { id: e.id, source: "gltf", ok: false, error: String(err) });
+      }
+    }),
+  );
+}
+
+/** Swap glTF-sourced props into their holders (procedural mesh stays if loading fails). */
+export async function loadPropOverrides(holders: Record<string, THREE.Object3D>, manifest: Record<string, AssetEntry> = ASSET_MANIFEST): Promise<void> {
+  await Promise.all(
+    PROP_IDS.map(async (pid) => {
+      const e = manifest[`prop:${pid}`];
+      if (!e || !isGltf(e.source)) return;
+      try {
+        const g = await loadGltf(e.source.gltf);
+        g.scene.scale.setScalar(e.scale);
+        g.scene.position.set(...e.offset);
+        const h = holders[pid];
+        h.clear();
+        h.add(g.scene);
+        status.set(e.id, { id: e.id, source: "gltf", ok: true });
+      } catch (err) {
+        status.set(e.id, { id: e.id, source: "gltf", ok: false, error: String(err) });
+      }
+    }),
+  );
+}
+
+const _q = new THREE.Quaternion();
+
+/** Wrap a loaded glTF scene as a CharacterRig, exposing Mixamo-named bones through the manifest's skeletonMap. */
+export function gltfRig(id: string, model: THREE.Object3D, entry: AssetEntry): CharacterRig {
+  const root = new THREE.Group();
+  root.name = `character:${id}`;
+  const holder = new THREE.Group();
+  holder.add(model);
+  root.add(holder);
+  // normalize height
+  const bb = new THREE.Box3().setFromObject(model);
+  const h0 = Math.max(1e-3, bb.max.y - bb.min.y);
+  const s = (entry.height ? entry.height / h0 : 1) * entry.scale;
+  holder.scale.setScalar(s);
+  holder.position.set(entry.offset[0], entry.offset[1] - bb.min.y * s, entry.offset[2]);
+  model.traverse((o) => {
+    if ((o as THREE.Mesh).isMesh) {
+      o.castShadow = true;
+      o.receiveShadow = true;
+    }
+  });
+  const byName = new Map<string, THREE.Bone>();
+  model.traverse((o) => {
+    if ((o as THREE.Bone).isBone && !byName.has(o.name)) byName.set(o.name, o as THREE.Bone);
+  });
+  const bones: Record<string, THREE.Bone> = {};
+  const rest: Record<string, THREE.Quaternion> = {};
+  const map = entry.skeletonMap ?? {};
+  for (const [mix, src] of Object.entries(map)) {
+    const b = byName.get(src) ?? byName.get(src.replace(/\./g, ""));
+    if (b) bones[mix] = b;
+  }
+  for (const [name, b] of byName) if (!bones[name] && /^(Hips|Spine|Neck|Head|Left|Right)/.test(name)) bones[name] = b; // Mixamo-named rigs map 1:1
+  for (const [name, b] of Object.entries(bones)) rest[name] = b.quaternion.clone();
+  const handSocket = new THREE.Object3D();
+  handSocket.name = "handSocket";
+  (bones.RightHand ?? root).add(handSocket);
+  const mats: THREE.Material[] = [];
+  model.traverse((o) => {
+    const m = (o as THREE.Mesh).material;
+    if (m) mats.push(...(Array.isArray(m) ? m : [m]));
+  });
+  return {
+    id,
+    root,
+    bones,
+    rest,
+    height: entry.height ?? h0 * s,
+    handSocket,
+    apply(frame: ActorFrame) {
+      root.position.set(frame.pos[0], frame.pos[1], frame.pos[2]);
+      root.rotation.set(0, frame.yaw, 0);
+      for (const [name, b] of Object.entries(bones)) {
+        const q = frame.bones[name];
+        // the source rest pose is not a T-pose: apply the frame rotation relative to the rest
+        if (q) b.quaternion.copy(rest[name]).multiply(_q.set(q[0], q[1], q[2], q[3]).normalize());
+        else b.quaternion.copy(rest[name]);
+      }
+      root.updateMatrixWorld(true);
+    },
+    dispose() {
+      model.traverse((o) => (o as THREE.Mesh).geometry?.dispose());
+      for (const m of mats) m.dispose();
+    },
+  };
+}
+
+/** Last-resort capsule stand-in (only used when a builder or a download fails). */
+export function standInRig(id: string, height: number, color: number): CharacterRig {
+  const root = new THREE.Group();
+  root.name = `character:${id}:capsule`;
+  const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.7 });
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(height * 0.22, height * 0.5, 6, 12), mat);
+  body.position.y = height * 0.47;
+  body.castShadow = true;
+  const hips = new THREE.Bone();
+  hips.name = "Hips";
+  hips.position.y = height * 0.45;
+  const hand = new THREE.Bone();
+  hand.name = "RightHand";
+  hand.position.set(-height * 0.25, height * 0.05, height * 0.1);
+  hips.add(hand);
+  root.add(body, hips);
+  const handSocket = new THREE.Object3D();
+  hand.add(handSocket);
+  return {
+    id,
+    root,
+    bones: { Hips: hips, RightHand: hand },
+    rest: { Hips: new THREE.Quaternion(), RightHand: new THREE.Quaternion() },
+    height,
+    handSocket,
+    apply(frame) {
+      root.position.set(frame.pos[0], frame.pos[1], frame.pos[2]);
+      root.rotation.set(0, frame.yaw, 0);
+      mat.transparent = frame.opacity < 1;
+      mat.opacity = frame.opacity;
+      root.updateMatrixWorld(true);
+    },
+    dispose() {
+      body.geometry.dispose();
+      mat.dispose();
+    },
+  };
+}
