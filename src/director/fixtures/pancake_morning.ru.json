@@ -108,6 +108,19 @@
             "with_previous": false,
             "delay_s": 0,
             "shot": "auto"
+          },
+          {
+            "actor": "masha",
+            "verb": "spin",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": null,
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": true,
+            "delay_s": 1.5,
+            "shot": "auto"
           }
         ],
         "rule_hits": []

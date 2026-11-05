@@ -33,19 +33,6 @@
             "shot": "wide"
           },
           {
-            "actor": "bear",
-            "verb": "take",
-            "target": "fishing_rod",
-            "item": "fishing_rod",
-            "line": null,
-            "emote": null,
-            "sfx": null,
-            "emotion": "happy",
-            "with_previous": false,
-            "delay_s": 0,
-            "shot": "auto"
-          },
-          {
             "actor": "masha",
             "verb": "take",
             "target": "ball",
@@ -55,7 +42,7 @@
             "sfx": null,
             "emotion": "excited",
             "with_previous": true,
-            "delay_s": 0.5,
+            "delay_s": 3,
             "shot": "auto"
           },
           {
@@ -72,19 +59,6 @@
             "shot": "medium"
           },
           {
-            "actor": "bear",
-            "verb": "fish",
-            "target": null,
-            "item": null,
-            "line": null,
-            "emote": "hum",
-            "sfx": null,
-            "emotion": "neutral",
-            "with_previous": true,
-            "delay_s": 0.5,
-            "shot": "auto"
-          },
-          {
             "actor": "masha",
             "verb": "run_to",
             "target": "pond_shore",
@@ -96,6 +70,32 @@
             "with_previous": false,
             "delay_s": 0,
             "shot": "tracking"
+          },
+          {
+            "actor": "bear",
+            "verb": "take",
+            "target": "fishing_rod",
+            "item": "fishing_rod",
+            "line": null,
+            "emote": null,
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": true,
+            "delay_s": 0,
+            "shot": "auto"
+          },
+          {
+            "actor": "bear",
+            "verb": "fish",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": "hum",
+            "sfx": null,
+            "emotion": "neutral",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "auto"
           }
         ],
         "rule_hits": []

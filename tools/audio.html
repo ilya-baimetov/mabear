@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MaBear audio bench</title>
+  <style>
+    body { font: 14px system-ui, sans-serif; margin: 16px; background: #faf7f0; color: #222; }
+    h2 { margin: 18px 0 6px; font-size: 15px; }
+    button { margin: 2px; padding: 4px 8px; border-radius: 6px; border: 1px solid #bbb; background: #fff; cursor: pointer; }
+    pre { background: #fff; border: 1px solid #ddd; padding: 8px; max-height: 320px; overflow: auto; }
+  </style>
+</head>
+<body>
+  <h1>MaBear audio bench (dev tool)</h1>
+  <p>Click any button (first click unlocks audio). <button id="selftest">Run offline self-test</button> <button id="stop">Stop</button></p>
+  <div id="groups"></div>
+  <pre id="log"></pre>
+  <script type="module" src="./audio.ts"></script>
+</body>
+</html>

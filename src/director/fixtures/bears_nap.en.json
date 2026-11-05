@@ -4,7 +4,7 @@
   "title": "Bear's nap",
   "paragraphs": [
     {
-      "text": "On a warm, lazy afternoon the grasshoppers are chirping and soft sleepy music plays. Bear lies down in the hammock and starts to snore. Masha giggles, \"Bear is sleeping? Not for long!\"",
+      "text": "On a warm, lazy afternoon the grasshoppers are chirping and soft sleepy music plays. Bear lies down in the hammock and starts to snore. Masha runs to the porch and giggles, \"Bear is sleeping? Not for long!\"",
       "beatScript": {
         "summary": "Bear settles into the hammock for a snooze while Masha hatches a plan.",
         "time_of_day": null,
@@ -59,6 +59,19 @@
             "shot": "auto"
           },
           {
+            "actor": "masha",
+            "verb": "run_to",
+            "target": "porch",
+            "item": null,
+            "line": null,
+            "emote": "giggle",
+            "sfx": null,
+            "emotion": "mischievous",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "auto"
+          },
+          {
             "actor": "bear",
             "verb": "sleep",
             "target": "hammock",
@@ -82,7 +95,7 @@
             "emotion": "mischievous",
             "with_previous": true,
             "delay_s": 1.5,
-            "shot": "auto"
+            "shot": "over_shoulder"
           },
           {
             "actor": "masha",
@@ -102,7 +115,7 @@
       }
     },
     {
-      "text": "Masha tiptoes to the hammock and shouts, \"Bear, wake up! Let's play!\" Bear jumps and tumbles out of the hammock with a loud crash!",
+      "text": "Bear snores louder and louder. Masha tiptoes to the hammock and shouts, \"Bear, wake up! Let's play!\" Bear jumps and tumbles out of the hammock with a loud crash!",
       "beatScript": {
         "summary": "Masha sneaks up and shouts — Bear wakes with a start and tumbles out!",
         "time_of_day": null,
@@ -126,6 +139,19 @@
             "with_previous": false,
             "delay_s": 0,
             "shot": "tracking"
+          },
+          {
+            "actor": "bear",
+            "verb": "sleep",
+            "target": "hammock",
+            "item": null,
+            "line": null,
+            "emote": "snore",
+            "sfx": null,
+            "emotion": "sleepy",
+            "with_previous": true,
+            "delay_s": 2,
+            "shot": "auto"
           },
           {
             "actor": "masha",
@@ -223,9 +249,9 @@
       }
     },
     {
-      "text": "Bear sighs and lifts Masha onto his shoulders while happy circus music plays. \"Faster, Bear, faster!\" Masha cheers as they gallop around the yard.",
+      "text": "Bear sighs and lifts Masha onto his shoulders while happy circus music plays. \"Faster, Bear, faster!\" Masha cheers as they parade around the yard like in the circus.",
       "beatScript": {
-        "summary": "Bear sighs, lifts Masha onto his shoulders and gallops around the yard.",
+        "summary": "Bear sighs, lifts Masha onto his shoulders and parades her around the yard.",
         "time_of_day": null,
         "mood": "triumphant",
         "music": {
@@ -289,13 +315,13 @@
           },
           {
             "actor": "bear",
-            "verb": "run_to",
+            "verb": "walk_to",
             "target": "swing",
             "item": null,
             "line": null,
             "emote": "huff",
             "sfx": null,
-            "emotion": "excited",
+            "emotion": "proud",
             "with_previous": false,
             "delay_s": 0,
             "shot": "tracking"
@@ -315,7 +341,7 @@
           },
           {
             "actor": "bear",
-            "verb": "run_to",
+            "verb": "walk_to",
             "target": "clearing",
             "item": null,
             "line": null,
@@ -413,11 +439,11 @@
           },
           {
             "actor": "bear",
-            "verb": "sit",
-            "target": "porch",
+            "verb": "sigh",
+            "target": null,
             "item": null,
             "line": null,
-            "emote": "sigh",
+            "emote": "hum",
             "sfx": null,
             "emotion": "happy",
             "with_previous": false,

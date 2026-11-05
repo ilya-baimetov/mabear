@@ -15,3 +15,9 @@ One line per decision: date — decision — why.
 - 2026-11-05 — A director response without `error` counts as success (ready/adjusted) whatever its `source`; with `error` → status `error` while the offline version keeps playing — matches §4.2 lifecycle and lets mock mode reach `ready`.
 - 2026-11-05 — Changing the EN/RU toggle does not re-direct existing paragraphs (only new renders use the new language) — avoids surprise API calls; examples load in the current language.
 - 2026-11-05 — Close-up screenshots use a debug camera override (`window.__mabear.closeup`) rather than hunting for a compiled close shot — deterministic screenshots for the likeness review.
+- 2026-11-05 — Mock director (MOCK_DIRECTOR=1) answers `source:"offline"`, `model:"mock"`, fake usage, no `error` — the UI derives status from `error`, so mock paragraphs reach `ready`.
+- 2026-11-05 — Session cookie = `ts.HMAC(SESSION_SECRET or SHA-256(DEMO_PASSWORD)-derived key, "v1.ts.DEMO_PASSWORD")`, 7 days; `Secure` omitted only on http://localhost for local e2e — spec §11 with a working local test path.
+- 2026-11-05 — Login attempts rate-limited to 20 per 10 min per IP (not in spec) — cheap brute-force protection for a public URL.
+- 2026-11-05 — SDK 1.5's zod→JSON-schema transform drops enums into descriptions; the worker re-inserts the enums, falling back to the SDK schema on a 400 — keeps verbs/ids constrained.
+- 2026-11-05 — Refusal fallback beta sent on non-Haiku models; a 400 switches to the next request shape (remembered per isolate) — spec §8.2's 15-minute box, no live verification possible without a key here.
+- 2026-11-05 — Validator errors surviving a second pass count as invalid output → one repair retry → offline — spec §8.1.

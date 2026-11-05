@@ -116,6 +116,11 @@ BeatScript fields:
 - beats: 1–${MAX_BEATS} beats.
 - rule_hits: [] unless a rule changed something.`;
 
+const CONTINUITY = `Each request gives you the world state at the start of the paragraph, the previous paragraphs (already staged — never re-stage them) and the paragraph to stage.
+- actors.<id>.mark is where the character stands (null = somewhere in between); posture "sleep" = asleep (wake_up before acting), "sit" = seated (stand_up before walking), "offstage" = not in the yard (enter first), "carried" = Masha is riding on Bear's shoulders.
+- actors.<id>.holding is the prop in their hands; props.<id> says where each prop is: a mark id, an actor id (that character holds it) or "hidden" (not in the scene yet; it can appear naturally, e.g. pancakes after cooking, a fish after fishing).
+- Stage only what this paragraph says (plus in-character business and reactions); keep characters where the story left them.`;
+
 const EXPANSION = `"A few words express a lot." The child writes tersely; you stage it richly and in character:
 - Turn each sentence into 2–4 beats with in-character business (Masha runs instead of walking, spins, giggles, gives orders; Bear sighs, facepalms, hums at his chores, forgives and hugs).
 - Add reactions from the other character with with_previous: true (optionally delay_s) so both characters act in parallel.
@@ -124,8 +129,7 @@ const EXPANSION = `"A few words express a lot." The child writes tersely; you st
 - A typical 1–3 sentence paragraph becomes 3–10 beats total. Prefer the most specific verb (tiptoe_to for sneaking, facepalm for exasperation, fall_down for slapstick tumbles).
 - Slapstick lands softly and every scene ends warm.`;
 
-const SOUND = `Speech and sound:
-- Keep the child's quoted words VERBATIM as the line of the right speaker (trim to ≤ ${MAX_LINE_CHARS} characters). If the quote is in a different language than the requested one, translate it faithfully into the requested language. Screenplay style "MASHA: ..." also counts as a quote.
+const SOUND = `- Keep the child's quoted words VERBATIM as the line of the right speaker (trim to ≤ ${MAX_LINE_CHARS} characters). If the quote is in a different language than the requested one, translate it faithfully into the requested language. Screenplay style "MASHA: ..." also counts as a quote.
 - Bear never speaks: a quote given to Bear becomes a fitting emote (hum, grunt, chuckle, sigh…) plus a gesture verb (nod, wave, hug…), and a bear_silent rule hit.
 - Every line, the summary and every kid_message are written in the requested language.
 - Map music requests ("cheerful music", "spooky music", "the music stops", «играет весёлая музыка») to music; background requests ("it starts to rain", "birds sing", "a thunderstorm", «ночь, сверчки») to ambience; event sounds ("the door slams", "a crash", "thunder", «бах!») to a beat's sfx.
@@ -134,10 +138,13 @@ const SOUND = `Speech and sound:
 
 // ---------- Few-shot examples ----------
 
-interface Shot { lang: Lang; text: string; beatScript: BeatScript }
+interface Shot { lang: Lang; text: string; beatScript: BeatScript; episode?: string }
 
-const b = (p: Partial<BeatScript["beats"][number]> & Pick<BeatScript["beats"][number], "actor" | "verb" | "emotion">): BeatScript["beats"][number] => ({
-  target: null, item: null, line: null, emote: null, sfx: null, with_previous: false, delay_s: 0, shot: "auto", ...p,
+type BeatT = BeatScript["beats"][number];
+/** Beat builder with the canonical key order (the examples are shown as JSON). */
+const b = (p: Partial<BeatT> & Pick<BeatT, "actor" | "verb" | "emotion">): BeatT => ({
+  actor: p.actor, verb: p.verb, target: p.target ?? null, item: p.item ?? null, line: p.line ?? null, emote: p.emote ?? null,
+  sfx: p.sfx ?? null, emotion: p.emotion, with_previous: p.with_previous ?? false, delay_s: p.delay_s ?? 0, shot: p.shot ?? "auto",
 });
 
 /** Built-in examples: used when the fixtures are unavailable, plus one canon example that is always shown. */
@@ -205,15 +212,17 @@ export const BUILTIN_EXAMPLES: Record<"nap_en" | "ball_ru" | "canon_en", Shot> =
 const QUOTE_RE = /["«“]/;
 const SOUND_RE = /music|rain|thunder|storm|birds|crickets|music stops|музык|дожд|гром|гроз|птиц|сверч/i;
 
-/** Picks 3 fixture paragraphs (EN with dialogue, EN with sound requests, RU with dialogue/any) deterministically. */
+/** Picks 3 fixture paragraphs deterministically — EN with dialogue, EN with sound requests, RU with dialogue —
+ *  preferring a different example episode each time so the shots don't repeat one story. */
 export function pickFewShots(fixtures: FixtureEpisode[] = FIXTURES): Shot[] {
   const all: Shot[] = [];
-  for (const ep of fixtures) for (const p of ep.paragraphs) all.push({ lang: ep.lang, text: p.text, beatScript: p.beatScript });
+  for (const ep of fixtures) for (const p of ep.paragraphs) all.push({ lang: ep.lang, text: p.text, beatScript: p.beatScript, episode: ep.id });
   if (all.length === 0) return [BUILTIN_EXAMPLES.nap_en, BUILTIN_EXAMPLES.ball_ru];
   const hasLine = (s: Shot) => s.beatScript.beats.some((x) => !!x.line);
   const picked: Shot[] = [];
   const take = (pred: (s: Shot) => boolean) => {
-    const s = all.find((x) => !picked.includes(x) && pred(x));
+    const used = new Set(picked.map((x) => x.episode));
+    const s = all.find((x) => !picked.includes(x) && !used.has(x.episode) && pred(x)) ?? all.find((x) => !picked.includes(x) && pred(x));
     if (s) picked.push(s);
   };
   take((s) => s.lang === "en" && QUOTE_RE.test(s.text) && hasLine(s));
@@ -247,6 +256,7 @@ export function buildSystemPrompt(): string {
     section("Props (prop ids)", propsText()),
     section("Verbs (beat.verb) — the action grammar", verbsText()),
     section("Allowed values", enumsText()),
+    section("World state and continuity", CONTINUITY),
     section("Expansion guidance", EXPANSION),
     section("Canon and safety rules", rulesText()),
     section("Speech and sound", SOUND),

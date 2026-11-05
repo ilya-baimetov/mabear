@@ -169,7 +169,7 @@ export function validateBeatScript(bs: BeatScript, startState: WorldState, lang:
         break;
       case "prop":
         if (!isProp(target)) target = isProp(b.item) ? b.item : null;
-        if (target == null) { errors.push(`${tag}: take without a prop → idle`); b.verb = "idle"; }
+        if (!isProp(target)) { errors.push(`${tag}: take without a prop → idle`); b.verb = "idle"; target = null; }
         else b.item = target;
         break;
       case "mark":

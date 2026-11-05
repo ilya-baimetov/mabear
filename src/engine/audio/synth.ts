@@ -136,11 +136,12 @@ export function tone(o: Out, p: ToneOpts): OscillatorNode {
   const { ctx } = o;
   const osc = ctx.createOscillator();
   osc.type = p.type ?? "sine";
-  osc.frequency.setValueAtTime(p.f, p.t);
   if (p.curve && p.curve.length > 1) {
+    osc.frequency.value = p.curve[0];
     osc.frequency.setValueCurveAtTime(Float32Array.from(p.curve), p.t, Math.max(0.01, p.dur));
-  } else if (p.f2 !== undefined) {
-    osc.frequency.exponentialRampToValueAtTime(Math.max(1, p.f2), p.t + (p.glide ?? p.dur));
+  } else {
+    osc.frequency.setValueAtTime(p.f, p.t);
+    if (p.f2 !== undefined) osc.frequency.exponentialRampToValueAtTime(Math.max(1, p.f2), p.t + (p.glide ?? p.dur));
   }
   if (p.detune) osc.detune.value = p.detune;
   if (p.vibrato) {

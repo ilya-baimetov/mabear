@@ -20,18 +20,18 @@ function toHex(buf: ArrayBuffer): string {
   return Array.from(new Uint8Array(buf), (b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-async function sha256(data: string): Promise<Uint8Array> {
+async function sha256(data: string): Promise<Uint8Array<ArrayBuffer>> {
   return new Uint8Array(await crypto.subtle.digest("SHA-256", enc.encode(data)));
 }
 
-async function hmacHex(keyMaterial: Uint8Array, message: string): Promise<string> {
+async function hmacHex(keyMaterial: Uint8Array<ArrayBuffer>, message: string): Promise<string> {
   const key = await crypto.subtle.importKey("raw", keyMaterial, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
   return toHex(await crypto.subtle.sign("HMAC", key, enc.encode(message)));
 }
 
-async function signingKey(env: AuthEnv): Promise<Uint8Array | null> {
+async function signingKey(env: AuthEnv): Promise<Uint8Array<ArrayBuffer> | null> {
   if (!env.DEMO_PASSWORD) return null;
-  if (env.SESSION_SECRET) return enc.encode(env.SESSION_SECRET);
+  if (env.SESSION_SECRET) return new Uint8Array(enc.encode(env.SESSION_SECRET));
   return sha256(`mabear-session-key:${env.DEMO_PASSWORD}`);
 }
 

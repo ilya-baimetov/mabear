@@ -4,7 +4,7 @@
   "title": "Мишкин сон",
   "paragraphs": [
     {
-      "text": "Тёплый ленивый денёк: стрекочут кузнечики, играет тихая сонная музыка. Мишка ложится в гамак и начинает храпеть. Маша хихикает: «Мишка спит? Это ненадолго!»",
+      "text": "Тёплый ленивый денёк: стрекочут кузнечики, играет тихая сонная музыка. Мишка ложится в гамак и начинает храпеть. Маша подбегает к крыльцу и хихикает: «Мишка спит? Это ненадолго!»",
       "beatScript": {
         "summary": "Мишка устраивается в гамаке вздремнуть, а Маша что-то задумала.",
         "time_of_day": null,
@@ -59,6 +59,19 @@
             "shot": "auto"
           },
           {
+            "actor": "masha",
+            "verb": "run_to",
+            "target": "porch",
+            "item": null,
+            "line": null,
+            "emote": "giggle",
+            "sfx": null,
+            "emotion": "mischievous",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "auto"
+          },
+          {
             "actor": "bear",
             "verb": "sleep",
             "target": "hammock",
@@ -82,7 +95,7 @@
             "emotion": "mischievous",
             "with_previous": true,
             "delay_s": 1.5,
-            "shot": "auto"
+            "shot": "over_shoulder"
           },
           {
             "actor": "masha",
@@ -102,7 +115,7 @@
       }
     },
     {
-      "text": "Маша на цыпочках подкрадывается к гамаку и кричит: «Мишка, вставай! Давай играть!» Мишка подскакивает и — бах! — с грохотом вываливается из гамака.",
+      "text": "Мишка храпит всё громче. Маша на цыпочках подкрадывается к гамаку и кричит: «Мишка, вставай! Давай играть!» Мишка подскакивает и — бах! — с грохотом вываливается из гамака.",
       "beatScript": {
         "summary": "Маша подкрадывается и кричит — Мишка вскакивает и вываливается из гамака!",
         "time_of_day": null,
@@ -126,6 +139,19 @@
             "with_previous": false,
             "delay_s": 0,
             "shot": "tracking"
+          },
+          {
+            "actor": "bear",
+            "verb": "sleep",
+            "target": "hammock",
+            "item": null,
+            "line": null,
+            "emote": "snore",
+            "sfx": null,
+            "emotion": "sleepy",
+            "with_previous": true,
+            "delay_s": 2,
+            "shot": "auto"
           },
           {
             "actor": "masha",
@@ -223,9 +249,9 @@
       }
     },
     {
-      "text": "Мишка вздыхает и сажает Машу себе на плечи, а вокруг звучит весёлая цирковая музыка. «Быстрее, Мишка, быстрее!» — радуется Маша, пока они скачут по двору.",
+      "text": "Мишка вздыхает и сажает Машу себе на плечи, а вокруг звучит весёлая цирковая музыка. «Быстрее, Мишка, быстрее!» — радуется Маша, пока они важно шагают по двору, как на арене цирка.",
       "beatScript": {
-        "summary": "Мишка вздыхает, сажает Машу на плечи и скачет с ней по двору.",
+        "summary": "Мишка вздыхает, сажает Машу на плечи и катает её по двору, как в цирке.",
         "time_of_day": null,
         "mood": "triumphant",
         "music": {
@@ -289,13 +315,13 @@
           },
           {
             "actor": "bear",
-            "verb": "run_to",
+            "verb": "walk_to",
             "target": "swing",
             "item": null,
             "line": null,
             "emote": "huff",
             "sfx": null,
-            "emotion": "excited",
+            "emotion": "proud",
             "with_previous": false,
             "delay_s": 0,
             "shot": "tracking"
@@ -315,7 +341,7 @@
           },
           {
             "actor": "bear",
-            "verb": "run_to",
+            "verb": "walk_to",
             "target": "clearing",
             "item": null,
             "line": null,
@@ -413,11 +439,11 @@
           },
           {
             "actor": "bear",
-            "verb": "sit",
-            "target": "porch",
+            "verb": "sigh",
+            "target": null,
             "item": null,
             "line": null,
-            "emote": "sigh",
+            "emote": "hum",
             "sfx": null,
             "emotion": "happy",
             "with_previous": false,

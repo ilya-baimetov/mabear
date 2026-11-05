@@ -1,7 +1,7 @@
 // Pose math and blending (spec §7.4): quaternion helpers, 0.2 s crossfades, additive layers
 // (breathing, look-at). Pure functions over plain arrays — no Three.js, no React.
 import type { Quat } from "../api";
-import type { Vec3 } from "../../shared/schema";
+import type { Emotion, Vec3, Viseme } from "../../shared/schema";
 
 export type Pose = Record<string, Quat>;
 
@@ -12,7 +12,7 @@ export interface PoseLayer {
   hipsOffset: Vec3;
   /** extra yaw (radians) added to the actor's facing (spin, sulk turn-away) */
   yawOffset?: number;
-  face?: { emotion?: import("../../shared/schema").Emotion; lidClose?: number; browRaise?: number; mouthOpen?: number };
+  face?: { emotion?: Emotion; lidClose?: number; browRaise?: number; viseme?: Viseme; visemeWeight?: number };
   /** secondary-motion driver hints 0..1 */
   sway?: number;
 }

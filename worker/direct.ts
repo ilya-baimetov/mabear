@@ -34,13 +34,48 @@ export const FALLBACK_BETA = "server-side-fallback-2026-07-01";
 /** Mock-mode usage: plausible numbers so the economics panel has something to show in tests. */
 export const MOCK_USAGE: Usage = { input_tokens: 900, output_tokens: 700, cache_read_input_tokens: 6000, cache_creation_input_tokens: 0 };
 
-const FORMAT = zodOutputFormat(BeatScriptSchema);
-const BETA_FORMAT = betaZodOutputFormat(BeatScriptSchema);
+/** SDK 1.5's zod→JSON-schema transform demotes `enum` to a description ("{enum: [...]}"), so ids would only be
+ *  validated after the fact. Put the enums back so constrained decoding enforces verbs/marks/emotes etc. */
+export function restoreEnums<T>(schema: T): T {
+  const walk = (node: unknown): unknown => {
+    if (Array.isArray(node)) return node.map(walk);
+    if (!node || typeof node !== "object") return node;
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(node as Record<string, unknown>)) out[k] = walk(v);
+    const m = typeof out.description === "string" ? /^\{enum: (\[.*\])\}$/s.exec(out.description) : null;
+    if (m && out.type === "string") {
+      try {
+        const values = JSON.parse(m[1]) as unknown;
+        if (Array.isArray(values) && values.every((x) => typeof x === "string")) {
+          out.enum = values;
+          delete out.description;
+        }
+      } catch {
+        /* keep as description */
+      }
+    }
+    return out;
+  };
+  return walk(schema) as T;
+}
 
-/** Server-side refusal fallback (§8.2) is tried on Opus; switched off for this isolate if the API rejects it. */
+const SDK_FORMAT = zodOutputFormat(BeatScriptSchema);
+const SDK_BETA_FORMAT = betaZodOutputFormat(BeatScriptSchema);
+const ENUM_FORMAT = { ...SDK_FORMAT, schema: restoreEnums(SDK_FORMAT.schema) };
+const ENUM_BETA_FORMAT = { ...SDK_BETA_FORMAT, schema: restoreEnums(SDK_BETA_FORMAT.schema) };
+
+/** Server-side refusal fallback (§8.2) and enum-constrained schema: tried first; a 400 moves to the next request
+ *  shape (see SHAPES) and the accepted shape is remembered per isolate. These flags are global kill switches. */
 let fallbackEnabled = true;
+let strictEnums = true;
+/** Test/ops hooks. */
 export function setRefusalFallbackEnabled(on: boolean): void {
   fallbackEnabled = on;
+  preferredShape = null;
+}
+export function setStrictEnums(on: boolean): void {
+  strictEnums = on;
+  preferredShape = null;
 }
 
 const JSON_HEADERS = { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" };
@@ -171,56 +206,72 @@ type CallOutcome =
   | { kind: "refusal"; category: string | null }
   | { kind: "invalid"; note: string };
 
-async function callOnce(client: Anthropic, model: string, userText: string, signal: AbortSignal, usageRef: { usage: Usage | null }): Promise<CallOutcome> {
+/** Request shape: server-side refusal fallback on/off × enum-constrained schema on/off. */
+interface Shape { fallback: boolean; enums: boolean }
+const SHAPES: Shape[] = [
+  { fallback: true, enums: true },
+  { fallback: false, enums: true },
+  { fallback: true, enums: false },
+  { fallback: false, enums: false },
+];
+/** The first shape the API accepted in this isolate (tried first next time). */
+let preferredShape: Shape | null = null;
+
+function shapesFor(model: string): Shape[] {
+  // Haiku has no server-side fallback; other models get the fallback beta (§8.2) and drop it if the API rejects it.
+  const supportsFallback = !model.startsWith("claude-haiku");
+  const allowed = SHAPES.filter((s) => (supportsFallback ? true : !s.fallback) && (fallbackEnabled || !s.fallback) && (strictEnums || !s.enums));
+  if (preferredShape) {
+    const p = allowed.find((s) => s.fallback === preferredShape!.fallback && s.enums === preferredShape!.enums);
+    if (p) return [p, ...allowed.filter((s) => s !== p)];
+  }
+  return allowed;
+}
+
+interface RawResult { stop_reason: string | null; stop_details?: { category?: string | null } | null; parsed_output: unknown; usage: ApiUsage; model: string }
+
+async function send(client: Anthropic, shape: Shape, model: string, userText: string, signal: AbortSignal): Promise<RawResult> {
   const system = [{ type: "text" as const, text: buildSystemPrompt(), cache_control: { type: "ephemeral" as const } }];
   const messages = [{ role: "user" as const, content: userText }];
-  const useFallback = fallbackEnabled && model.startsWith("claude-opus");
+  if (shape.fallback) {
+    return (await client.beta.messages.parse(
+      { model, max_tokens: MAX_TOKENS, system, messages, betas: [FALLBACK_BETA], fallbacks: "default", output_config: { effort: "low", format: shape.enums ? ENUM_BETA_FORMAT : SDK_BETA_FORMAT } },
+      { signal },
+    )) as unknown as RawResult;
+  }
+  return (await client.messages.parse(
+    { model, max_tokens: MAX_TOKENS, system, messages, output_config: { effort: "low", format: shape.enums ? ENUM_FORMAT : SDK_FORMAT } },
+    { signal },
+  )) as unknown as RawResult;
+}
+
+async function callOnce(client: Anthropic, model: string, userText: string, signal: AbortSignal, usageRef: { usage: Usage | null }): Promise<CallOutcome> {
   try {
-    let stopReason: string | null;
-    let parsed: BeatScript | null;
-    let category: string | null = null;
-    let servedBy = model;
-    if (useFallback) {
+    let r: RawResult | null = null;
+    let lastBadRequest: unknown = null;
+    for (const shape of shapesFor(model)) {
       try {
-        const r = await client.beta.messages.parse(
-          { model, max_tokens: MAX_TOKENS, system, messages, betas: [FALLBACK_BETA], fallbacks: "default", output_config: { effort: "low", format: BETA_FORMAT } },
-          { signal },
-        );
-        usageRef.usage = addUsage(usageRef.usage, r.usage);
-        stopReason = r.stop_reason;
-        category = r.stop_details?.category ?? null;
-        parsed = stopReason === "refusal" ? null : (r.parsed_output as BeatScript | null);
-        servedBy = r.model || model;
+        r = await send(client, shape, model, userText, signal);
+        preferredShape = shape;
+        break;
       } catch (e) {
-        // The fallback beta doesn't combine with this request shape → drop it for this isolate and retry plainly.
-        // If the plain request is rejected too, the 400 wasn't about the fallback → re-enable it.
+        // 400 → this request shape isn't accepted (e.g. fallback beta + structured outputs); try the next shape.
         if (e instanceof Anthropic.BadRequestError) {
-          fallbackEnabled = false;
-          try {
-            return await callOnce(client, model, userText, signal, usageRef);
-          } catch (e2) {
-            if (e2 instanceof Anthropic.BadRequestError) fallbackEnabled = true;
-            throw e2;
-          }
+          lastBadRequest = e;
+          continue;
         }
         throw e;
       }
-    } else {
-      const r = await client.messages.parse(
-        { model, max_tokens: MAX_TOKENS, system, messages, output_config: { effort: "low", format: FORMAT } },
-        { signal },
-      );
-      usageRef.usage = addUsage(usageRef.usage, r.usage);
-      stopReason = r.stop_reason;
-      category = r.stop_details?.category ?? null;
-      parsed = stopReason === "refusal" ? null : (r.parsed_output as BeatScript | null);
-      servedBy = r.model || model;
     }
-    if (stopReason === "refusal") return { kind: "refusal", category };
+    if (!r) throw lastBadRequest ?? new Error("no request shape available");
+    usageRef.usage = addUsage(usageRef.usage, r.usage);
+    const stopReason = r.stop_reason;
+    if (stopReason === "refusal") return { kind: "refusal", category: r.stop_details?.category ?? null };
+    const parsed = r.parsed_output;
     if (!parsed) return { kind: "invalid", note: `no structured output (stop_reason: ${stopReason})` };
     const check = BeatScriptSchema.safeParse(parsed);
     if (!check.success) return { kind: "invalid", note: short(check.error.message, 600) };
-    return { kind: "ok", beatScript: check.data, model: servedBy };
+    return { kind: "ok", beatScript: check.data, model: r.model || model };
   } catch (e) {
     // The SDK's structured-output parser throws a plain AnthropicError on bad JSON / schema mismatch → repair.
     if (e instanceof Anthropic.AnthropicError && !(e instanceof Anthropic.APIError) && /structured output/i.test(e.message)) {

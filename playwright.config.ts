@@ -23,7 +23,7 @@ export default defineConfig({
   webServer: {
     command: `npm run build && npx wrangler dev --port ${PORT} --ip localhost --var MOCK_DIRECTOR:1 --var DEMO_PASSWORD:${E2E_PASSWORD} --var SESSION_SECRET:e2e-secret`,
     url: `http://localhost:${PORT}/api/health`,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
     timeout: 180_000,
     stdout: "ignore",
     stderr: "pipe",
