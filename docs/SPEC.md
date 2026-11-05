@@ -12,6 +12,11 @@ simplest option that keeps the Definition of Done (§14) achievable, and log the
 
 ## 0. One-paragraph summary
 
+**What it is:** a fan-fiction game — an online play space where kids and fans write their own Masha and the Bear
+stories and watch them come alive. **What it is not:** a production tool. The studio will never make episodes with
+it, and it doesn't try to reproduce the nuance animators put in by hand. The quality bar is "delightful, on-model fan
+content that Animaccord is happy to carry its name", not episode parity.
+
 A web app where a child writes a cartoon script **paragraph by paragraph** ("Masha sneaks into Bear's garden. She
 steals a carrot.") and each paragraph is rendered, within seconds, into an animated 3D scene starring Masha and the
 Bear — with motion, camera cuts, Masha's voice + lip-sync, music and SFX. Because the system knows the characters
@@ -46,7 +51,8 @@ anything is rendered.
 ## 1. Audience and what the prototype must prove
 
 Primary audience: **Animaccord leadership and prospective funders** (live demo, ~5 minutes, laptop + Chrome).
-Secondary: a child (7–10) using it hands-on in that demo.
+Secondary: a child or fan (7+) playing with it hands-on in that demo. The product UI is for players only; the
+funder evidence (economics, system layers, data view) lives in a hidden **Behind the scenes** overlay (§4.4).
 
 | # | Demo moment | Funder question answered | Priority |
 |---|---|---|---|
@@ -54,16 +60,16 @@ Secondary: a child (7–10) using it hands-on in that demo.
 | D2 | Rewrite paragraph 2 → only paragraph 2 re-renders; the rest is cached | Is iteration fast and cheap? | P0 |
 | D3 | Terse script ("Bear naps. Masha wakes him.") → rich in-character staging | Is the character knowledge the moat? | P0 |
 | D4 | "Bear says thank you" / "Masha grabs a knife" → adjusted; the rule shown | Will studio and parents trust it? | P0 |
-| D5 | Studio mode "Economics" panel (§4.4): plan size (KB), on-device FPS, server cost per paragraph, and a 10-million-user projection vs diffusion video | Do the economics hold at internet scale? | P0 |
+| D5 | Behind-the-scenes "Economics" panel (§4.4): plan size (KB), on-device FPS, server cost per paragraph, and a 10-million-user projection vs diffusion video | Do the economics hold at internet scale? | P0 |
 | D6 | EN ⇄ RU toggle: UI, Masha's lines and voice switch | International? | P0 |
-| D7 | Change shot, lighting or a line in Studio mode → instant local re-render, $0 | Why not video diffusion? | P1 |
-| D8 | Timeline (dope sheet) labeled "every produced episode already exists in this format → training data" | Is the data moat real? | P1 |
+| D7 | Player "remix" buttons on a paragraph (🎥 another camera, ☀️/🌙 time of day, 🎵 music mood) → instant local re-render, $0, no AI call | Why not video diffusion? | P1 |
+| D8 | Behind-the-scenes data view: the paragraph's timeline as tracks, labeled "every produced episode already exists in this format → training data" | Is the data moat real? | P1 |
 | D9 | Tap a character after the episode ends → reaction (playable scene) | Interactivity | P2 |
 | D10 | Sound is part of the script: "It starts to rain. Spooky music. Masha runs home shouting 'Bear!'" → rain ambience, the music shifts, splashy running footsteps, Masha's voice; characters audibly breathe, grunt and giggle as they move | Does it feel like an episode, not a tech demo? | P0 |
 
-## 2. Honesty labels (mandatory, visible in Studio mode)
+## 2. Honesty labels (mandatory, in the Behind-the-scenes overlay)
 
-The prototype must never pretend a layer exists when it doesn't. Studio mode shows a "System layers" legend rendering
+The prototype must never pretend a layer exists when it doesn't. The overlay shows a "System layers" legend rendering
 the §0 table: each row tagged **Live**, **Stand-in** or **Placeholder**, each with its production counterpart. The
 legend also states: "In production, the text→plan and plan→motion layers are one model trained on Animaccord's
 episode archive. Here they are approximated by Claude + a character bible and by open motion libraries."
@@ -72,7 +78,8 @@ episode archive. Here they are approximated by Claude + a character bible and by
 
 User accounts, server-side persistence (use `localStorage`), public sharing/feed, mobile layout (desktop Chrome only;
 must not break below 1280 px but needn't be pretty), training any model, official assets (but keep them a drop-in
-swap, §7.3), interior sets (P2 at most), more than three characters, speech input (voice dictation comes later).
+swap, §7.3), interior sets (P2 at most), more than three characters, speech input (voice dictation comes later),
+any studio/production tooling (shot-by-shot editing, dope-sheet editing, mixing consoles).
 
 ---
 
@@ -82,7 +89,7 @@ swap, §7.3), interior sets (P2 at most), more than three characters, speech inp
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│ MaBear · [Episode title]     ▶ Play all   ⟲ New   Examples ▾   EN|RU  Kid|Studio │
+│ MaBear · [Story title]       ▶ Play all   ⟲ New   Examples ▾   EN|RU   🔊         │
 ├───────────────────────────┬──────────────────────────────────────────────────┤
 │ SCRIPT (paragraph cards)  │                                                  │
 │ ┌───────────────────────┐ │                 STAGE (Three.js)                  │
@@ -91,11 +98,11 @@ swap, §7.3), interior sets (P2 at most), more than three characters, speech inp
 │ └───────────────────────┘ │                                                  │
 │ ┌───────────────────────┐ │                                                  │
 │ │2 Bear is asleep in a  │ │──────────────────────────────────────────────────│
-│ │  hammock... ⏳        │ │ TIMELINE: ¶1 | ¶2 | ¶3   (Studio: dope-sheet     │
-│ └───────────────────────┘ │ tracks Masha · Bear · Camera · Dialogue · SFX ·  │
-│ [ + add paragraph ]       │ Music · Light; Kid: one band per paragraph)       │
+│ │  hammock... ⏳        │ │ STORY BAR: ¶1 | ¶2 | ¶3  (one colored band per   │
+│ └───────────────────────┘ │ paragraph, playhead, click/drag to scrub)         │
+│ [ + add paragraph ]       │                                                  │
 └───────────────────────────┴──────────────────────────────────────────────────┘
-Studio mode adds a right drawer "Under the hood" for the selected paragraph.
+Behind the scenes (funder overlay, hidden by default): a right drawer for the selected paragraph (§4.4).
 ```
 
 ### 4.2 Paragraph = unit of tracking
@@ -122,8 +129,8 @@ Triggers: render when the user stops typing for **1.5 s**, on blur, or on Ctrl/C
 creates a new paragraph. A version is created only when the text actually changed (trimmed, whitespace-normalized).
 
 Every paragraph version is appended to a local **tracking log** (`localStorage: mabear.log`): `{episodeId,
-paragraphId, version, text, lang, beatScript, source: "llm"|"offline", latencyMs, usage, ruleHits, ts}`. Studio mode
-has an "Export log (JSON)" button. This is the "demand intelligence" hook from the pitch.
+paragraphId, version, text, lang, beatScript, source: "llm"|"offline", latencyMs, usage, ruleHits, ts}`. The
+Behind-the-scenes overlay has an "Export log (JSON)" button. This is the "demand intelligence" hook from the pitch.
 
 ### 4.3 Playback
 
@@ -133,12 +140,19 @@ has an "Export log (JSON)" button. This is the "demand intelligence" hook from t
   real-time playback.
 - After the last paragraph finishes: hold the final frame with idle motion (P2: tap-to-react, D9).
 
-### 4.4 Kid mode vs Studio mode
+### 4.4 The player UI and the Behind-the-scenes overlay
 
-- **Kid mode** (default): large rounded type (Google Font "Nunito"), warm palette (forest greens, honey yellow,
-  Masha-magenta accent), big buttons, emoji status chips (✏️ ⏳ ✅ ✨ ⚠️), example story chips under an empty script
-  ("Pancake morning", "Bear's nap", "Fishing trip"), timeline as simple colored paragraph bands.
-- **Studio mode**: dope-sheet timeline with tracks; the "Under the hood" drawer for the selected paragraph:
+- **The app is a game, for players only**: large rounded type (Google Font "Nunito"), warm palette (forest greens,
+  honey yellow, Masha-magenta accent), big buttons, emoji status chips (✏️ ⏳ ✅ ✨ ⚠️), example story chips under an
+  empty script ("Pancake morning", "Bear's nap", "Fishing trip"), the story bar as colored paragraph bands, and a
+  master volume / mute button. Playful **remix buttons** on each ready paragraph card: 🎥 "another camera" (re-rolls
+  the camera plan with a new seed), ☀️/🌙 time of day, 🎵 music mood. They re-render locally with no AI call (D7).
+  No technical vocabulary anywhere in the player UI.
+- **Behind the scenes** (funder demo overlay, P0): hidden by default; opened with the `?pitch=1` URL parameter or the
+  `Shift+B` shortcut; never shown to players. A right drawer for the selected paragraph:
+  - A read-only **data view** of the paragraph's timeline as tracks (Masha · Bear · Camera · Dialogue · Vocals ·
+    Foley · SFX · Ambience · Music · Light), labeled "every produced episode already exists in this format →
+    training data" (D8).
   - Beat script (pretty JSON, collapsible) and its `source` (LLM / offline / fixture).
   - **Plan size** in bytes vs "equivalent 1080p video ≈ duration × 1 MB/s" (state the assumption: H.264 @ ~8 Mbit/s).
   - Director latency; input/output/cache tokens; **actual cost in $** from `usage` × the price table in
@@ -156,11 +170,8 @@ has an "Export log (JSON)" button. This is the "demand intelligence" hook from t
     (https://cloud.google.com/vertex-ai/generative-ai/pricing, Veo rows). If you can't verify it, use the pitch
     deck's range ($0.05–0.75 per second) labeled "per pitch deck, unverified". Never present an unsourced number as
     fact.
-  - Rule report: each hit → rule id, original, replacement, studio explanation.
-  - **Sound** for the selected paragraph: music mood + intensity dropdowns, ambience layer toggles, per-bus volume
-    sliders (voice, vocals/foley/SFX, ambience, music), a list of the compiled audio cues; overrides re-render locally.
-  - Per-shot override dropdown (wide / medium / close / low angle / over-shoulder / tracking), time-of-day override,
-    editable dialogue lines → re-render locally (no LLM call) and show "Re-rendered locally in N ms · $0" (D7).
+  - Rule report: each hit → rule id, original, replacement, explanation.
+  - The compiled audio cues (counts per track) and, after a remix, "Re-rendered locally in N ms · $0".
   - The honesty legend (§2).
 
 ### 4.5 Internationalization (EN / RU)
@@ -207,7 +218,7 @@ public/assets/  (downloaded open motion clips and models; licenses in docs/ASSET
               motion/{library.ts, verbs/*.ts, blend.ts}  player/{player.ts, evaluate.ts}  fx/fx.ts
               audio/{bus.ts, scheduler.ts, tts.ts, vocals.ts, foley.ts, sfx.ts, ambience.ts, music.ts}
 src/app/      main.tsx  App.tsx  store.ts  components/{TopBar, ScriptEditor, ParagraphCard, Stage, Timeline,
-              UnderTheHood, SystemLayers}.tsx  i18n/{en.ts, ru.ts, index.ts}  styles.css
+              RemixButtons, BehindTheScenes, Economics, DataView, SystemLayers}.tsx  i18n/{en.ts, ru.ts, index.ts}  styles.css
 worker/       index.ts  auth.ts  rateLimit.ts  direct.ts
 tests/unit/   *.test.ts (vitest)        tests/e2e/   *.spec.ts (playwright)
 ```
@@ -359,8 +370,7 @@ Episode timeline = concatenation of segments; segment i starts at Σ duration(0.
    changed. If a downstream BeatScript fails validation against its new start state (e.g. `eat jam_jar` but nobody
    holds it), the compiler auto-repairs where trivial (insert `take`) or marks the paragraph `draft` and re-directs it.
 5. At most 2 director calls in flight; newer edits of the same paragraph cancel older calls (AbortController).
-6. Studio overrides `{ shots: Record<clipIndex, Shot>, lines: Record<beatIndex, string>, timeOfDay, music,
-   ambience }` are stored per
+6. Remix choices `{ cameraSeed: number, timeOfDay, musicMood }` are stored per
    paragraph version and applied by the compiler — **never** trigger an LLM call.
 
 ### 6.6 Fixtures (golden path, offline-safe)
@@ -535,7 +545,8 @@ Rules, in priority order: user override > beat `shot` hint > automatic rules:
 
 Sound is half of a cartoon; treat it as P0. The compiler produces six audio tracks (§6.4). The player schedules them
 on one shared `AudioContext` (unlocked on the first user gesture), with buses: **voice**, **vocals + foley + SFX**,
-**ambience**, **music**, then master. Volume sliders and mute per bus live in Studio mode; a master mute is in the top bar.
+**ambience**, **music**, then master. Players get one master volume / mute button; bus levels are fixed in a mix
+config constant.
 
 | Track | Where it comes from | Prototype sound source |
 |---|---|---|
@@ -714,7 +725,8 @@ reaction beat for the other actor). It powers the instant preview, the no-key fa
      version numbers.
   5. Canon: "Bear says thank you to Masha" → no Bear dialogue in the compiled segment and an `adjusted` chip.
   6. EN → RU toggle → UI strings switch (assert 3 labels) and a RU example loads.
-  7. Studio mode → the drawer shows plan size, cost and FPS; a shot override re-renders without a director request.
+  7. Behind the scenes (`?pitch=1`) → the drawer shows plan size, cost, FPS and the economics panel; it's absent
+     without the parameter. A 🎥 remix re-renders without a director request.
   7b. Sound: a paragraph with "It starts to rain. Spooky music." compiles to `ambience` containing `rain` and
      `music.mood = spooky`; during playback the app's audio debug hook (`window.__mabearAudio`) reports scheduled
      dialogue, foley and music cues (assert counts > 0; actual audio output isn't verified headless).
@@ -739,8 +751,8 @@ reaction beat for the other actor). It powers the instant preview, the no-key fa
    smoke test instead).
 6. Deployed to Cloudflare behind the password gate, with the §12 smoke test output printed — **or**, if Cloudflare
    credentials are absent, `STATUS.md` names the missing variables and the one command that finishes the deploy.
-7. `docs/ASSETS.md` lists the source, author and license of every third-party asset, and Studio mode's System
-   layers legend matches the §0 table;
+7. `docs/ASSETS.md` lists the source, author and license of every third-party asset, and the Behind-the-scenes
+   System layers legend matches the §0 table;
 8. `docs/DEMO_SCRIPT.md` (a 5-minute funder walkthrough mapping D1–D8 to clicks and lines to say) is written;
    `docs/STATUS.md` is current; everything is committed and pushed to the session's designated branch.
 
@@ -757,8 +769,8 @@ log them as deferred, and move on. **P0 before P1 before P2, always.**
 | M2 Engine | T+0:40–2:00 | Set (incl. creek, van), Masha and Bear rigs on Mixamo-named skeletons + procedural faces, asset manifest, open motion clips retargeted + procedural layers for every P0 verb, blend, evaluate, series look (§7.1), fx, render the fixtures | Subagent A (characters + faces + motion/retarget), subagent B (set + look + fx + asset manifest) |
 | M3 Compiler + rules + parser | T+0:40–1:30 | compile, world state, camera, dialogue/visemes, audio cues, validator, offline parser + unit tests | Subagent C |
 | M4 Director | T+1:15–2:00 | Worker (auth, rate limit, direct), prompt, mock mode, client, eval script | Subagent D |
-| M5 App | T+1:30–2:45 | Store + paragraph pipeline (§6.5), editor, stage, timeline, under the hood, i18n, kid/studio, integrate audio | Main thread integrates; Subagent E builds the audio engine (§7.6 buses, scheduler, TTS, vocals, foley, SFX, ambience, music) from T+0:40 against the frozen Segment contract |
-| M6 Editing + polish | T+2:40–3:15 | Likeness passes 2–3 (§7.3) first, then Studio overrides (D7), dope sheet (D8), performance pass | Subagent for likeness while the main thread does D7/D8 |
+| M5 App | T+1:30–2:45 | Store + paragraph pipeline (§6.5), editor, stage, story bar, remix buttons, Behind-the-scenes overlay (economics, data view, layers), i18n, integrate audio | Main thread integrates; Subagent E builds the audio engine (§7.6 buses, scheduler, TTS, vocals, foley, SFX, ambience, music) from T+0:40 against the frozen Segment contract |
+| M6 Editing + polish | T+2:40–3:15 | Likeness passes 2–3 (§7.3) first, then remix polish (D7), data view (D8), performance pass | Subagent for likeness while the main thread does D7/D8 |
 | M7 Verify + ship | T+3:15–3:45 | E2E, screenshots, director eval, deploy + smoke test, DEMO_SCRIPT, final STATUS | — |
 | Buffer | T+3:45–4:00 | Fixes only | — |
 
