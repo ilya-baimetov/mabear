@@ -87,3 +87,4 @@ Judgment: Opus stays the deployed default (richer in-character staging); Haiku i
   - Night still reads a bit blue at the pond; Kenney/Quaternius tree packs not used (faceted low-poly style mismatch, Quaternius behind itch.io).
   - Earlier open items unchanged: no IK (foot slip), rigid kerchief/skirt, no shell fur, TTS onboundary lip-sync.
 - **Deploy:** Workers Build `052d6082` for 054bc5a **success** (and `c3379d86` for 40a2d0c). §12 smoke test against https://mabear.ilya-baimetov.workers.dev: health 200 ✅ · noindex ✅ · `/` → login ✅ · `/api/direct` 401 without cookie ✅ · authenticated part not run: DEMO_PASSWORD not in environment.
+- **FPS (owner check, 2026-11-05):** the owner reports the Rendering card's FPS counter always above 50 on their machine (real GPU) — the A5 ≥ 50 FPS target is met. Owner also reports further issues; fixes follow as a FIXES entry.
