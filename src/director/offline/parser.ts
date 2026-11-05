@@ -4,11 +4,12 @@
 // validateBeatScript with 0 errors.
 import { CHARACTERS } from "../../shared/bible/characters";
 import { PROPS } from "../../shared/bible/props";
-import { detectLang, preFilter } from "../../shared/rules";
+import { canonAbsentFor, canonAbsentMessage, detectLang, preFilter } from "../../shared/rules";
+import { isWolf } from "../../shared/grammar";
 import {
-  MAX_BEATS, MAX_LINE_CHARS, MAX_PARAGRAPH_CHARS, MAX_SUMMARY_CHARS,
+  ACTOR_IDS, MAX_BEATS, MAX_LINE_CHARS, MAX_PARAGRAPH_CHARS, MAX_SUMMARY_CHARS,
   type ActorId, type Ambience, type Beat, type BeatScript, type Emote, type Emotion, type Lang, type MarkId,
-  type Mood, type MusicCue, type MusicMood, type PropId, type SfxId, type TimeOfDay, type Verb, type WorldState,
+  type Mood, type MusicCue, type RuleHit, type MusicMood, type PropId, type SfxId, type TimeOfDay, type Verb, type WorldState,
 } from "../../shared/schema";
 import { allowedEmote, otherActor, validateBeatScript } from "../../compiler/validate";
 import { LEXICON_EN } from "./lexicon.en";
@@ -16,7 +17,8 @@ import { LEXICON_RU } from "./lexicon.ru";
 
 export interface Lexicon {
   lang: Lang;
-  actors: { re: RegExp; id: ActorId; nominative: boolean }[];
+  /** `plural` = a group mention ("the wolves"): both Wolves act, in parallel */
+  actors: { re: RegExp; id: ActorId; nominative: boolean; plural?: boolean }[];
   pronouns: { re: RegExp; id: ActorId; subject: boolean }[];
   both: RegExp;
   objectPrepositions: RegExp;
@@ -111,10 +113,15 @@ function beat(actor: ActorId, verb: Verb, extra: Partial<Beat> = {}): Beat {
 export function parseParagraph(text: string, lang: Lang, startState: WorldState, options: ParseOptions = {}): BeatScript {
   const lex = LEXICONS[detectLang(text)];
   const pf = preFilter(text.slice(0, MAX_PARAGRAPH_CHARS), lex.lang, lang);
-  const src = pf.text;
+  // canon characters not in the prototype (Hare, Penguin, Dasha…) are played by Masha/Bear, with an honest note
+  const ca = substituteCanonAbsent(pf.text, lex.lang, lang);
+  pf.hits.push(...ca.hits);
+  const src = ca.text;
 
   const quotes: string[] = [];
-  const holding: Record<ActorId, PropId | null> = { masha: startState.actors.masha.holding, bear: startState.actors.bear.holding };
+  const holding = Object.fromEntries(ACTOR_IDS.map((id) => [id, startState.actors[id]?.holding ?? null])) as Record<ActorId, PropId | null>;
+  /** the last subject was "the wolves" (so "they" means the Wolves) */
+  let lastWolvesPlural = false;
   const beats: Beat[] = [];
   const ambience: Ambience[] = [];
   let music: MusicCue | null = null;
@@ -180,7 +187,9 @@ export function parseParagraph(text: string, lang: Lang, startState: WorldState,
 
     // clauses
     const bothToken = lex.lang === "ru" ? " маша⁂ " : " masha⁂ ";
-    const prepared = lower
+    // after "the wolves …", a "they" refers to the Wolves, not to Masha and Bear
+    const lowerT: string = lastWolvesPlural ? lower.replace(lex.lang === "ru" ? /(?<!\p{L})они(?!\p{L})/gu : /\bthey\b/g, lex.lang === "ru" ? "волки" : "the wolves") : lower;
+    const prepared = lowerT
       .replace(new RegExp(lex.both.source, "gu"), bothToken)
       .replace(/\s+(while|as|пока)\s+/g, ", meanwhile ")
       .replace(/^(meanwhile|тем временем)[,\s]+/, "meanwhile ");
@@ -196,16 +205,18 @@ export function parseParagraph(text: string, lang: Lang, startState: WorldState,
 
       // --- actors ---
       const both = clause.includes("⁂");
-      const mentions: { i: number; id: ActorId; nominative: boolean; obj: boolean }[] = [];
+      const mentions0: { i: number; len: number; id: ActorId; nominative: boolean; obj: boolean; plural: boolean }[] = [];
       for (const a of lex.actors) {
         const re = new RegExp(a.re.source, "gu");
         for (const m of clause.matchAll(re)) {
           const pre = clause.slice(Math.max(0, m.index - 12), m.index);
           const lastWord = pre.trim().split(/\s+/).pop() ?? "";
           const possessive = /^['’]s\b/.test(clause.slice(m.index + m[0].length));
-          mentions.push({ i: m.index, id: a.id, nominative: a.nominative, obj: possessive || (lex.objectPrepositions.test(lastWord) && new RegExp(`^(?:${lex.objectPrepositions.source})$`, "u").test(lastWord)) });
+          mentions0.push({ i: m.index, len: m[0].length, id: a.id, nominative: a.nominative, plural: !!a.plural, obj: possessive || (lex.objectPrepositions.test(lastWord) && new RegExp(`^(?:${lex.objectPrepositions.source})$`, "u").test(lastWord)) });
         }
       }
+      // "the little wolf" also contains "wolf": keep only the longest of overlapping mentions
+      const mentions = mentions0.filter((m) => !mentions0.some((o) => o !== m && o.len > m.len && o.i <= m.i && o.i + o.len >= m.i + m.len));
       mentions.sort((x, y) => x.i - y.i);
       let subject: ActorId | null = null;
       const subjMention = (lex.lang === "ru" ? mentions.find((m) => m.nominative && !m.obj) : null) ?? mentions.find((m) => !m.obj);
@@ -214,9 +225,10 @@ export function parseParagraph(text: string, lang: Lang, startState: WorldState,
         const sp = firstMatch(clause, lex.pronouns.filter((p) => p.subject).map((p) => ({ re: p.re, v: p.id })));
         if (sp && sp.index < 3) subject = sp.value;
       }
+      const wolvesPlural: boolean = subjMention ? subjMention.plural : subject == null && lastWolvesPlural && (subjectCarry ?? lastActor) === "wolf_a";
       const subjectExplicit = subject != null;
       if (!subject) subject = subjectCarry ?? lastActor ?? "masha";
-      let object: ActorId | null = mentions.find((m) => m.id !== subject)?.id ?? null;
+      let object: ActorId | null = mentions.find((m) => m.id !== subject && !(wolvesPlural && isWolf(m.id)))?.id ?? null;
       if (!object) {
         const op = firstMatch(clause, lex.pronouns.filter((p) => !p.subject && p.id !== subject).map((p) => ({ re: p.re, v: p.id })));
         if (op) object = op.value;
@@ -277,13 +289,25 @@ export function parseParagraph(text: string, lang: Lang, startState: WorldState,
 
       switch (verb) {
         case "walk_to": case "run_to": case "tiptoe_to": {
-          let target: string | null = mark ?? object ?? prop;
+          // the Wolves go for the food first ("sneak up to steal Bear's honey" → the honey pot)
+          let target: string | null = isWolf(a) ? mark ?? prop ?? object : mark ?? object ?? prop;
+          // a Wolf running off with nowhere named scampers back to the van
+          if (!target && isWolf(a) && verb === "run_to") target = "van";
           if (!target) target = startState.actors[a].mark === "clearing" ? "table" : "clearing";
           mkBeat(a, verb, { target });
           break;
         }
         case "chase": case "hug": mkBeat(a, verb, { target: object ?? o }); break;
+        case "exit":
+          if (isWolf(a)) mkBeat(a, "run_to", { target: "van", emotion: emotion ?? "scared" }); // the Wolves flee to their van
+          else mkBeat(a, verb);
+          break;
         case "carry":
+          if (isWolf(a)) { // Wolves don't carry Masha: they grab the thing, or just eye it
+            if (prop) { mkBeat(a, "take", { target: prop, item: prop }); holding[a] = prop; }
+            else mkBeat(a, "look_at", { target: mark ?? object ?? null });
+            break;
+          }
           mkBeat("bear", "carry", { target: "masha", emotion: a === "masha" ? "happy" : emotion ?? "happy" });
           if (mark) mkBeat("bear", "walk_to", { target: mark, emotion: "happy" });
           break;
@@ -300,7 +324,7 @@ export function parseParagraph(text: string, lang: Lang, startState: WorldState,
           } else mkBeat(a, "scared");
           break;
         case "swing":
-          if (a === "bear") mkBeat(a, "look_at", { target: "swing" });
+          if (a !== "masha") mkBeat(a, "look_at", { target: "swing" });
           else mkBeat(a, "swing");
           break;
         case "take": {
@@ -317,7 +341,7 @@ export function parseParagraph(text: string, lang: Lang, startState: WorldState,
         }
         case "eat": {
           const held = holding[a];
-          const item = prop ?? (held && PROPS[held].edible ? held : a === "masha" ? "jam_jar" : "honey_pot");
+          const item = prop ?? (held && PROPS[held].edible ? held : a === "masha" ? "jam_jar" : a === "wolf_b" ? "pancakes" : "honey_pot");
           mkBeat(a, "eat", { item });
           if (["pancakes", "fish", "carrot", "cake", "lollipop"].includes(item)) holding[a] = null; else holding[a] = item;
           break;
@@ -348,6 +372,12 @@ export function parseParagraph(text: string, lang: Lang, startState: WorldState,
       const clauseSfx = firstMatch(clause, lex.sfx.map((x) => ({ re: x.re, v: x.id })))?.value ?? null;
       if (clauseSfx && !sfxUsed) { speakerBeat.sfx = clauseSfx; sfxUsed = true; }
       if (simultaneous && beats.length > 0) made[0].with_previous = true;
+      // "the wolves sneak…" → both Wolves do it, side by side and in parallel
+      if (wolvesPlural && made.length === 1 && isWolf(made[0].actor) && !NO_TWIN.has(made[0].verb)) {
+        const twin: Beat = { ...made[0], actor: "wolf_b", line: null, sfx: null, with_previous: true, delay_s: 0.2 };
+        if (twin.target === "wolf_b") twin.target = "wolf_a";
+        made.push(twin);
+      }
       // "Masha and Bear dance" → both do it, in parallel
       if (both && made.length === 1 && GRAMMAR_BOTH.has(made[0].verb)) {
         const twin = { ...made[0], actor: otherActor(made[0].actor), line: null, emote: null, sfx: null, with_previous: true };
@@ -367,6 +397,7 @@ export function parseParagraph(text: string, lang: Lang, startState: WorldState,
       }
       lastActor = a;
       subjectCarry = a;
+      lastWolvesPlural = wolvesPlural && isWolf(a);
     }
 
     // ≥ 1 beat per sentence: sound-only / unparsed sentences get a reaction beat
@@ -391,7 +422,7 @@ export function parseParagraph(text: string, lang: Lang, startState: WorldState,
   if (beats.length === 0) beats.push(beat("masha", "look_at", { target: "bear" }));
   if (beats.length < 2) {
     const first = beats[0];
-    const reactor = otherActor(first.actor);
+    const reactor = isWolf(first.actor) ? "masha" : otherActor(first.actor);
     if (startState.actors[reactor].posture !== "offstage") beats.push(reactionBeat(reactor, first));
     else beats.push(beat(first.actor, first.actor === "masha" ? "laugh" : "nod"));
   }
@@ -412,6 +443,23 @@ export function parseParagraph(text: string, lang: Lang, startState: WorldState,
   return validateBeatScript(bs, startState, lang).beatScript;
 }
 
+/** Replace canon-but-absent characters in the narration (not inside quotes) with their stand-in's name. */
+export function substituteCanonAbsent(text: string, textLang: Lang, uiLang: Lang): { text: string; hits: RuleHit[] } {
+  const hits: RuleHit[] = [];
+  const parts = text.split(/("[^"]*"|“[^”]*”|«[^»]*»|„[^“”]*[“”])/u);
+  const out = parts.map((part, i) => {
+    if (i % 2 === 1) return part; // quoted words stay verbatim
+    return part.replace(/(?<![\p{L}])(?:the |a |an )?([\p{L}]+)/giu, (m, word: string) => {
+      const c = canonAbsentFor(word);
+      if (!c) return m;
+      const rep = c.sub === "masha" ? (textLang === "ru" ? "Маша" : "Masha") : textLang === "ru" ? "Мишка" : "Bear";
+      if (!hits.some((h) => h.original.toLowerCase() === word.toLowerCase())) hits.push({ rule: "cast_only", original: word, replacement: rep, kid_message: canonAbsentMessage(c, uiLang) });
+      return m.replace(/^(?:the |a |an )/i, "").replace(word, rep);
+    });
+  });
+  return { text: out.join(""), hits };
+}
+
 /** Unquoted speech: "Bear says thank you to Masha" → "Thank you". Returns null when nothing is left to say. */
 function unquotedSpeech(clause: string, lex: Lexicon): string | null {
   const m = new RegExp(lex.speech.source, "u").exec(clause);
@@ -425,10 +473,17 @@ function unquotedSpeech(clause: string, lex: Lexicon): string | null {
   return rest.charAt(0).toUpperCase() + rest.slice(1);
 }
 
+/** Verbs a "the wolves" clause does NOT duplicate for the second Wolf (one object, or the verb already involves both). */
+const NO_TWIN = new Set<Verb>(["take", "give", "eat", "throw", "hug", "carry", "cook", "fish", "swing", "water_plants"]);
 const GRAMMAR_BOTH = new Set<Verb>(["dance", "jump", "spin", "laugh", "clap", "walk_to", "run_to", "tiptoe_to", "sit", "wave", "look_at", "cry", "sigh", "eat", "hide", "sleep", "yawn_stretch", "surprised", "scared"]);
 
 function reactionBeat(reactor: ActorId, first: Beat): Beat {
   const v = first.verb;
+  if (isWolf(first.actor)) {
+    // Masha watches the Wolves' antics (and laughs at their slapstick)
+    if (v === "fall_down" || v === "sneeze" || v === "scared") return beat(reactor, "laugh");
+    return beat(reactor, "point_at", { target: first.actor, emotion: "curious" });
+  }
   if (reactor === "bear") {
     if (v === "fall_down" || v === "sneeze") return beat("bear", "surprised", { emote: "gasp" });
     if (["dance", "spin", "swing", "jump", "clap"].includes(v)) return beat("bear", "nod", { emotion: "happy", emote: "chuckle" });

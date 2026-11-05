@@ -3,7 +3,7 @@
 import type { Quat } from "../../api";
 import { addLayer, blendLayers, clamp01, easeInOut, qmul, smooth, window01, type PoseLayer } from "../blend";
 import {
-  UPPER, UPPER_NO_HEAD, arm, idleBase, raiseArms, layer, leg, mask, noise1, pose, poseClip, rx, ry, rz,
+  UPPER, UPPER_NO_HEAD, arm, byPersona, idleBase, raiseArms, layer, leg, mask, noise1, pose, poseClip, rx, ry, rz,
   sampleClip, type VerbCtx, type VerbImpl,
 } from "./common";
 
@@ -78,7 +78,7 @@ export const jump: VerbImpl = (lt, _p, ctx) => jumpPose(lt, ctx);
 function jumpPose(lt: number, ctx: VerbCtx): PoseLayer {
   const u = lt / ctx.dur;
   const h = ctx.style.hipHeight;
-  const peak = ctx.actor === "masha" ? 0.28 : 0.2;
+  const peak = byPersona(ctx.actor, 0.28, 0.2, 0.3);
   const crouch = window01(u, 0, 0.36, 0.12) + window01(u, 0.7, 1, 0.12);
   const air = u > 0.32 && u < 0.76 ? Math.sin(((u - 0.32) / 0.44) * Math.PI) : 0;
   const base = mask(idleBase(ctx, 0.3), { bones: raiseArms(air, 0.8, 0.4), hipsOffset: [0, 0, 0] }, ["LeftArm", "LeftForeArm", "RightArm", "RightForeArm"], smooth(Math.min(1, u * 8)));
@@ -106,9 +106,9 @@ export const spin: VerbImpl = (lt, _p, ctx) => {
 };
 
 export const dance: VerbImpl = (lt, _p, ctx) => {
-  const rate = ctx.actor === "masha" ? 1.1 : 0.75;
+  const rate = byPersona(ctx.actor, 1.1, 0.75, 1.0);
   const top = sampleClip("robot_dance", lt * rate, ctx.style, true);
-  const beat = ctx.actor === "masha" ? 2.2 : 1.4; // knee bounces per second
+  const beat = byPersona(ctx.actor, 2.2, 1.4, 2.0); // knee bounces per second
   const b = Math.abs(Math.sin(lt * beat * Math.PI));
   const sway = Math.sin(lt * beat * Math.PI * 0.5) * 0.12;
   const legs = layer(pose(

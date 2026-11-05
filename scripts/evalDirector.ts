@@ -89,6 +89,12 @@ function check(p: GoldenPrompt, resp: unknown, requireLlm: boolean, minBeats: nu
   if (v.errors.length) problems.push(`validator: ${v.errors.slice(0, 3).join("; ")}`);
   if (bs.beats.length < minBeats) problems.push(`only ${bs.beats.length} beats (< ${minBeats})`);
   if (bs.beats.some((b) => b.actor === "bear" && b.line && b.line.trim())) problems.push("Bear has a line");
+  if (bs.beats.some((b) => (b.actor === "wolf_a" || b.actor === "wolf_b") && b.line && b.line.trim())) problems.push("a Wolf has a line");
+  // the Wolves are canon: a paragraph about them must stage them, never cast them out
+  if (/\bwol(?:f|ves)\b|волк|волч/i.test(p.paragraph)) {
+    if (!bs.beats.some((b) => b.actor === "wolf_a" || b.actor === "wolf_b")) problems.push("the Wolves are not staged");
+    if (bs.rule_hits.some((h) => h.rule === "cast_only" && /wol(?:f|ves)|волк|волч/i.test(h.original))) problems.push("the Wolves were treated as cast_only");
+  }
   const badLines = bs.beats.filter((b) => b.line && !lineInLanguage(b.line, p.lang)).map((b) => b.line);
   if (badLines.length) problems.push(`line not in ${p.lang}: ${JSON.stringify(badLines[0])}`);
   if (requireLlm && r.source !== "llm") problems.push(`source=${r.source}${r.error ? ` (${r.error.slice(0, 120)})` : ""}`);

@@ -148,6 +148,13 @@ function gaitLegs(actor: ActorId, kind: Gait, bones: Pose, ph: number, contacts:
       post(`${side}UpLeg`, -0.1 * sq);
       post(`${side}Foot`, 0.25 * fl);
     }
+  } else if (actor === "wolf_a" || actor === "wolf_b") {
+    // lanky and light: springy knees on contact, a long heel-to-toe roll, feet barely thump
+    for (const side of ["Left", "Right"]) {
+      post(`${side}Leg`, 0.12 * imp);
+      post(`${side}UpLeg`, -0.05 * imp);
+      post(`${side}Foot`, 0.2 * between(ph, contacts));
+    }
   } else {
     for (const side of ["Left", "Right"]) {
       post(`${side}Leg`, 0.08 * imp);
@@ -211,6 +218,21 @@ function gait(kind0: Gait, ctx: VerbCtx, localT: number): PoseLayer {
     });
     // little hops: flight between run contacts (a walk's bob comes from the legs alone)
     L.lift = kind === "run" ? 0.05 * flight(ph, contacts, 0.4) * style.bounce : 0;
+  } else if (actor === "wolf_a" || actor === "wolf_b") {
+    // lanky: long loose arms swinging with overlap, shoulders hunched forward, head bobbing ahead of the body
+    const lag = sampleClip(clip, (ph - 0.05) * c.dur, style, true).bones;
+    const amp = kind === "run" ? 1.35 : 1.2;
+    const ref = pose(arm("Left", 1.2, 0.2, 0.5), arm("Right", 1.2, 0.2, 0.5));
+    const arms: Pose = {};
+    for (const b of ["LeftArm", "RightArm", "LeftForeArm", "RightForeArm"]) arms[b] = qextrap(ref[b], lag[b] ?? ref[b], amp);
+    L = { ...L, bones: { ...L.bones, ...arms } };
+    const sq = imp * (kind === "run" ? 0.8 : 0.4);
+    L = addLayer(L, {
+      Spine1: rx(0.1 + 0.06 * sq + (kind === "run" ? 0.08 : 0)),
+      Neck: rx(-0.08),
+      Head: qmul2(rx(0.05 * sq - 0.03 * air), rz(0.04 * Math.sin(ph * Math.PI * 2))),
+    });
+    L.lift = kind === "run" ? 0.04 * flight(ph, contacts, 0.42) * style.bounce : 0;
   } else {
     // heavy footfalls: knees absorb each contact, the torso and head settle a beat later
     const settle = impact(ph - 0.06, contacts, 0.12);
@@ -233,6 +255,11 @@ function gait(kind0: Gait, ctx: VerbCtx, localT: number): PoseLayer {
     const sneak = poseClip("xbot_sneak", style);
     L = mask(L, sneak, UPPER, 0.85);
     L = addLayer(L, pose(arm("Left", 0.6, 0.9, 1.2, -1.2), arm("Right", 0.6, 0.9, 1.2, -1.2)), 0.6);
+    // the Wolves' cartoon sneak: extra-high knees and a deeper crouch, head low and forward
+    if (actor === "wolf_a" || actor === "wolf_b") {
+      const lift2 = between(ph, contacts);
+      L = addLayer(L, { Spine1: rx(0.12), Neck: rx(-0.12), LeftUpLeg: rx(-0.18 * lift2), RightUpLeg: rx(-0.18 * lift2) });
+    }
     L.lift = 0;
   }
   // blend in from idle as the first step starts, and settle back into idle as the path eases to a stop

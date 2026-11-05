@@ -11,6 +11,13 @@ export const LEXICON_RU: Lexicon = {
     { re: R("медведь$|мишка$|миша$|медведик$"), id: "bear", nominative: true },
     { re: R("маш(?:и|е|у|ей|енька|еньку|еньке)$|девочк"), id: "masha", nominative: false },
     { re: R("медвед(?:я|ю|ем|е)$|мишк(?:и|е|у|ой)$|миш(?:и|е|у)$"), id: "bear", nominative: false },
+    // the Wolves (canon): plural = both Wolves acting together; singular = the (big) Wolf
+    { re: R("(?:оба |два )?волки$"), id: "wolf_a", nominative: true, plural: true },
+    { re: R("волк(?:ов|ам|ами|ах)$"), id: "wolf_a", nominative: false, plural: true },
+    { re: R("(?:маленький|младший) волк$|волчок$|волчонок$"), id: "wolf_b", nominative: true },
+    { re: R("(?:маленьк(?:ого|ому|им)|младш(?:его|ему|им)) волк(?:а|у|ом|е)$|волчк(?:а|у|ом|е)$|волчонк(?:а|у|ом|е)$"), id: "wolf_b", nominative: false },
+    { re: R("(?:большой |старший )?волк$"), id: "wolf_a", nominative: true },
+    { re: R("(?:больш(?:ого|ому|им) |старш(?:его|ему|им) )?волк(?:а|у|ом|е)$"), id: "wolf_a", nominative: false },
   ],
   pronouns: [
     { re: R("она$"), id: "masha", subject: true },
@@ -49,7 +56,7 @@ export const LEXICON_RU: Lexicon = {
     { re: R("машет|помахал|махнул|машут|замахал"), verb: "wave" },
     { re: R("хлопает в ладоши|в ладоши|аплодир|хлопает$"), verb: "clap" },
     { re: R("показыва|указыва|показал"), verb: "point_at" },
-    { re: R("смотр|посмотр|гляд|увидел|видит|замет|наблюда|разгляд|нюха|принюх"), verb: "look_at" },
+    { re: R("смотр|посмотр|гляд|увидел|видит|замет|замеча|наблюда|разгляд|нюха|принюх"), verb: "look_at" },
     { re: R("кива|кивнул"), verb: "nod" },
     { re: R("пожима|пожал плеч"), verb: "shrug" },
     { re: R("обним|обнял|обнима"), verb: "hug" },
@@ -82,6 +89,9 @@ export const LEXICON_RU: Lexicon = {
     { re: R("ура$"), emote: "cheer" },
     { re: R("уии+"), emote: "wheee" },
     { re: R("пыхт|фырк"), emote: "huff" },
+    { re: R("во[ею]т$|воют$|завыл|подвыва|взвыл|выть$"), emote: "howl" },
+    { re: R("скул|поскул|заскул|хныч"), emote: "whimper" },
+    { re: R("хмыка|хмыкн|ехидно|посмеива|гыгык"), emote: "snicker" },
   ],
   marks: [
     { re: R("полян|двор$|двора$|дворе$|двору$|лужайк"), id: "clearing" },
@@ -196,6 +206,6 @@ export const LEXICON_RU: Lexicon = {
     take: "берёт", give: "дарит", eat: "ест", throw: "бросает", cook: "готовит", fish: "рыбачит",
     swing: "качается", carry: "катает Машу", water_plants: "поливает огород",
   },
-  names: { masha: "Маша", bear: "Мишка" },
+  names: { masha: "Маша", bear: "Мишка", wolf_a: "Большой Волк", wolf_b: "Маленький Волк" },
   says: "говорит",
 };

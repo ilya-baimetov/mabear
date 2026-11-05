@@ -9,7 +9,8 @@
 import { CHARACTERS } from "../shared/bible/characters";
 import { PROPS } from "../shared/bible/props";
 import { MARKS, OBSTACLES } from "../shared/bible/set";
-import { GRAMMAR, LOCOMOTION_VERBS, SPEEDS, VERB_HOME_MARK, VERB_IMPLIED_PROP } from "../shared/grammar";
+import { GRAMMAR, LOCOMOTION_VERBS, SPEEDS, VERB_HOME_MARK, VERB_IMPLIED_PROP, isWolf } from "../shared/grammar";
+import { ACTOR_IDS } from "../shared/schema";
 import type {
   ActorClip, ActorId, Beat, BeatScript, Emotion, FxCue, FxId, LightingCue, MarkId, Posture, PropId, SfxId,
   Vec2, Vec3, Verb, WorldState,
@@ -20,12 +21,16 @@ import { dialogueDuration, isShouted, makeDialogueCue } from "./dialogue";
 import { clampWalkable, pathEndYaw, pathLength, planPath, pointAlong, yawTo } from "./path";
 import type { CompileFn, CompileOptions, CompileResult } from "./types";
 import { isActor, isMark, isProp, otherActor, validateBeatScript } from "./validate";
-import { cloneWorldState } from "./worldState";
+import { cloneWorldState, withAllActors } from "./worldState";
 
 export const SEGMENT_TAIL = 0.6;
 /** Cartoon time: one locomotion clip never lasts longer than this (long trips speed up instead). */
 export const MAX_LOCO_S = 6;
-const ACTORS: ActorId[] = ["masha", "bear"];
+const ACTORS: ActorId[] = [...ACTOR_IDS];
+/** Sideways nudge per actor so characters arriving at the same spot don't overlap. */
+const SPREAD_OFFSET: Record<ActorId, Vec2> = { masha: [1.0, 0.2], bear: [-1.0, 0.2], wolf_a: [0.7, 0.8], wolf_b: [-0.7, -0.8] };
+/** Where each actor stands after entering from the forest path (offset from the clearing). */
+const ENTER_OFFSET: Record<ActorId, Vec2> = { masha: [0.8, 1.5], bear: [-0.8, 1.5], wolf_a: [1.8, 2.4], wolf_b: [2.6, 1.6] };
 const r3 = (n: number) => Math.round(n * 1000) / 1000;
 const dist = (a: Vec2, b: Vec2) => Math.hypot(a[0] - b[0], a[1] - b[1]);
 const v2 = (p: readonly number[]): Vec2 => [p[0], p[1]];
@@ -38,6 +43,8 @@ const SLEEP_OK = new Set<Verb>(["sleep", "wake_up", "idle", "surprised", "scared
 const ENDS_CARRY = new Set<Verb>(["sit", "sleep", "exit", "fall_down", "hide", "jump", "spin", "dance", "hug", "cook", "fish", "water_plants", "angry_stomp", "chase", "run_to"]);
 const CONSUMABLE = new Set<PropId>(["pancakes", "fish", "carrot", "cake", "lollipop"]);
 const LOUD_VERBS = new Set<Verb>(["fall_down", "sneeze", "laugh", "angry_stomp", "jump"]);
+/** Bear sounds that send the (cowardly) Wolves cowering. */
+const BEAR_SCARY_EMOTES = new Set<string>(["roar_soft", "growl_soft", "huff", "grunt"]);
 const LOUD_SFX = new Set<SfxId>(["crash", "door_slam", "thunder_clap", "pot_clang", "boing", "van_horn"]);
 
 interface ActorTrack {
@@ -60,6 +67,8 @@ interface BeatTiming {
   lineStart: number;
   lineDur: number;
   loud: boolean;
+  /** a Bear beat that makes the Wolves cower (loud, angry, a roar/growl/huff) */
+  scary: boolean;
   /** auto-walk inside the beat (camera treats it as its own locomotion) */
   walk: { start: number; dur: number; verb: Verb; from: Vec2; to: Vec2 } | null;
 }
@@ -92,23 +101,22 @@ export function standPos(mark: MarkId): Vec2 {
 export const compile: CompileFn = (inputBs, startState, opts) => compileImpl(inputBs, startState, opts);
 export const compileParagraph = compile;
 
-function compileImpl(inputBs: BeatScript, startState: WorldState, opts: CompileOptions): CompileResult {
+function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: CompileOptions): CompileResult {
+  // world states saved before the Wolves joined get them back at their start spot by the van
+  const startState = withAllActors(cloneWorldState(startState0));
   const v = validateBeatScript(inputBs, startState, opts.lang);
   const bs0 = v.beatScript;
   const repairs: string[] = v.errors.map((e) => `validator: ${e}`);
   const errors: string[] = [];
   const ws = cloneWorldState(startState);
-  const tracks: Record<ActorId, ActorTrack> = {
-    masha: { clips: [], free: 0, states: [snap(ws, "masha", 0)] },
-    bear: { clips: [], free: 0, states: [snap(ws, "bear", 0)] },
-  };
+  const tracks = Object.fromEntries(ACTORS.map((a) => [a, { clips: [], free: 0, states: [snap(ws, a, 0)] }])) as unknown as Record<ActorId, ActorTrack>;
   const compiledBeats: Beat[] = [];
   const timings: BeatTiming[] = [];
   const events: AudioBeatEvent[] = [];
   const dialogue: ReturnType<typeof makeDialogueCue>[] = [];
   const fx: FxCue[] = [];
   const extraSfx: { t: number; id: SfxId; pos: Vec2 }[] = [];
-  const lastBeatIdx: Record<ActorId, number> = { masha: -1, bear: -1 };
+  const lastBeatIdx = Object.fromEntries(ACTORS.map((a) => [a, -1])) as Record<ActorId, number>;
   bs0.beats.forEach((b, i) => { lastBeatIdx[b.actor] = i; });
   let flourUsed = false;
 
@@ -185,13 +193,25 @@ function compileImpl(inputBs: BeatScript, startState: WorldState, opts: CompileO
     }
     return null;
   }
-  /** Avoid standing on top of the other character. */
+  /** Avoid standing on top of another character (partner first, then everyone else). */
   function spread(a: ActorId, p: Vec2, t: number): Vec2 {
-    const o = otherActor(a);
-    if (ws.actors[o].posture === "offstage" || ws.actors[o].posture === "carried") return p;
-    const op = posAt(o, Math.max(t, tracks[o].free));
-    if (dist(op, p) < 0.8) return clampWalkable([p[0] + (a === "masha" ? 1.0 : -1.0), p[1] + 0.2]);
-    return p;
+    const o0 = otherActor(a);
+    const others = [o0, ...ACTORS.filter((x) => x !== a && x !== o0)];
+    let q = p;
+    for (let pass = 0; pass < 3; pass++) {
+      let moved = false;
+      for (const o of others) {
+        if (ws.actors[o].posture === "offstage" || ws.actors[o].posture === "carried") continue;
+        const op = posAt(o, Math.max(t, tracks[o].free));
+        if (dist(op, q) < 0.8) {
+          const off = SPREAD_OFFSET[a];
+          q = clampWalkable([q[0] + off[0], q[1] + off[1]]);
+          moved = true;
+        }
+      }
+      if (!moved) break;
+    }
+    return q;
   }
   function speed(a: ActorId, verb: Verb): number {
     const s = SPEEDS[a] as Record<string, number>;
@@ -276,9 +296,9 @@ function compileImpl(inputBs: BeatScript, startState: WorldState, opts: CompileO
     }
     if ((b.verb === "eat" || b.verb === "give" || b.verb === "throw") && b.item && st.holding !== b.item) {
       const at = ws.props[b.item]?.at;
-      if (at === o) {
-        errors.push(`${a} can't ${b.verb} the ${b.item}: ${o} is holding it`);
-        b.verb = "point_at"; b.target = o; b.item = null;
+      if (isActor(at) && at !== a) {
+        errors.push(`${a} can't ${b.verb} the ${b.item}: ${at} is holding it`);
+        b.verb = "point_at"; b.target = at; b.item = null;
       } else {
         const take: Beat = { ...b, verb: "take", target: b.item, item: b.item, line: null, emote: null, sfx: null, shot: "auto" };
         queue.splice(origIndex, 0, { beat: take, orig: -1 });
@@ -288,9 +308,10 @@ function compileImpl(inputBs: BeatScript, startState: WorldState, opts: CompileO
         continue;
       }
     }
-    if (b.verb === "take" && b.item && ws.props[b.item]?.at === o) {
-      errors.push(`${a} can't take the ${b.item}: ${o} is holding it`);
-      b.verb = "point_at"; b.target = o; b.item = null;
+    const heldBy = b.verb === "take" && b.item ? ws.props[b.item]?.at : undefined;
+    if (b.verb === "take" && b.item && isActor(heldBy) && heldBy !== a) {
+      errors.push(`${a} can't take the ${b.item}: ${heldBy} is holding it`);
+      b.verb = "point_at"; b.target = heldBy; b.item = null;
     }
 
     compiledBeats.push(b);
@@ -298,7 +319,7 @@ function compileImpl(inputBs: BeatScript, startState: WorldState, opts: CompileO
     const anchor = prevTiming ? (b.with_previous ? prevTiming.start : prevTiming.end) : 0;
     let t = Math.max(anchor + b.delay_s, tracks[a].free);
     const interacts = (b.verb === "hug" || b.verb === "carry" || b.verb === "give") && isActor(b.target);
-    if (interacts) t = Math.max(t, tracks[o].free);
+    if (interacts && isActor(b.target)) t = Math.max(t, tracks[b.target].free);
     const beatStart = t;
     const fromPos = posAt(a, t);
 
@@ -331,7 +352,9 @@ function compileImpl(inputBs: BeatScript, startState: WorldState, opts: CompileO
     let walkInfo: BeatTiming["walk"] = null;
     if (walkDest && dist(walkDest, st.pos) > 0.8 && st.posture !== "carried") {
       const d = dist(walkDest, st.pos);
-      const verb: Verb = a === "masha" ? (b.emotion === "mischievous" && d < 6 ? "tiptoe_to" : d > 3 ? "run_to" : "walk_to") : d > 8 && b.emotion === "excited" ? "run_to" : "walk_to";
+      const verb: Verb = a === "masha" ? (b.emotion === "mischievous" && d < 6 ? "tiptoe_to" : d > 3 ? "run_to" : "walk_to")
+        : isWolf(a) ? (b.emotion === "mischievous" && d < 8 ? "tiptoe_to" : b.emotion === "scared" || d > 5 ? "run_to" : "walk_to")
+        : d > 8 && b.emotion === "excited" ? "run_to" : "walk_to";
       const s0 = t;
       const faceAfter = isMark(walkTarget) ? MARKS[walkTarget].facing : undefined;
       const wFrom = v2(st.pos);
@@ -364,7 +387,7 @@ function compileImpl(inputBs: BeatScript, startState: WorldState, opts: CompileO
           const fromP: Vec2 = st.mark === "door" ? v2(MARKS.door.pos) : v2(MARKS.path_entry.pos);
           st.pos = fromP;
           st.posture = "stand";
-          dest = st.mark === "door" ? spread(a, standPos("porch"), t) : spread(a, [MARKS.clearing.pos[0] + (a === "masha" ? 0.8 : -0.8), MARKS.clearing.pos[1] + 1.5], t);
+          dest = st.mark === "door" ? spread(a, standPos("porch"), t) : spread(a, [MARKS.clearing.pos[0] + ENTER_OFFSET[a][0], MARKS.clearing.pos[1] + ENTER_OFFSET[a][1]], t);
         } else dest = spread(a, standPos("clearing"), t);
       } else if (b.verb === "exit") {
         dest = v2(MARKS.path_entry.pos);
@@ -568,7 +591,9 @@ function compileImpl(inputBs: BeatScript, startState: WorldState, opts: CompileO
     const timing: BeatTiming = {
       start: beatStart, end: t, mainStart, mainDur, actor: a, verb: b.verb, from: fromPos, to: v2(st.pos),
       hasLine: !!lineText, lineStart, lineDur, walk: walkInfo, loud: LOUD_VERBS.has(b.verb) || (!!lineText && isShouted(lineText)) || (b.sfx != null && LOUD_SFX.has(b.sfx)),
+      scary: false,
     };
+    timing.scary = a === "bear" && (timing.loud || b.emotion === "angry" || b.verb === "chase" || (b.emote != null && BEAR_SCARY_EMOTES.has(b.emote)));
     timings.push(timing);
     prevTiming = timing;
   }
@@ -580,7 +605,16 @@ function compileImpl(inputBs: BeatScript, startState: WorldState, opts: CompileO
   const duration = r3(Math.max(1.5, end + SEGMENT_TAIL));
 
   // ---------- ambient life ----------
-  const actorClips = { masha: fillAmbient("masha"), bear: fillAmbient("bear") };
+  const actorClips = { masha: fillAmbient("masha"), bear: fillAmbient("bear"), wolf_a: fillAmbient("wolf_a"), wolf_b: fillAmbient("wolf_b") };
+
+  /** Who an idle character watches at time t: whoever's beat covers t (latest start), else its partner. */
+  function focusAt(a: ActorId, o: ActorId, t: number): ActorId {
+    let best: BeatTiming | null = null;
+    for (const tm of timings) if (tm.actor !== a && tm.start <= t && t < tm.end && (!best || tm.start >= best.start)) best = tm;
+    if (best && postureAt(best.actor, t) !== "offstage") return best.actor;
+    if (isWolf(a) && postureAt(o, t) === "offstage") return postureAt("bear", t) !== "offstage" ? "bear" : "masha";
+    return o;
+  }
 
   function fillAmbient(a: ActorId): ActorClip[] {
     const o = otherActor(a);
@@ -636,13 +670,14 @@ function compileImpl(inputBs: BeatScript, startState: WorldState, opts: CompileO
     const st = stateAt(a, s);
     const posture = st.posture;
     const verbFor = (): Verb => (posture === "sleep" ? "sleep" : "idle");
-    // reactions to loud beats of the other character
-    const reactions = timings.filter((tm) => tm.actor === o && tm.loud && tm.mainStart + 0.25 >= s && tm.mainStart + 0.25 < e);
+    // reactions to loud beats of the others (the Wolves only react to Bear — they cower)
+    const wolf = isWolf(a);
+    const reactions = timings.filter((tm) => tm.actor !== a && (wolf ? tm.scary : tm.loud) && tm.mainStart + 0.25 >= s && tm.mainStart + 0.25 < e);
     let t = s;
     const pushIdle = (from: number, to: number) => {
       // split at the other actor's beat boundaries (look-at follows the action), max 4 s each
       const cuts = new Set<number>([from, to]);
-      for (const tm of timings) if (tm.actor === o) for (const x of [tm.start, tm.end]) if (x > from + 0.5 && x < to - 0.5) cuts.add(x);
+      for (const tm of timings) if (tm.actor !== a) for (const x of [tm.start, tm.end]) if (x > from + 0.5 && x < to - 0.5) cuts.add(x);
       const pts = [...cuts].sort((x, y) => x - y);
       const fine: number[] = [pts[0]];
       for (let i = 1; i < pts.length; i++) {
@@ -655,7 +690,8 @@ function compileImpl(inputBs: BeatScript, startState: WorldState, opts: CompileO
         const c1 = fine[i];
         if (c1 - c0 < 1e-6) continue;
         const mid = (c0 + c1) / 2;
-        const look = ws.actors[o] && postureAt(o, mid) !== "offstage" && posture !== "sleep" ? headAt(o, mid) : undefined;
+        const f = focusAt(a, o, mid);
+        const look = postureAt(f, mid) !== "offstage" && posture !== "sleep" ? headAt(f, mid) : undefined;
         const p0 = posAt(a, c0);
         const params: ActorClip["params"] = { from: p0, facing: st.facing, posture, item: st.holding ?? undefined, lookAt: look, ambient: true };
         if (posture === "carried") {
@@ -669,11 +705,13 @@ function compileImpl(inputBs: BeatScript, startState: WorldState, opts: CompileO
     for (const r of reactions) {
       if (posture === "sleep" || posture === "offstage") break;
       const rt = r.mainStart + 0.25;
-      const verb: Verb = a === "masha" ? (r.verb === "fall_down" || r.verb === "sneeze" || r.verb === "laugh" ? "laugh" : "surprised") : r.verb === "laugh" ? "nod" : "surprised";
+      const verb: Verb = wolf ? "scared"
+        : a === "masha" ? (r.verb === "fall_down" || r.verb === "sneeze" || r.verb === "laugh" ? "laugh" : "surprised") : r.verb === "laugh" ? "nod" : "surprised";
       const rd = GRAMMAR[verb].baseDuration;
       if (rt < t || rt + rd > e) continue;
       if (rt > t + 1e-6) pushIdle(t, rt);
-      out.push({ start: rt, dur: rd, verb, emotion: verb === "laugh" || verb === "nod" ? "happy" : "surprised", params: { from: posAt(a, rt), facing: r3(yawTo(posAt(a, rt), posAt(o, rt), st.facing)), posture, item: st.holding ?? undefined, lookAt: headAt(o, rt), ambient: true, target: o } });
+      const ro = r.actor;
+      out.push({ start: rt, dur: rd, verb, emotion: verb === "laugh" || verb === "nod" ? "happy" : verb === "scared" ? "scared" : "surprised", params: { from: posAt(a, rt), facing: r3(yawTo(posAt(a, rt), posAt(ro, rt), st.facing)), posture, item: st.holding ?? undefined, lookAt: headAt(ro, rt), ambient: true, target: ro } });
       t = rt + rd;
     }
     if (e > t + 1e-6) pushIdle(t, e);

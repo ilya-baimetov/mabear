@@ -2,7 +2,7 @@
 // the rest (clap, point, shrug, Bear's signature facepalm, hug) are procedural on the idle base.
 import { addLayer, clamp, qfromTo, qmul, window01, type PoseLayer } from "../blend";
 import {
-  ARMS, UPPER, UPPER_NO_HEAD, arm, idleBase, mask, pose, rx, ry, rz, sampleClip, type VerbCtx, type VerbImpl,
+  ARMS, UPPER, UPPER_NO_HEAD, arm, byPersona, idleBase, mask, pose, rx, ry, rz, sampleClip, type VerbCtx, type VerbImpl,
 } from "./common";
 
 /** Play a gesture clip over the idle lower body. Bear plays clips slower. */
@@ -21,7 +21,7 @@ export const wave: VerbImpl = (lt, _p, ctx) => {
 
 export const clap: VerbImpl = (lt, _p, ctx) => {
   const k = window01(lt, 0, ctx.dur, 0.2);
-  const period = ctx.actor === "masha" ? 0.3 : 0.42;
+  const period = byPersona(ctx.actor, 0.3, 0.42, 0.32);
   const open = 0.5 + 0.5 * Math.cos((lt / period) * Math.PI * 2); // 0 = hands together
   const base = idleBase(ctx, 0.5);
   const arms = pose(arm("Left", 0.55, 1.05 - 0.35 * open, 0.85 + 0.25 * open, -0.6), arm("Right", 0.55, 1.05 - 0.35 * open, 0.85 + 0.25 * open, -0.6));
@@ -62,7 +62,7 @@ export const shake_head: VerbImpl = (lt, _p, ctx) => {
   const L = gestureClip("xbot_headshake", lt, ctx, ["Spine2", "Neck", "Head"]);
   // exaggerate a bit for cartoon readability
   const k = window01(lt, 0, ctx.dur, 0.15);
-  return addLayer(L, { Head: ry(Math.sin(lt * (ctx.actor === "masha" ? 14 : 8)) * 0.25 * k) });
+  return addLayer(L, { Head: ry(Math.sin(lt * byPersona(ctx.actor, 14, 8, 12)) * 0.25 * k) });
 };
 
 export const shrug: VerbImpl = (lt, _p, ctx) => {

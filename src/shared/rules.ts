@@ -11,12 +11,13 @@ export interface RuleDef {
 
 export const RULES: Record<RuleId, RuleDef> = {
   bear_silent: { id: "bear_silent", hard: true, description: "Bear never speaks words (canon; verify with Animaccord). A Bear line becomes a fitting emote + gesture.", kidMessage: { en: "Bear doesn't talk in our show — he grumbled instead!", ru: "Мишка в мультике не разговаривает — он просто заурчал!" } },
-  cast_only: { id: "cast_only", hard: true, description: "Only bible characters, marks and props. Other franchises' characters never appear.", kidMessage: { en: "Only Masha and Bear live in this yard, so they played it themselves!", ru: "В этом дворе живут только Маша и Мишка — они сыграли всё сами!" } },
+  cast_only: { id: "cast_only", hard: true, description: "Only bible characters (Masha, Bear, the two Wolves), marks and props. Other franchises' characters never appear. The Wolves are canon and never cast_only.", kidMessage: { en: "Only Masha, Bear and the Wolves live in this yard, so they played it themselves!", ru: "В этом дворе живут только Маша, Мишка и Волки — они сыграли всё сами!" } },
   no_weapons: { id: "no_weapons", hard: true, description: "No weapons or real violence; soft slapstick is fine. Weapons become toys or are removed; hitting becomes a playful pillow bonk or nothing.", kidMessage: { en: "We swapped that for something safe and silly!", ru: "Мы заменили это на что-то безопасное и смешное!" } },
   no_scary: { id: "no_scary", hard: false, description: "No gore, horror, death or injury. Reframe as a gentle surprise.", kidMessage: { en: "We made it a funny surprise instead of a scary one!", ru: "Мы сделали это весёлым сюрпризом, а не страшилкой!" } },
   kind_language: { id: "kind_language", hard: false, description: "No insults or profanity; replace with a kind equivalent.", kidMessage: { en: "Masha found a kinder way to say it!", ru: "Маша сказала это по-доброму!" } },
   no_brands: { id: "no_brands", hard: false, description: "No real brands or products; use a generic noun.", kidMessage: { en: "We used a regular word instead of a brand name.", ru: "Мы заменили название бренда обычным словом." } },
   no_personal_data: { id: "no_personal_data", hard: false, description: "Strip names, addresses, phone numbers, emails the child types about themselves.", kidMessage: { en: "We left out personal details to keep you safe.", ru: "Мы убрали личные данные, чтобы было безопасно." } },
+  wolves_silent: { id: "wolves_silent", hard: true, description: "The Wolves don't speak words in this prototype (verify with Animaccord). A Wolf line becomes a howl, whimper or snicker + gesture.", kidMessage: { en: "The Wolves don't talk here — they howled and snickered instead!", ru: "Волки тут не разговаривают — они повыли и похихикали!" } },
   in_character: { id: "in_character", hard: false, description: "Masha is mischievous but never cruel; Bear is never aggressive toward Masha. Restage.", kidMessage: { en: "We kept Masha and Bear true to themselves!", ru: "Маша и Мишка остались собой!" } },
 };
 
@@ -83,6 +84,39 @@ export const FOREIGN_CHARACTERS = [
   "mickey", "minnie", "elsa", "spider-man", "spiderman", "batman", "superman", "pikachu", "shrek", "peppa", "sonic", "mario",
   "микки", "эльза", "человек-паук", "бэтмен", "супермен", "пикачу", "шрек", "пеппа", "соник", "марио",
 ];
+
+/** Canon series characters that are NOT in this prototype yet (honest substitution, not "foreign").
+ *  `keys` are lower-case target words (EN + RU stems); `sub` is the stand-in actor used instead. */
+export const CANON_ABSENT: { keys: string[]; name: Record<Lang, string>; sub: "masha" | "bear" }[] = [
+  { keys: ["hare", "rabbit", "bunny", "заяц", "зайц", "зайк", "зайчик"], name: { en: "The Hare", ru: "Зайца" }, sub: "masha" },
+  { keys: ["penguin", "пингвин"], name: { en: "The Penguin", ru: "Пингвина" }, sub: "masha" },
+  { keys: ["panda", "панд"], name: { en: "The Panda", ru: "Панды" }, sub: "bear" },
+  { keys: ["tiger", "тигр"], name: { en: "The Tiger", ru: "Тигра" }, sub: "bear" },
+  { keys: ["dasha", "даша", "дашу", "даши"], name: { en: "Dasha", ru: "Даши" }, sub: "masha" },
+  { keys: ["rosie", "pig", "piglet", "свин", "розочк", "хрюш"], name: { en: "Rosie the pig", ru: "Розочки-свинки" }, sub: "masha" },
+  { keys: ["goat", "коз"], name: { en: "The Goat", ru: "Козы" }, sub: "masha" },
+  { keys: ["dog", "puppy", "пёс", "пес", "собак"], name: { en: "The Dog", ru: "Пса" }, sub: "masha" },
+  { keys: ["squirrel", "белк", "белоч"], name: { en: "The Squirrels", ru: "Белок" }, sub: "masha" },
+];
+
+/** Find a canon-but-absent character for a lower-case word (exact EN key or RU stem prefix). */
+export function canonAbsentFor(word: string): (typeof CANON_ABSENT)[number] | null {
+  const w = word.trim().toLowerCase();
+  if (!w) return null;
+  for (const c of CANON_ABSENT) {
+    for (const k of c.keys) {
+      if (/[\u0400-\u04FF]/.test(k) ? w.startsWith(k) : w === k || w === k + "s") return c;
+    }
+  }
+  return null;
+}
+
+/** Honest kid message for a canon character that isn't in the prototype yet. */
+export function canonAbsentMessage(c: (typeof CANON_ABSENT)[number], lang: Lang): string {
+  return lang === "ru"
+    ? `${c.name.ru} пока нет в этой версии — ${c.sub === "masha" ? "Маша" : "Мишка"} сыграл${c.sub === "masha" ? "а" : ""} эту роль!`
+    : `${c.name.en} isn't in this prototype yet — ${c.sub === "masha" ? "Masha" : "Bear"} played the part!`;
+}
 
 /** Real brands (no_brands) — small list; the LLM handles the rest. */
 export const BRANDS = ["coca-cola", "coke", "pepsi", "mcdonald", "nutella", "lego", "nike", "adidas", "iphone", "kinder", "кока-кола", "пепси", "макдональдс", "нутелла", "лего", "айфон", "киндер"];

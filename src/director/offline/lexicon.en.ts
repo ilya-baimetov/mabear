@@ -8,6 +8,10 @@ export const LEXICON_EN: Lexicon = {
   actors: [
     { re: W("masha|mashenka|the girl|little girl"), id: "masha", nominative: true },
     { re: W("bear|mishka|misha|the bear|big bear"), id: "bear", nominative: true },
+    // the Wolves (canon): plural = both Wolves acting together; singular = the (big) Wolf
+    { re: W("(?:the )?(?:two |both )?wolves"), id: "wolf_a", nominative: true, plural: true },
+    { re: W("(?:the )?(?:little|small|younger|short) wolf"), id: "wolf_b", nominative: true },
+    { re: W("(?:the )?(?:big |tall |older )?wolf"), id: "wolf_a", nominative: true },
   ],
   pronouns: [
     { re: W("she"), id: "masha", subject: true },
@@ -80,6 +84,9 @@ export const LEXICON_EN: Lexicon = {
     { re: W("cheers?|cheered|hooray"), emote: "cheer" },
     { re: W("wheee+"), emote: "wheee" },
     { re: W("huffs?|huffed|puffs?"), emote: "huff" },
+    { re: W("howls?|howled|howling"), emote: "howl" },
+    { re: W("whimpers?|whimpered|whimpering|whines?|whined|yelps?|yelped"), emote: "whimper" },
+    { re: W("snickers?|snickered|snickering|sniggers?|sniggered"), emote: "snicker" },
   ],
   marks: [
     { re: W("clearing|yard|meadow|lawn|middle of the yard"), id: "clearing" },
@@ -196,6 +203,6 @@ export const LEXICON_EN: Lexicon = {
     take: "takes something", give: "gives a present", eat: "eats", throw: "throws", cook: "cooks", fish: "fishes",
     swing: "swings", carry: "carries Masha", water_plants: "waters the garden",
   },
-  names: { masha: "Masha", bear: "Bear" },
+  names: { masha: "Masha", bear: "Bear", wolf_a: "the Big Wolf", wolf_b: "the Little Wolf" },
   says: "says",
 };

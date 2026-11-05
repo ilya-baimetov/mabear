@@ -21,7 +21,7 @@ export interface CharacterBible {
   interjections?: Partial<Record<Emote, Record<Lang, string>>>;
 }
 
-export const BIBLE_VERSION = "2026-11-05.1";
+export const BIBLE_VERSION = "2026-11-05.2"; // .2: the Wolves (wolf_a, wolf_b) joined the cast
 
 export const CHARACTERS: Record<ActorId, CharacterBible> = {
   masha: {
@@ -61,7 +61,29 @@ export const CHARACTERS: Record<ActorId, CharacterBible> = {
     motionStyle: "Slow, weighty, patient; lower hips, wide stance; tender when hugging or carrying Masha.",
     signatures: ["facepalm", "long sigh", "gentle hug", "carrying Masha on his shoulders", "humming while cooking or gardening"],
   },
+  wolf_a: {
+    id: "wolf_a",
+    name: { en: "Big Wolf", ru: "Большой Волк" },
+    speaks: false, // verify with Animaccord: the Wolves stay wordless in this prototype (rule wolves_silent)
+    voice: null,
+    emotes: ["howl", "whimper", "snicker", "gasp", "grunt", "sigh", "huff", "yawn", "snore", "sneeze", "hmph"],
+    personality:
+      "One of the two Wolves (canon series characters) who live in the old ambulance van at the forest edge. Lanky, clumsy and ALWAYS hungry; forever scheming to pinch food — Bear's honey, Masha's jam, pancakes, fish — and their plans always go comically wrong. Cowardly: terrified of Bear (one look from him and they cower, whimper and flee). Wordless here: they howl, whimper and snicker. The taller one: the ringleader who hatches the plans.",
+    motionStyle: "Lanky, light and quick; sneaky tiptoeing with hunched shoulders, long loose limbs, tail swishing; startles easily and scrambles away.",
+    signatures: ["sneaking up on food on tiptoe", "snickering over a plan", "cowering and whimpering when Bear turns around", "howling together", "fleeing back to the van"],
+  },
+  wolf_b: {
+    id: "wolf_b",
+    name: { en: "Little Wolf", ru: "Маленький Волк" },
+    speaks: false, // verify with Animaccord: the Wolves stay wordless in this prototype (rule wolves_silent)
+    voice: null,
+    emotes: ["howl", "whimper", "snicker", "gasp", "grunt", "sigh", "huff", "yawn", "snore", "sneeze", "hmph"],
+    personality:
+      "One of the two Wolves (canon series characters) who live in the old ambulance van at the forest edge. Lanky, clumsy and ALWAYS hungry; forever scheming to pinch food — Bear's honey, Masha's jam, pancakes, fish — and their plans always go comically wrong. Cowardly: terrified of Bear (one look from him and they cower, whimper and flee). Wordless here: they howl, whimper and snicker. The shorter one: the eager sidekick who usually bungles them.",
+    motionStyle: "Lanky, light and quick; sneaky tiptoeing with hunched shoulders, long loose limbs, tail swishing; startles easily and scrambles away.",
+    signatures: ["sneaking up on food on tiptoe", "snickering over a plan", "cowering and whimpering when Bear turns around", "howling together", "fleeing back to the van"],
+  },
 };
 
 export const RELATIONSHIP =
-  "Masha initiates, Bear reacts. Slapstick consequences land softly. Every scene ends warm.";
+  "Masha initiates, Bear reacts. The Wolves scheme for food, Bear catches them, they flee; Masha laughs (she is never their victim, and they are never really hurt). Slapstick consequences land softly. Every scene ends warm.";

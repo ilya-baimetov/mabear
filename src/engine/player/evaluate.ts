@@ -2,7 +2,7 @@
 // globals mutated; blinks and fidgets are functions of t. The renderer applies the result each frame.
 import type { ActorFrame, FaceParams, FrameState, FxFrame, PropFrame } from "../api";
 import {
-  ACTOR_IDS, MARK_IDS, PROP_IDS,
+  ACTOR_IDS, MARK_IDS, PROP_IDS, WOLF_START,
   type ActorClip, type ActorId, type CamKey, type MarkId, type Posture, type PropId, type PropLocation,
   type Segment, type TimeOfDay, type Timeline, type Vec2, type Vec3, type Viseme, type WorldState,
 } from "../../shared/schema";
@@ -33,7 +33,17 @@ const BLINK_LEN = 0.16;
 
 const MARK_SET = new Set<string>(MARK_IDS);
 const isMark = (s: string | undefined | null): s is MarkId => !!s && MARK_SET.has(s);
-const isActor = (s: string | undefined | null): s is ActorId => s === "masha" || s === "bear";
+const ACTOR_SET = new Set<string>(ACTOR_IDS);
+const isActor = (s: string | undefined | null): s is ActorId => !!s && ACTOR_SET.has(s);
+const isWolfId = (a: ActorId): boolean => a === "wolf_a" || a === "wolf_b";
+/** An actor's state in a world state (segments saved before the Wolves joined have no wolf entries). */
+function stOf(ws: WorldState, a: ActorId): WorldState["actors"][ActorId] {
+  return ws.actors[a] ?? (WOLF_START as Partial<Record<ActorId, WorldState["actors"][ActorId]>>)[a] ?? ws.actors.bear;
+}
+/** An actor's clips in a segment (older segments have none for the Wolves). */
+function clipsOf(seg: Segment, a: ActorId): ActorClip[] {
+  return seg.actorClips[a] ?? [];
+}
 
 // ---------- small math ----------
 
@@ -116,8 +126,8 @@ function markPos(id: MarkId): Vec2 {
 
 /** Resolve an actor's clips into a kinematic chain (positions, yaw, posture at each clip boundary). */
 function resolveTrack(seg: Segment, actor: ActorId, extraPosture: { t: number; posture: Posture }[], initYaw?: number): Resolved[] {
-  const st = seg.startState.actors[actor];
-  const clips = [...seg.actorClips[actor]].sort((a, b) => a.start - b.start);
+  const st = stOf(seg.startState, actor);
+  const clips = [...clipsOf(seg, actor)].sort((a, b) => a.start - b.start);
   let pos: Vec2 = [st.pos[0], st.pos[1]];
   let yaw = initYaw ?? st.facing;
   let posture: Posture = st.posture;
@@ -155,7 +165,7 @@ function resolveTrack(seg: Segment, actor: ActorId, extraPosture: { t: number; p
       }
       const dYaw = Math.abs(wrapAngle(firstYaw - yaw));
       // turn in place before moving (Bear turns slower)
-      turnDur = dYaw > 0.35 && length > 0.05 ? Math.min((actor === "bear" ? 0.55 : 0.3) * (dYaw / Math.PI) + 0.1, clip.dur * 0.3) : 0;
+      turnDur = dYaw > 0.35 && length > 0.05 ? Math.min((actor === "bear" ? 0.55 : isWolfId(actor) ? 0.25 : 0.3) * (dYaw / Math.PI) + 0.1, clip.dur * 0.3) : 0;
       if (isMark(p.target)) mark = p.target;
       else mark = null;
     } else {
@@ -183,7 +193,7 @@ function resolveTrack(seg: Segment, actor: ActorId, extraPosture: { t: number; p
   for (let i = 0; i < out.length; i++) {
     const r = out[i];
     const next = out[i + 1];
-    const goesOff = next ? next.fromPosture === "offstage" || next.posture === "offstage" : seg.endState.actors[actor].posture === "offstage";
+    const goesOff = next ? next.fromPosture === "offstage" || next.posture === "offstage" : stOf(seg.endState, actor).posture === "offstage";
     if (LOCOMOTION_VERBS.includes(r.clip.verb) && r.posture !== "offstage" && goesOff && r.fromPosture !== "offstage") {
       r.posture = "offstage";
       if (next) next.fromPosture = "offstage";
@@ -245,13 +255,13 @@ function propLocationsAt(seg: Segment, localT: number): { at: Record<PropId, Pro
   const at = {} as Record<PropId, PropLocation>;
   for (const id of PROP_IDS) at[id] = seg.startState.props[id]?.at ?? "hidden";
   for (const a of ACTOR_IDS) {
-    const h = seg.startState.actors[a].holding;
+    const h = stOf(seg.startState, a).holding;
     if (h) at[h] = a;
   }
   const events: PropEvent[] = [];
   const touched = new Map<PropId, number>();
   for (const a of ACTOR_IDS) {
-    for (const c of seg.actorClips[a]) {
+    for (const c of clipsOf(seg, a)) {
       const item = c.params.item;
       const end = c.start + c.dur;
       if (item) touched.set(item, Math.max(touched.get(item) ?? 0, end));
@@ -308,7 +318,7 @@ function handPos(a: ActorFrame, actor: ActorId): Vec3 {
 // ---------- face ----------
 
 function blink(actor: ActorId, t: number): number {
-  const seed = actor === "masha" ? 1 : 2;
+  const seed = ACTOR_IDS.indexOf(actor) + 1;
   const b = Math.floor(t / BLINK_BUCKET);
   const start = b * BLINK_BUCKET + 0.3 + hash1(b * 13.37 + seed * 101.1) * 1.4;
   const x = (t - start) / BLINK_LEN;
@@ -576,7 +586,7 @@ const CALM_VERBS = new Set<ActorClip["verb"]>(["idle", "look_at", "point_at", "w
 function talkPose(actor: ActorId, t: number, w: number): Record<string, [number, number, number, number]> {
   const bob = Math.sin(t * 9.0) * 0.5 + Math.sin(t * 5.3) * 0.5;
   const gest = Math.max(0, Math.sin(t * 2.1));
-  const k = actor === "masha" ? 1 : 0.6;
+  const k = actor === "masha" ? 1 : isWolfId(actor) ? 0.8 : 0.6;
   return {
     Head: qmul(qaxis([1, 0, 0], 0.05 * bob * w * k), qaxis([0, 0, 1], 0.06 * Math.sin(t * 1.7) * w * k)),
     Spine1: qaxis([0, 1, 0], 0.05 * Math.sin(t * 1.3) * w * k),
@@ -670,7 +680,7 @@ function emptySegment(): Segment {
   const ws = initialWorldState();
   return {
     paragraphId: "", version: 0, duration: 0, startState: ws, endState: ws,
-    actorClips: { masha: [], bear: [] }, dialogue: [], emotes: [], foley: [], camera: [], sfx: [], music: [],
+    actorClips: { masha: [], bear: [], wolf_a: [], wolf_b: [] }, dialogue: [], emotes: [], foley: [], camera: [], sfx: [], music: [],
     ambience: [], ducking: [], lighting: [], fx: [],
   };
 }
@@ -708,7 +718,7 @@ function carryEvents(seg: Segment): { t: number; posture: Posture }[] {
 function startYaws(segs: Timeline["segments"], index: number): Record<ActorId, number> {
   const yaw = {} as Record<ActorId, number>;
   for (const a of ACTOR_IDS) {
-    let y = segs.length ? segs[0].segment.startState.actors[a].facing : 0;
+    let y = segs.length ? stOf(segs[0].segment.startState, a).facing : 0;
     for (let j = 0; j < index; j++) {
       const tr = resolveTrack(segs[j].segment, a, [], y);
       if (tr.length) y = tr[tr.length - 1].endYaw;
@@ -750,11 +760,15 @@ export function evaluate(timeline: Timeline, t: number): FrameState {
     const tr = resolveTrack(prevSeg, a, a === "masha" ? carryEvents(prevSeg) : [], prevYaws[a]);
     return tr.length ? { r: tr[tr.length - 1], seg: prevSeg } : null;
   };
-  const startOf = (a: ActorId) => ({ ...seg.startState.actors[a], facing: yaws[a] });
+  const startOf = (a: ActorId) => ({ ...stOf(seg.startState, a), facing: yaws[a] });
   const bear = evalActor("bear", { seg, lt, t, track: tracks.bear, stateAtStart: startOf("bear"), prevLast: lt < CROSSFADE_S ? prevLast("bear") : null }, null, null);
   const carry = carryState(seg, lt, tracks.masha);
   const masha = evalActor("masha", { seg, lt, t, track: tracks.masha, stateAtStart: startOf("masha"), prevLast: lt < CROSSFADE_S ? prevLast("masha") : null }, bear.frame, carry);
-  const actors: Record<ActorId, ActorFrame> = { masha: masha.frame, bear: bear.frame };
+  // the Wolves: independent tracks (nobody carries them)
+  const wolf = (a: "wolf_a" | "wolf_b") => evalActor(a, { seg, lt, t, track: resolveTrack(seg, a, [], yaws[a]), stateAtStart: startOf(a), prevLast: lt < CROSSFADE_S ? prevLast(a) : null }, null, null);
+  const wolf_a = wolf("wolf_a");
+  const wolf_b = wolf("wolf_b");
+  const actors: Record<ActorId, ActorFrame> = { masha: masha.frame, bear: bear.frame, wolf_a: wolf_a.frame, wolf_b: wolf_b.frame };
 
   // look-at: explicit params.lookAt, else toward the current speaker; the speaker looks at the other actor
   // attention carries across paragraph boundaries (a line's tail / the next line's lead-in)
@@ -763,10 +777,11 @@ export function evaluate(timeline: Timeline, t: number): FrameState {
   for (const cand of [prevSeg ? speakerAt(prevSeg, lt + prevSeg.duration) : null, nextSeg ? speakerAt(nextSeg, lt - seg.duration) : null]) {
     if (cand && (!speaker || cand.w > speaker.w)) speaker = cand;
   }
-  const evals: Record<ActorId, ActorEval> = { masha, bear };
+  const evals: Record<ActorId, ActorEval> = { masha, bear, wolf_a, wolf_b };
   for (const a of ACTOR_IDS) {
     const f = actors[a];
-    const other: ActorId = a === "masha" ? "bear" : "masha";
+    // partner for speaker attention: Masha ↔ Bear; the Wolves watch whoever is talking (else each other)
+    const other: ActorId = a === "masha" ? "bear" : a === "bear" ? "masha" : speaker && speaker.actor !== a ? speaker.actor : a === "wolf_a" ? "wolf_b" : "wolf_a";
     const o = actors[other];
     const otherHead: Vec3 = [o.pos[0], o.pos[1] + STYLES[other].height * 0.8, o.pos[2]];
     const explicit = f.face.lookAt;
@@ -808,7 +823,7 @@ export function swingAngleAt(timeline: Timeline, t: number): number {
     const lt = t - offset;
     if (lt < 0 || lt > segment.duration) continue;
     for (const a of ACTOR_IDS) {
-      for (const c of segment.actorClips[a]) {
+      for (const c of clipsOf(segment, a)) {
         if (c.verb !== "swing" || lt < c.start || lt > c.start + c.dur) continue;
         const yaw = c.params.facing ?? MARKS.swing.facing;
         return -swingAngle(lt - c.start, c.dur) * Math.cos(yaw);

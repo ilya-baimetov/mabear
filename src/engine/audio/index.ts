@@ -5,6 +5,7 @@
 // runs "dry": the same scheduling walk on the wall clock that only counts cues. Never throws.
 import type { AudioDebug, AudioEngine } from "../api";
 import type { ActorId, CamKey, Lang, Timeline, Vec3 } from "../../shared/schema";
+import { ACTOR_IDS } from "../../shared/schema";
 import { CHARACTERS } from "../../shared/bible/characters";
 import { AmbienceDirector } from "./ambience";
 import { MIX, createBuses, getSharedContext, masterLevel, mergeDuckWindows, resetDuck, scheduleDuck, setMaster, type Buses, type DuckWindow } from "./bus";
@@ -42,7 +43,7 @@ export const SOFT_REPLAY_S = 0.25;
 const LATE_WINDOW_S = 3.5;
 /** Safety latency between scheduling and the first sound (s). */
 const START_LATENCY = 0.06;
-const ACTORS: ActorId[] = ["masha", "bear"];
+const ACTORS: ActorId[] = [...ACTOR_IDS];
 
 type Track = keyof AudioDebug["scheduled"];
 
@@ -239,8 +240,8 @@ export function createAudioEngine(opts: AudioEngineOptions = {}): AudioEngine {
         sfx: mk(MIX.sfx, buses.fx),
         music: mk(1, buses.music),
         ambience: mk(1, buses.ambience),
-        foley: { masha: mk(MIX.foley, channels.masha!.input), bear: mk(MIX.foley, channels.bear!.input) },
-        vocals: { masha: mk(MIX.vocals, channels.masha!.input), bear: mk(MIX.vocals, channels.bear!.input) },
+        foley: Object.fromEntries(ACTORS.map((a) => [a, mk(MIX.foley, channels[a]!.input)])) as Record<ActorId, GainNode>,
+        vocals: Object.fromEntries(ACTORS.map((a) => [a, mk(MIX.vocals, channels[a]!.input)])) as Record<ActorId, GainNode>,
       };
       const track = (n: AudioScheduledSourceNode): void => {
         sources.add(n);

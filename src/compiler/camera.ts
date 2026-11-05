@@ -54,8 +54,11 @@ export function mulberry32(seed: number): () => number {
   };
 }
 
-export const HEAD_HEIGHT: Record<ActorId, number> = { masha: 0.85, bear: 1.75 };
-const CHEST: Record<ActorId, number> = { masha: 0.6, bear: 1.25 };
+export const HEAD_HEIGHT: Record<ActorId, number> = { masha: 0.85, bear: 1.75, wolf_a: 1.65, wolf_b: 1.56 };
+const CHEST: Record<ActorId, number> = { masha: 0.6, bear: 1.25, wolf_a: 1.2, wolf_b: 1.13 };
+const isWolfId = (a: ActorId | null): boolean => a === "wolf_a" || a === "wolf_b";
+/** Default cast of a two-shot / wide: the leads. The Wolves join only when they act (they never steal framing idle). */
+const LEADS: ActorId[] = ["masha", "bear"];
 
 type Kind = "wide" | "medium" | "two" | "close" | "low_angle" | "over_shoulder" | "tracking";
 interface Proposal {
@@ -69,7 +72,10 @@ interface Proposal {
   establishing?: boolean;
   /** frames a speaker during a line */
   line?: boolean;
+  /** who a two-shot / wide frames (default: Masha and Bear) */
+  cast?: ActorId[];
 }
+const castKey = (p: { cast?: ActorId[] }) => (p.cast ?? LEADS).join(",");
 
 const LOCO = new Set(["walk_to", "run_to", "tiptoe_to", "chase", "enter", "exit"]);
 const SLAPSTICK = new Set(["fall_down", "sneeze", "surprised", "scared"]);
@@ -93,7 +99,19 @@ export function planCamera(input: CameraPlanInput): CameraCue[] {
   const { duration, posAt, visibleAt } = input;
   const rnd = mulberry32((input.cameraSeed * 7919 + 17) | 0);
   const beats = [...input.beats].sort((a, b) => a.start - b.start);
-  const other = (a: ActorId): ActorId => (a === "masha" ? "bear" : "masha");
+  // reaction partner: Masha ↔ Bear; after a Wolf's slapstick, Masha's (or Bear's) reaction
+  const other = (a: ActorId, t: number): ActorId => (a === "masha" ? "bear" : a === "bear" ? "masha" : visibleAt("masha", t) ? "masha" : "bear");
+  /** Cast for a Wolf beat's two-shot: both Wolves when close, else the Wolf and the nearest lead within 6 m. */
+  const wolfCast = (b: CameraBeatInfo): ActorId[] | null => {
+    const t = b.start + 0.1;
+    const mate: ActorId = b.actor === "wolf_a" ? "wolf_b" : "wolf_a";
+    const p = posAt(b.actor, t);
+    if (visibleAt(mate, t) && dist(p, posAt(mate, t)) < 5 && beats.some((o) => o.actor === mate && o.start < b.start + b.dur - 0.3 && o.start + o.dur > b.start + 0.3)) return [b.actor, mate];
+    let best: ActorId | null = null;
+    let bd = 6;
+    for (const l of LEADS) if (visibleAt(l, t) && dist(p, posAt(l, t)) < bd) { bd = dist(p, posAt(l, t)); best = l; }
+    return best ? [b.actor, best] : null;
+  };
   const props: Proposal[] = [];
 
   // 1. establishing shot
@@ -115,8 +133,13 @@ export function planCamera(input: CameraPlanInput): CameraCue[] {
     const isLoco = LOCO.has(b.verb);
     const known = knownAt(b.start - 0.05);
     const star = b.actor === "masha";
-    if (b.shot !== "auto") {
-      props.push({ start: b.start, want: Math.max(SHOT_MIN, b.dur), prio: 6, kind: hintKind(b.shot), subject: b.shot === "wide" ? null : b.actor, overridden: true });
+    if (isWolfId(b.actor) && b.shot === "auto" && !b.hasLine) {
+      // a Wolf acting: frame them (below Masha's priority, like Bear); both Wolves together → a two-shot of the pair
+      const cast = wolfCast(b);
+      const kind: Kind = isLoco && b.dur > 2 ? "tracking" : cast ? "two" : "medium";
+      props.push({ start: b.start, want: Math.max(SHOT_MIN, b.dur), prio: isLoco && b.dur > 2 ? 2.2 : 1.6, kind, subject: kind === "two" ? null : b.actor, overridden: false, cast: kind === "two" && cast ? cast : undefined });
+    } else if (b.shot !== "auto") {
+      props.push({ start: b.start, want: Math.max(SHOT_MIN, b.dur), prio: 6, kind: hintKind(b.shot), subject: b.shot === "wide" ? null : b.actor, overridden: true, cast: b.shot === "wide" && isWolfId(b.actor) ? [...LEADS, b.actor] : undefined });
     } else if (b.hasLine) {
       props.push({ start: b.lineStart, want: Math.max(SHOT_MIN, b.lineDur), prio: 5.5, kind: "close", subject: b.actor, overridden: false, line: true });
     } else if (isLoco && b.dur > 2) {
@@ -133,10 +156,10 @@ export function planCamera(input: CameraPlanInput): CameraCue[] {
     }
     // arriving in a new cluster → establish it
     if (isLoco && visibleAt(b.actor, b.start + b.dur) && !known.has(clusterAt(b.to))) {
-      props.push({ start: b.start + b.dur, want: 2.0, prio: 3.5, kind: "wide", subject: null, overridden: false, establishing: true });
+      props.push({ start: b.start + b.dur, want: 2.0, prio: 3.5, kind: "wide", subject: null, overridden: false, establishing: true, cast: isWolfId(b.actor) ? [...LEADS, b.actor] : undefined });
     }
     // reaction shot on the other character after slapstick, or after the punchline line has ENDED
-    const o = other(b.actor);
+    const o = other(b.actor, b.start + b.dur);
     if ((SLAPSTICK.has(b.verb) || (b.hasLine && b.punchline)) && visibleAt(o, b.start + b.dur)) {
       const at = b.hasLine ? b.lineStart + b.lineDur : b.start + Math.min(b.dur, 1.2);
       props.push({ start: at, want: 1.0 + rnd() * 0.5, prio: 4.5, kind: "close", subject: o, overridden: false });
@@ -157,7 +180,7 @@ export function planCamera(input: CameraPlanInput): CameraCue[] {
     }
     const last = cuts[cuts.length - 1];
     const gap = p.start - last.start;
-    if (p.kind === last.kind && p.subject === last.subject && p.prio <= last.prio + 1) {
+    if (p.kind === last.kind && p.subject === last.subject && castKey(p) === castKey(last) && p.prio <= last.prio + 1) {
       last.want = Math.max(last.want, p.start + p.want - last.start);
       last.prio = Math.max(last.prio, p.prio);
       last.line = last.line || p.line;
@@ -201,6 +224,7 @@ export function planCamera(input: CameraPlanInput): CameraCue[] {
       const subj = speaker?.actor ?? active?.actor ?? null;
       const bothActive = activeAll.some((b) => b.actor === "masha") && activeAll.some((b) => b.actor === "bear");
       const kind: Kind = speaker ? "close"
+        : active && isWolfId(active.actor) ? (LOCO.has(active.verb) && active.start + active.dur - t > 2 ? "tracking" : "medium")
         : active && LOCO.has(active.verb) && active.start + active.dur - t > 2 ? (active.actor === "bear" && close6(t) && close6(Math.min(next, t + 4) - 0.05) ? "two" : "tracking")
         : bothActive && near(t) ? "two"
         : subj && rnd() < 0.6 ? "medium" : "two";
@@ -262,9 +286,11 @@ export function planCamera(input: CameraPlanInput): CameraCue[] {
     if (visibleAt("masha", s.start) && visibleAt("bear", s.start)) side = continueSide(posAt("masha", s.start), posAt("bear", s.start), side);
     const angle = (rnd() - 0.5) * (s.kind === "wide" ? 0.8 : 1.1);
     // occlusion: try yaw nudges around the subject (staying on the 180° side) until no trunk / wall blocks the view
+    const cast = s.cast ?? LEADS;
     const framedAt = (t: number): { head: Vec3; w: number }[] => {
       const out: { head: Vec3; w: number }[] = [];
-      for (const a of ["masha", "bear"] as ActorId[]) {
+      const who = s.subject && !cast.includes(s.subject) ? [...cast, s.subject] : cast;
+      for (const a of who) {
         if (!visibleAt(a, t)) continue;
         const p = posAt(a, t);
         const w = s.kind === "wide" || s.kind === "two" || a === s.subject || s.subject === null ? 1 : 0.5;
@@ -274,13 +300,13 @@ export function planCamera(input: CameraPlanInput): CameraCue[] {
     };
     const h0 = framedAt(s.start + 0.01);
     const h1 = framedAt(Math.max(s.start, s.end - 0.01));
-    let best = framing(s.kind, s.subject, s.start, s.end, angle, side, posAt, visibleAt, rnd, input.headY);
+    let best = framing(s.kind, s.subject, cast, s.start, s.end, angle, side, posAt, visibleAt, rnd, input.headY);
     let bestCost = occlusionCost(best.from, h0) + occlusionCost(best.to, h1);
     for (const dlt of [0.35, -0.35, 0.7, -0.7, 1.05, -1.05]) {
       if (bestCost === 0) break;
       const a = angle + dlt;
       if (Math.abs(a) > 1.3) continue;
-      const fr = framing(s.kind, s.subject, s.start, s.end, a, side, posAt, visibleAt, rnd, input.headY);
+      const fr = framing(s.kind, s.subject, cast, s.start, s.end, a, side, posAt, visibleAt, rnd, input.headY);
       const cost = occlusionCost(fr.from, h0) + occlusionCost(fr.to, h1);
       if (cost < bestCost - 1e-6) { best = fr; bestCost = cost; }
     }
@@ -288,7 +314,7 @@ export function planCamera(input: CameraPlanInput): CameraCue[] {
     for (const dlt of [1.45, -1.45, 1.6, -1.6]) {
       if (bestCost < 1) break;
       const a = Math.max(-1.6, Math.min(1.6, angle + dlt));
-      const fr = framing(s.kind, s.subject, s.start, s.end, a, side, posAt, visibleAt, rnd, input.headY);
+      const fr = framing(s.kind, s.subject, cast, s.start, s.end, a, side, posAt, visibleAt, rnd, input.headY);
       const cost = occlusionCost(fr.from, h0) + occlusionCost(fr.to, h1);
       if (cost < bestCost - 1e-6) { best = fr; bestCost = cost; }
     }
@@ -298,7 +324,7 @@ export function planCamera(input: CameraPlanInput): CameraCue[] {
       for (const alt of ["medium", "wide"] as Kind[]) {
         if (alt === s.kind) continue;
         for (const dlt of [0, 0.35, -0.35, 0.7, -0.7, 1.05, -1.05]) {
-          const fr = framing(alt, s.subject, s.start, s.end, Math.max(-1.3, Math.min(1.3, angle + dlt)), side, posAt, visibleAt, rnd, input.headY);
+          const fr = framing(alt, s.subject, cast, s.start, s.end, Math.max(-1.3, Math.min(1.3, angle + dlt)), side, posAt, visibleAt, rnd, input.headY);
           const cost = occlusionCost(fr.from, h0) + occlusionCost(fr.to, h1);
           if (cost < bestCost - 1e-6) { best = fr; bestCost = cost; kind = alt; }
           if (bestCost < 1) break;
@@ -403,17 +429,25 @@ function continueSide(m: Vec2, b: Vec2, prev: Vec2): Vec2 {
   return p[0] * prev[0] + p[1] * prev[1] >= 0 ? p : [-p[0], -p[1]];
 }
 
+/** Centre and span (max pairwise distance) of the visible members of a cast at time t. */
+function castSpread(cast: ActorId[], t: number, posAt: CameraPlanInput["posAt"], visibleAt: CameraPlanInput["visibleAt"]): { mid: Vec2 | null; span: number } {
+  const ps = cast.filter((a) => visibleAt(a, t)).map((a) => posAt(a, t));
+  if (!ps.length) return { mid: null, span: 0 };
+  let span = 0;
+  for (let i = 0; i < ps.length; i++) for (let j = i + 1; j < ps.length; j++) span = Math.max(span, dist(ps[i], ps[j]));
+  const mid: Vec2 = [ps.reduce((a, p) => a + p[0], 0) / ps.length, ps.reduce((a, p) => a + p[1], 0) / ps.length];
+  return { mid, span };
+}
+
 function framing(
-  kind: Kind, subject: ActorId | null, t0: number, t1: number, angle: number, side: Vec2,
+  kind: Kind, subject: ActorId | null, cast: ActorId[], t0: number, t1: number, angle: number, side: Vec2,
   posAt: CameraPlanInput["posAt"], visibleAt: CameraPlanInput["visibleAt"], rnd: () => number,
   headY?: CameraPlanInput["headY"],
 ): { from: CamKey; to: CamKey } {
-  const m0 = posAt("masha", t0);
-  const b0 = posAt("bear", t0);
-  const mv = visibleAt("masha", t0);
-  const bv = visibleAt("bear", t0);
-  const mid: Vec2 = mv && bv ? [(m0[0] + b0[0]) / 2, (m0[1] + b0[1]) / 2] : mv ? m0 : bv ? b0 : [0, 0];
-  const subj = subject ?? (mv ? "masha" : "bear");
+  const c0 = castSpread(cast, t0, posAt, visibleAt);
+  const mid: Vec2 = c0.mid ?? [0, 0];
+  const firstVisible = cast.find((a) => visibleAt(a, t0)) ?? (visibleAt("masha", t0) ? "masha" : "bear");
+  const subj = subject ?? firstVisible;
   let sp: Vec2 = posAt(subj, t0);
   // a subject that moves during a single shot is followed: pick the (from, to) look targets that keep the eased
   // camera closest to the subject over the shot (static at the start, static at the end, or a follow dolly)
@@ -421,14 +455,15 @@ function framing(
   sp = spA;
   const hy0 = headY ? headY(subj, t0) : HEAD_HEIGHT[subj];
   const hy1 = headY ? headY(subj, t1) : HEAD_HEIGHT[subj];
-  const op = posAt(subj === "masha" ? "bear" : "masha", t0);
+  const partner: ActorId = subj === "masha" ? "bear" : subj === "bear" ? "masha" : subj === "wolf_a" ? "wolf_b" : "wolf_a";
+  const op = posAt(partner, t0);
   const dir = rot(side, angle);
 
   let from: CamKey;
   let to: CamKey;
   switch (kind) {
     case "wide": {
-      const span = mv && bv ? dist(m0, b0) : 0;
+      const span = c0.span;
       const d = 11 + Math.min(8, span * 0.6);
       from = key(mid, dir, d, 5.5, 0.8, 50);
       to = key(mid, dir, d * 0.94, 5.3, 0.8, 50);
@@ -436,12 +471,9 @@ function framing(
     }
     case "two": {
       // follows the pair's midpoint when they move during the shot
-      const m1 = posAt("masha", t1);
-      const b1 = posAt("bear", t1);
-      const mv1 = visibleAt("masha", t1);
-      const bv1 = visibleAt("bear", t1);
-      const mid1: Vec2 = mv1 && bv1 ? [(m1[0] + b1[0]) / 2, (m1[1] + b1[1]) / 2] : mv1 ? m1 : bv1 ? b1 : mid;
-      const span = Math.max(mv && bv ? dist(m0, b0) : 0, mv1 && bv1 ? dist(m1, b1) : 0);
+      const c1 = castSpread(cast, t1, posAt, visibleAt);
+      const mid1: Vec2 = c1.mid ?? mid;
+      const span = Math.max(c0.span, c1.span);
       const d = Math.max(5.5, span * 1.3 + 3.5);
       from = key(mid, dir, d, 2.2, 1.0, 45);
       to = key(dist(mid, mid1) > 1 ? mid1 : mid, dir, d * 0.95, 2.1, 1.0, 45);
@@ -472,7 +504,7 @@ function framing(
     }
     case "over_shoulder": {
       const back = norm([op[0] - sp[0], op[1] - sp[1]]);
-      const o: ActorId = subj === "masha" ? "bear" : "masha";
+      const o: ActorId = partner;
       // lateral offset varies with the (occlusion-nudged) angle but never crosses the 180° line
       const lat = Math.max(0.25, 0.6 + angle * 0.9);
       const pos: Vec2 = [op[0] + back[0] * (1.2 + Math.abs(angle) * 0.4) + side[0] * lat, op[1] + back[1] * (1.2 + Math.abs(angle) * 0.4) + side[1] * lat];

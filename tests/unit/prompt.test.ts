@@ -36,10 +36,10 @@ describe("director system prompt", () => {
     expect(buildSystemPrompt()).toBe(prompt);
   });
 
-  it("carries 3–4 few-shot examples covering EN and RU", () => {
+  it("carries 3–5 few-shot examples covering EN and RU", () => {
     const n = (prompt.match(/### Example \d/g) ?? []).length;
     expect(n).toBeGreaterThanOrEqual(3);
-    expect(n).toBeLessThanOrEqual(4);
+    expect(n).toBeLessThanOrEqual(5);
     expect(prompt).toContain("requested language: en");
     expect(prompt).toContain("requested language: ru");
   });
@@ -54,7 +54,7 @@ describe("director system prompt", () => {
 
   it("few-shots cover §8.3.7: EN+RU, dialogue, explicit sound, terse expansion, music continue, a Bear quote", () => {
     const shots = pickFewShots();
-    expect(shots.length).toBe(4);
+    expect(shots.length).toBe(5);
     expect(new Set(shots.map((s) => s.lang))).toEqual(new Set(["en", "ru"]));
     expect(shots.some((s) => s.beatScript.beats.some((b) => b.line) && /["«“]/.test(s.text))).toBe(true);
     expect(shots.some((s) => s.beatScript.ambience !== null && /music|музык|колыбельн/i.test(s.text))).toBe(true);

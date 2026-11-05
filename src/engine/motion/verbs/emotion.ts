@@ -1,15 +1,17 @@
 // Emotion verbs: procedural on the Mixamo idle; cry uses the Xbot sad pose as its base.
 import { addLayer, qmul, smooth, window01 } from "../blend";
-import { ARMS, UPPER, arm, idleBase, leg, mask, poseClip, pose, preRotate, rx, ry, rz, type VerbImpl } from "./common";
+import { ARMS, UPPER, arm, byPersona, idleBase, persona, leg, mask, poseClip, pose, preRotate, rx, ry, rz, type VerbImpl } from "./common";
 
 export const laugh: VerbImpl = (lt, _p, ctx) => {
   const k = window01(lt, 0, ctx.dur, 0.2);
-  const f = ctx.actor === "masha" ? 7 : 4.5;
+  const f = byPersona(ctx.actor, 7, 4.5, 8.5); // the Wolves snicker in quick little shakes
   const bob = Math.sin(lt * f * Math.PI) * k;
   const base = idleBase(ctx, 0.3);
   // Masha: hands to cheeks/belly, bouncing; Bear: paws on belly, slow shoulder shakes
   const arms = ctx.actor === "bear"
     ? pose(arm("Left", 0.95, 0.9, 1.3), arm("Right", 0.95, 0.9, 1.3))
+    : persona(ctx.actor) === "wolf"
+    ? pose(arm("Left", 0.65, 1.1, 2.1, -1.0), arm("Right", 1.0, 0.7, 1.2)) // paw over the snout, the other on the belly
     : pose(arm("Left", 0.8, 0.8, 1.6, -0.8), arm("Right", 0.8, 0.8, 1.6, -0.8));
   const L = mask(base, { bones: arms, hipsOffset: [0, 0, 0] }, ARMS, k);
   const out = addLayer(L, {
@@ -18,7 +20,7 @@ export const laugh: VerbImpl = (lt, _p, ctx) => {
     Head: rx(-0.15 * k + 0.08 * bob),
     LeftShoulder: rz(0.06 * bob), RightShoulder: rz(-0.06 * bob),
   });
-  return { ...out, lift: Math.abs(bob) * (ctx.actor === "masha" ? 0.02 : 0.008), face: { emotion: "happy", viseme: "open_wide", visemeWeight: 0.5 + 0.5 * Math.abs(bob), lidClose: 0.45 * k } };
+  return { ...out, lift: Math.abs(bob) * byPersona(ctx.actor, 0.02, 0.008, 0.012), face: { emotion: "happy", viseme: "open_wide", visemeWeight: 0.5 + 0.5 * Math.abs(bob), lidClose: 0.45 * k } };
 };
 
 export const cry: VerbImpl = (lt, _p, ctx) => {
@@ -54,7 +56,7 @@ export const surprised: VerbImpl = (lt, _p, ctx) => {
   const L = mask(base, { bones: arms, hipsOffset: [0, 0, 0] }, ARMS, jolt);
   return {
     ...addLayer(L, { Spine: rx(-0.2 * jolt), Head: rx(-0.15 * jolt) }, 1, [0, 0, -0.03 * jolt]),
-    lift: hop * (ctx.actor === "masha" ? 0.08 : 0.04),
+    lift: hop * byPersona(ctx.actor, 0.08, 0.04, 0.09), // the Wolves leap out of their skin
     face: { emotion: "surprised", browRaise: jolt, viseme: "o", visemeWeight: jolt },
   };
 };

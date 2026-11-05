@@ -46,5 +46,13 @@
     "previous": [],
     "canonViolating": false,
     "note": "RU sound: splash + music"
+  },
+  {
+    "id": "ru_wolves",
+    "lang": "ru",
+    "paragraph": "Волки подкрадываются к столу и хватают блины, но Мишка их замечает.",
+    "previous": [],
+    "canonViolating": false,
+    "note": "A4 the Wolves are canon series characters: staged, never cast_only, never speaking"
   }
 ]

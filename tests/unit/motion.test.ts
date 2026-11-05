@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ACTOR_IDS, VERBS, type Verb } from "../../src/shared/schema";
+import { ACTOR_IDS, VERBS, type ActorId, type Verb } from "../../src/shared/schema";
 import { GRAMMAR } from "../../src/shared/grammar";
 import { VERB_CLIPS, VERB_IMPLS, VERB_KIND, STYLES, evaluatePose, type VerbCtx } from "../../src/engine/motion/library";
 import { CLIPS } from "../../src/engine/motion/clips.generated";
@@ -8,7 +8,7 @@ import { IDENTITY, blendLayers, qaxis, qmul, qrot, qslerp, type PoseLayer } from
 import type { Quat } from "../../src/engine/api";
 import type { Vec3 } from "../../src/shared/schema";
 
-function ctxFor(actor: "masha" | "bear", verb: Verb, lt: number): VerbCtx {
+function ctxFor(actor: ActorId, verb: Verb, lt: number): VerbCtx {
   const dur = GRAMMAR[verb].baseDuration;
   return {
     actor, style: STYLES[actor], dur, emotion: "happy", t: 3 + lt,

@@ -2,8 +2,8 @@
 // (validating an already-validated script yields no new hits and no errors).
 import { CHARACTERS } from "../shared/bible/characters";
 import { MARKS } from "../shared/bible/set";
-import { GRAMMAR, VERB_IMPLIED_PROP } from "../shared/grammar";
-import { RULES, preFilter } from "../shared/rules";
+import { GRAMMAR, VERB_IMPLIED_PROP, isWolf } from "../shared/grammar";
+import { RULES, canonAbsentFor, canonAbsentMessage, preFilter } from "../shared/rules";
 import {
   ACTOR_IDS, AMBIENCES, EMOTES, EMOTIONS, MARK_IDS, MAX_BEATS, MAX_DELAY_S, MAX_LINE_CHARS, MAX_SUMMARY_CHARS,
   MOODS, MUSIC_MOODS, PROP_IDS, SFX_IDS, SHOTS, TIMES_OF_DAY, VERBS,
@@ -17,7 +17,10 @@ export const isMark = (s: unknown): s is MarkId => typeof s === "string" && (MAR
 export const isProp = (s: unknown): s is PropId => typeof s === "string" && (PROP_IDS as readonly string[]).includes(s);
 const inList = <T extends string>(list: readonly T[], v: unknown): v is T => typeof v === "string" && (list as readonly string[]).includes(v);
 
+/** The default partner for actor-target verbs: Masha↔Bear; each Wolf's partner is the other Wolf. */
 export function otherActor(a: ActorId): ActorId {
+  if (a === "wolf_a") return "wolf_b";
+  if (a === "wolf_b") return "wolf_a";
   return a === "masha" ? "bear" : "masha";
 }
 
@@ -32,9 +35,24 @@ const TARGET_SYNONYMS: Record<string, string> = {
   bed: "hammock", logs: "woodpile", firewood: "woodpile", car: "van", ambulance: "van", truck: "van", bushes: "bush", shrub: "bush",
   jam: "jam_jar", honey: "honey_pot", pancake: "pancakes", pan: "frying_pan", rod: "fishing_rod", candy: "lollipop",
   flower: "flowers", can: "watering_can", flour: "flour_bag", tea: "teapot",
-  rabbit: "masha", hare: "masha", wolf: "bear", wolves: "bear", penguin: "masha", panda: "bear", tiger: "bear", dasha: "masha",
+  // canon names for cast members (never a cast_only hit). The Wolves are canon: never substituted.
   medved: "bear", misha: "bear", mishka: "bear",
+  wolf: "wolf_a", wolves: "wolf_a", wolf_1: "wolf_a", wolf_2: "wolf_b", wolf1: "wolf_a", wolf2: "wolf_b",
+  big_wolf: "wolf_a", little_wolf: "wolf_b", small_wolf: "wolf_b", "волк": "wolf_a", "волки": "wolf_a", "волков": "wolf_a",
 };
+/** Synonyms that name a real cast member (no cast_only hit when resolved). */
+const CAST_ALIASES = new Set(["medved", "misha", "mishka", "wolf", "wolves", "wolf_1", "wolf_2", "wolf1", "wolf2", "big_wolf", "little_wolf", "small_wolf", "волк", "волки", "волков"]);
+
+/** A canon series character that isn't in the prototype (Hare, Penguin, Panda, Tiger, Dasha, Rosie…) → stand-in id. */
+export function canonAbsentTarget(raw: string | null): { sub: ActorId; message: Record<Lang, string> } | null {
+  if (raw == null) return null;
+  const words = raw.trim().toLowerCase().split(/[\s_-]+/).filter(Boolean);
+  for (const w of words.reverse()) {
+    const c = canonAbsentFor(w);
+    if (c) return { sub: c.sub, message: { en: canonAbsentMessage(c, "en"), ru: canonAbsentMessage(c, "ru") } };
+  }
+  return null;
+}
 
 /** Map an arbitrary target string to an allowed id, or null when nothing fits. */
 export function resolveTargetId(raw: string | null): string | null {
@@ -42,6 +60,8 @@ export function resolveTargetId(raw: string | null): string | null {
   const s = raw.trim().toLowerCase().replace(/[\s-]+/g, "_");
   if (isActor(s) || isMark(s) || isProp(s)) return s;
   if (TARGET_SYNONYMS[s]) return TARGET_SYNONYMS[s];
+  const absent = canonAbsentTarget(s);
+  if (absent) return absent.sub;
   const words = s.split("_");
   for (const w of [...words].reverse()) {
     if (isActor(w) || isMark(w) || isProp(w)) return w;
@@ -51,10 +71,25 @@ export function resolveTargetId(raw: string | null): string | null {
   return null;
 }
 
+function WOLF_EMOTE_FALLBACK(): Partial<Record<Emote, Emote>> {
+  return {
+    giggle: "snicker", chuckle: "snicker", laugh: "snicker", hum: "snicker", wheee: "howl", cheer: "howl", roar_soft: "howl", scream_fun: "howl",
+    growl_soft: "snicker", cry: "whimper", uh_oh: "whimper",
+  };
+}
+/** The emote a silent Wolf makes instead of a spoken line (wolves_silent). */
+export function wolfLineEmote(emotion: string): Emote {
+  if (["sad", "scared", "surprised"].includes(emotion)) return "whimper";
+  if (["happy", "excited", "proud"].includes(emotion)) return "howl";
+  return "snicker";
+}
+
 /** Per-character emote fallbacks (an emote outside the bible list → the nearest one the character can make). */
 const EMOTE_FALLBACK: Record<ActorId, Partial<Record<Emote, Emote>>> = {
-  masha: { grunt: "hmph", huff: "hmph", snore: "yawn", growl_soft: "hmph", chuckle: "giggle", roar_soft: "scream_fun" },
-  bear: { giggle: "chuckle", wheee: "hum", uh_oh: "grunt", cry: "sigh", cheer: "hum", scream_fun: "roar_soft" },
+  masha: { grunt: "hmph", huff: "hmph", snore: "yawn", growl_soft: "hmph", chuckle: "giggle", roar_soft: "scream_fun", howl: "wheee", whimper: "cry", snicker: "giggle" },
+  bear: { giggle: "chuckle", wheee: "hum", uh_oh: "grunt", cry: "sigh", cheer: "hum", scream_fun: "roar_soft", howl: "roar_soft", whimper: "sigh", snicker: "chuckle" },
+  wolf_a: WOLF_EMOTE_FALLBACK(),
+  wolf_b: WOLF_EMOTE_FALLBACK(),
 };
 export function allowedEmote(actor: ActorId, emote: Emote | null): Emote | null {
   if (emote == null || emote === "none") return null;
@@ -72,14 +107,14 @@ function clampText(s: string, max: number): string {
 }
 
 function defaultMarkFor(verb: string, actor: ActorId, ws: WorldState): MarkId | null {
-  if (verb === "sleep") return actor === "bear" ? "hammock" : ws.actors[actor].mark ?? "hammock";
-  if (verb === "hide") return "bush";
+  if (verb === "sleep") return actor === "bear" ? "hammock" : isWolf(actor) ? "van" : ws.actors[actor].mark ?? "hammock";
+  if (verb === "hide") return isWolf(actor) ? "van" : "bush";
   if (verb === "sit") return ws.actors[actor].mark ?? "bench";
   return ws.actors[actor].mark;
 }
 
 /** Default food per character when `eat` names nothing. */
-const DEFAULT_FOOD: Record<ActorId, PropId> = { masha: "jam_jar", bear: "honey_pot" };
+const DEFAULT_FOOD: Record<ActorId, PropId> = { masha: "jam_jar", bear: "honey_pot", wolf_a: "honey_pot", wolf_b: "pancakes" };
 
 export function validateBeatScript(bs: BeatScript, startState: WorldState, lang: Lang): ValidateResult {
   const hits: RuleHit[] = [];
@@ -114,7 +149,7 @@ export function validateBeatScript(bs: BeatScript, startState: WorldState, lang:
   if (beats.length > MAX_BEATS) { errors.push(`too many beats (${beats.length}); kept ${MAX_BEATS}`); beats = beats.slice(0, MAX_BEATS); }
 
   // light holding simulation so missing items can be filled in
-  const holding: Record<ActorId, PropId | null> = { masha: startState.actors.masha.holding, bear: startState.actors.bear.holding };
+  const holding = Object.fromEntries(ACTOR_IDS.map((id) => [id, startState.actors[id]?.holding ?? null])) as Record<ActorId, PropId | null>;
   const out: Beat[] = [];
   beats.forEach((raw, i) => {
     const tag = `beat ${i + 1}`;
@@ -129,7 +164,7 @@ export function validateBeatScript(bs: BeatScript, startState: WorldState, lang:
 
     // Masha-only / Bear-only verbs
     if (!GRAMMAR[b.verb].actors.includes(actor)) {
-      if (b.verb === "carry") {
+      if (b.verb === "carry" && !isWolf(actor)) {
         errors.push(`${tag}: only Bear carries — Bear lifts Masha`);
         actor = "bear";
         b.actor = "bear";
@@ -145,11 +180,14 @@ export function validateBeatScript(bs: BeatScript, startState: WorldState, lang:
     // ---- target vs verb.target ----
     const rawTarget = b.target;
     let target = resolveTargetId(rawTarget);
+    const rawNorm = rawTarget == null ? "" : rawTarget.trim().toLowerCase().replace(/[\s-]+/g, "_");
+    const absent = isActor(target) && !isActor(rawNorm) && !CAST_ALIASES.has(rawNorm) ? canonAbsentTarget(rawTarget) : null;
     if (rawTarget != null && rawTarget.trim() !== "" && target == null) {
       hit("cast_only", rawTarget, "");
       errors.push(`${tag}: unknown target "${rawTarget}" dropped`);
     } else if (rawTarget != null && target != null && target !== rawTarget) {
-      if (isActor(target) && !isActor(rawTarget.trim().toLowerCase())) hit("cast_only", rawTarget, target);
+      if (absent) hits.push({ rule: "cast_only", original: rawTarget, replacement: String(target), kid_message: absent.message[lang] });
+      else if (isActor(target) && !isActor(rawNorm) && !CAST_ALIASES.has(rawNorm)) hit("cast_only", rawTarget, target);
       errors.push(`${tag}: target "${rawTarget}" → ${target}`);
     }
     // a prop named as target of a needsItem verb (other than take) is really the item
@@ -209,8 +247,9 @@ export function validateBeatScript(bs: BeatScript, startState: WorldState, lang:
     let line = typeof b.line === "string" ? b.line.trim() : null;
     if (line === "") line = null;
     if (line != null && !CHARACTERS[actor].speaks) {
-      const replacement: Emote = ["happy", "proud", "excited"].includes(b.emotion) ? "hum" : "grunt";
-      hit("bear_silent", line, replacement);
+      const wolf = isWolf(actor);
+      const replacement: Emote = wolf ? wolfLineEmote(b.emotion) : ["happy", "proud", "excited"].includes(b.emotion) ? "hum" : "grunt";
+      hit(wolf ? "wolves_silent" : "bear_silent", line, replacement);
       line = null;
       if (emote == null) emote = replacement;
       if (b.verb === "idle") b.verb = "nod"; // a fitting gesture instead of words

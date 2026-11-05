@@ -1,7 +1,7 @@
 // Object verbs: procedural arm work layered on the Mixamo idle (the libraries have no prop clips).
 // The held prop rides on the RightHand socket; timings match the grammar's foley rules.
 import { addLayer, blendLayers, qmul, smooth, window01 } from "../blend";
-import { ARMS, arm, idleBase, layer, leg, mask, pose, rx, ry, rz, type VerbCtx, type VerbImpl } from "./common";
+import { ARMS, arm, byPersona, idleBase, layer, leg, mask, pose, rx, ry, rz, type VerbCtx, type VerbImpl } from "./common";
 import type { Pose } from "../blend";
 
 /** Right arm holding something in front of the chest (used between object verbs). */
@@ -22,7 +22,7 @@ export const take: VerbImpl = (lt, _p, ctx) => {
   const L = armsOver(ctx, reachArm, reach);
   const H = armsOver(ctx, holdArm(), hold);
   const out = blendLayers(L, H, hold);
-  const bend = reach * (ctx.actor === "bear" ? 0.6 : 0.35);
+  const bend = reach * byPersona(ctx.actor, 0.35, 0.6, 0.5);
   return addLayer(out, pose({ Spine: rx(bend), Spine1: rx(bend * 0.4) }, leg("Left", 0.3 * reach, 0.5 * reach), leg("Right", 0.3 * reach, 0.5 * reach)), 1, [0, -0.08 * ctx.style.hipHeight * reach, 0]);
 };
 
@@ -30,15 +30,15 @@ export const give: VerbImpl = (lt, _p, ctx) => {
   const u = lt / ctx.dur;
   const ext = window01(u, 0, 0.95, 0.35);
   // Bear offers low (to Masha), Masha offers up (to Bear)
-  const down = ctx.actor === "bear" ? 0.6 : -0.1;
+  const down = byPersona(ctx.actor, -0.1, 0.6, 0.3);
   const L = armsOver(ctx, arm("Right", down, 1.35, 0.25 + 0.6 * (1 - ext), -0.3), 1);
-  const out = addLayer(L, { Spine: rx((ctx.actor === "bear" ? 0.25 : -0.05) * ext), Head: rz(0.15 * ext) });
+  const out = addLayer(L, { Spine: rx(byPersona(ctx.actor, -0.05, 0.25, 0.15) * ext), Head: rz(0.15 * ext) });
   return { ...out, face: { emotion: ctx.emotion === "neutral" ? "happy" : ctx.emotion, browRaise: 0.3 * ext } };
 };
 
 export const eat: VerbImpl = (lt, _p, ctx) => {
   const k = window01(lt, 0, ctx.dur, 0.3);
-  const period = ctx.actor === "masha" ? 0.9 : 1.2;
+  const period = byPersona(ctx.actor, 0.9, 1.2, 0.75); // the hungry Wolves gobble
   const toMouth = 0.5 - 0.5 * Math.cos((lt / period) * Math.PI * 2);
   const L = armsOver(ctx, arm("Right", 0.7 - 0.5 * toMouth, 1.1, 1.5 + 0.8 * toMouth, -1.2), k);
   const chew = Math.abs(Math.sin(lt * 9));

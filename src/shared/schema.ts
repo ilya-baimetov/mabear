@@ -3,7 +3,10 @@
 import { z } from "zod";
 
 // ---------- 6.1 Identifiers ----------
-export const ACTOR_IDS = ["masha", "bear"] as const;
+// wolf_a / wolf_b (the Wolves, canon series characters) were appended after M1 (additive).
+export const ACTOR_IDS = ["masha", "bear", "wolf_a", "wolf_b"] as const;
+/** The two Wolves (stand-ins). */
+export const WOLF_IDS = ["wolf_a", "wolf_b"] as const;
 export const MARK_IDS = [
   "clearing", "porch", "door", "garden", "beehive", "swing", "pond_shore", "pier", "table",
   "bench", "woodpile", "path_entry", "big_tree", "bush", "hammock", "creek", "van",
@@ -22,6 +25,8 @@ export const SHOTS = ["auto", "wide", "medium", "close", "low_angle", "over_shou
 export const EMOTES = [
   "none", "giggle", "laugh", "gasp", "wheee", "hmph", "uh_oh", "yawn", "cry", "cheer", "scream_fun",
   "grunt", "sigh", "hum", "growl_soft", "chuckle", "snore", "huff", "roar_soft", "sneeze",
+  // appended for the Wolves (additive)
+  "howl", "whimper", "snicker",
 ] as const;
 export const MUSIC_MOODS = [
   "none", "playful", "calm", "sleepy", "tense", "spooky", "chase", "triumphant", "sad", "romantic_waltz",
@@ -37,6 +42,8 @@ export const SFX_IDS = [
 export const RULE_IDS = [
   "bear_silent", "cast_only", "no_weapons", "no_scary", "kind_language", "no_brands",
   "no_personal_data", "in_character",
+  // appended (additive): the Wolves never speak words in this prototype (verify with Animaccord)
+  "wolves_silent",
 ] as const;
 export const VERBS = [
   // Locomotion
@@ -166,9 +173,18 @@ export type ActorState = z.infer<typeof ActorStateSchema>;
 export const PropLocationSchema = z.union([MarkIdSchema, ActorIdSchema, z.literal("hidden")]);
 export type PropLocation = z.infer<typeof PropLocationSchema>;
 
+/** Where the Wolves stand when a world state predates them (by their van, facing west toward the yard). */
+export const WOLF_START: Record<"wolf_a" | "wolf_b", ActorState> = {
+  wolf_a: { pos: [12.1, 0.3], facing: -Math.PI / 2, mark: "van", holding: null, posture: "stand" },
+  wolf_b: { pos: [12.0, -1.9], facing: -Math.PI / 2, mark: "van", holding: null, posture: "stand" },
+};
+const wolfStateDefault = (id: "wolf_a" | "wolf_b") =>
+  ActorStateSchema.default(() => JSON.parse(JSON.stringify(WOLF_START[id])) as ActorState);
+
 export const WorldStateSchema = z.object({
   timeOfDay: TimeOfDaySchema,
-  actors: z.object({ masha: ActorStateSchema, bear: ActorStateSchema }),
+  // wolf_a / wolf_b default in (additive): world states saved before the Wolves still parse.
+  actors: z.object({ masha: ActorStateSchema, bear: ActorStateSchema, wolf_a: wolfStateDefault("wolf_a"), wolf_b: wolfStateDefault("wolf_b") }),
   props: z.record(PropIdSchema, z.object({ at: PropLocationSchema })),
 });
 export type WorldState = z.infer<typeof WorldStateSchema>;
@@ -250,7 +266,12 @@ export const SegmentSchema = z.object({
   duration: z.number(),
   startState: WorldStateSchema,
   endState: WorldStateSchema,
-  actorClips: z.object({ masha: z.array(ActorClipSchema), bear: z.array(ActorClipSchema) }),
+  actorClips: z.object({
+    masha: z.array(ActorClipSchema),
+    bear: z.array(ActorClipSchema),
+    wolf_a: z.array(ActorClipSchema).default([]), // additive (Wolves)
+    wolf_b: z.array(ActorClipSchema).default([]),
+  }),
   dialogue: z.array(DialogueCueSchema),
   emotes: z.array(EmoteCueSchema),
   foley: z.array(FoleyCueSchema),

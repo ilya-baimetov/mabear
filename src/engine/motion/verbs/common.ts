@@ -50,7 +50,33 @@ export const STYLES: Record<ActorId, ActorStyle> = {
     leg: { x: 0.22, y: -0.03, thigh: 0.32, shin: 0.27, ankle: 0.1, toe: 0.15 },
     cadence: { walk: 0.72, run: 1.15, tiptoe: 0.6 },
   },
+  // the Wolves (stand-ins on Bear's rig, lanky): long light legs, quick sneaky cadence, a slight hunch (knees soft)
+  wolf_a: wolfStyle(2.05),
+  wolf_b: wolfStyle(1.93),
 };
+
+/** Wolf style at a variant height; leg lengths mirror src/engine/characters/wolf.ts (base 2.0 m, scaled uniformly). */
+function wolfStyle(height: number): ActorStyle {
+  const k = height / 2.0;
+  const r = (n: number) => Math.round(n * k * 1000) / 1000;
+  return {
+    height, hipHeight: r(0.98), timeScale: 1.05, bounce: 0.7, stance: 0.04, armOut: 0.2, hipsDrop: 0.02, lieHeight: 0.2,
+    shoulderHeight: r(1.39), breathRate: 0.3, breathDepth: 1.0,
+    leg: { x: r(0.1), y: r(-0.05), thigh: r(0.44), shin: r(0.41), ankle: r(0.06), toe: r(0.13) },
+    cadence: { walk: 0.95, run: 1.5, tiptoe: 0.8 },
+  };
+}
+
+/** Motion family of an actor: Masha (small, bouncy), Bear (big, weighty) or a Wolf (lanky, quick, sneaky). */
+export type Persona = "masha" | "bear" | "wolf";
+export function persona(actor: ActorId): Persona {
+  return actor === "masha" ? "masha" : actor === "bear" ? "bear" : "wolf";
+}
+/** Pick a per-persona value (so the Wolves never fall into Bear's heavy branch by accident). */
+export function byPersona<T>(actor: ActorId, masha: T, bear: T, wolf: T): T {
+  const p = persona(actor);
+  return p === "masha" ? masha : p === "bear" ? bear : wolf;
+}
 
 // ---------- leg forward kinematics (actor-local frame: x = left, y = up, z = forward) ----------
 
@@ -280,8 +306,30 @@ export function steppedNoise(t: number, period: number, seed: number): number {
 /** Standing base: the Mixamo idle clip, with Masha's fidget loop or Bear's slow, patient sway layered on. */
 export function idleBase(ctx: VerbCtx, amount = 1): PoseLayer {
   const { style, t, actor } = ctx;
-  let base = sampleClip("xbot_idle", t * (actor === "masha" ? 1.25 : 0.7), style, true);
-  if (actor === "masha") {
+  let base = sampleClip("xbot_idle", t * byPersona(actor, 1.25, 0.7, 1.0), style, true);
+  const seed = actor === "wolf_b" ? 9 : 0;
+  if (persona(actor) === "wolf") {
+    // sneaky and twitchy: a soft hunch, quick glances over the shoulder, restless weight shifts, a foot tap now and then
+    const a = amount;
+    const look = steppedNoise(t, 1.1, 7 + seed) * 0.6 * a;
+    const tilt = steppedNoise(t + 0.4, 1.7, 8 + seed) * 0.14 * a;
+    const shift = (0.7 * noise1(t * 0.9, 11 + seed) + 0.3 * Math.sin(t * 1.9)) * a;
+    const tapPh = (t * 0.29 + seed * 0.13) % 1;
+    const tap = tapPh > 0.85 ? Math.abs(Math.sin(((tapPh - 0.85) / 0.15) * Math.PI * 3)) * a : 0;
+    base = addLayer(base, {
+      Hips: rz(0.04 * shift),
+      Spine: rx(0.05),
+      Spine1: qmul(rx(0.08), rz(-0.04 * shift)),
+      Spine2: qmul(rx(0.04), ry(look * 0.12)),
+      Neck: qmul(rx(-0.08), ry(look * 0.35)),
+      Head: qmul(ry(look * 0.5), rz(tilt)),
+      LeftLeg: rx(0.1 * Math.max(0, -shift)), RightLeg: rx(0.1 * Math.max(0, shift) + 0.25 * tap),
+      RightUpLeg: rx(-0.12 * tap),
+      RightFoot: rx(-0.3 * tap),
+    });
+    // hands held a little forward (scheming paws), fingers-to-chin readiness without a full gesture
+    base = preRotate(base, { LeftArm: rx(-0.18 - 0.05 * noise1(t * 0.7, 13 + seed)), RightArm: rx(-0.16 - 0.05 * noise1(t * 0.7, 14 + seed)) });
+  } else if (actor === "masha") {
     // never still: rocking heel-to-toe, weight shifts, looking around with little head snaps, arms swinging along
     const a = amount;
     const rockW = 0.5 + 0.5 * noise1(t * 0.23, 5); // phases of rocking vs. looking around
@@ -321,7 +369,22 @@ export function idleBase(ctx: VerbCtx, amount = 1): PoseLayer {
       LeftLeg: rx(0.08 * Math.max(0, -sway)), RightLeg: rx(0.08 * Math.max(0, sway)),
     });
   }
-  return base;
+  return relaxArms(base, actor);
+}
+
+/** Natural standing arms: elbows never dead straight, upper arms slightly away from the body (likeness review). */
+export const RELAXED_ELBOW: Record<Persona, number> = { masha: 0.22, bear: 0.3, wolf: 0.32 };
+export const RELAXED_ABDUCTION: Record<Persona, number> = { masha: 0.06, bear: 0.05, wolf: 0.07 };
+export function relaxArms(L: PoseLayer, actor: ActorId): PoseLayer {
+  const p = persona(actor);
+  const e = RELAXED_ELBOW[p];
+  const ab = RELAXED_ABDUCTION[p];
+  const bones: Pose = { ...L.bones };
+  bones.LeftForeArm = qmul(bones.LeftForeArm ?? IDENTITY, ry(-e));
+  bones.RightForeArm = qmul(bones.RightForeArm ?? IDENTITY, ry(e));
+  bones.LeftArm = qmul(rz(ab), bones.LeftArm ?? IDENTITY);
+  bones.RightArm = qmul(rz(-ab), bones.RightArm ?? IDENTITY);
+  return { ...L, bones };
 }
 
 /** Pre-multiply rotations (in the parent's frame): swings a limb without changing its own bend. */

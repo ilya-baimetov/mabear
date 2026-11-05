@@ -68,9 +68,38 @@ export const MASHA_VOCALS: Partial<Record<Emote, Syllable[]>> = {
   sigh: [s(0, 0.7, [360, 260], ["a", "u"], 0.5, 0.85)],
 };
 
+/** f0 contour with vibrato baked in: `base` (Hz) points interpolated over n samples, ±depth (fraction) at `rate` Hz
+ *  across a syllable of `dur` s, the vibrato fading in after `onset` (fraction of dur). Pure. */
+export function vibratoCurve(base: number[], dur: number, rate: number, depth: number, onset = 0.3, n = 48): number[] {
+  const out: number[] = [];
+  for (let i = 0; i < n; i++) {
+    const u = i / (n - 1);
+    const x = u * (base.length - 1);
+    const k = Math.min(base.length - 2, Math.floor(x));
+    const f = base[k] + (base[k + 1] - base[k]) * (x - k);
+    const w = Math.max(0, Math.min(1, (u - onset) / 0.15));
+    out.push(Math.round(f * (1 + depth * w * Math.sin(2 * Math.PI * rate * u * dur)) * 10) / 10);
+  }
+  return out;
+}
+
+/** The Wolves' own vocal emotes (lanky adult voice, a touch nasal). Pure data. */
+export const WOLF_VOCALS: Partial<Record<Emote, Syllable[]>> = {
+  // a classic cartoon howl: a rising "oo" glide into a long vibrato "ow", tailing off
+  howl: [s(0, 1.8, vibratoCurve([240, 330, 520, 540, 520, 380], 1.8, 6, 0.04, 0.35), ["u", "o"], 0.85, 0.12)],
+  // short high falling glides (a frightened little whine), three in a row
+  whimper: [s(0, 0.17, [640, 450], "i", 0.55, 0.3), s(0.24, 0.15, [610, 440], "i", 0.5, 0.3), s(0.46, 0.3, [660, 380], ["i", "u"], 0.5, 0.35)],
+  // rapid nasal pulses through the snout: "nhn-nhn-nhn"
+  snicker: [0, 0.1, 0.2, 0.3, 0.4, 0.5].map((t, k) => s(t, 0.055, [340 - k * 6, 300 - k * 6], "m", 0.7 - k * 0.07, 0.45)),
+};
+const WOLF_VOICE: Record<"wolf_a" | "wolf_b", VocalVoice> = { wolf_a: { pitch: 1, formant: 0.95 }, wolf_b: { pitch: 1.14, formant: 1.02 } };
+/** Bear's recipes the Wolves borrow for their other emotes, raised to a lankier, smaller voice. */
+const WOLF_FROM_BEAR = 1.7;
+
 /** Emotes Bear doesn't have → nearest Bear sound. */
 const BEAR_ALIAS: Partial<Record<Emote, Emote>> = {
   giggle: "chuckle", wheee: "hum", cheer: "laugh", cry: "sigh", uh_oh: "gasp", scream_fun: "roar_soft",
+  howl: "roar_soft", whimper: "sigh", snicker: "chuckle",
 };
 
 export interface VocalVoice {
@@ -91,6 +120,13 @@ export function vocalFor(actor: ActorId, emote: Emote): { syl: Syllable[]; voice
     if (m) return { syl: m, voice: MASHA_VOICE };
     const b = BEAR_VOCALS[emote];
     return b ? { syl: b, voice: { pitch: 3.4, formant: 1.3 } } : null;
+  }
+  if (actor === "wolf_a" || actor === "wolf_b") {
+    const v = WOLF_VOICE[actor];
+    const w = WOLF_VOCALS[emote];
+    if (w) return { syl: w, voice: v };
+    const b = BEAR_VOCALS[emote];
+    return b ? { syl: b, voice: { pitch: v.pitch * WOLF_FROM_BEAR, formant: v.formant } } : null;
   }
   const b = BEAR_VOCALS[emote] ?? BEAR_VOCALS[BEAR_ALIAS[emote] ?? "none"];
   return b ? { syl: b, voice: BEAR_VOICE } : null;

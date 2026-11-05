@@ -1,7 +1,7 @@
 // World state helpers (spec §6.4).
 import { MARKS } from "../shared/bible/set";
 import { PROPS } from "../shared/bible/props";
-import { PROP_IDS, type PropId, type WorldState } from "../shared/schema";
+import { ACTOR_IDS, PROP_IDS, WOLF_START, type ActorId, type PropId, type WorldState } from "../shared/schema";
 
 /** The set's initial state (paragraph 0 starts here). */
 export function initialWorldState(): WorldState {
@@ -12,6 +12,9 @@ export function initialWorldState(): WorldState {
     actors: {
       masha: { pos: [...MARKS.clearing.pos] as [number, number], facing: 0, mark: "clearing", holding: null, posture: "stand" },
       bear: { pos: [...MARKS.porch.pos] as [number, number], facing: 0, mark: "porch", holding: null, posture: "stand" },
+      // the Wolves loiter just west of their van, facing the yard
+      wolf_a: { ...WOLF_START.wolf_a, pos: [...WOLF_START.wolf_a.pos] as [number, number] },
+      wolf_b: { ...WOLF_START.wolf_b, pos: [...WOLF_START.wolf_b.pos] as [number, number] },
     },
     props,
   };
@@ -20,14 +23,24 @@ export function initialWorldState(): WorldState {
 /** Stable, order-independent digest of a world state (for the director cache key). */
 export function worldStateDigest(ws: WorldState): string {
   const r = (n: number) => Math.round(n * 10) / 10;
-  const a = (id: "masha" | "bear") => {
-    const s = ws.actors[id];
+  const a = (id: ActorId) => {
+    const s = ws.actors[id] ?? (WOLF_START as Partial<Record<ActorId, WorldState["actors"]["masha"]>>)[id];
+    if (!s) return `${id}:-`;
     return `${id}:${r(s.pos[0])},${r(s.pos[1])},${s.mark ?? "-"},${s.holding ?? "-"},${s.posture}`;
   };
   const props = Object.keys(ws.props).sort().map((k) => `${k}@${ws.props[k as PropId]?.at}`).join(";");
-  return `${ws.timeOfDay}|${a("masha")}|${a("bear")}|${props}`;
+  // masha/bear first (unchanged layout); wolves appended so pre-wolf digests stay comparable in shape
+  return `${ws.timeOfDay}|${ACTOR_IDS.map((id) => a(id)).join("|")}|${props}`;
 }
 
 export function cloneWorldState(ws: WorldState): WorldState {
-  return JSON.parse(JSON.stringify(ws)) as WorldState;
+  return withAllActors(JSON.parse(JSON.stringify(ws)) as WorldState);
+}
+
+/** Fill in actors missing from an older world state (saved before the Wolves joined) with their start state. */
+export function withAllActors(ws: WorldState): WorldState {
+  const actors = ws.actors as Partial<WorldState["actors"]>;
+  if (!actors.wolf_a) actors.wolf_a = JSON.parse(JSON.stringify(WOLF_START.wolf_a)) as WorldState["actors"]["wolf_a"];
+  if (!actors.wolf_b) actors.wolf_b = JSON.parse(JSON.stringify(WOLF_START.wolf_b)) as WorldState["actors"]["wolf_b"];
+  return ws;
 }

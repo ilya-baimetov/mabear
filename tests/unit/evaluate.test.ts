@@ -4,9 +4,9 @@ import { initialWorldState, cloneWorldState } from "../../src/compiler/worldStat
 import { MARKS } from "../../src/shared/bible/set";
 import type { ActorClip, Segment, Timeline, Vec2, WorldState } from "../../src/shared/schema";
 
-function seg(start: WorldState, end: WorldState, duration: number, clips: Segment["actorClips"], extra: Partial<Segment> = {}): Segment {
+function seg(start: WorldState, end: WorldState, duration: number, clips: Pick<Segment["actorClips"], "masha" | "bear"> & Partial<Segment["actorClips"]>, extra: Partial<Segment> = {}): Segment {
   return {
-    paragraphId: "p", version: 1, duration, startState: start, endState: end, actorClips: clips,
+    paragraphId: "p", version: 1, duration, startState: start, endState: end, actorClips: { wolf_a: [], wolf_b: [], ...clips },
     dialogue: [], emotes: [], foley: [], camera: [], sfx: [], music: [], ambience: [], ducking: [], lighting: [], fx: [],
     ...extra,
   };

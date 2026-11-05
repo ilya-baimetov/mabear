@@ -3,10 +3,11 @@
 // across paragraphs (CarryAudio), ducking under dialogue. Gains are SOURCE loudness (the engine attenuates by
 // distance); pans are estimates relative to the planned camera.
 import { surfaceAt } from "../shared/bible/set";
-import { GRAMMAR, SPEEDS, STRIDE, STRIDE_SCALE, WALK_TO_RUN_SPEED_FACTOR, type FoleyRule, type Gait } from "../shared/grammar";
+import { GRAMMAR, SPEEDS, STRIDE, STRIDE_SCALE, WALK_TO_RUN_SPEED_FACTOR, isWolf, type FoleyRule, type Gait } from "../shared/grammar";
+import { ACTOR_IDS } from "../shared/schema";
 import type {
   ActorClip, ActorId, Ambience, AmbienceCue, BeatScript, CameraCue, DialogueCue, DuckingCue, Emote, EmoteCue,
-  FoleyCue, MusicMood, MusicTrackCue, SfxCue, SfxId, TimeOfDay, Vec2,
+  FoleyCue, MusicMood, MusicTrackCue, SfxCue, SfxId, Surface, TimeOfDay, Vec2,
 } from "../shared/schema";
 import { panFor } from "./camera";
 import { pathLength, pointAlong } from "./path";
@@ -20,7 +21,19 @@ export const DUCK_DEPTH_DB = 8;
 export const EMOTE_DUR: Record<Emote, number> = {
   none: 0, giggle: 0.8, laugh: 1.4, gasp: 0.5, wheee: 1.0, hmph: 0.6, uh_oh: 0.8, yawn: 1.5, cry: 1.5, cheer: 0.9,
   scream_fun: 1.0, grunt: 0.6, sigh: 1.2, hum: 1.6, growl_soft: 0.9, chuckle: 0.9, snore: 1.8, huff: 0.5, roar_soft: 1.2, sneeze: 0.8,
+  howl: 1.9, whimper: 0.9, snicker: 0.8,
 };
+
+/** Ambience layers that make the ground wet: footsteps on grass/dirt splash (B12). */
+export const WET_AMBIENCE: readonly Ambience[] = ["rain", "thunderstorm"];
+export function isWet(layers: readonly Ambience[]): boolean {
+  return layers.some((l) => WET_AMBIENCE.includes(l));
+}
+/** Footstep surface: under rain, grass and dirt become splashy puddles ("water"); boards stay wood. */
+export function footSurface(x: number, z: number, wet: boolean): Surface {
+  const s = surfaceAt(x, z);
+  return wet && (s === "grass" || s === "dirt") ? "water" : s;
+}
 
 /** Fraction of the clip at which a verb's effort vocal fires. */
 const EFFORT_AT: Partial<Record<string, number>> = { jump: 0.15, fall_down: 0.3, throw: 0.4, stand_up: 0.2, carry: 0.4, spin: 0.2, swing: 0.25 };
@@ -94,13 +107,17 @@ export function gaitFor(actor: ActorId, verb: string, speed: number): Gait {
   return speed > SPEEDS[actor].walk_to * WALK_TO_RUN_SPEED_FACTOR ? "run" : "walk";
 }
 
-/** Footsteps / foley for one clip from its verb's FoleyRules. */
-export function foleyForClip(actor: ActorId, c: ActorClip, camera: CameraCue[]): FoleyCue[] {
+/** Footsteps / foley for one clip from its verb's FoleyRules. `wet` = rain/thunderstorm ambience is on (B12). */
+export function foleyForClip(actor: ActorId, c: ActorClip, camera: CameraCue[], wet = false): FoleyCue[] {
   if (c.params.ambient || c.params.posture === "carried" || c.params.posture === "offstage") return [];
   const out: FoleyCue[] = [];
   const heavy = actor === "bear";
+  // Wolves are light-footed: softer steps than Masha's
+  const light = isWolf(actor) ? 0.75 : 1;
   const push = (t: number, id: FoleyCue["id"], gain: number, pos: Vec2) => {
-    out.push({ start: r3(t), actor, id, surface: surfaceAt(pos[0], pos[1]), gain: Math.round(gain * 100) / 100, pan: panFor(camera, pos, t) });
+    const surface = id === "footstep" || id === "footstep_heavy" || id === "landing_thud" || id === "ground_thump" ? footSurface(pos[0], pos[1], wet) : surfaceAt(pos[0], pos[1]);
+    const gl = id === "footstep" ? gain * light : gain;
+    out.push({ start: r3(t), actor, id, surface, gain: Math.round(gl * 100) / 100, pan: panFor(camera, pos, t) });
   };
   for (const rule of GRAMMAR[c.verb].foley as FoleyRule[]) {
     const g = rule.gain ?? 1;
@@ -141,10 +158,12 @@ export function foleyForClip(actor: ActorId, c: ActorClip, camera: CameraCue[]):
 
 export function buildAudioCues(input: AudioCueInput): AudioCueOutput {
   const { camera, events } = input;
+  const layers = resolveAmbienceLayers(input);
 
-  // ---- foley ----
+  // ---- foley ---- (splashy footsteps while it rains)
+  const wet = isWet(layers);
   const foley: FoleyCue[] = [];
-  for (const actor of ["masha", "bear"] as ActorId[]) for (const c of input.actorClips[actor]) foley.push(...foleyForClip(actor, c, camera));
+  for (const actor of ACTOR_IDS) for (const c of input.actorClips[actor] ?? []) foley.push(...foleyForClip(actor, c, camera, wet));
   foley.sort((a, b) => a.start - b.start || a.actor.localeCompare(b.actor));
 
   // ---- emotes: beat emotes, effort vocals, ambient reactions, snoring ----
@@ -163,18 +182,23 @@ export function buildAudioCues(input: AudioCueInput): AudioCueOutput {
       if (def.effortVocal === "snore") for (let t = ev.start + 0.4; t < ev.start + ev.dur - 0.5; t += 3.5) addEmote(t, ev.actor, "snore");
       else if (def.effortVocal === "grunt" && ev.actor === "masha") { /* Masha doesn't grunt */ }
       else {
-        const effort: Emote = ev.actor === "masha" && def.effortVocal === "huff" ? (ev.verb === "jump" ? "wheee" : "hmph") : def.effortVocal;
+        const effort: Emote = ev.actor === "masha" && def.effortVocal === "huff" ? (ev.verb === "jump" ? "wheee" : "hmph")
+          : isWolf(ev.actor) ? wolfEffort(ev.verb, def.effortVocal) : def.effortVocal;
         addEmote(ev.start + (EFFORT_AT[ev.verb] ?? 0) * ev.dur, ev.actor, effort);
       }
     }
     // Bear huffs after a long run
     if (ev.actor === "bear" && (ev.verb === "run_to" || ev.verb === "chase") && ev.dur > 2 && !ev.emote) addEmote(ev.start + ev.dur - 0.2, "bear", "huff");
+    // a Wolf scampering away (scared run) yelps a whimper
+    if (isWolf(ev.actor) && ev.main && ev.verb === "run_to" && !ev.emote && !ev.hasLine && ev.dur > 1.2) addEmote(ev.start + 0.15, ev.actor, "whimper");
   }
-  for (const actor of ["masha", "bear"] as ActorId[]) {
-    for (const c of input.actorClips[actor]) {
+  for (const actor of ACTOR_IDS) {
+    for (const c of input.actorClips[actor] ?? []) {
       if (!c.params.ambient) continue;
       if (actor === "masha" && c.verb === "laugh") addEmote(c.start + 0.1, "masha", "giggle");
       if (actor === "bear" && c.verb === "sleep") for (let t = c.start + 0.6; t < c.start + c.dur - 1.0; t += 4) addEmote(t, "bear", "snore");
+      // the Wolves cower with a whimper when Bear is loud (only one Wolf whimpers per moment, to keep it light)
+      if (isWolf(actor) && c.verb === "scared" && (actor === "wolf_a" || !emotes.some((e) => e.actor === "wolf_a" && Math.abs(e.start - c.start - 0.1) < 0.3))) addEmote(c.start + 0.1, actor, "whimper");
     }
   }
   emotes.sort((a, b) => a.start - b.start || a.actor.localeCompare(b.actor));
@@ -208,20 +232,30 @@ export function buildAudioCues(input: AudioCueInput): AudioCueOutput {
 
   // ---- ambience ----
   const ambience: AmbienceCue[] = [];
-  let layers: Ambience[];
-  if (input.bs.ambience === null) {
-    const carried = input.carry.ambience;
-    const wasDefault = sameSet(carried, defaultAmbience(input.prevTimeOfDay));
-    if (input.isFirst && carried.length === 0) layers = defaultAmbience(input.timeOfDay);
-    else if (input.timeOfDay !== input.prevTimeOfDay && wasDefault) layers = defaultAmbience(input.timeOfDay);
-    else layers = carried;
-  } else layers = [...input.bs.ambience];
   if (input.isFirst || !sameSet(layers, input.carry.ambience)) ambience.push({ start: 0, layers, fade: input.isFirst ? 0.5 : 2.0 });
 
   // ---- ducking: one window per dialogue cue ----
   const ducking: DuckingCue[] = input.dialogue.map((d) => ({ start: d.start, dur: d.dur, depth: DUCK_DEPTH_DB }));
 
   return { foley, emotes, sfx, music, ambience, ducking, carry: { music: carryMusic, ambience: layers } };
+}
+
+/** The ambience layers active in this paragraph (explicit, carried over, or the time-of-day default). */
+export function resolveAmbienceLayers(input: Pick<AudioCueInput, "bs" | "carry" | "isFirst" | "timeOfDay" | "prevTimeOfDay">): Ambience[] {
+  if (input.bs.ambience !== null) return [...input.bs.ambience];
+  const carried = input.carry.ambience;
+  const wasDefault = sameSet(carried, defaultAmbience(input.prevTimeOfDay));
+  if (input.isFirst && carried.length === 0) return defaultAmbience(input.timeOfDay);
+  if (input.timeOfDay !== input.prevTimeOfDay && wasDefault) return defaultAmbience(input.timeOfDay);
+  return carried;
+}
+
+/** A Wolf's version of a verb's effort vocal (they whimper and snicker rather than grunt and gasp). */
+function wolfEffort(verb: string, e: Emote): Emote {
+  if (verb === "scared" || verb === "fall_down" || verb === "cry") return "whimper";
+  if (verb === "laugh" || verb === "sulk") return "snicker";
+  if (e === "wheee") return "howl";
+  return e;
 }
 
 function sameSet(a: Ambience[], b: Ambience[]): boolean {
