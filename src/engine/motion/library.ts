@@ -90,7 +90,8 @@ export function evaluatePose(verb: Verb, localT: number, params: ClipParams, ctx
   const impl = VERB_IMPLS[verb] ?? VERB_IMPLS.idle;
   const held = ctx.fromPosture;
   let L: PoseLayer;
-  if (POSTURE_VERBS.has(verb) || held === "stand" || held === "offstage") {
+  const seatedLean = (held === "sit" || held === "carried") && (verb === "peek" || verb === "hide");
+  if ((POSTURE_VERBS.has(verb) && !seatedLean) || held === "stand" || held === "offstage") {
     L = impl(localT, params, ctx);
   } else if (held === "sleep" && ctx.posture !== "sleep") {
     // startled awake (surprised / scared while asleep): get up like wake_up, keeping the verb's face
