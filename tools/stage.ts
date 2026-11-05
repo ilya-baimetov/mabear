@@ -112,4 +112,31 @@ function loop() {
   }
   return out;
 };
+// triangles per top-level group (×2 when the object also renders into the shadow map)
+(window as unknown as { __tris: () => Record<string, number> }).__tris = () => {
+  const out: Record<string, number> = {};
+  const groups = [...stage.scene.children.filter((o) => o !== stage.set.root), ...stage.set.root.children];
+  for (const g of groups) {
+    let n = 0;
+    g.traverseVisible((o) => {
+      const m = o as unknown as { isMesh?: boolean; geometry?: { index: { count: number } | null; attributes: { position: { count: number } } }; count?: number; isInstancedMesh?: boolean; castShadow: boolean };
+      if (!m.isMesh || !m.geometry) return;
+      const t = (m.geometry.index ? m.geometry.index.count : m.geometry.attributes.position.count) / 3;
+      n += t * (m.isInstancedMesh ? m.count ?? 1 : 1) * (m.castShadow ? 2 : 1);
+    });
+    if (n) out[g.name || g.type] = Math.round(n);
+  }
+  return out;
+};
+// ms/frame with gl.finish() (GPU-inclusive), n frames
+(window as unknown as { __bench: (n: number) => number }).__bench = (count: number) => {
+  const gl = stage.renderer.getContext();
+  const f = frame(t0);
+  stage.render(f);
+  gl.finish();
+  const a = performance.now();
+  for (let i = 0; i < count; i++) stage.render(f);
+  gl.finish();
+  return (performance.now() - a) / count;
+};
 loop();

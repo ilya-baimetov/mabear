@@ -200,6 +200,24 @@ describe("evaluate()", () => {
     expect(pre.actors.masha.pos[0]).toBeCloseTo(0, 5);
   });
 
+  it("exit and walking through the door fade out, and stay gone", () => {
+    const s0 = initialWorldState();
+    const s1 = cloneWorldState(s0);
+    s1.actors.masha.posture = "offstage";
+    s1.actors.masha.pos = [...MARKS.path_entry.pos] as Vec2;
+    s1.actors.bear.posture = "offstage";
+    s1.actors.bear.pos = [...MARKS.door.pos] as Vec2;
+    const masha = [clip(0, 4, "exit", { path: [[0, 0], [0, 16]], posture: "stand" }), clip(4, 2, "idle", { ambient: true, posture: "offstage" })];
+    const bear = [clip(0, 3, "walk_to", { path: [[-6, -2.6], [-6, -3.6]], target: "door", posture: "stand" }), clip(3, 3, "idle", { ambient: true, posture: "offstage" })];
+    const tl = timeline(seg(s0, s1, 6, { masha, bear }));
+    expect(evaluate(tl, 1).actors.masha.opacity).toBe(1);
+    expect(evaluate(tl, 3.99).actors.masha.opacity).toBeLessThan(0.05);
+    expect(evaluate(tl, 5).actors.masha.opacity).toBe(0);
+    expect(evaluate(tl, 2.99).actors.bear.opacity).toBeLessThan(0.05);
+    expect(evaluate(tl, 4).actors.bear.opacity).toBe(0);
+    expect(evaluate(tl, 9).actors.bear.opacity).toBe(0);
+  });
+
   it("enter fades in from offstage; Bear's carry puts Masha on his shoulders", () => {
     const s0 = initialWorldState();
     s0.actors.masha.posture = "offstage";

@@ -28,3 +28,8 @@ One line per decision: date — decision — why.
 - 2026-11-05 — Likeness references: only 3 images (2019 Russian stamps, Wikimedia Commons) obtainable — Wikimedia rate-limited (429), Fandom 403; not circumvented. Colours sampled from them (Masha's sleeves pale lilac #CFCDE8, not spec pink) — spec says replace defaults with sampled values.
 - 2026-11-05 — Character modules export `buildMasha()`/`buildBear()` (not `build()`); the asset manifest maps to them.
 - 2026-11-05 — Bear fur = soft geometric noise (shell fur, P1, deferred).
+- 2026-11-05 — No single walk/run lasts > 6 s; long trips speed up instead (§7.4 speeds produced 17 s tiptoes) — keeps shots within the 1.2–6 s rule and scenes snappy.
+- 2026-11-05 — Walking to the door takes a character inside only on their last beat (not a knock); `exit` always goes offstage; hidden props (pancakes, fish, lollipop) appear in hand when taken; wanting an item the other character holds is unrepairable → store re-directs.
+- 2026-11-05 — Dialogue cue `lang` follows the script of the words (Cyrillic → RU voice) — a Russian quote in the EN UI is spoken by a Russian voice.
+- 2026-11-05 — Remix time of day changes the end state, so later paragraphs inherit it (recompile only, no director call).
+- 2026-11-05 — Offline parser turns unquoted speech into a line ("Bear says thank you" → "Thank you" → bear_silent hit) — makes the D4 canon demo visible even offline.

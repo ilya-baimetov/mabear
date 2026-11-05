@@ -286,8 +286,9 @@ export function lathe(
 /** Merge geometries that share one material (drops uv/normal mismatch by normalising attributes). */
 export function mergeSame(geoms: THREE.BufferGeometry[]): THREE.BufferGeometry {
   const anyColor = geoms.some((g) => !!g.getAttribute("color"));
+  const allIndexed = geoms.every((g) => !!g.index); // keep indices: 3× fewer vertices to shade
   const prepared = geoms.map((g0) => {
-    let g = g0.index ? g0.toNonIndexed() : g0;
+    let g = g0.index && !allIndexed ? g0.toNonIndexed() : g0;
     if (g !== g0) g0.dispose();
     for (const name of Object.keys(g.attributes)) {
       if (name !== "position" && name !== "normal" && name !== "color") g.deleteAttribute(name);
@@ -297,7 +298,7 @@ export function mergeSame(geoms: THREE.BufferGeometry[]): THREE.BufferGeometry {
     return g;
   });
   const merged = mergeGeometries(prepared, false);
-  for (const g of prepared) g.dispose();
+  for (const g of prepared) if (g !== merged) g.dispose();
   if (!merged) throw new Error("mergeSame: incompatible geometries");
   return merged;
 }

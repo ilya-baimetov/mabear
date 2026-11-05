@@ -9,6 +9,7 @@ import {
   type FixtureEpisode,
   type Lang,
   type LogEntry,
+  type MusicMood,
   type Remix,
   type RuleHit,
   type Timeline,
@@ -344,7 +345,7 @@ class Store {
     // (a) instant offline preview
     let preview: BeatScript;
     try {
-      preview = parseParagraph(text, lang, start);
+      preview = parseParagraph(text, lang, start, { prevMusicMood: this.prevMusicFor(idx) });
     } catch {
       return;
     }
@@ -466,6 +467,17 @@ class Store {
   }
 
   // ---------- compile ----------
+  /** Resolved music mood at the end of the paragraph before `index` (offline parser "continue" hint). */
+  private prevMusicFor(index: number): MusicMood | null {
+    const prev = this.state.paragraphs
+      .slice(0, index)
+      .filter((p) => p.current >= 0)
+      .map((p) => p.id);
+    const lastId = prev[prev.length - 1];
+    const si = lastId ? this.state.segmentIds.indexOf(lastId) : -1;
+    return si >= 0 ? this.state.results[si].carry.music?.mood ?? null : null;
+  }
+
   startStateFor(index: number): WorldState {
     if (index <= 0) return initialWorldState();
     const ids = this.state.segmentIds;

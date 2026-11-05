@@ -112,7 +112,7 @@ export function buildMasha(): CharacterRig {
       0.035 * bump(d, chin, 0.28) -
       0.05 * bump(d, jaw, 0.6) +
       0.02 * bump(d, dir(0, 0.55, 0.85), 0.5));
-  const headGeom = blob(32, (d, out) => {
+  const headGeom = blob(14, (d, out) => {
     out.copy(d).multiplyScalar(headR(d)).add(hc);
   });
   const cSkin = col(C.skin);
@@ -125,7 +125,7 @@ export function buildMasha(): CharacterRig {
   // nose: a small soft button
   const noseDir = dir(0, -0.24, 1);
   const noseAt = noseDir.clone().multiplyScalar(headR(noseDir) * 0.975).add(hc);
-  const noseGeom = blob(8, (d, out) => {
+  const noseGeom = blob(3, (d, out) => {
     out.set(d.x * 0.0145, d.y * 0.0125, d.z * 0.0125).add(noseAt);
   });
   paintVertices(noseGeom, (_p, out) => out.copy(cSkin).lerp(cCheek, 0.05));
@@ -204,7 +204,7 @@ export function buildMasha(): CharacterRig {
     const ay0 = (H.openTop + H.openBottom) / 2;
     const Bv = (H.openTop - H.openBottom) / 2;
     const A = H.openHalfAz;
-    const shell = blob(34, (d, out) => {
+    const shell = blob(16, (d, out) => {
       let ax = Math.atan2(d.x, d.z);
       let ay = Math.asin(THREE.MathUtils.clamp(d.y, -1, 1));
       let k = Math.hypot(ax / A, (ay - ay0) / Bv);
@@ -247,12 +247,12 @@ export function buildMasha(): CharacterRig {
     });
     // knot under the chin + two short tails
     const knotAt = new THREE.Vector3(0, hc.y + Math.sin(H.openBottom) * H.radius * 1.02, hc.z + Math.cos(H.openBottom) * H.radius * 1.05);
-    const knot = blob(10, (d, out) => {
+    const knot = blob(4, (d, out) => {
       out.set(d.x * 0.03, d.y * 0.024, d.z * 0.022).add(knotAt);
     });
     const tails: THREE.BufferGeometry[] = [];
     for (const s of [1, -1]) {
-      const t = blob(10, (d, out) => {
+      const t = blob(4, (d, out) => {
         // teardrop: wide at the bottom, pinched at the knot
         const v = (d.y + 1) / 2; // 0 bottom .. 1 top
         const w = 0.022 * Math.sin(Math.PI * (0.15 + 0.85 * (1 - v))) * (0.5 + 0.5 * (1 - v)) + 0.004;
@@ -329,7 +329,7 @@ export function buildMasha(): CharacterRig {
         [0.05, 0.135],
         [0.0, 0.14],
       ],
-      { sq: 0.82, segments: 40 },
+      { sq: 0.82, segments: 24, samples: 16 },
     );
     paintVertices(g, (_p, out) => out.copy(cDress));
     attach(chest, g, fabric, "bodice");
@@ -355,8 +355,8 @@ export function buildMasha(): CharacterRig {
       ],
       {
         sq: 0.86,
-        segments: 64,
-        samples: 64,
+        segments: 36,
+        samples: 22,
         ripple: (phi, y) => 1 + 0.04 * smoothstep(-0.06, -0.28, y) * Math.sin(phi * 9),
       },
     );
@@ -374,19 +374,19 @@ export function buildMasha(): CharacterRig {
   for (const side of ["Left", "Right"] as const) {
     const s = side === "Left" ? 1 : -1;
     const ua = limb(new THREE.Vector3(-0.01 * s, 0, 0), new THREE.Vector3(0.11 * s, 0, 0), (t) => 0.04 + 0.012 * Math.sin(Math.PI * Math.min(1, t * 1.3)) - 0.006 * t, {
-      detail: 10,
+      detail: 4,
     });
     attach(B[`${side}Arm`], ua, sleeve, `${side}Sleeve`);
     const fa = limb(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0.088 * s, 0, 0), (t) => 0.033 - 0.004 * t + 0.006 * smoothstep(0.75, 1, t), {
-      detail: 10,
+      detail: 4,
     });
     attach(B[`${side}ForeArm`], fa, sleeve, `${side}ForeSleeve`);
     sleeveGeoms[side] = ua;
     // hand: soft mitten + thumb (forward, +z)
-    const palm = blob(10, (d, out) => {
+    const palm = blob(3, (d, out) => {
       out.set(0.028 * s + d.x * 0.03, d.y * 0.02, d.z * 0.026);
     });
-    const thumb = blob(6, (d, out) => {
+    const thumb = blob(2, (d, out) => {
       out.set(0.012 * s + d.x * 0.012, -0.002 + d.y * 0.01, 0.022 + d.z * 0.012);
     });
     const hg = mergeSame([palm, thumb]);
@@ -398,11 +398,11 @@ export function buildMasha(): CharacterRig {
   const cShoe = col(C.shoes);
   const cSole = col(C.soles);
   for (const side of ["Left", "Right"] as const) {
-    const th = limb(new THREE.Vector3(0, 0.02, 0), new THREE.Vector3(0, -0.15, 0), (t) => 0.045 - 0.006 * t, { detail: 8 });
+    const th = limb(new THREE.Vector3(0, 0.02, 0), new THREE.Vector3(0, -0.15, 0), (t) => 0.045 - 0.006 * t, { detail: 4 });
     attach(B[`${side}UpLeg`], th, stocking, `${side}Thigh`);
-    const sh = limb(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, -0.13, 0), (t) => 0.039 - 0.007 * t, { detail: 8 });
+    const sh = limb(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, -0.13, 0), (t) => 0.039 - 0.007 * t, { detail: 4 });
     attach(B[`${side}Leg`], sh, stocking, `${side}Shin`);
-    const sg = blob(12, (d, out) => {
+    const sg = blob(4, (d, out) => {
       const fz = (d.z + 1) / 2; // 0 heel .. 1 toe
       const w = 0.036 * (0.85 + 0.3 * Math.sin(Math.PI * Math.min(1, fz * 1.1)));
       const yy = d.y < -0.3 ? -0.3 - (d.y + 0.3) * 0.25 : d.y; // flat-ish sole

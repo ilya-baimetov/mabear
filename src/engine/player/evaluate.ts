@@ -9,7 +9,7 @@ import {
 import { LOCOMOTION_VERBS } from "../../shared/grammar";
 import { MARKS } from "../../shared/bible/set";
 import { initialWorldState } from "../../compiler/worldState";
-import { CROSSFADE_S, applyLookAt, blendLayers, clamp, clamp01, easeInOut, lerp, lookAtPose, qrot, qaxis, smooth, window01, type PoseLayer } from "../motion/blend";
+import { CROSSFADE_S, addLayer, applyLookAt, blendLayers, qmul, clamp, clamp01, easeInOut, lerp, lookAtPose, qrot, qaxis, smooth, window01, type PoseLayer } from "../motion/blend";
 import { SEAT_HEIGHT, STYLES, evaluatePose, type VerbCtx } from "../motion/library";
 import { hash1 } from "../motion/verbs/common";
 import { swingAngle } from "../motion/verbs/objects";
@@ -329,6 +329,16 @@ function visemeAt(seg: Segment, actor: ActorId, lt: number): { v: Viseme; w: num
 }
 
 /** Who is speaking (or vocalizing) around lt, with a smooth attention weight so heads turn, not snap. */
+/** Slow-ramped "is talking" weight for body gestures (visemes use a fast ramp). */
+function talkWeight(seg: Segment, actor: ActorId, lt: number): number {
+  let w = 0;
+  for (const d of seg.dialogue) {
+    if (d.actor !== actor) continue;
+    w = Math.max(w, Math.min(smooth((lt - d.start + 0.1) / 0.45), smooth((d.start + d.dur + 0.3 - lt) / 0.45)));
+  }
+  return w;
+}
+
 function speakerAt(seg: Segment, lt: number): { actor: ActorId; w: number } | null {
   let best: { actor: ActorId; w: number } | null = null;
   const consider = (actor: ActorId, start: number, dur: number) => {
@@ -466,6 +476,10 @@ function evalActor(actor: ActorId, inp: ActorCtxIn, bear: ActorFrame | null, car
     ev = { layer: blendLayers(prev.layer, ev.layer, k), breathe: ev.breathe };
   }
   let L: PoseLayer = ev.layer;
+  // talking: small head bobs and a hand gesture on top of calm verbs while a line is spoken
+  const talk = visemeAt(seg, actor, lt);
+  const tw = talkWeight(seg, actor, lt);
+  if (tw > 0 && CALM_VERBS.has(verb) && posture !== "sleep") L = addLayer(L, talkPose(actor, t, tw));
   // posture-based root placement
   let pos3: Vec3 = [pos[0], 0, pos[1]];
   let finalYaw = yaw + (L.yawOffset ?? 0);
@@ -504,7 +518,7 @@ function evalActor(actor: ActorId, inp: ActorCtxIn, bear: ActorFrame | null, car
   if (prevR && since < CROSSFADE_S) lookScale = lerp(lookFreedom(prevR.clip.verb, prevR.fromPosture, 1), lookScale, smooth(since / CROSSFADE_S));
   const face = L.face ?? {};
   // (speaker-based look-at is resolved by the caller, which knows both actors)
-  const vis = visemeAt(seg, actor, lt);
+  const vis = talk;
   const sleeping = posture === "sleep" && verb !== "wake_up" && verb !== "stand_up";
   const lid = sleeping ? 1 : Math.max(blink(actor, t), face.lidClose ?? 0);
   const faceOut: FaceParams = {
@@ -532,6 +546,22 @@ function evalActor(actor: ActorId, inp: ActorCtxIn, bear: ActorFrame | null, car
     secondary: { sway, jiggle, breathe: ev.breathe },
   };
   return { frame, carryLift: carry?.k ?? 0, mark, lookW, lookScale };
+}
+
+/** Verbs calm enough to carry a talking layer. */
+const CALM_VERBS = new Set<ActorClip["verb"]>(["idle", "look_at", "point_at", "wave", "sit", "hide", "peek", "sulk", "give", "take", "cook", "fish", "water_plants", "swing", "hug", "shrug"]);
+
+/** Talking layer: head bobs on syllables, Masha's free hand gestures (additive, weight w). */
+function talkPose(actor: ActorId, t: number, w: number): Record<string, [number, number, number, number]> {
+  const bob = Math.sin(t * 9.0) * 0.5 + Math.sin(t * 5.3) * 0.5;
+  const gest = Math.max(0, Math.sin(t * 2.1));
+  const k = actor === "masha" ? 1 : 0.6;
+  return {
+    Head: qmul(qaxis([1, 0, 0], 0.05 * bob * w * k), qaxis([0, 0, 1], 0.06 * Math.sin(t * 1.7) * w * k)),
+    Spine1: qaxis([0, 1, 0], 0.05 * Math.sin(t * 1.3) * w * k),
+    LeftForeArm: qaxis([0, 1, 0], -0.5 * gest * w * k),
+    LeftArm: qaxis([0, 0, 1], 0.15 * gest * w * k),
+  };
 }
 
 /** Where Masha sits when riding on Bear's shoulders (root position). */

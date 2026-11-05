@@ -104,7 +104,7 @@ export function buildBear(): CharacterRig {
   B.Hips.add(belly);
   const hipsW = restWorld(B.Hips);
   {
-    const g = blob(26, (d, out) => {
+    const g = blob(11, (d, out) => {
       const y = d.y < 0 ? d.y * 0.42 : d.y * 0.58;
       const t = (d.y + 1) / 2; // 0 bottom .. 1 top
       const w = 0.54 * (0.76 + 0.32 * Math.sin(Math.PI * Math.min(1, 0.25 + t * 0.95)));
@@ -121,7 +121,7 @@ export function buildBear(): CharacterRig {
   B.Spine2.add(chest);
   const spine2W = restWorld(B.Spine2);
   {
-    const g = blob(26, (d, out) => {
+    const g = blob(10, (d, out) => {
       const t = (d.y + 1) / 2;
       const w = 0.47 - 0.07 * t * t;
       out.set(d.x * w * 1.06, 0.08 + d.y * 0.43, d.z * w * 0.84 - 0.02);
@@ -146,10 +146,10 @@ export function buildBear(): CharacterRig {
       0.14 * (bump(d, dir(0.8, -0.32, 0.45), 0.36) + bump(d, dir(-0.8, -0.32, 0.45), 0.36)) +
       0.04 * (bump(d, dir(0.35, 0.3, 0.88), 0.25) + bump(d, dir(-0.35, 0.3, 0.88), 0.25)) -
       0.09 * bump(d, dir(0, 1, 0.1), 0.55));
-  const cranium = blob(28, (d, out) => {
+  const cranium = blob(13, (d, out) => {
     out.copy(d).multiplyScalar(craniumR(d)).add(hc);
   });
-  const snout = blob(22, (d, out) => {
+  const snout = blob(8, (d, out) => {
     const fz = (d.z + 1) / 2;
     out.set(d.x * sr[0] * (1 - 0.18 * fz), d.y * sr[1] * (1 - 0.1 * fz), d.z * sr[2]).add(sc);
   });
@@ -168,7 +168,7 @@ export function buildBear(): CharacterRig {
   geoms.push(headGeom);
 
   const noseAt = new THREE.Vector3(0, sc.y + sr[1] * 0.55, sc.z + sr[2] * 0.86);
-  const noseGeom = blob(14, (d, out) => {
+  const noseGeom = blob(5, (d, out) => {
     const top = d.y > 0 ? 1 : 0.85;
     out.set(d.x * 0.088, d.y * 0.058 * top, d.z * 0.064 - 0.012 * d.y * d.y).add(noseAt);
   });
@@ -184,7 +184,7 @@ export function buildBear(): CharacterRig {
     const ed = dir(0.6 * s, 0.76, -0.12);
     eg.position.copy(ed.clone().multiplyScalar(H.radius * 0.93).add(hc));
     eg.rotation.set(-0.1, 0.25 * s, -0.42 * s);
-    const g = blob(12, (d, out) => {
+    const g = blob(4, (d, out) => {
       const rr = d.x * d.x + d.y * d.y;
       const cup = d.z > 0 ? 0.03 * (1 - rr) : 0;
       out.set(d.x * 0.112, d.y * 0.106, d.z * 0.05 - cup);
@@ -260,17 +260,17 @@ export function buildBear(): CharacterRig {
   for (const side of ["Left", "Right"] as const) {
     const s = side === "Left" ? 1 : -1;
     const ua = limb(new THREE.Vector3(-0.06 * s, 0, 0), new THREE.Vector3(0.42 * s, 0, 0), (t) => 0.19 - 0.055 * t + 0.015 * Math.sin(Math.PI * t), {
-      detail: 14,
+      detail: 5,
       sq: 0.95,
     });
     fuzz(ua);
     paintVertices(ua, (_p, out) => out.copy(cFur));
     attach(B[`${side}Arm`], ua, fur, `${side}UpperArm`);
-    const fa = limb(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0.34 * s, 0, 0), (t) => 0.135 - 0.02 * t, { detail: 14, sq: 0.95 });
+    const fa = limb(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0.34 * s, 0, 0), (t) => 0.135 - 0.02 * t, { detail: 5, sq: 0.95 });
     fuzz(fa);
     paintVertices(fa, (_p, out) => out.copy(cFur));
     attach(B[`${side}ForeArm`], fa, fur, `${side}ForeArm`);
-    const paw = blob(12, (d, out) => {
+    const paw = blob(5, (d, out) => {
       out.set(0.09 * s + d.x * 0.13, d.y * 0.09, d.z * 0.115);
     });
     fuzz(paw, 0.5);
@@ -281,15 +281,15 @@ export function buildBear(): CharacterRig {
 
   // ---- legs: short, thick; big feet
   for (const side of ["Left", "Right"] as const) {
-    const th = limb(new THREE.Vector3(0, 0.06, 0), new THREE.Vector3(0, -0.32, 0), (t) => 0.235 - 0.045 * t, { detail: 14 });
+    const th = limb(new THREE.Vector3(0, 0.06, 0), new THREE.Vector3(0, -0.32, 0), (t) => 0.235 - 0.045 * t, { detail: 5 });
     fuzz(th);
     paintVertices(th, (_p, out) => out.copy(cFur));
     attach(B[`${side}UpLeg`], th, fur, `${side}Thigh`);
-    const sh = limb(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, -0.26, 0), (t) => 0.18 - 0.025 * t, { detail: 12 });
+    const sh = limb(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, -0.26, 0), (t) => 0.18 - 0.025 * t, { detail: 5 });
     fuzz(sh);
     paintVertices(sh, (_p, out) => out.copy(cFur));
     attach(B[`${side}Leg`], sh, fur, `${side}Shin`);
-    const ft = blob(14, (d, out) => {
+    const ft = blob(4, (d, out) => {
       const fz = (d.z + 1) / 2;
       const yy = d.y < -0.35 ? -0.35 - (d.y + 0.35) * 0.2 : d.y;
       out.set(d.x * 0.145 * (0.9 + 0.2 * fz), -0.035 + yy * 0.075 * (1 - 0.25 * fz), 0.07 + d.z * 0.2);

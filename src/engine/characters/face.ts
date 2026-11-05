@@ -227,7 +227,7 @@ export function buildFace(cfg: FaceConfig, mats: MaterialSet): FaceRig {
     g.updateMatrix();
 
     // sclera (baked into one merged mesh in face space)
-    const sg = new THREE.SphereGeometry(E.r, 32, 24);
+    const sg = new THREE.SphereGeometry(E.r, 22, 14);
     sg.applyMatrix4(g.matrix);
     scleraGeoms.push(sg);
 
@@ -237,7 +237,7 @@ export function buildFace(cfg: FaceConfig, mats: MaterialSet): FaceRig {
     g.add(rot);
     const ri = E.r * E.iris;
     const rp = ri * E.pupil;
-    const ig = new THREE.RingGeometry(0, ri, 40, 14);
+    const ig = new THREE.RingGeometry(0, ri, 32, 9);
     const ipos = ig.getAttribute("position") as THREE.BufferAttribute;
     for (let i = 0; i < ipos.count; i++) {
       const px = ipos.getX(i);
@@ -285,7 +285,7 @@ export function buildFace(cfg: FaceConfig, mats: MaterialSet): FaceRig {
     const lid = new THREE.Object3D();
     lid.name = "lid";
     g.add(lid);
-    const lg = new THREE.SphereGeometry(E.r * 1.07, 36, 14, 0, Math.PI * 2, 0, E.lidCap);
+    const lg = new THREE.SphereGeometry(E.r * 1.07, 30, 9, 0, Math.PI * 2, 0, E.lidCap);
     lg.deleteAttribute("uv");
     const capCos = Math.cos(E.lidCap);
     paintVertices(lg, (p, out) => {
@@ -296,7 +296,7 @@ export function buildFace(cfg: FaceConfig, mats: MaterialSet): FaceRig {
     let lidGeom: THREE.BufferGeometry = lg;
     if (E.lashFlick) {
       // small outer-corner lash flick (attached to the lid so it closes with it)
-      const fl = blob(3, (d, out) => {
+      const fl = blob(2, (d, out) => {
         out.set(d.x * E.r * 0.2, d.y * E.r * 0.05, d.z * E.r * 0.05);
       });
       fl.rotateZ(side === 1 ? 0.5 : -0.5);
@@ -338,7 +338,7 @@ export function buildFace(cfg: FaceConfig, mats: MaterialSet): FaceRig {
     const g = new THREE.Group();
     g.name = side === 1 ? "browL" : "browR";
     g.position.set(bx, by, 0);
-    const bg = blob(4, (d, out) => {
+    const bg = blob(3, (d, out) => {
       const t = d.x; // -1..1 along the brow
       const taper = 1 - 0.55 * t * t;
       const lx = (t * B.length) / 2;
