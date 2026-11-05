@@ -714,8 +714,10 @@ reaction beat for the other actor). It powers the instant preview, the no-key fa
   `GET /accounts/{account_id}/builds/builds/{build_uuid}/logs` for its logs. To rebuild without a new commit:
   `POST /accounts/{account_id}/builds/triggers/3d4e8714-763e-4964-a55b-bc20a7b2efe0/builds` with
   `{ "branch": "claude/keen-pascal-xwbndk" }`. A failed build is a red CI: fix it and push.
-- **Worker secrets are already set**: `DEMO_PASSWORD` and `SESSION_SECRET` (their values are also in the git-ignored
-  `.secrets.env`; load with `set -a; . ./.secrets.env; set +a`; never print, commit or copy them).
+- **Worker secrets are already set**: `DEMO_PASSWORD` and `SESSION_SECRET`. The run needs only `DEMO_PASSWORD` (to log
+  in for the smoke test and the deployed eval), read from the environment variable `DEMO_PASSWORD` (or from a
+  git-ignored `.secrets.env`, if one exists). Never print, commit or copy it. If it is absent, run the unauthenticated
+  part of the smoke test and record "authenticated smoke test not run: DEMO_PASSWORD absent" in `STATUS.md`.
   **`ANTHROPIC_API_KEY` is added by the owner directly in the Cloudflare dashboard.** The run never sets, overwrites,
   reads or deletes it. If it is missing, the deployed director answers `source: "offline"`; record that in `STATUS.md`.
 - The Worker is served at https://mabear.ilya-baimetov.workers.dev (a 503 placeholder until the first real deploy).

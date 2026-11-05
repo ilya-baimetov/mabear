@@ -1,19 +1,19 @@
 # Running the build as a `/goal`
 
-## Before you start (done)
+## Before you start
 
-- Deploys go through Cloudflare Workers Builds: every push to `claude/keen-pascal-xwbndk` builds and deploys once
-  `.deploy-ready` is committed (spec §12). No Cloudflare token is needed in this environment.
-- The Worker `mabear` exists (placeholder) at https://mabear.ilya-baimetov.workers.dev, with `DEMO_PASSWORD` and
-  `SESSION_SECRET` already set as Worker secrets. Their values are in `.secrets.env` (repo root, git-ignored, mode 600).
-- The owner adds `ANTHROPIC_API_KEY` directly as a Worker secret in the Cloudflare dashboard. It never enters this
-  environment or the chat.
-- Run the goal **in this same session** (the secrets file lives in this container), in **auto** permission mode.
+- Deploys go through Cloudflare Workers Builds: every push to **`claude/keen-pascal-xwbndk`** builds and deploys once
+  `.deploy-ready` is committed (spec §12). Cloudflare can't watch wildcard branches, so the run works on that branch.
+- The Worker `mabear` exists (placeholder) at https://mabear.ilya-baimetov.workers.dev, with `ANTHROPIC_API_KEY`,
+  `DEMO_PASSWORD` and `SESSION_SECRET` already set as Worker secrets.
+- **One manual step:** in the cloud environment's settings, add the environment variable `DEMO_PASSWORD` (the demo
+  password) so the new session can log in for the smoke test.
+- Start a **new** cloud session on `ilya-baimetov/mabear` in **auto** permission mode and paste the goal below.
 
-## The goal (paste as-is)
+## The goal (paste as-is into a new session)
 
 ```
-/goal Build the MaBear prototype exactly as specified in docs/SPEC.md and satisfy every item of its §14 Definition of Done. First read docs/SPEC.md fully (it is the source of truth) and load secrets with `set -a; . ./.secrets.env; set +a` whenever a command needs them; never print them. Work autonomously: never ask the user questions; when the spec is silent, choose the simplest option that keeps §14 achievable and log it in docs/NOTES.md. Follow the §15 milestone order and time boxes, P0 before P1 before P2; after the M1 contracts are frozen, run M2/M3/M4 and the audio engine (§15 Subagent E) as parallel subagents launched in one message. Commit and push to this session's designated branch after every milestone and update docs/STATUS.md each time. The goal is met only when the transcript shows, from the final state of the code: (1) the output of `npm run typecheck`, `npm test` and `npm run e2e`, each exiting 0; (2) `npm run build` succeeding and `grep -r "sk-ant" dist/` printing nothing; (3) every docs/screenshots/ file listed in §13 opened with the Read tool and reviewed, with Masha and Bear judged recognizable against §7.3 and docs/LIKENESS.md showing at least three scored likeness passes; (4) either passing `npm run eval:director` output, or docs/STATUS.md stating "director eval not run: key absent"; (5) the latest Workers Build for the pushed head reported as success via the Cloudflare MCP connector, plus the §12 curl smoke-test output against https://mabear.ilya-baimetov.workers.dev; (6) docs/DEMO_SCRIPT.md written, `git status` clean, and the pushed branch head equal to local HEAD. The goal is impossible only if npm package installs stay blocked for more than 30 minutes. Hard stop: once `date -u` shows 07:40 UTC or later, or after 150 turns, commit, push, print the final docs/STATUS.md and treat the goal as met with the open items listed.
+/goal Build the MaBear prototype exactly as specified in docs/SPEC.md and satisfy every item of its §14 Definition of Done. Step 0: run `git fetch origin claude/keen-pascal-xwbndk && git checkout -B claude/keen-pascal-xwbndk FETCH_HEAD`; work on and push to that branch only (I explicitly permit this instead of your designated branch: Cloudflare deploys from it). Then read docs/SPEC.md fully; it is the source of truth. Read DEMO_PASSWORD from the environment; never print it. Work autonomously: never ask me questions; when the spec is silent, choose the simplest option that keeps §14 achievable and log it in docs/NOTES.md. Follow the §15 milestone order and time boxes, P0 before P1 before P2; after the M1 contracts are frozen, run M2/M3/M4 and the audio engine (§15 Subagent E) as parallel subagents launched in one message. Commit and push after every milestone and update docs/STATUS.md each time. The goal is met only when the transcript shows, from the final state of the code: (1) the output of `npm run typecheck`, `npm test` and `npm run e2e`, each exiting 0; (2) `npm run build` succeeding and `grep -r "sk-ant" dist/` printing nothing; (3) every docs/screenshots/ file listed in §13 opened with the Read tool and reviewed, with Masha and Bear judged recognizable against §7.3 and docs/LIKENESS.md showing at least three scored likeness passes; (4) passing `npm run eval:director` output against the deployed Worker, or docs/STATUS.md explaining why it could not run; (5) the latest Workers Build for the pushed head reported as success via the Cloudflare MCP connector, plus the §12 curl smoke-test output against https://mabear.ilya-baimetov.workers.dev; (6) docs/DEMO_SCRIPT.md written, `git status` clean, and origin/claude/keen-pascal-xwbndk equal to local HEAD. The goal is impossible only if npm package installs stay blocked for more than 30 minutes. Hard stop: once `date -u` shows 07:40 UTC or later, or after 150 turns, commit, push, print the final docs/STATUS.md and treat the goal as met with the open items listed.
 ```
 
 ## Watching it
