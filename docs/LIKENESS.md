@@ -408,9 +408,94 @@ Triangles: Masha 26.2k, Bear 26.2k; meshes 26 / 27 (≤ 44 draw calls each inclu
   stacked-primitive joints in front, ¾ or close-up views. Motion feel is re-scored after 06:15 once the motion
   owner's arm fixes land.
 
+### Pass 12 — 2026-11-05 05:48 UTC (in-scene check + face rig sheet)
+
+New bench modes (`tools/likeness.ts`, `scripts/likenessShots.ts`):
+- `--stage <fixture>:<t>[:<focus>]` renders the **real engine stage** (set, look, props, fx, adaptive resolution
+  off) at time t of a compiled fixture, optionally with a ¾ close-up camera on one character. These are in-app
+  views without the Worker.
+- `--faces` renders every viseme and six emotions as close-ups.
+Files: `pass11-stage-*.png`, `pass12-stage-*.png`, and the face sheets `pass12-<char>-faces.png` (top row: visemes
+rest, open_small, open_wide, o, e, frown, grin; bottom row: surprised, sad, angry, sleepy, mischievous, scared).
+
+Findings and fixes:
+- In the scene (warm look rig, set) both characters hold up. Bear's plush fur and the annoyed face read at the
+  table; Masha's kerchief from a ¾-back angle still showed a large mass behind the skull → tightened the back of the
+  shell (−1.2 cm behind the crown) and lowered the cape's back dip.
+- The face sheet showed **highlight rings poking through half-closed lids** (flat highlight discs stood out past
+  the lid shell). Fix: highlight discs are wrapped onto the sphere at 1.03 r, so they sit above the iris cap and
+  below the lids.
+- Lids read as **bulging discs** in sleepy/sad/angry. Fix: lid shell 1.07 r → 1.045 r.
+- Brow acting was too timid (angry looked "tired", Bear's sad barely moved). Fix: brow tilt ×0.35 → ×0.5 of the
+  preset. Now sad (inner ends up), angry (inner ends down) and mischievous (one brow up) read on both
+  characters, including Bear's furry brows.
+- All 7 visemes read distinctly on Masha (rest smirk, open_small, open_wide, o, e, frown, grin) and on Bear's
+  muzzle.
+
+| | Silhouette | Proportions | Face | Colors | Materials | Motion feel |
+|---|---|---|---|---|---|---|
+| Masha | 4 | 4 | 4 | 4.5 | 4 | 3.5 |
+| Bear | 4 | 4 | 4 | 4 | 4 | 3.5 |
+
+### Pass 13 — 2026-11-05 05:50 UTC (final scored pass; motion feel after the motion owner's pass)
+
+Motion filmstrips on all three fixtures (`evaluate()` of the real compiled episodes, ¾ tracking camera):
+`pass13-motion-f0-*` (Pancake morning), `pass13-motion-f2-*` (Bear's nap), `pass13-motion-f4-*` (Fishing trip), plus
+dense strips `pass13-motion-f0-bear-37.png` (walk, 0.15 s) and `pass13-motion-f2-masha-5.2.png` (run, 0.1 s).
+No character code changed in this pass. Character code was frozen at 06:25 UTC.
+
+- Masha: the run is quick and bouncy with pumping arms; the skirt swings and tilts with the leading thigh; tiptoe,
+  peek, wave, point, clap, hug and spin all read at a glance; blinks and the smirk carry between gestures.
+- Bear: the walk is slow and heavy with a hip bob. The arms now clear the belly (abduction fix landed). Yawn-stretch,
+  facepalm, sigh, surprised (arms up), sleep and carrying Masha on his shoulders read as the series' gentle giant.
+- Bench caveat: the tracking camera sometimes sits behind the other character. That is a bench limitation, not
+  the rigs.
+
+| | Silhouette | Proportions | Face | Colors | Materials | Motion feel |
+|---|---|---|---|---|---|---|
+| Masha | 4 | 4 | 4 | 4.5 | 4 | 4 |
+| Bear | 4 | 4 | 4 | 4 | 4 | 4 |
+
+Budgets at freeze: Masha 26,231 triangles / 26 meshes, Bear 26,188 / 27 meshes (≤ 44 draw calls each incl. shadow
+casters). `tests/unit/characters.test.ts` 17/17 green.
+
 ## 5. Next pass checklist (append new passes below)
 
 1. `npx tsx scripts/likenessShots.ts --pass N` (vite on port 5180 is started automatically).
 2. Look at every PNG next to `refs/` (contact sheets help); score the rubric honestly; list concrete fixes.
 3. Apply fixes in `src/engine/characters/{masha,bear,face,rig}.ts` (look objects hold all colours and proportions).
 4. `npx vitest run tests/unit/characters.test.ts` stays green (heights, bones, identity rest, apply, mesh budget).
+
+## 6. Honest summary (final, 2026-11-05)
+
+**Where the stand-ins are:** after 13 scored passes every rubric score is ≥ 4 for both characters, judged against
+the three official stills we could obtain. Both are recognisable at a glance in silhouette alone:
+- Masha: bell-shaped magenta kerchief, A-line sarafan, short stockinged legs, chunky shoes, big green eyes, blond
+  fringe, rosy cheeks, her knowing smirk.
+- Bear: brown pear-shaped body with a tan belly patch, small head sunk into high shoulders, round ears with tan
+  inner ears, long tan muzzle with a big glossy nose, heavy furry brows, small dark eyes.
+
+Faces act: 12 emotions, 7 visemes, blinks and parallel gaze. Secondary motion is in place: skirt follows the thighs
+and sways, belly jiggles, ears wiggle, chest breathes. Budgets suit the headless e2e run and integrated GPUs.
+
+**What still falls short of the series (an Animaccord artist would notice):**
+- **Reference base is thin.** Only three images (2019 postage stamps), with no side, back or straight-front views.
+  The profile and back are informed guesses.
+- **Masha's eyes are larger than the show's.** We follow spec §7.3 (~⅓ of face width), but the series' eyes are
+  smaller relative to the face. Her face is a smooth sphere: no sculpted nose bridge, no lip volume, no cheek
+  dimples. The fringe is a single sculpted swoosh, not individual strands. The kerchief is a rigid shell on the head
+  bone: it does not drape or settle when she moves, and its folds are painted shading rather than real folds.
+- **Cloth is rigid.** The skirt is one rigid piece that tilts with the legs; in deep poses (sitting, big strides) it
+  reads stiff, and legs can clip the hem. Sleeves are low-poly capsules with visible faceting at the elbow.
+- **Bear's fur** is a procedural strand texture plus geometric breakup, not real fur (shell fur, spec P1, was
+  deferred for performance). The fur silhouette stays smooth, and the rim does not glow and break up the way the
+  show's groomed fur does. His hands are simple paws without fingers; feet have no pads.
+- **Joints:** limbs are rigid segments on bones (no skinning). The chest/shoulder/neck soft union hides the
+  shoulder and neck joints, but elbows, knees and the hip–belly overlap still show segment junctions when bent.
+- **Motion feel** depends on the open motion library retargeted onto these proportions. It reads well in
+  filmstrips, but has none of the show's hand-keyed timing, anticipation or exaggeration. That is expected for the
+  stand-in layer (spec §0).
+
+Everything above is a stand-in for Animaccord's production characters and is labelled as such in the
+Behind-the-scenes overlay (spec §2). Replacing a stand-in with the official rig needs only an asset-manifest change.
+
