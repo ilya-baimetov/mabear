@@ -6,3 +6,4 @@ refs/
 .dev.vars
 test-results/
 playwright-report/
+.secrets.env

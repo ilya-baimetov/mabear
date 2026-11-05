@@ -639,8 +639,10 @@ an `error` string. **The endpoint never returns a 5xx for a director failure.**
 
 For the 6 golden prompts in `tests/golden/prompts.json` (3 EN, 3 RU, including one canon-violating prompt), every
 response must parse, pass the post-validator with 0 errors, contain ≥ 3 beats, give Bear no `line`, and place every
-`line` in the requested language. Run this as `npm run eval:director` (uses the real API; skipped with a clear
-message if `ANTHROPIC_API_KEY` is absent). Run the eval on **both** `claude-opus-5-5` and `claude-haiku-5-5`, and log
+`line` in the requested language. Run this as `npm run eval:director`. It uses the real API directly when
+`ANTHROPIC_API_KEY` is set locally. Otherwise, run it against the **deployed** Worker
+(`EVAL_TARGET=https://mabear.ilya-baimetov.workers.dev npm run eval:director`, logging in with `DEMO_PASSWORD`); it
+passes only if every response has `source: "llm"`. Run the eval on **both** `claude-opus-5-5` and `claude-haiku-5-5`, and log
 a comparison table in `STATUS.md`: pass rate, P50 latency, mean cost per paragraph, and a one-line judgment of
 staging richness. The deployed default stays `claude-opus-5-5` unless the operator sets `DIRECTOR_MODEL`. The
 results feed the Economics panel.
@@ -696,11 +698,18 @@ reaction beat for the other actor). It powers the instant preview, the no-key fa
   `run_worker_first = true` (so the password gate covers the assets too).
 - Scripts: `npm run build` (vite build → `dist/`), `npm run dev` (vite + `wrangler dev` or a vite proxy to a local
   mock), `npm run deploy` (`wrangler deploy`).
-- Deploy requires env `CLOUDFLARE_API_TOKEN` (Workers Scripts: Edit) and `CLOUDFLARE_ACCOUNT_ID`. Set Worker secrets
-  non-interactively from env: `printf %s "$ANTHROPIC_API_KEY" | npx wrangler secret put ANTHROPIC_API_KEY` (same for
-  `DEMO_PASSWORD`; generate `SESSION_SECRET` with `openssl rand -hex 32` and never print it).
-- If the Cloudflare variables are missing, complete everything else, then record in `STATUS.md` exactly which
-  variables are missing and the single command that finishes the deploy. Never ask for secrets in chat.
+- **Secrets file:** `.secrets.env` in the repo root (git-ignored, mode 600) holds `CLOUDFLARE_ACCOUNT_ID`,
+  `CLOUDFLARE_API_TOKEN`, `DEMO_PASSWORD` and `SESSION_SECRET`. Load it with `set -a; . ./.secrets.env; set +a`
+  before any wrangler command. Never print, commit or copy its values anywhere else.
+- **The Worker already exists**: `mabear` on account `2f26060a68f7297a6c57ca6b1b9704ca`, served at
+  https://mabear.ilya-baimetov.workers.dev (currently a 503 placeholder). `wrangler deploy` replaces it.
+- **`ANTHROPIC_API_KEY` is set by the owner directly in the Cloudflare dashboard** as a Worker secret. The run never
+  sets, overwrites, reads or deletes it. Set only `DEMO_PASSWORD` and `SESSION_SECRET`:
+  `printf %s "$DEMO_PASSWORD" | npx wrangler secret put DEMO_PASSWORD` (same for `SESSION_SECRET`).
+- **If `CLOUDFLARE_API_TOKEN` is empty:** try to mint one through the Cloudflare MCP connector — an account-owned
+  token (`POST /accounts/{account_id}/tokens`) with only *Workers Scripts Write* on this account, expiring 7 days from
+  now — and write it into `.secrets.env`. If the connector lacks the scope, complete everything else and record the
+  blocker and the finishing command in `STATUS.md`. Never ask for secrets in chat.
 - After deploying: smoke test with curl — `/api/health` → 200; `/` without the cookie → login page; a login POST with
   the password from env → cookie; `/api/direct` with the cookie on two golden prompts → `source: "llm"` and a valid
   BeatScript. Print the URL (the workers.dev URL is fine).
@@ -730,8 +739,8 @@ reaction beat for the other actor). It powers the instant preview, the no-key fa
   7b. Sound: a paragraph with "It starts to rain. Spooky music." compiles to `ambience` containing `rain` and
      `music.mood = spooky`; during playback the app's audio debug hook (`window.__mabearAudio`) reports scheduled
      dialogue, foley and music cues (assert counts > 0; actual audio output isn't verified headless).
-  8. Save screenshots to `docs/screenshots/` (kid-mode.png, studio-mode.png, masha-closeup.png, bear-closeup.png,
-     ru-mode.png).
+  8. Save screenshots to `docs/screenshots/` (player.png, behind-the-scenes.png, masha-closeup.png,
+     bear-closeup.png, ru-mode.png).
 - **Visual self-review**: run the §7.3 likeness protocol (reference board, measured proportions and sampled colors,
   ≥ 3 side-by-side passes with silhouettes, rubric scores in `docs/LIKENESS.md`).
 - **Performance**: in a non-headless-equivalent check, log the average FPS of a 10 s playback in the e2e run (headless
@@ -746,9 +755,9 @@ reaction beat for the other actor). It powers the instant preview, the no-key fa
 4. Screenshots from §13.8 exist and were reviewed; Masha (magenta kerchief + sarafan, green eyes, blond fringe, chibi
    proportions) and Bear (big brown upright bear, tan muzzle, round ears) are recognizable; `docs/LIKENESS.md` shows
    ≥ 3 passes with rubric scores (target ≥ 4 everywhere); `refs/` is git-ignored and absent from `dist/`.
-5. The director eval (§8.4) passes with real API calls — **or**, if `ANTHROPIC_API_KEY` is absent in the build
-   environment, it is explicitly marked "not run: key absent" in `STATUS.md` (then it must pass on the deployed Worker
-   smoke test instead).
+5. The director eval (§8.4) passes with real API calls, locally or against the deployed Worker — **or**, if no
+   Anthropic key is available anywhere (the deployed Worker answers `source: "offline"`), `STATUS.md` says "director
+   eval not run: key absent".
 6. Deployed to Cloudflare behind the password gate, with the §12 smoke test output printed — **or**, if Cloudflare
    credentials are absent, `STATUS.md` names the missing variables and the one command that finishes the deploy.
 7. `docs/ASSETS.md` lists the source, author and license of every third-party asset, and the Behind-the-scenes
