@@ -84,6 +84,24 @@ function qrotv(q: Quat, v: Vec3): Vec3 {
   return [ix * w - iw * x - iy * z + iz * y, iy * w - iw * y - iz * x + ix * z, iz * w - iw * z - ix * y + iy * x];
 }
 
+/** Standing leg style: stance widened (hip abduction) and, for Bear, knees bent to carry the weight low. */
+export function styleLegs(bones: Pose, style: ActorStyle): Pose {
+  const out: Pose = { ...bones };
+  const pre = (b: string, q: Quat) => { out[b] = qmul(q, out[b] ?? IDENTITY); };
+  const post = (b: string, q: Quat) => { out[b] = qmul(out[b] ?? IDENTITY, q); };
+  pre("LeftUpLeg", rz(style.stance));
+  pre("RightUpLeg", rz(-style.stance));
+  if (style.hipsDrop > 0) {
+    const a = Math.acos(Math.max(-1, 1 - style.hipsDrop / style.hipHeight));
+    for (const side of ["Left", "Right"]) {
+      pre(`${side}UpLeg`, rx(-a));
+      post(`${side}Leg`, rx(2 * a));
+      post(`${side}Foot`, rx(-a));
+    }
+  }
+  return out;
+}
+
 /** Height of the lowest sole point (0 = touching the ground). */
 export function lowestFoot(bones: Pose, hipsOffset: Vec3, style: ActorStyle): number {
   const f = feetPoints(bones, hipsOffset, style);
@@ -212,6 +230,18 @@ export function arm(side: "Left" | "Right", down: number, fwd: number, elbow: nu
     [`${side}Arm`]: upper,
     [`${side}ForeArm`]: ry(-s * elbow),
   };
+}
+
+/**
+ * Both arms raised along a FORWARD arc (never out to the sides through a T-pose): s = 0 hanging at the sides,
+ * 1 overhead with the elbows bent. `reach` 0..1 = how far overhead (1 ≈ straight up).
+ */
+export function raiseArms(s: number, reach = 1, elbowEnd = 0.9): Pose {
+  const k = Math.max(0, Math.min(1, s));
+  const down = 1.25 + (-1.2 * reach - 1.25) * k; // elevation below horizontal: 1.25 (down) → about -1.2 (up)
+  const fwd = 0.1 + 1.25 * Math.sin(Math.PI * Math.min(1, k * 1.15)) * (1 - 0.6 * k) + 0.35 * k; // swing up in front
+  const elbow = 0.3 + (elbowEnd - 0.3) * k;
+  return pose(arm("Left", down, fwd, elbow), arm("Right", down, fwd, elbow));
 }
 
 /** Leg pose: hip flexion (thigh forward, rad), knee flexion, hip abduction (outward), ankle. */

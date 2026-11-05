@@ -56,6 +56,8 @@ export interface FaceConfig {
     arch: number;
     /** metres of travel for a full raise */
     range: number;
+    /** optional vertex-coloured material for the brows (e.g. Bear's fur); default: a plain matte material */
+    material?: THREE.Material;
   };
   mouth: {
     surface: FaceSurface;
@@ -194,7 +196,8 @@ export function buildFace(cfg: FaceConfig, mats: MaterialSet): FaceRig {
   const lidMat = mats.add(
     new THREE.MeshPhysicalMaterial({ color: 0xffffff, vertexColors: true, roughness: 0.62, sheen: 0.5, sheenColor: col(E.lidColor) }),
   );
-  const browMat = mats.add(new THREE.MeshStandardMaterial({ color: col(cfg.brows.color), roughness: 0.85 }));
+  const browMat = cfg.brows.material ?? mats.add(new THREE.MeshStandardMaterial({ color: col(cfg.brows.color), roughness: 0.85 }));
+  const browCol = col(cfg.brows.color);
   const mouthMat = mats.add(new THREE.MeshStandardMaterial({ color: 0xffffff, vertexColors: true, roughness: 0.55 }));
 
   // ---- eyes
@@ -348,6 +351,7 @@ export function buildFace(cfg: FaceConfig, mats: MaterialSet): FaceRig {
       const z0 = surfZ(E.surface, bx + lx, by + ly);
       out.set(lx, ly, z0 + d.z * B.thickness * 0.55 * taper + B.thickness * 0.3);
     });
+    if (cfg.brows.material) paintVertices(bg, (_p, out) => out.copy(browCol));
     const bm = new THREE.Mesh(bg, browMat);
     bm.name = "brow";
     g.add(bm);

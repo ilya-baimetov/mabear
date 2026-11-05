@@ -1,9 +1,9 @@
 // Body verbs and held postures (sit, lie, carried). Dance uses the RobotExpressive clip for the upper body;
 // the rest is procedural on top of the Mixamo idle.
 import type { Quat } from "../../api";
-import { addLayer, blendLayers, easeInOut, qmul, smooth, window01, type PoseLayer } from "../blend";
+import { addLayer, blendLayers, clamp01, easeInOut, qmul, smooth, window01, type PoseLayer } from "../blend";
 import {
-  UPPER, UPPER_NO_HEAD, arm, idleBase, layer, leg, mask, noise1, pose, poseClip, rx, ry, rz,
+  UPPER, UPPER_NO_HEAD, arm, idleBase, raiseArms, layer, leg, mask, noise1, pose, poseClip, rx, ry, rz,
   sampleClip, type VerbCtx, type VerbImpl,
 } from "./common";
 
@@ -81,7 +81,7 @@ function jumpPose(lt: number, ctx: VerbCtx): PoseLayer {
   const peak = ctx.actor === "masha" ? 0.28 : 0.2;
   const crouch = window01(u, 0, 0.36, 0.12) + window01(u, 0.7, 1, 0.12);
   const air = u > 0.32 && u < 0.76 ? Math.sin(((u - 0.32) / 0.44) * Math.PI) : 0;
-  const base = mask(idleBase(ctx, 0.3), { bones: pose(arm("Left", -0.9, 0.3, 0.3), arm("Right", -0.9, 0.3, 0.3)), hipsOffset: [0, 0, 0] }, ["LeftArm", "LeftForeArm", "RightArm", "RightForeArm"], air);
+  const base = mask(idleBase(ctx, 0.3), { bones: raiseArms(air, 0.8, 0.4), hipsOffset: [0, 0, 0] }, ["LeftArm", "LeftForeArm", "RightArm", "RightForeArm"], smooth(Math.min(1, u * 8)));
   const tuck = air * 0.6;
   const L0 = addLayer(base, pose(
     leg("Left", 0.6 * crouch + tuck, 1.2 * crouch + tuck * 1.2), leg("Right", 0.6 * crouch + tuck, 1.2 * crouch + tuck * 1.2),
@@ -171,17 +171,25 @@ export const wake_up: VerbImpl = (lt, _p, ctx) => {
   const stand = standPose(ctx);
   let L = u < 0.45 ? transition(lie, sitUp, u / 0.45) : transition(sitUp, stand, (u - 0.45) / 0.4);
   const stretch = window01(u, 0.55, 1, 0.15);
-  L = addLayer(L, { LeftArm: rz(2.4 * stretch), RightArm: rz(-2.4 * stretch), Spine1: rx(-0.2 * stretch), Head: rx(-0.25 * stretch) });
+  L = mask(L, { bones: raiseArms(stretch, 0.95, 1.0), hipsOffset: [0, 0, 0] }, ["LeftArm", "LeftForeArm", "RightArm", "RightForeArm"], smooth(stretch * 4));
+  L = addLayer(L, { Spine1: rx(-0.2 * stretch), Head: rx(-0.25 * stretch) });
   const gw = ctx.fromPosture === "sleep" ? (u < 0.45 ? 0 : easeInOut((u - 0.45) / 0.4)) : 1;
   return { ...L, groundW: gw, face: { lidClose: 1 - smooth(u / 0.4), emotion: "sleepy", viseme: "o", visemeWeight: stretch } };
 };
 
 export const yawn_stretch: VerbImpl = (lt, _p, ctx) => {
+  // arms swing up in front and overhead (elbows bent), the back arches, a big yawn, then everything lowers
   const u = lt / ctx.dur;
-  const s = window01(u, 0.1, 0.9, 0.25);
-  const base = mask(idleBase(ctx, 0.3), { bones: pose(arm("Left", -1.25, 0.25, 0.5), arm("Right", -1.25, 0.25, 0.5)), hipsOffset: [0, 0, 0] }, ["LeftArm", "LeftForeArm", "RightArm", "RightForeArm"], s);
-  const L = addLayer(base, { Spine: rx(-0.15 * s), Spine1: rx(-0.1 * s), Head: rx(-0.3 * s) }, 1, [0, 0.02 * s * ctx.style.hipHeight, 0]);
-  return { ...L, face: { viseme: "o", visemeWeight: s, lidClose: 0.6 * s } };
+  const s = easeInOut(clamp01((u - 0.05) / 0.35)) * (1 - easeInOut(clamp01((u - 0.72) / 0.26)));
+  const take = smooth(u / 0.06) * smooth((1 - u) / 0.04);
+  const base = mask(idleBase(ctx, 0.3), { bones: raiseArms(s, 1, 1.0), hipsOffset: [0, 0, 0] }, ["LeftArm", "LeftForeArm", "RightArm", "RightForeArm"], take);
+  const arch = s * (ctx.actor === "bear" ? 1.1 : 1);
+  const L = addLayer(base, {
+    Spine: rx(-0.14 * arch), Spine1: rx(-0.12 * arch), Spine2: rx(-0.08 * arch), Neck: rx(-0.1 * arch), Head: rx(-0.25 * arch),
+    LeftShoulder: rz(0.15 * s), RightShoulder: rz(-0.15 * s),
+    LeftFoot: rx(0.25 * s), RightFoot: rx(0.25 * s),
+  });
+  return { ...L, face: { viseme: "o", visemeWeight: s, lidClose: 0.7 * s } };
 };
 
 function crouch(ctx: VerbCtx, depth: number): PoseLayer {

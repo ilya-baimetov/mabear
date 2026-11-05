@@ -55,7 +55,7 @@ async function main(): Promise<void> {
     const page = await browser.newPage({ viewport: { width: 800, height: 800 } });
     page.on("pageerror", (e) => console.error("pageerror:", e.message));
     page.on("console", (m) => {
-      if (motions.length) console.log("page:", m.text());
+      if (motions.length || m.type() === "error" || m.type() === "warning") console.log("page:", m.type(), m.text().slice(0, 300));
     });
     for (const spec of motions) {
       const [f, c, t0, dt, n] = spec.split(":");

@@ -32,3 +32,13 @@
 
 - **Next:** keep the deployed default on `claude-opus-5-5` (spec); director tuning round 2 on beat richness; final e2e + screenshot review.
 - **Risks:** Opus latency ~7 s per paragraph (the offline preview covers the wait).
+
+### Director tuning round 2 (05:31 UTC, deployed build `1c83ff72` for 6639baf) — prompt frozen after this round
+Changes: every noticeable beat gets a `with_previous` reaction from the other character; physical reactions to weather/sound requests (+ natural sfx); no empty beats (look/walk to the mark you stand on, idle filler); beat-count targets (1 sentence 4–7, 2–3 sentences 6–10); `cast_only` only for non-existent characters/places; summaries never mention rules.
+
+| Model | Pass rate | P50 latency | Mean cost / paragraph | Beats per prompt (en_nap, en_rain, en_canon, ru_carrot, ru_swing, ru_fishing) | Mean beats (round 1 → 2) | Staging richness |
+|---|---|---|---|---|---|---|
+| claude-opus-5-5 | 6/6 (100%) | 6 702 ms | $0.0311 (incl. one $0.089 cache write; ~$0.02 warm) | 9, 8, 7, 7, 6, 10 | 7.7 → 7.8 | Rain prompt now 8 beats with real rain business; canon prompt lost its spurious `cast_only` hit (2 hits: no_weapons, bear_silent) |
+| claude-haiku-5-5 | 6/6 (100%) | 4 752 ms | $0.00096 | 8, 6, 6, 8, 5, 8 | 6.3 → 6.8 | Fuller than round 1, still plainer than Opus; ~32× cheaper |
+
+Judgment: Opus stays the deployed default (richer in-character staging); Haiku is a credible cost lever for the Economics story (~$0.001/¶ today on a frontier-lab small model).

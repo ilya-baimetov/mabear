@@ -3,10 +3,10 @@
 // arm swing; Bear's heavy footfalls and arms carried clear of his belly. Root motion comes from the compiled path.
 import { SPEEDS } from "../../../shared/grammar";
 import type { ActorId } from "../../../shared/schema";
-import { addLayer, clamp, lerp, qpow, qslerp, smooth, type Pose, type PoseLayer } from "../blend";
+import { addLayer, clamp, lerp, qextrap, qpow, qslerp, smooth, type Pose, type PoseLayer } from "../blend";
 import { CLIPS } from "../clips.generated";
 import {
-  LOWER, STYLES, UPPER, arm, feetPoints, idleBase, mask, poseClip, pose, rx, ry, rz, sampleClip,
+  LOWER, STYLES, UPPER, arm, feetPoints, styleLegs, idleBase, mask, poseClip, pose, rx, ry, rz, sampleClip,
   type ActorStyle, type VerbCtx, type VerbImpl,
 } from "./common";
 
@@ -29,13 +29,17 @@ const strideMemo = new Map<string, number>();
 const contactMemo = new Map<string, number[]>();
 
 /** Per-frame foot samples of a clip cycle on this rig: sole height and fore-aft position of each foot. */
-function footTrack(actor: ActorId, clip: string, s: number): { h: [number, number]; z: [number, number] }[] {
+function footTrack(actor: ActorId, clip: string, s: number, kind?: Gait): { h: [number, number]; z: [number, number] }[] {
   const style = STYLES[actor];
   const c = CLIPS[clip];
+  const contacts = kind ? contactPhases(actor, clip) : [];
   const out: { h: [number, number]; z: [number, number] }[] = [];
   for (let i = 0; i < SAMPLES; i++) {
-    const L = sampleClip(clip, (i / SAMPLES) * c.dur, style, true);
-    const f = feetPoints(scaleLegs(L.bones, s), [0, 0, 0], style);
+    const ph = i / SAMPLES;
+    const L = sampleClip(clip, ph * c.dur, style, true);
+    let bones = scaleLegs(L.bones, s);
+    if (kind) bones = styleLegs(gaitLegs(actor, kind, bones, ph, contacts), style);
+    const f = feetPoints(bones, [0, 0, 0], style);
     out.push({
       h: [Math.min(f.left[0][1], f.left[1][1]), Math.min(f.right[0][1], f.right[1][1])],
       z: [(f.left[0][2] + f.left[1][2]) / 2, (f.right[0][2] + f.right[1][2]) / 2],
@@ -48,12 +52,12 @@ function footTrack(actor: ActorId, clip: string, s: number): { h: [number, numbe
  * Ground distance covered by one gait cycle of `clip` on this rig with leg scale s: the backward sweep speed of
  * a planted foot (relative to the hips) × one cycle — playing the cycle at distance/D keeps planted feet still.
  */
-export function cycleDistance(actor: ActorId, clip: string, s: number): number {
-  const key = `${actor}|${clip}|${s.toFixed(2)}`;
+export function cycleDistance(actor: ActorId, clip: string, s: number, kind: Gait = clip === "xbot_run" ? "run" : "walk"): number {
+  const key = `${actor}|${clip}|${s.toFixed(2)}|${kind}`;
   const hit = strideMemo.get(key);
   if (hit !== undefined) return hit;
   const style = STYLES[actor];
-  const tr = footTrack(actor, clip, s);
+  const tr = footTrack(actor, clip, s, kind);
   const eps = 0.012 * style.height;
   const v: number[] = [];
   for (let i = 0; i < SAMPLES; i++) {
@@ -128,9 +132,42 @@ function between(ph: number, contacts: number[]): number {
   return Math.sin(Math.min(1, best / gap) * Math.PI);
 }
 
+/** Leg-only personality on top of the clip: Masha's knees give on contact (squash) and toes point in flight;
+ *  Bear's knees absorb each heavy footfall; tiptoe walks on the toes with high knees. Used for the pose AND for
+ *  measuring the stride, so the cadence stays matched to the ground. */
+function gaitLegs(actor: ActorId, kind: Gait, bones: Pose, ph: number, contacts: number[]): Pose {
+  const out: Pose = { ...bones };
+  const post = (b: string, a: number) => { if (a) out[b] = qmul2(out[b] ?? [0, 0, 0, 1], rx(a)); };
+  const imp = impact(ph, contacts, kind === "run" ? 0.06 : 0.08);
+  if (actor === "masha") {
+    const sq = imp * (kind === "run" ? 1 : 0);
+    // runs: toes point in flight; walks: a light heel-to-toe roll through each step
+    const fl = kind === "run" ? flight(ph, contacts, 0.4) : 0.8 * between(ph, contacts);
+    for (const side of ["Left", "Right"]) {
+      post(`${side}Leg`, 0.22 * sq);
+      post(`${side}UpLeg`, -0.1 * sq);
+      post(`${side}Foot`, 0.25 * fl);
+    }
+  } else {
+    for (const side of ["Left", "Right"]) {
+      post(`${side}Leg`, 0.08 * imp);
+      post(`${side}UpLeg`, -0.035 * imp);
+      post(`${side}Foot`, 0.12 * between(ph, contacts));
+    }
+  }
+  if (kind === "tiptoe") {
+    for (const side of ["Left", "Right"]) {
+      post(`${side}UpLeg`, -0.15);
+      post(`${side}Leg`, 0.21);
+      post(`${side}Foot`, 0.27);
+    }
+  }
+  return out;
+}
+
 /** Leg scale that brings the cadence near the character's natural rhythm for this speed. */
 function legScale(style: ActorStyle, actor: ActorId, gait: Gait, speed: number): number {
-  const d1 = cycleDistance(actor, CLIP_OF[gait], 1);
+  const d1 = cycleDistance(actor, CLIP_OF[gait], 1, gait);
   const s = speed / (d1 * style.cadence[gait]);
   return Math.round(clamp(s, 0.7, gait === "run" ? 1.5 : 1.35) * 20) / 20;
 }
@@ -146,14 +183,14 @@ function gait(kind0: Gait, ctx: VerbCtx, localT: number): PoseLayer {
   const moving = ctx.dist > 0.01 || ctx.turned > 0.01;
   if (!moving || !c) return idleBase(ctx);
   const s = legScale(style, actor, kind, speed);
-  const D = cycleDistance(actor, clip, s);
+  const D = cycleDistance(actor, clip, s, kind);
   // phase follows the ground actually covered (eased starts/stops included) → planted feet stay put;
   // turning in place before moving shuffles ~2 steps per radian
   const cyc = ctx.dist / D + ctx.turned / (actor === "bear" ? 1.6 : 1.2);
   const ph = cyc - Math.floor(cyc);
   const base = sampleClip(clip, ph * c.dur, style, true);
-  let L: PoseLayer = { bones: scaleLegs(base.bones, s), hipsOffset: base.hipsOffset, ground: "lock" };
   const contacts = contactPhases(actor, clip);
+  let L: PoseLayer = { bones: gaitLegs(actor, kind, scaleLegs(base.bones, s), ph, contacts), hipsOffset: base.hipsOffset, ground: "lock" };
   const imp = impact(ph, contacts, kind === "run" ? 0.06 : 0.08);
   const air = between(ph, contacts);
 
@@ -163,17 +200,14 @@ function gait(kind0: Gait, ctx: VerbCtx, localT: number): PoseLayer {
     const amp = kind === "run" ? 1.45 : 1.6;
     const ref = pose(arm("Left", 1.2, 0.1, 0.4), arm("Right", 1.2, 0.1, 0.4));
     const arms: Pose = {};
-    for (const b of ["LeftArm", "RightArm", "LeftForeArm", "RightForeArm"]) arms[b] = qslerp(ref[b], lag[b] ?? ref[b], amp);
+    for (const b of ["LeftArm", "RightArm", "LeftForeArm", "RightForeArm"]) arms[b] = qextrap(ref[b], lag[b] ?? ref[b], amp);
     L = { ...L, bones: { ...L.bones, ...arms } };
     // squash on each contact (knees give, chest dips), stretch in between (tall, toes pointed); little hops
     const sq = imp * (kind === "run" ? 1 : 0.6);
     L = addLayer(L, {
-      LeftLeg: rx(0.22 * sq), RightLeg: rx(0.22 * sq),
-      LeftUpLeg: rx(-0.1 * sq), RightUpLeg: rx(-0.1 * sq),
       Spine: rx(0.1 * sq - 0.05 * air),
       Spine2: rx(-0.04 * air),
       Head: qmul2(rx(0.06 * sq), rz(0.05 * Math.sin(ph * Math.PI * 2))),
-      LeftFoot: rx(0.2 * air), RightFoot: rx(0.2 * air),
     });
     // little hops: flight between run contacts (a walk's bob comes from the legs alone)
     L.lift = kind === "run" ? 0.05 * flight(ph, contacts, 0.4) * style.bounce : 0;
@@ -191,8 +225,6 @@ function gait(kind0: Gait, ctx: VerbCtx, localT: number): PoseLayer {
       Spine1: qmul2(rz(-roll * 0.7), rx(0.05 * settle)),
       Spine2: rx(0.03 * settle),
       Head: qmul2(rz(-roll * 0.3), rx(0.07 * settle)),
-      LeftLeg: rx(0.1 + 0.18 * imp), RightLeg: rx(0.1 + 0.18 * imp),
-      LeftUpLeg: rx(-0.05 - 0.08 * imp), RightUpLeg: rx(-0.05 - 0.08 * imp),
     });
     if (kind === "run") L.lift = 0.025 * flight(ph, contacts, 0.45);
   }
@@ -200,12 +232,7 @@ function gait(kind0: Gait, ctx: VerbCtx, localT: number): PoseLayer {
     // sneaky: crouched upper body from the Mixamo sneak pose, high knees, up on the toes
     const sneak = poseClip("xbot_sneak", style);
     L = mask(L, sneak, UPPER, 0.85);
-    L = addLayer(L, {
-      LeftUpLeg: rx(-0.25), RightUpLeg: rx(-0.25),
-      LeftLeg: rx(0.35), RightLeg: rx(0.35),
-      LeftFoot: rx(0.45), RightFoot: rx(0.45),
-      ...pose(arm("Left", 0.6, 0.9, 1.2, -1.2), arm("Right", 0.6, 0.9, 1.2, -1.2)),
-    }, 0.6);
+    L = addLayer(L, pose(arm("Left", 0.6, 0.9, 1.2, -1.2), arm("Right", 0.6, 0.9, 1.2, -1.2)), 0.6);
     L.lift = 0;
   }
   // blend in from idle as the first step starts, and settle back into idle as the path eases to a stop

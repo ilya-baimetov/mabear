@@ -355,7 +355,7 @@ export function fabricMaterial(color: string, sheenColor: string, vertexColors =
  * fine anisotropic value flecks and a derivative-based bump from the same noise, in mesh-local space so it sticks
  * to the body. It fades out when a strand gets smaller than a pixel (no sparkle in wide shots). No UVs or textures needed.
  */
-export const FUR_STRANDS = { freq: 150, stretch: 0.3, value: 0.16, bump: 0.55 };
+export const FUR_STRANDS = { freq: 90, stretch: 0.35, value: 0.05, bump: 0.0012 };
 
 export function furMaterial(sheenColor: string): THREE.MeshPhysicalMaterial {
   const m = new THREE.MeshPhysicalMaterial({

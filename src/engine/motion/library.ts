@@ -4,7 +4,7 @@
 import type { Verb } from "../../shared/schema";
 import { LOCOMOTION_VERBS } from "../../shared/grammar";
 import { addLayer, breathingPose, clamp01, qmul, type Pose, type PoseLayer } from "./blend";
-import { UPPER, lowestFoot, mask, rx, rz, type ClipParams, type VerbCtx, type VerbImpl, type VerbKind } from "./verbs/common";
+import { UPPER, lowestFoot, mask, rx, styleLegs, rz, type ClipParams, type VerbCtx, type VerbImpl, type VerbKind } from "./verbs/common";
 import * as loco from "./verbs/locomotion";
 import * as body from "./verbs/body";
 import * as gesture from "./verbs/gesture";
@@ -59,26 +59,12 @@ const FREE_VERBS = new Set<Verb>(["sit", "sleep", "fall_down", "swing", "jump", 
 /** Bear's weight / Masha's lightness, applied after every verb while standing. */
 function applyStyle(L: PoseLayer, ctx: VerbCtx, standing: boolean): PoseLayer {
   const s = ctx.style;
-  const bones: Pose = { ...L.bones };
-  const pre = (b: string, q: [number, number, number, number]) => {
-    bones[b] = qmul(q, bones[b] ?? [0, 0, 0, 1]);
-  };
+  let bones: Pose = { ...L.bones };
   // arms clear the body (Bear's belly, Masha's dress) — in every verb
-  pre("LeftArm", rz(s.armOut));
-  pre("RightArm", rz(-s.armOut));
-  if (standing) {
-    pre("LeftUpLeg", rz(s.stance));
-    pre("RightUpLeg", rz(-s.stance));
-    if (s.hipsDrop > 0) {
-      // carry the weight low: knees bent (the ground lock then lowers the hips with the feet planted)
-      const a = Math.acos(Math.max(-1, 1 - s.hipsDrop / s.hipHeight));
-      for (const side of ["Left", "Right"]) {
-        pre(`${side}UpLeg`, rx(-a));
-        bones[`${side}Leg`] = qmul(bones[`${side}Leg`] ?? [0, 0, 0, 1], rx(2 * a));
-        bones[`${side}Foot`] = qmul(bones[`${side}Foot`] ?? [0, 0, 0, 1], rx(-a));
-      }
-    }
-  }
+  bones.LeftArm = qmul(rz(s.armOut), bones.LeftArm ?? [0, 0, 0, 1]);
+  bones.RightArm = qmul(rz(-s.armOut), bones.RightArm ?? [0, 0, 0, 1]);
+  // wide stance, weight carried low (the ground lock then lowers the hips with the feet planted)
+  if (standing) bones = styleLegs(bones, s);
   return { ...L, bones };
 }
 

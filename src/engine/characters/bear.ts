@@ -238,7 +238,7 @@ export function buildBear(): CharacterRig {
       lidCap: 1.3,
       lashFlick: false,
     },
-    brows: { color: C.brows, y: 0.058, dx: 0.006, length: 0.11, thickness: 0.019, arch: 0.016, range: 0.03 },
+    brows: { color: C.brows, y: 0.058, dx: 0.006, length: 0.11, thickness: 0.019, arch: 0.016, range: 0.03, material: fur },
     mouth: {
       surface: { center: H.snoutCenter as V3, radius: sr[2], zAt: snoutZ },
       y: sc.y - 0.035,

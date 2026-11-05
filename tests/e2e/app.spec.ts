@@ -137,6 +137,12 @@ test("5. canon: Bear says thank you → no Bear dialogue and an adjusted chip", 
   const segs = await segments(page);
   expect(segs.length).toBe(1);
   expect(segs[0].segment.dialogue.filter((d) => d.actor === "bear")).toHaveLength(0);
+  // D4, second half: a weapon is swapped for something safe before anything renders → adjusted as well
+  await typeParagraph(page, "Masha grabs a knife.");
+  await expect(page.getByTestId("paragraph-card").nth(1)).toHaveAttribute("data-status", "adjusted", { timeout: 30_000 });
+  const rules = await page.evaluate(() => (JSON.parse(localStorage.getItem("mabear.log") ?? "[]") as { ruleHits: { rule: string }[] }[]).flatMap((e) => e.ruleHits.map((h) => h.rule)));
+  expect(rules).toContain("bear_silent");
+  expect(rules).toContain("no_weapons");
 });
 
 test("6. EN → RU toggle switches UI strings and a RU example loads", async ({ page }) => {

@@ -123,6 +123,11 @@ export function qpow(q: Quat, s: number): Quat {
   return [q[0] * k, q[1] * k, q[2] * k, Math.cos(half * s)];
 }
 
+/** Interpolate a→b by t, extrapolating past b when t > 1 (amplifies a motion around a reference pose). */
+export function qextrap(a: Quat, b: Quat, t: number): Quat {
+  return qnorm(qmul(a, qpow(qmul(qinv(a), b), t)));
+}
+
 /** Scale a rotation's angle (t=0 → identity, t=1 → q). Used for additive weights. */
 export function qscale(q: Quat, t: number): Quat {
   return qslerp(IDENTITY, q, t);
