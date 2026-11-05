@@ -37,7 +37,7 @@ export function Economics({ durationS, planBytes, directorCost, costNote }: { du
   const cols = [
     { key: "video", name: t.bts.colVideo, per: diffusionCostPerParagraph(dur, videoPrice), bytesPer: dur * VIDEO_BYTES_PER_SECOND, note: `${dur.toFixed(1)} s × $${videoPrice}/s (${VIDEO_PRICE.label})`, render: t.bts.gpuCloud },
     { key: "proto", name: t.bts.colProto, per: directorCost, bytesPer: planBytes, note: costNote, render: t.bts.onDevice },
-    { key: "prod", name: t.bts.colProd, per: prodCost, bytesPer: planBytes, note: `${t.bts.assumption}: ${PRODUCTION_COST_PER_PARAGRAPH.label}`, render: t.bts.onDevice },
+    { key: "prod", name: t.bts.colProd, per: prodCost, bytesPer: planBytes, note: PRODUCTION_COST_PER_PARAGRAPH.label, render: t.bts.onDevice },
   ].map((c) => ({ ...c, scale: scaleRow(c.per, c.bytesPer, users, ppd) }));
   return (
     <section className="bts-sec" data-testid="economics">

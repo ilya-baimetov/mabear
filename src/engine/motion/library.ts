@@ -3,7 +3,7 @@
 // Pure: evaluatePose(verb, localT, params, ctx) depends only on its arguments.
 import type { Verb } from "../../shared/schema";
 import { LOCOMOTION_VERBS } from "../../shared/grammar";
-import { addLayer, breathingPose, clamp01, qmul, type Pose, type PoseLayer } from "./blend";
+import { addLayer, breathingPose, clamp01, qmul, qrot, type Pose, type PoseLayer } from "./blend";
 import { UPPER, lowestFoot, mask, rx, styleLegs, rz, type ClipParams, type VerbCtx, type VerbImpl, type VerbKind } from "./verbs/common";
 import * as loco from "./verbs/locomotion";
 import * as body from "./verbs/body";
@@ -60,9 +60,13 @@ const FREE_VERBS = new Set<Verb>(["sit", "sleep", "fall_down", "swing", "jump", 
 function applyStyle(L: PoseLayer, ctx: VerbCtx, standing: boolean): PoseLayer {
   const s = ctx.style;
   let bones: Pose = { ...L.bones };
-  // arms clear the body (Bear's belly, Masha's dress) — in every verb
-  bones.LeftArm = qmul(rz(s.armOut), bones.LeftArm ?? [0, 0, 0, 1]);
-  bones.RightArm = qmul(rz(-s.armOut), bones.RightArm ?? [0, 0, 0, 1]);
+  // arms clear the body (Bear's belly, Masha's dress) — in every verb, fully while hanging down, fading out as
+  // an arm is raised (so raised arms never get pushed up into a T-pose)
+  for (const [n, sgn] of [["LeftArm", 1], ["RightArm", -1]] as const) {
+    const q = bones[n] ?? [0, 0, 0, 1];
+    const hang = clamp01(-qrot(q, [sgn, 0, 0])[1]); // 1 = pointing straight down
+    bones[n] = qmul(rz(sgn * s.armOut * (0.25 + 0.75 * hang)), q);
+  }
   // wide stance, weight carried low (the ground lock then lowers the hips with the feet planted)
   if (standing) bones = styleLegs(bones, s);
   return { ...L, bones };

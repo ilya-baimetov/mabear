@@ -98,7 +98,7 @@ export const spin: VerbImpl = (lt, _p, ctx) => {
   const out = window01(u, 0, 1, 0.15);
   const base = idleBase(ctx, 0.2);
   const L = addLayer(base, pose(
-    { LeftArm: rz(0.9 * out), RightArm: rz(-0.9 * out), Head: ry(-0.3 * Math.sin(u * Math.PI)), Spine: rz(0.1 * Math.sin(u * Math.PI * 2)) },
+    { LeftArm: rz(0.6 * out), RightArm: rz(-0.6 * out), Head: ry(-0.3 * Math.sin(u * Math.PI)), Spine: rz(0.1 * Math.sin(u * Math.PI * 2)) },
   ));
   L.lift = Math.sin(u * Math.PI) * 0.04 * ctx.style.bounce;
   L.yawOffset = turn;

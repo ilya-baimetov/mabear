@@ -17,11 +17,11 @@ export const BEAR_LOOK = {
     furSheen: "#C08A5C",
     tan: "#D9A062",
     muzzle: "#E8B676",
-    earInner: "#9A6646",
+    earInner: "#C8955E",
     nose: "#1E1410",
     iris: "#3A261A",
     irisRim: "#140B07",
-    sclera: "#FFFDF8",
+    sclera: "#EFE2D2",
     brows: "#4A2A1A",
     lash: "#3A2416",
     mouthInterior: "#4A1418",
@@ -121,12 +121,41 @@ export function buildBear(): CharacterRig {
   B.Spine2.add(chest);
   const spine2W = restWorld(B.Spine2);
   {
-    const g = blob(10, (d, out) => {
-      const t = (d.y + 1) / 2;
-      const w = 0.5 - 0.07 * t * t;
-      out.set(d.x * w * 1.06, 0.08 + d.y * 0.43, d.z * w * 0.84 - 0.02);
-      // trapezius: shoulders slope up into the head (no visible neck)
-      out.y += 0.08 * bump(d, dir(0.55, 0.75, -0.15), 0.42) + 0.08 * bump(d, dir(-0.55, 0.75, -0.15), 0.42);
+    // One smooth surface for chest + shoulder caps + neck ruff: a soft union of ellipsoids, ray-cast from the chest
+    // centre along every icosphere direction. No creases where shoulders and neck meet the chest. The caps are
+    // spheres around the arm joints, so the arms rotate inside them without exposing a seam.
+    const sc0 = new THREE.Vector3(0, 0.1, -0.02);
+    const parts: Array<{ c: THREE.Vector3; r: THREE.Vector3 }> = [
+      { c: new THREE.Vector3(0, 0.06, -0.02), r: new THREE.Vector3(0.52, 0.46, 0.42) },
+      { c: new THREE.Vector3(0.32, 0.19, -0.01), r: new THREE.Vector3(0.2, 0.2, 0.19) },
+      { c: new THREE.Vector3(-0.32, 0.19, -0.01), r: new THREE.Vector3(0.2, 0.2, 0.19) },
+      { c: new THREE.Vector3(0, 0.45, -0.05), r: new THREE.Vector3(0.27, 0.17, 0.21) },
+    ];
+    const q = new THREE.Vector3();
+    const sdf = (p: THREE.Vector3): number => {
+      let res = Infinity;
+      for (const e of parts) {
+        q.copy(p).sub(e.c);
+        const k0 = Math.hypot(q.x / e.r.x, q.y / e.r.y, q.z / e.r.z);
+        const k1 = Math.hypot(q.x / (e.r.x * e.r.x), q.y / (e.r.y * e.r.y), q.z / (e.r.z * e.r.z));
+        const dd = k1 > 1e-9 ? (k0 * (k0 - 1)) / k1 : -Math.min(e.r.x, e.r.y, e.r.z);
+        // polynomial smooth min, k = 0.12 m
+        const k = 0.12;
+        const h = Math.max(k - Math.abs(res - dd), 0) / k;
+        res = res === Infinity ? dd : Math.min(res, dd) - h * h * k * 0.25;
+      }
+      return res;
+    };
+    const pt = new THREE.Vector3();
+    const g = blob(12, (d, out) => {
+      let lo = 0;
+      let hi = 1.2;
+      for (let i = 0; i < 26; i++) {
+        const mid = (lo + hi) / 2;
+        if (sdf(pt.copy(d).multiplyScalar(mid).add(sc0)) < 0) lo = mid;
+        else hi = mid;
+      }
+      out.copy(d).multiplyScalar((lo + hi) / 2).add(sc0);
       out.z += 0.03 * bump(d, dir(0, -0.3, 1), 0.6);
     });
     fuzz(g);
@@ -164,7 +193,8 @@ export function buildBear(): CharacterRig {
   fuzz(cranium, 0.6);
   paintVertices(snout, (_p, out) => out.copy(cMuzzle));
   const headGeom = mergeSame([cranium, snout]);
-  attach(B.Head, headGeom, fur, "head");
+  // the head does not cast onto the chest (a hard dark "bib" under the chin read as stacked primitives)
+  attach(B.Head, headGeom, fur, "head").castShadow = false;
   geoms.push(headGeom);
 
   const noseAt = new THREE.Vector3(0, sc.y + sr[1] * 0.55, sc.z + sr[2] * 0.86);
@@ -221,12 +251,12 @@ export function buildBear(): CharacterRig {
       surface: { center: H.center as V3, radius: H.radius, zAt: craniumZ },
       x: 0.098,
       y: hc.y + 0.05,
-      r: 0.033,
+      r: 0.03,
       scaleX: 0.92,
       scaleY: 1.12,
       scaleZ: 0.6,
       depth: 0.3,
-      iris: 0.6,
+      iris: 0.82,
       pupil: 0.55,
       irisColor: C.iris,
       irisRim: C.irisRim,
@@ -234,7 +264,7 @@ export function buildBear(): CharacterRig {
       toeOut: -0.25,
       lidColor: C.tan,
       lashColor: C.lash,
-      lidOpen: -0.55,
+      lidOpen: -0.38,
       lidCap: 1.3,
       lashFlick: false,
     },

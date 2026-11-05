@@ -197,7 +197,7 @@ function gait(kind0: Gait, ctx: VerbCtx, localT: number): PoseLayer {
   if (actor === "masha") {
     // loose arms with overlap: they trail the legs a little and swing wider
     const lag = sampleClip(clip, (ph - 0.06) * c.dur, style, true).bones;
-    const amp = kind === "run" ? 1.45 : 1.6;
+    const amp = kind === "run" ? 1.25 : 1.5;
     const ref = pose(arm("Left", 1.2, 0.1, 0.4), arm("Right", 1.2, 0.1, 0.4));
     const arms: Pose = {};
     for (const b of ["LeftArm", "RightArm", "LeftForeArm", "RightForeArm"]) arms[b] = qextrap(ref[b], lag[b] ?? ref[b], amp);

@@ -533,9 +533,27 @@ function evalActor(actor: ActorId, inp: ActorCtxIn, bear: ActorFrame | null, car
     browRaise: clamp((face.browRaise ?? 0) + (vis ? 0.15 * vis.w * Math.max(0, Math.sin(t * 7)) : 0), -1, 1),
   };
   // secondary drivers: Masha's hem sways with her motion; Bear's belly jiggles (delayed) with his hips
-  const ph = kin.dist / (2 * 0.35);
-  const sway = clamp01(0.5 + 0.5 * Math.sin(ph * Math.PI * 2) * (kin.dist > 0 ? 1 : 0.2) + (L.yawOffset ? 0.2 * Math.sin(L.yawOffset) : 0));
-  const jiggle = clamp01(0.5 + 0.5 * Math.sin(t * 9 - 0.6) * clamp01(Math.abs(L.hipsOffset[1]) * 8 + (kin.dist > 0 ? 0.6 : 0.08)));
+  const layerAt = (dt: number): PoseLayer => {
+    if (!inClip || !r) return L;
+    const lt2 = Math.max(0, clipLt - dt);
+    const k2 = kinematics(r, lt2);
+    const c2 = makeCtx(actor, r, k2, lt2, t - dt, seg, posture, fromPosture, mark, k2.yaw, k2.pos);
+    return evaluatePose(verb, lt2, r.clip.params, c2).layer;
+  };
+  // the hem follows the hips' side-to-side roll a beat late (overlap), and flares in spins
+  const roll = (q: [number, number, number, number] | undefined) => (q ? 2 * Math.atan2(q[2], q[3]) : 0);
+  const lagged = actor === "masha" ? layerAt(0.1) : L;
+  const sway = clamp01(0.5 + 2 * roll(lagged.bones.Hips) + 1 * (lagged.hipsOffset[0] - L.hipsOffset[0]) / STYLES[actor].hipHeight + (L.yawOffset ? 0.25 * Math.sin(L.yawOffset) : 0));
+  let jiggle = 0.5 + 0.04 * Math.sin(t * 2 * Math.PI * STYLES[actor].breathRate - 0.8); // breathing settles the belly
+  if (actor === "bear") {
+    // the belly lags the hips: compare the hips height now with ~0.08 s and ~0.16 s ago (pure: re-evaluated)
+    const hipsAt = (dt: number): number => layerAt(dt).hipsOffset[1];
+    const y0 = L.hipsOffset[1];
+    const y1 = hipsAt(0.08);
+    const y2 = hipsAt(0.16);
+    jiggle += 4 * (y1 - y0) - 2 * (y2 - y1);
+  }
+  jiggle = clamp01(jiggle);
   const frame: ActorFrame = {
     pos: pos3,
     yaw: finalYaw,

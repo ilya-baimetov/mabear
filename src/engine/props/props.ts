@@ -237,7 +237,7 @@ export const PROP_SLOTS: Partial<Record<PropId, { mark: MarkId; pos: Vec3; rot?:
   watering_can: { mark: "garden", pos: [6.5, 0, -4.75], rot: [0, -0.6, 0] },
   broom: { mark: "porch", pos: [-7.5, PORCH_HEIGHT, -3.75], rot: [-0.22, 0, 0.05] },
   book: { mark: "bench", pos: [2.45, 0.47, 3.0], rot: [0, 0.3, 0] },
-  pillow: { mark: "hammock", pos: [-11.9, 0.69, 2.2], rot: [0, 0, 0.12] },
+  pillow: { mark: "hammock", pos: [-11.62, 0.77, 2.85], rot: [0, 0.8, 0.12] },
   ball: { mark: "clearing", pos: [1.3, 0, 0.9] },
   lollipop: { mark: "table", pos: [2.3, TABLE_TOP + 0.01, 1.62], rot: [Math.PI / 2, 0.9, 0] },
 };

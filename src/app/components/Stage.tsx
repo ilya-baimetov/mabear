@@ -9,7 +9,7 @@ import { reactionTimeline } from "../react";
 
 declare global {
   interface Window {
-    __mabear?: { closeup: (actor: "masha" | "bear" | null, angle?: number) => void; stats: () => { fps: number; drawCalls: number; triangles: number } | null; t: () => number; playing: () => boolean; segments: () => number; timeline: () => unknown };
+    __mabear?: { screenOf: (actor: "masha" | "bear") => [number, number] | null; closeup: (actor: "masha" | "bear" | null, angle?: number) => void; stats: () => { fps: number; drawCalls: number; triangles: number } | null; t: () => number; playing: () => boolean; segments: () => number; timeline: () => unknown };
   }
 }
 
@@ -68,6 +68,14 @@ export function Stage() {
       ro = new ResizeObserver(fit);
       if (wrap.current) ro.observe(wrap.current);
       window.__mabear = {
+        screenOf: (actor) => {
+          const f = player.frame;
+          if (!f) return null;
+          const a = f.actors[actor];
+          const h = actor === "masha" ? 0.55 : 1.4;
+          const v = stage.camera.position.clone().set(a.pos[0], a.pos[1] + h, a.pos[2]).project(stage.camera);
+          return [(v.x + 1) / 2, (1 - v.y) / 2];
+        },
         closeup: (actor, angle = 0) => {
           if (!actor) {
             player.cameraOverride = null;

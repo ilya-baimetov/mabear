@@ -53,7 +53,8 @@ export const SET_ELEMENTS: Record<SetElementId, SetElementDef> = {
   garden: { id: "garden", pos: [5.4, 0, -7.1], rotY: 0, mark: "garden", description: "Raised beds with carrots and cabbages, small picket fence" },
   beehive: { id: "beehive", pos: [10.2, 0, -9.1], rotY: 0, mark: "beehive", description: "Wooden beehive on a stump" },
   oak_swing: { id: "oak_swing", pos: [8.6, 0, -0.6], rotY: 0, mark: "swing", description: "Big oak with a rope swing (seat is a separate moving object)" },
-  hammock: { id: "hammock", pos: [-11, 0, 2.2], rotY: 0, mark: "hammock", description: "Striped hammock between two pines" },
+  // rotated 46° so neither pine trunk stands on the hammock→clearing lane or the w_hammock waypoint paths
+  hammock: { id: "hammock", pos: [-11, 0, 2.2], rotY: 0.8, mark: "hammock", description: "Striped hammock between two pines" },
   pond: { id: "pond", pos: [-8, 0, 10], rotY: 0, mark: "pond_shore", description: "Small round pond with stones, reeds and lily pads" },
   pier: { id: "pier", pos: [PIER_START[0], 0, PIER_START[1]], rotY: PIER_YAW, mark: "pier", description: "Small wooden fishing pier" },
   table: { id: "table", pos: [2, 0, 1.5], rotY: 0, mark: "table", description: "Round outdoor wooden table" },
@@ -170,12 +171,24 @@ const box = (w: number, h: number, d: number) => new THREE.BoxGeometry(w, h, d);
 const cyl = (rt: number, rb: number, h: number, seg = 10, hs = 1) => new THREE.CylinderGeometry(rt, rb, h, seg, hs);
 const sph = (r: number, ws = 12, hs = 8) => new THREE.SphereGeometry(r, ws, hs);
 
-function blob(r: number, seed: number, amp = 0.12, detail = 2): THREE.BufferGeometry {
+/**
+ * Soft organic blob (canopies, bushes, rocks): welded icosphere, gentle lumps, smooth normals blended toward the
+ * sphere normal ("puffy" shading) so low-poly canopies read as soft CG rather than faceted game art.
+ */
+function blob(r: number, seed: number, amp = 0.12, detail = 2, puff = 0.55): THREE.BufferGeometry {
   let g: THREE.BufferGeometry = new THREE.IcosahedronGeometry(r, detail);
   g.deleteAttribute("normal");
   g.deleteAttribute("uv");
   g = mergeVertices(g);
-  return lumpy(g, amp * r, 2.2 / r, seed);
+  lumpy(g, amp * r * (detail < 2 ? 0.6 : 1), 2.2 / r, seed);
+  const pos = g.attributes.position, nor = g.attributes.normal;
+  const v = new THREE.Vector3(), n = new THREE.Vector3();
+  for (let i = 0; i < pos.count; i++) {
+    v.fromBufferAttribute(pos, i).normalize();
+    n.fromBufferAttribute(nor, i).lerp(v, puff).normalize();
+    nor.setXYZ(i, n.x, n.y, n.z);
+  }
+  return g;
 }
 
 /** Cylinder between two points. */
@@ -211,7 +224,16 @@ export function addPine(bag: GeoBag, height: number, seed: number, m: THREE.Matr
         pos.setY(k, py + Math.sin(a * 5 + seed) * 0.04 * ch);
       }
     }
-    g.computeVertexNormals();
+    // keep CylinderGeometry's analytic normals (smooth up to the apex), tilted a little upward for a softer read
+    const nn = g.attributes.normal;
+    for (let k = 0; k < nn.count; k++) {
+      const ny = nn.getY(k);
+      if (ny > -0.9) {
+        const x = nn.getX(k), z = nn.getZ(k), y2 = ny + 0.35;
+        const l = Math.hypot(x, y2, z) || 1;
+        nn.setXYZ(k, x / l, y2 / l, z / l);
+      }
+    }
     const top = new THREE.Color(0x5f9c48), bot = new THREE.Color(0x2c6236);
     bag.add(mat, g, 0x3f7d3f, xf([0, y, 0], [0, r() * 6, 0]).premultiply(m), {
       capColor: 0x1d4527,

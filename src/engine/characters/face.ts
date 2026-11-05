@@ -432,6 +432,9 @@ export function buildFace(cfg: FaceConfig, mats: MaterialSet): FaceRig {
   const cur = { browL: 0, browR: 0, tilt: 0, lid: 0, mouth: { ...EMOTION_PRESETS.neutral.mouth } };
   let first = true;
   const v3 = new THREE.Vector3();
+  const eyeMid = new THREE.Vector3();
+  const gazeDir = new THREE.Vector3();
+  const tmpQ = new THREE.Quaternion();
   const LID_CLOSED = Math.PI / 2 + 0.12;
 
   writeMouth(cur.mouth);
@@ -460,19 +463,20 @@ export function buildFace(cfg: FaceConfig, mats: MaterialSet): FaceRig {
     const lidBase = cur.lid < 0 ? lerp(E.lidOpen, E.lidOpen - 0.35, -cur.lid / 0.3) : lerp(E.lidOpen, LID_CLOSED, cur.lid * 0.85);
     const close = sleeping ? 1 : Math.min(1, Math.max(0, p.lidClose));
     const lidAngle = lerp(lidBase, LID_CLOSED, close);
+    // parallel gaze: one world direction from between the eyes (per-eye targets made the eyes converge)
+    eyes[0].g.getWorldPosition(eyeMid);
+    eyes[1].g.getWorldPosition(v3);
+    eyeMid.add(v3).multiplyScalar(0.5);
+    if (p.lookAt) gazeDir.set(p.lookAt[0] - eyeMid.x, p.lookAt[1] - eyeMid.y, p.lookAt[2] - eyeMid.z);
+    else gazeDir.set(0, 0, 1).applyQuaternion(group.getWorldQuaternion(tmpQ));
+    if (gazeDir.lengthSq() < 1e-8) gazeDir.set(0, 0, 1).applyQuaternion(group.getWorldQuaternion(tmpQ));
+    gazeDir.normalize();
     for (const e of eyes) {
       e.lid.rotation.set(lidAngle, 0, 0);
       // gaze
-      let yaw = 0;
-      let pitch = 0;
-      if (p.lookAt) {
-        v3.set(p.lookAt[0], p.lookAt[1], p.lookAt[2]);
-        e.g.worldToLocal(v3);
-        if (v3.lengthSq() > 1e-8) {
-          yaw = Math.atan2(v3.x, Math.max(1e-4, v3.z));
-          pitch = Math.atan2(v3.y, Math.hypot(v3.x, v3.z));
-        }
-      }
+      v3.copy(gazeDir).applyQuaternion(e.g.getWorldQuaternion(tmpQ).invert());
+      const yaw = Math.atan2(v3.x, Math.max(1e-4, v3.z)) + e.side * 0.02; // a hair of divergence reads relaxed
+      const pitch = Math.atan2(v3.y, Math.hypot(v3.x, v3.z));
       e.rot.rotation.set(-THREE.MathUtils.clamp(pitch, -0.3, 0.3), THREE.MathUtils.clamp(yaw, -0.45, 0.45), 0, "YXZ");
     }
 

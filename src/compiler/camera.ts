@@ -65,6 +65,8 @@ interface Proposal {
   overridden: boolean;
   /** true for establishing wides (minimum hold 1.5 s) */
   establishing?: boolean;
+  /** frames a speaker during a line */
+  line?: boolean;
 }
 
 const LOCO = new Set(["walk_to", "run_to", "tiptoe_to", "chase", "enter", "exit"]);
@@ -100,36 +102,45 @@ export function planCamera(input: CameraPlanInput): CameraCue[] {
   };
   if (input.isFirst) props.push({ start: 0, want: 2.5, prio: 5, kind: "wide", subject: null, overridden: false, establishing: true });
 
+  // Priorities: beat hint 6 > the speaker for the WHOLE line 5.5 > episode establishing 5 > reaction 4.5 >
+  // cluster establishing 3.5 > tracking 3 (Masha) / 2.5 (Bear) > low angle 2 > two-shot for parallel action 1.6 >
+  // medium 1.3 (Masha, the star) / 1 (Bear).
+  const near = (t: number) => visibleAt("masha", t) && visibleAt("bear", t) && dist(posAt("masha", t), posAt("bear", t)) < 8;
+  const parallel = (b: CameraBeatInfo) =>
+    beats.some((o) => o.actor !== b.actor && o.start < b.start + b.dur - 0.3 && o.start + o.dur > b.start + 0.3);
   for (const b of beats) {
     const isLoco = LOCO.has(b.verb);
     const known = knownAt(b.start - 0.05);
+    const star = b.actor === "masha";
     if (b.shot !== "auto") {
       props.push({ start: b.start, want: Math.max(SHOT_MIN, b.dur), prio: 6, kind: hintKind(b.shot), subject: b.shot === "wide" ? null : b.actor, overridden: true });
     } else if (b.hasLine) {
-      props.push({ start: b.lineStart, want: Math.max(SHOT_MIN, b.lineDur), prio: 4, kind: "close", subject: b.actor, overridden: false });
+      props.push({ start: b.lineStart, want: Math.max(SHOT_MIN, b.lineDur), prio: 5.5, kind: "close", subject: b.actor, overridden: false, line: true });
     } else if (isLoco && b.dur > 2) {
-      props.push({ start: b.start, want: b.dur, prio: 3, kind: "tracking", subject: b.actor, overridden: false });
-    } else if ((b.actor === "masha" && b.emotion === "mischievous") || (b.actor === "bear" && ["angry_stomp", "chase", "carry", "angry"].some((v) => v === b.verb || v === b.emotion))) {
+      props.push({ start: b.start, want: b.dur, prio: star ? 3 : 2.5, kind: "tracking", subject: b.actor, overridden: false });
+    } else if ((star && b.emotion === "mischievous") || (b.actor === "bear" && ["angry_stomp", "chase", "carry", "angry"].some((v) => v === b.verb || v === b.emotion))) {
       props.push({ start: b.start, want: Math.max(SHOT_MIN, b.dur), prio: 2, kind: rnd() < 0.65 ? "low_angle" : "medium", subject: b.actor, overridden: false });
+    } else if (parallel(b) && near(b.start + 0.1)) {
+      props.push({ start: b.start, want: Math.max(SHOT_MIN, b.dur), prio: 1.6, kind: "two", subject: null, overridden: false });
     } else {
-      const d = dist(posAt("masha", b.start), posAt("bear", b.start));
-      const both = visibleAt("masha", b.start) && visibleAt("bear", b.start);
-      props.push({ start: b.start, want: Math.max(SHOT_MIN, b.dur), prio: 1, kind: both && d < 5 && rnd() < 0.5 ? "two" : "medium", subject: b.actor, overridden: false });
+      const two = near(b.start) && dist(posAt("masha", b.start), posAt("bear", b.start)) < 5 && rnd() < 0.35;
+      props.push({ start: b.start, want: Math.max(SHOT_MIN, b.dur), prio: star ? 1.3 : 1, kind: two ? "two" : "medium", subject: two ? null : b.actor, overridden: false });
     }
     // arriving in a new cluster → establish it
     if (isLoco && visibleAt(b.actor, b.start + b.dur) && !known.has(clusterAt(b.to))) {
       props.push({ start: b.start + b.dur, want: 2.0, prio: 3.5, kind: "wide", subject: null, overridden: false, establishing: true });
     }
-    // reaction shot on the other character after slapstick / punchline
+    // reaction shot on the other character after slapstick, or after the punchline line has ENDED
     const o = other(b.actor);
     if ((SLAPSTICK.has(b.verb) || (b.hasLine && b.punchline)) && visibleAt(o, b.start + b.dur)) {
-      const at = b.hasLine && !SLAPSTICK.has(b.verb) ? b.lineStart + b.lineDur : b.start + Math.min(b.dur, 1.2);
+      const at = b.hasLine ? b.lineStart + b.lineDur : b.start + Math.min(b.dur, 1.2);
       props.push({ start: at, want: 1.0 + rnd() * 0.5, prio: 4.5, kind: "close", subject: o, overridden: false });
     }
   }
   props.sort((a, b) => a.start - b.start || b.prio - a.prio);
 
-  // 2. resolve into a cut list (min hold, deferral, priority replacement)
+  // 2. resolve into a cut list. A shot keeps the screen for its minimum hold; a stronger shot also protects its
+  //    whole wanted window (a speaker shot covers the entire line) from weaker ones, which wait until it ends.
   const cuts: Proposal[] = [];
   const hold = (p: Proposal) => (p.establishing ? 1.5 : SHOT_MIN);
   for (const p0 of props) {
@@ -143,21 +154,34 @@ export function planCamera(input: CameraPlanInput): CameraCue[] {
     const gap = p.start - last.start;
     if (p.kind === last.kind && p.subject === last.subject && p.prio <= last.prio + 1) {
       last.want = Math.max(last.want, p.start + p.want - last.start);
+      last.prio = Math.max(last.prio, p.prio);
+      last.line = last.line || p.line;
       continue;
     }
-    if (gap >= hold(last)) { cuts.push(p); continue; }
-    if (p.prio > last.prio && (cuts.length === 1 ? last.prio < 5 : true) && !(last.establishing && last.prio >= 5)) {
-      // replace the weaker shot (start it a little early)
-      cuts[cuts.length - 1] = { ...p, start: last.start, want: p.want + gap };
+    const protectedEnd = last.start + (last.prio > p.prio ? Math.max(hold(last), last.want) : hold(last));
+    if (p.start >= protectedEnd - 1e-6) { cuts.push(p); continue; }
+    if (p.prio > last.prio) {
+      if (last.establishing && last.start === 0 && input.isFirst) {
+        // the opening wide keeps its minimum length; the stronger shot follows it
+        const st = last.start + SHOT_MIN;
+        last.want = SHOT_MIN;
+        cuts.push({ ...p, start: st, want: Math.max(SHOT_MIN, p.start + p.want - st) });
+      } else if (gap >= SHOT_MIN) {
+        last.want = gap;
+        cuts.push(p);
+      } else {
+        // replace the weaker shot (start the stronger one a little early)
+        cuts[cuts.length - 1] = { ...p, start: last.start, want: p.want + gap };
+      }
       continue;
     }
-    const deferred = last.start + hold(last);
     const end = p.start + p.want;
-    if (end - deferred >= 0.3 && deferred < duration - SHOT_MIN) cuts.push({ ...p, start: deferred, want: Math.max(SHOT_MIN, end - deferred) });
+    if (end - protectedEnd >= 0.3 && protectedEnd < duration - SHOT_MIN) cuts.push({ ...p, start: protectedEnd, want: Math.max(SHOT_MIN, end - protectedEnd) });
   }
   if (cuts.length === 0) cuts.push({ start: 0, want: duration, prio: 0, kind: "two", subject: null, overridden: false });
 
-  // 3. fillers where a shot outlives its purpose
+  if (process.env.CAMDBG) console.log("PROPS", JSON.stringify(props.map((p) => [p.start.toFixed(2), p.kind, p.subject, p.prio, p.want.toFixed(2)])), "CUTS", JSON.stringify(cuts.map((p) => [p.start.toFixed(2), p.kind, p.subject, p.prio, p.want.toFixed(2)])));
+  // 3. fillers where a shot outlives its purpose (the speaker first, then Masha when she is acting)
   const filled: Proposal[] = [];
   for (let i = 0; i < cuts.length; i++) {
     const c = cuts[i];
@@ -166,42 +190,50 @@ export function planCamera(input: CameraPlanInput): CameraCue[] {
     let t = c.start + Math.max(c.want, hold(c));
     while (next - t >= SHOT_MIN + 0.3 && t - filled[filled.length - 1].start >= SHOT_MIN) {
       const speaker = input.dialogue.find((d) => d.start <= t + 0.2 && d.start + d.dur > t + 0.4);
-      const active = beats.filter((b) => b.start <= t && b.start + b.dur > t).pop();
+      const activeAll = beats.filter((b) => b.start <= t && b.start + b.dur > t);
+      const active = activeAll.find((b) => b.actor === "masha") ?? activeAll[activeAll.length - 1];
       const subj = speaker?.actor ?? active?.actor ?? null;
-      const kind: Kind = speaker ? "close" : active && LOCO.has(active.verb) && active.start + active.dur - t > 2 ? "tracking" : subj && rnd() < 0.5 ? "medium" : "two";
+      const bothActive = activeAll.some((b) => b.actor === "masha") && activeAll.some((b) => b.actor === "bear");
+      const kind: Kind = speaker ? "close"
+        : active && LOCO.has(active.verb) && active.start + active.dur - t > 2 ? "tracking"
+        : bothActive && near(t) ? "two"
+        : subj && rnd() < 0.6 ? "medium" : "two";
       const want = Math.min(4, next - t);
-      filled.push({ start: t, want, prio: 0, kind, subject: subj, overridden: false });
+      filled.push({ start: t, want, prio: speaker ? 5.5 : 0, kind, subject: kind === "two" ? null : subj, overridden: false, line: !!speaker });
       t += want;
     }
   }
 
-  // 4. drop a too-short last shot, then split shots longer than SHOT_MAX
+  // 4. fix too-short shots (the weaker neighbour gives way), then split shots longer than SHOT_MAX
   let shots = filled.map((c, i) => ({ ...c, end: i + 1 < filled.length ? filled[i + 1].start : duration }));
-  shots = shots.filter((s) => s.end - s.start > 1e-6);
-  if (shots.length > 1 && shots[shots.length - 1].end - shots[shots.length - 1].start < SHOT_MIN) {
-    shots.pop();
-    shots[shots.length - 1].end = duration;
-  }
-  // merge any interior too-short shots into their predecessor
-  for (let i = 1; i < shots.length; i++) {
-    if (shots[i].end - shots[i].start < SHOT_MIN - 1e-6) {
-      shots[i - 1].end = shots[i].end;
-      shots.splice(i, 1);
-      i--;
-    }
-  }
-  if (shots.length > 1 && shots[0].end - shots[0].start < SHOT_MIN - 1e-6) {
-    shots[1].start = 0;
-    shots.shift();
+  shots = shots.filter((x) => x.end - x.start > 1e-6);
+  for (let guard = 0; guard < 50 && shots.length > 1; guard++) {
+    const i = shots.findIndex((x) => x.end - x.start < SHOT_MIN - 1e-6);
+    if (i < 0) break;
+    const prev = i > 0 ? shots[i - 1] : null;
+    const next = i + 1 < shots.length ? shots[i + 1] : null;
+    const need = SHOT_MIN - (shots[i].end - shots[i].start);
+    // borrow time from a neighbour that can spare it, so a strong short shot survives
+    if (prev && prev.end - prev.start - need >= SHOT_MIN && (shots[i].prio >= prev.prio || !next)) { prev.end -= need; shots[i].start = prev.end; continue; }
+    if (next && next.end - next.start - need >= SHOT_MIN && shots[i].prio >= next.prio) { next.start += need; shots[i].end = next.start; continue; }
+    // otherwise merge with the neighbour; the stronger shot keeps the screen
+    const nb = prev && (!next || prev.prio >= next.prio || !next) ? prev : next!;
+    const keep = nb.prio > shots[i].prio ? nb : shots[i];
+    const merged = { ...keep, start: Math.min(nb.start, shots[i].start), end: Math.max(nb.end, shots[i].end) };
+    const lo = Math.min(shots.indexOf(nb), i);
+    shots.splice(lo, 2, merged);
   }
   const split: typeof shots = [];
-  for (const s of shots) {
-    const len = s.end - s.start;
-    if (len <= SHOT_MAX) { split.push(s); continue; }
+  for (const sh of shots) {
+    const len = sh.end - sh.start;
+    if (len <= SHOT_MAX) { split.push(sh); continue; }
     const n = Math.ceil(len / 5);
     for (let k = 0; k < n; k++) {
-      const kind: Kind = k === 0 ? s.kind : s.kind === "tracking" ? "tracking" : k % 2 === 1 ? (s.kind === "two" ? "medium" : "two") : s.kind;
-      split.push({ ...s, kind, start: s.start + (len * k) / n, end: s.start + (len * (k + 1)) / n });
+      // a long line stays on the speaker (close ↔ medium); other long shots alternate framing
+      const alt: Kind = sh.kind === "tracking" ? "tracking" : sh.kind === "close" ? "medium" : sh.kind === "medium" ? "two" : sh.kind === "low_angle" ? "medium" : "medium";
+      const kind: Kind = k % 2 === 0 ? sh.kind : alt;
+      const subject = kind === "two" ? null : sh.subject ?? (sh.kind === "two" || sh.kind === "wide" ? "masha" : sh.subject);
+      split.push({ ...sh, kind, subject, start: sh.start + (len * k) / n, end: sh.start + (len * (k + 1)) / n });
     }
   }
 

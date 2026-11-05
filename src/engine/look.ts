@@ -460,7 +460,7 @@ export function paint(g: THREE.BufferGeometry, color: THREE.ColorRepresentation,
   g.computeBoundingBox();
   const bb = g.boundingBox!;
   const h = Math.max(1e-6, bb.max.y - bb.min.y);
-  const r = rng(o.seed ?? 1);
+  const sd = (o.seed ?? 1) * 1.618;
   const cols = new Float32Array(pos.count * 3);
   for (let i = 0; i < pos.count; i++) {
     _p.fromBufferAttribute(pos, i);
@@ -476,7 +476,8 @@ export function paint(g: THREE.BufferGeometry, color: THREE.ColorRepresentation,
       const t = (_p.y - bb.min.y) / h;
       _c.multiplyScalar(1 - o.aoBottom * (1 - Math.min(1, t * 2.2)));
     }
-    if (o.jitter) _c.multiplyScalar(1 + (r() - 0.5) * o.jitter);
+    // smooth positional variation (not per-vertex random speckle, which reads as facets on big triangles)
+    if (o.jitter) _c.multiplyScalar(1 + o.jitter * 0.5 * Math.sin(_p.x * 7.3 + _p.y * 5.1 + sd) * Math.cos(_p.z * 6.7 - _p.y * 3.3 + sd * 0.7));
     cols[i * 3] = _c.r;
     cols[i * 3 + 1] = _c.g;
     cols[i * 3 + 2] = _c.b;

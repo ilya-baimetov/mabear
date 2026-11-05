@@ -60,12 +60,12 @@ export const MASHA_LOOK = {
     radius: 0.168,
     cheekBulge: 0.11,
     /** kerchief shell radius factor, opening (elevation top/bottom, azimuth half width; radians) */
-    kerchief: 1.1,
+    kerchief: 1.06,
     openTop: 0.7,
     openBottom: -1.02,
     openHalfAz: 1.08,
     /** how far the kerchief's cape falls below the skull centre at the back/sides (m) */
-    capeDrop: 0.26,
+    capeDrop: 0.2,
   },
   eyes: { x: 0.059, y: 0.132, r: 0.04, iris: 0.72, pupil: 0.38 },
 } as const;
@@ -223,7 +223,7 @@ export function buildMasha(): CharacterRig {
       if (ay < -0.05) {
         const t = (-0.05 - ay) / (Math.PI / 2 - 0.05); // 0 at the cheek line .. 1 at the bottom
         const w = smoothstep(A * 0.85, A * 1.45, Math.abs(ax)) * smoothstep(0, 0.3, t);
-        const bh = Rk * (1.0 + 0.45 * t) * Math.sqrt(Math.max(0, 1 - Math.pow(t, 8)));
+        const bh = Rk * (1.0 + 0.18 * t) * Math.sqrt(Math.max(0, 1 - Math.pow(t, 8)));
         const backness = 0.5 - 0.5 * Math.cos(ax); // the cape comes to a soft point at the back
         const drop = t * L.head.capeDrop * (0.9 + 0.25 * backness);
         const bell = new THREE.Vector3(hc.x + Math.sin(ax) * bh * 1.04, hc.y - 0.01 - drop, hc.z + Math.cos(ax) * bh * 0.9);
@@ -358,7 +358,7 @@ export function buildMasha(): CharacterRig {
     paintVertices(g, (p, out) => {
       const phi = Math.atan2(p.x, p.z);
       const v = smoothstep(-0.005, 0.005, p.y - 0.104 - 0.12 * Math.abs(phi)) * smoothstep(0.2, 0.5, p.z / 0.1);
-      out.copy(cDress).lerp(cBlouse, v);
+      out.copy(cDress).lerp(cBlouse, v * 0); // blouse V disabled (QA: read as a white speck under the knot)
     });
     attach(chest, g, fabric, "bodice");
     geoms.push(g);

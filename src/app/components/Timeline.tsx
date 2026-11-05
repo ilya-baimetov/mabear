@@ -1,11 +1,12 @@
 import { useRef } from "react";
-import { useStore } from "../useStore";
+import { useStore, useStrings } from "../useStore";
 import { playback } from "../playback";
 
 export const BAND_COLORS = ["#6BBF59", "#F2B33D", "#E0569A", "#4BA3C7", "#9B7BD4", "#F07F4F", "#3FB59B", "#D9C24A"];
 
 export function Timeline() {
   const s = useStore();
+  const t = useStrings();
   const bar = useRef<HTMLDivElement>(null);
   const dur = s.timeline.duration;
   const toT = (clientX: number) => {
@@ -45,7 +46,7 @@ export function Timeline() {
         })}
         {dur > 0 && <div className="playhead" data-testid="playhead" data-t={s.t.toFixed(2)} style={{ left: `${(Math.min(s.t, dur) / dur) * 100}%` }} />}
       </div>
-      <div className="time">{Math.min(s.t, dur).toFixed(1)} / {dur.toFixed(1)}s</div>
+      <div className="time">{Math.min(s.t, dur).toFixed(1)} / {dur.toFixed(1)}{t.seconds}</div>
     </div>
   );
 }

@@ -119,6 +119,8 @@ export const sigh: VerbImpl = (lt, _p, ctx) => {
   const base = idleBase(ctx, 0.15);
   const L = addLayer(base, {
     LeftShoulder: rz((0.32 * rise - 0.1 * slump) * big), RightShoulder: rz((-0.32 * rise + 0.1 * slump) * big),
+    // arms keep hanging while the shoulders lift (counter-rotate so they don't flare out)
+    LeftArm: rz(-(0.32 * rise) * big * 0.9), RightArm: rz((0.32 * rise) * big * 0.9),
     Spine1: rx((-0.07 * rise + 0.12 * slump) * big),
     Spine2: rx((-0.08 * rise + 0.08 * slump) * big),
     Neck: rx((-0.05 * rise + 0.1 * slump) * big),

@@ -230,3 +230,19 @@ test("8. close-up screenshots + performance (FPS > 10 headless, draw calls < 200
   await page.getByTestId("stage-canvas").screenshot({ path: `${SHOTS}/bear-closeup.png` });
   await page.evaluate(() => window.__mabear!.closeup(null));
 });
+
+test("9. tap a character after the story → it reacts locally (no director call)", async ({ page }) => {
+  await open(page);
+  let calls = 0;
+  await page.route("**/api/direct", async (route) => {
+    calls++;
+    await route.continue();
+  });
+  await page.waitForTimeout(1000);
+  const uv = await page.evaluate(() => window.__mabear!.screenOf("masha"));
+  expect(uv).not.toBeNull();
+  const box = (await page.getByTestId("stage-canvas").boundingBox())!;
+  await page.mouse.click(box.x + uv![0] * box.width, box.y + uv![1] * box.height);
+  await expect.poll(async () => page.evaluate(() => window.__mabear!.playing()), { timeout: 10_000 }).toBe(true);
+  expect(calls).toBe(0);
+});

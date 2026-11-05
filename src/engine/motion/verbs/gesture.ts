@@ -68,7 +68,8 @@ export const shake_head: VerbImpl = (lt, _p, ctx) => {
 export const shrug: VerbImpl = (lt, _p, ctx) => {
   const s = window01(lt / ctx.dur, 0.05, 0.95, 0.3);
   const base = idleBase(ctx, 0.4);
-  const arms = pose(arm("Left", 1.0, 0.35, 1.3, 0.9), arm("Right", 1.0, 0.35, 1.3, 0.9), { LeftShoulder: rz(0.35), RightShoulder: rz(-0.35) });
+  // shoulders up, elbows at the sides, forearms and palms turned out (upper arms stay down: no T-pose)
+  const arms = pose(arm("Left", 1.35, 0.3, 1.35, 0.9), arm("Right", 1.35, 0.3, 1.35, 0.9), { LeftShoulder: rz(0.3), RightShoulder: rz(-0.3) });
   const L = mask(base, { bones: arms, hipsOffset: [0, 0, 0] }, ARMS, s);
   return { ...addLayer(L, { Head: rz(0.2 * s), Neck: rx(-0.1 * s) }), face: { browRaise: 0.8 * s } };
 };

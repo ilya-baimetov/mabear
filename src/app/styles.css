@@ -140,9 +140,9 @@ button:disabled { opacity: 0.45; cursor: default; }
 .kpi .s { font-size: 11px; color: #c9d4c5; }
 .model-toggle { display: flex; gap: 6px; align-items: center; margin-top: 10px; flex-wrap: wrap; }
 .remixed { margin-top: 8px; background: rgba(107, 191, 89, 0.2); color: #cfeec5; padding: 6px 10px; border-radius: 10px; font-weight: 800; }
-.scale-inputs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 8px; }
+.scale-inputs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-bottom: 8px; }
 .scale-inputs label { display: flex; flex-direction: column; font-size: 11px; color: #b8c5b4; font-weight: 700; }
-.scale-inputs input { margin-top: 3px; background: #10170f; color: #fff; border: 1px solid #3a4a3a; border-radius: 6px; padding: 4px 6px; font: inherit; }
+.scale-inputs input { width: 100%; min-width: 0; margin-top: 3px; background: #10170f; color: #fff; border: 1px solid #3a4a3a; border-radius: 6px; padding: 4px 6px; font: inherit; }
 .assume { color: var(--honey); font-size: 10px; }
 table { width: 100%; border-collapse: collapse; }
 .bts td, .bts th { border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding: 4px 6px; text-align: left; vertical-align: top; }
