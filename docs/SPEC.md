@@ -582,7 +582,10 @@ sample's source and license in `docs/ASSETS.md`. Time-box sample hunting to 20 m
 ### 8.1 Endpoint (`worker/direct.ts`)
 
 `POST /api/direct` body: `{ lang: "en"|"ru", paragraph: string, previous: string[] (≤ 3 most recent paragraphs),
-worldState: WorldState, episodeId: string, paragraphId: string }`.
+worldState: WorldState, episodeId: string, paragraphId: string, model?: "claude-opus-5-5" | "claude-haiku-5-5" }`.
+`model` is optional and allow-listed (anything else → 400). It's used by the director eval against the deployed
+Worker and by a model toggle in the Behind-the-scenes overlay (P1), so funders can watch cost per paragraph change
+live. Default: `DIRECTOR_MODEL` env, else `claude-opus-5-5`.
 Response: `{ beatScript: BeatScript, source: "llm"|"offline", latencyMs, usage: { input_tokens, output_tokens,
 cache_read_input_tokens, cache_creation_input_tokens } | null, model }`.
 
