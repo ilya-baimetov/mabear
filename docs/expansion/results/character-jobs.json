@@ -1,0 +1,260 @@
+{
+  "batch_status": "submitted",
+  "batch_items": [
+    {
+      "index": 0,
+      "endpoint_id": "meshy/v7.1/image-to-3d",
+      "status": "submitted",
+      "field_error_codes": []
+    },
+    {
+      "index": 1,
+      "endpoint_id": "meshy/v7.1/image-to-3d",
+      "status": "submitted",
+      "field_error_codes": []
+    },
+    {
+      "index": 2,
+      "endpoint_id": "meshy/v7.1/image-to-3d",
+      "status": "submitted",
+      "field_error_codes": []
+    },
+    {
+      "index": 3,
+      "endpoint_id": "meshy/v7.1/image-to-3d",
+      "status": "submitted",
+      "field_error_codes": []
+    },
+    {
+      "index": 4,
+      "endpoint_id": "meshy/v7.1/image-to-3d",
+      "status": "submitted",
+      "field_error_codes": []
+    },
+    {
+      "index": 5,
+      "endpoint_id": "meshy/v7.1/image-to-3d",
+      "status": "submitted",
+      "field_error_codes": []
+    }
+  ],
+  "not_started_count": 0,
+  "status": "submitted",
+  "all_submitted": true,
+  "submitted_count": 6,
+  "rejected_count": 0,
+  "submission_unknown_count": 0,
+  "jobs": [
+    {
+      "index": 0,
+      "endpoint_id": "meshy/v7.1/image-to-3d",
+      "decision_id": "71f3767b-6574-4f96-9a47-31d47c57ded6",
+      "status": "submitted",
+      "request_id": "01a1b23d-fb78-78a1-92da-75cca4e459f4",
+      "response_url": "https://queue.fal.run/meshy/v7.1/requests/01a1b23d-fb78-78a1-92da-75cca4e459f4",
+      "status_url": "https://queue.fal.run/meshy/v7.1/requests/01a1b23d-fb78-78a1-92da-75cca4e459f4/status",
+      "cancel_url": "https://queue.fal.run/meshy/v7.1/requests/01a1b23d-fb78-78a1-92da-75cca4e459f4/cancel",
+      "logs": null,
+      "metrics": {},
+      "queue_position": 1,
+      "user_queue_position": 1,
+      "user_queued_count": 2,
+      "recipe": {
+        "endpoint_id": "meshy/v7.1/image-to-3d",
+        "input": {
+          "image_url": "local:docs/expansion/inputs/bear.jpg",
+          "model_type": "standard",
+          "topology": "triangle",
+          "target_polycount": 60000,
+          "geometry_resolution": "4k",
+          "symmetry_mode": "auto",
+          "should_remesh": true,
+          "should_texture": true,
+          "texture_model": "meshy-7",
+          "enable_pbr": true,
+          "pose_mode": "a-pose",
+          "enable_rigging": true,
+          "rigging_height_meters": 2.4,
+          "enable_animation": false
+        },
+        "note": "Submitted inputs, not resolved server defaults. Source URLs may expire."
+      }
+    },
+    {
+      "index": 1,
+      "endpoint_id": "meshy/v7.1/image-to-3d",
+      "decision_id": "71f3767b-6574-4f96-9a47-31d47c57ded6",
+      "status": "submitted",
+      "request_id": "01a1b23d-fb28-78c3-9a76-6a946c053a0d",
+      "response_url": "https://queue.fal.run/meshy/v7.1/requests/01a1b23d-fb28-78c3-9a76-6a946c053a0d",
+      "status_url": "https://queue.fal.run/meshy/v7.1/requests/01a1b23d-fb28-78c3-9a76-6a946c053a0d/status",
+      "cancel_url": "https://queue.fal.run/meshy/v7.1/requests/01a1b23d-fb28-78c3-9a76-6a946c053a0d/cancel",
+      "logs": null,
+      "metrics": {},
+      "queue_position": 3,
+      "user_queue_position": 3,
+      "user_queued_count": 4,
+      "recipe": {
+        "endpoint_id": "meshy/v7.1/image-to-3d",
+        "input": {
+          "image_url": "local:docs/expansion/inputs/lady-bear.jpg",
+          "model_type": "standard",
+          "topology": "triangle",
+          "target_polycount": 60000,
+          "geometry_resolution": "4k",
+          "symmetry_mode": "auto",
+          "should_remesh": true,
+          "should_texture": true,
+          "texture_model": "meshy-7",
+          "enable_pbr": true,
+          "pose_mode": "a-pose",
+          "enable_rigging": true,
+          "rigging_height_meters": 2.15,
+          "enable_animation": false
+        },
+        "note": "Submitted inputs, not resolved server defaults. Source URLs may expire."
+      }
+    },
+    {
+      "index": 2,
+      "endpoint_id": "meshy/v7.1/image-to-3d",
+      "decision_id": "71f3767b-6574-4f96-9a47-31d47c57ded6",
+      "status": "submitted",
+      "request_id": "01a1b23d-fb25-7212-8bef-c6421e0ea8b1",
+      "response_url": "https://queue.fal.run/meshy/v7.1/requests/01a1b23d-fb25-7212-8bef-c6421e0ea8b1",
+      "status_url": "https://queue.fal.run/meshy/v7.1/requests/01a1b23d-fb25-7212-8bef-c6421e0ea8b1/status",
+      "cancel_url": "https://queue.fal.run/meshy/v7.1/requests/01a1b23d-fb25-7212-8bef-c6421e0ea8b1/cancel",
+      "logs": null,
+      "metrics": {},
+      "queue_position": 1,
+      "user_queue_position": 1,
+      "user_queued_count": 3,
+      "recipe": {
+        "endpoint_id": "meshy/v7.1/image-to-3d",
+        "input": {
+          "image_url": "local:docs/expansion/inputs/hare.jpg",
+          "model_type": "standard",
+          "topology": "triangle",
+          "target_polycount": 40000,
+          "geometry_resolution": "4k",
+          "symmetry_mode": "auto",
+          "should_remesh": true,
+          "should_texture": true,
+          "texture_model": "meshy-7",
+          "enable_pbr": true,
+          "pose_mode": "a-pose",
+          "enable_rigging": true,
+          "rigging_height_meters": 0.85,
+          "enable_animation": false
+        },
+        "note": "Submitted inputs, not resolved server defaults. Source URLs may expire."
+      }
+    },
+    {
+      "index": 3,
+      "endpoint_id": "meshy/v7.1/image-to-3d",
+      "decision_id": "71f3767b-6574-4f96-9a47-31d47c57ded6",
+      "status": "submitted",
+      "request_id": "01a1b23d-fb5e-7030-9158-186b4d509c58",
+      "response_url": "https://queue.fal.run/meshy/v7.1/requests/01a1b23d-fb5e-7030-9158-186b4d509c58",
+      "status_url": "https://queue.fal.run/meshy/v7.1/requests/01a1b23d-fb5e-7030-9158-186b4d509c58/status",
+      "cancel_url": "https://queue.fal.run/meshy/v7.1/requests/01a1b23d-fb5e-7030-9158-186b4d509c58/cancel",
+      "logs": null,
+      "metrics": {},
+      "queue_position": 0,
+      "user_queue_position": 0,
+      "user_queued_count": 1,
+      "recipe": {
+        "endpoint_id": "meshy/v7.1/image-to-3d",
+        "input": {
+          "image_url": "local:docs/expansion/inputs/rosie.jpg",
+          "model_type": "standard",
+          "topology": "triangle",
+          "target_polycount": 40000,
+          "geometry_resolution": "4k",
+          "symmetry_mode": "auto",
+          "should_remesh": true,
+          "should_texture": true,
+          "texture_model": "meshy-7",
+          "enable_pbr": true,
+          "pose_mode": "a-pose",
+          "enable_rigging": true,
+          "rigging_height_meters": 1.05,
+          "enable_animation": false
+        },
+        "note": "Submitted inputs, not resolved server defaults. Source URLs may expire."
+      }
+    },
+    {
+      "index": 4,
+      "endpoint_id": "meshy/v7.1/image-to-3d",
+      "decision_id": "71f3767b-6574-4f96-9a47-31d47c57ded6",
+      "status": "submitted",
+      "request_id": "01a1b23d-fb23-7ce0-b257-ee3622e35bc0",
+      "response_url": "https://queue.fal.run/meshy/v7.1/requests/01a1b23d-fb23-7ce0-b257-ee3622e35bc0",
+      "status_url": "https://queue.fal.run/meshy/v7.1/requests/01a1b23d-fb23-7ce0-b257-ee3622e35bc0/status",
+      "cancel_url": "https://queue.fal.run/meshy/v7.1/requests/01a1b23d-fb23-7ce0-b257-ee3622e35bc0/cancel",
+      "logs": null,
+      "metrics": {},
+      "queue_position": 0,
+      "user_queue_position": 0,
+      "user_queued_count": 1,
+      "recipe": {
+        "endpoint_id": "meshy/v7.1/image-to-3d",
+        "input": {
+          "image_url": "local:docs/expansion/inputs/squirrel.jpg",
+          "model_type": "standard",
+          "topology": "triangle",
+          "target_polycount": 40000,
+          "geometry_resolution": "4k",
+          "symmetry_mode": "auto",
+          "should_remesh": true,
+          "should_texture": true,
+          "texture_model": "meshy-7",
+          "enable_pbr": true,
+          "pose_mode": "a-pose",
+          "enable_rigging": true,
+          "rigging_height_meters": 0.65,
+          "enable_animation": false
+        },
+        "note": "Submitted inputs, not resolved server defaults. Source URLs may expire."
+      }
+    },
+    {
+      "index": 5,
+      "endpoint_id": "meshy/v7.1/image-to-3d",
+      "decision_id": "71f3767b-6574-4f96-9a47-31d47c57ded6",
+      "status": "submitted",
+      "request_id": "01a1b23d-fb26-74e3-8236-fcbd935faa45",
+      "response_url": "https://queue.fal.run/meshy/v7.1/requests/01a1b23d-fb26-74e3-8236-fcbd935faa45",
+      "status_url": "https://queue.fal.run/meshy/v7.1/requests/01a1b23d-fb26-74e3-8236-fcbd935faa45/status",
+      "cancel_url": "https://queue.fal.run/meshy/v7.1/requests/01a1b23d-fb26-74e3-8236-fcbd935faa45/cancel",
+      "logs": null,
+      "metrics": {},
+      "queue_position": 1,
+      "user_queue_position": 1,
+      "user_queued_count": 2,
+      "recipe": {
+        "endpoint_id": "meshy/v7.1/image-to-3d",
+        "input": {
+          "image_url": "local:docs/expansion/inputs/rival-bear.jpg",
+          "model_type": "standard",
+          "topology": "triangle",
+          "target_polycount": 60000,
+          "geometry_resolution": "4k",
+          "symmetry_mode": "auto",
+          "should_remesh": true,
+          "should_texture": true,
+          "texture_model": "meshy-7",
+          "enable_pbr": true,
+          "pose_mode": "a-pose",
+          "enable_rigging": true,
+          "rigging_height_meters": 2.55,
+          "enable_animation": false
+        },
+        "note": "Submitted inputs, not resolved server defaults. Source URLs may expire."
+      }
+    }
+  ],
+  "hint": "Use wait_for_jobs with each accepted item's index and canonical URLs; it waits up to 40 seconds per call and returns every result once its group has finished (check_job and get_job_result also work per item). Retain indexes across waiting and final display. Never replay this whole batch to retry an individual item."
+}

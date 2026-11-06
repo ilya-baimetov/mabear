@@ -1,0 +1,272 @@
+{
+  "id": "garden_party",
+  "lang": "ru",
+  "title": "Гости в саду",
+  "paragraphs": [
+    {
+      "text": "Медведица приходит в гости. Мишка машет ей. Маша говорит: «Добро пожаловать в наш сад!»",
+      "beatScript": {
+        "summary": "Медведица приходит в гости. Мишка машет ей. Маша говорит: «Добро пожаловать в наш сад!»",
+        "time_of_day": "morning",
+        "mood": "playful",
+        "music": {
+          "mood": "playful",
+          "intensity": "soft",
+          "change": "start"
+        },
+        "ambience": [
+          "birds_day"
+        ],
+        "beats": [
+          {
+            "actor": "lady_bear",
+            "verb": "walk_to",
+            "target": "clearing",
+            "item": null,
+            "line": null,
+            "emote": "hum",
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "wide"
+          },
+          {
+            "actor": "bear",
+            "verb": "wave",
+            "target": "lady_bear",
+            "item": null,
+            "line": null,
+            "emote": "chuckle",
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": true,
+            "delay_s": 0,
+            "shot": "auto"
+          },
+          {
+            "actor": "masha",
+            "verb": "wave",
+            "target": "lady_bear",
+            "item": null,
+            "line": "Добро пожаловать в наш сад!",
+            "emote": "giggle",
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "medium"
+          }
+        ],
+        "rule_hits": []
+      }
+    },
+    {
+      "text": "Заяц бежит к грядкам, берёт морковку и ест её. Свинка подходит и удивляется! Маша говорит: «Оставьте мне морковку!»",
+      "beatScript": {
+        "summary": "Заяц бежит к грядкам, берёт морковку и ест её. Свинка подходит и удивляется!",
+        "time_of_day": "morning",
+        "mood": "playful",
+        "music": {
+          "mood": "playful",
+          "intensity": "soft",
+          "change": "continue"
+        },
+        "ambience": [
+          "birds_day"
+        ],
+        "beats": [
+          {
+            "actor": "hare",
+            "verb": "run_to",
+            "target": "garden",
+            "item": null,
+            "line": null,
+            "emote": null,
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "wide"
+          },
+          {
+            "actor": "hare",
+            "verb": "take",
+            "target": "carrot",
+            "item": "carrot",
+            "line": null,
+            "emote": "huff",
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "medium"
+          },
+          {
+            "actor": "hare",
+            "verb": "eat",
+            "target": null,
+            "item": "carrot",
+            "line": null,
+            "emote": null,
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "auto"
+          },
+          {
+            "actor": "rosie",
+            "verb": "walk_to",
+            "target": "garden",
+            "item": null,
+            "line": null,
+            "emote": null,
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "auto"
+          },
+          {
+            "actor": "rosie",
+            "verb": "surprised",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": "gasp",
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "close"
+          },
+          {
+            "actor": "masha",
+            "verb": "wave",
+            "target": null,
+            "item": null,
+            "line": "Оставьте мне морковку!",
+            "emote": null,
+            "sfx": null,
+            "emotion": "excited",
+            "with_previous": true,
+            "delay_s": 0.2,
+            "shot": "medium"
+          }
+        ],
+        "rule_hits": []
+      }
+    },
+    {
+      "text": "Белочка радостно прыгает. Медведь-спортсмен приходит на поляну и танцует. Медведица хлопает, Маша прыгает, а Мишка смеётся. Маша говорит: «Все танцуют!»",
+      "beatScript": {
+        "summary": "Белочка радостно прыгает. Медведь-спортсмен приходит на поляну и танцует. Медведица хлопает, Маша прыгает, а Мишка смеётся.",
+        "time_of_day": "morning",
+        "mood": "playful",
+        "music": {
+          "mood": "playful",
+          "intensity": "soft",
+          "change": "continue"
+        },
+        "ambience": [
+          "birds_day"
+        ],
+        "beats": [
+          {
+            "actor": "squirrel",
+            "verb": "jump",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": "chuckle",
+            "sfx": "boing",
+            "emotion": "happy",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "close"
+          },
+          {
+            "actor": "rival_bear",
+            "verb": "walk_to",
+            "target": "clearing",
+            "item": null,
+            "line": null,
+            "emote": null,
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "wide"
+          },
+          {
+            "actor": "rival_bear",
+            "verb": "dance",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": "hum",
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "medium"
+          },
+          {
+            "actor": "lady_bear",
+            "verb": "clap",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": "chuckle",
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": true,
+            "delay_s": 0,
+            "shot": "auto"
+          },
+          {
+            "actor": "masha",
+            "verb": "jump",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": "giggle",
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": true,
+            "delay_s": 0,
+            "shot": "auto"
+          },
+          {
+            "actor": "bear",
+            "verb": "laugh",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": "chuckle",
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": true,
+            "delay_s": 0,
+            "shot": "auto"
+          },
+          {
+            "actor": "masha",
+            "verb": "wave",
+            "target": null,
+            "item": null,
+            "line": "Все танцуют!",
+            "emote": null,
+            "sfx": null,
+            "emotion": "excited",
+            "with_previous": true,
+            "delay_s": 0.2,
+            "shot": "medium"
+          }
+        ],
+        "rule_hits": []
+      }
+    }
+  ]
+}

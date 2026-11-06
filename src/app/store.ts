@@ -59,6 +59,7 @@ export interface Paragraph {
 }
 
 export interface AppState {
+  stageReady: boolean;
   episodeId: string;
   title: string;
   lang: Lang;
@@ -213,6 +214,7 @@ class Store {
   constructor() {
     const vol = Number(lsGet(LS.volume) ?? "0.8");
     this.state = {
+      stageReady: false,
       episodeId: newId("e"),
       title: "",
       lang: initialLang(),
@@ -305,6 +307,7 @@ class Store {
   setModel(model: DirectorModel | null): void {
     this.set({ model });
   }
+  setStageReady(stageReady:boolean):void { if(this.state.stageReady!==stageReady)this.set({stageReady}); }
   select(id: string | null): void {
     this.set({ selectedId: id });
   }

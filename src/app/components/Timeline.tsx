@@ -20,7 +20,7 @@ export function Timeline() {
   return (
     <div className="transport">
       <div className="transport-row">
-        {s.playing || s.waiting ? <button className="btn btn-primary" data-testid="pause" onClick={() => playback.pause()}><Pause size={18} fill="currentColor"/>{t.pause}</button> : <button className="btn btn-primary" data-testid="play-all" disabled={!s.paragraphs.some(p => p.text.trim())} onClick={() => { window.__mabear?.closeup(null); playback.playAll(); }}><Play size={18} fill="currentColor"/>{t.playAll}</button>}
+        {s.playing || s.waiting ? <button className="btn btn-primary" data-testid="pause" onClick={() => playback.pause()}><Pause size={18} fill="currentColor"/>{t.pause}</button> : <button className="btn btn-primary" data-testid="play-all" disabled={!s.stageReady || !s.paragraphs.some(p => p.text.trim())} onClick={() => { window.__mabear?.closeup(null); playback.playAll(); }}><Play size={18} fill="currentColor"/>{t.playAll}</button>}
         <button className="btn icon restart" title={s.lang === "en" ? "Back to the beginning" : "В начало"} aria-label={s.lang === "en" ? "Back to the beginning" : "В начало"} disabled={!dur} onClick={() => playback.seek(0)}><RotateCcw size={18}/></button>
         <button className="btn icon fullscreen-volume" aria-label={s.muted ? t.unmute : t.mute} onClick={() => store.setMuted(!s.muted)}>{s.muted ? <VolumeX size={18}/> : <Volume2 size={18}/>}</button>
         <span className="transport-hint">{s.lang === "en" ? (s.playing ? "A little story is coming to life." : "Press play. Let the adventure unfold.") : (s.playing ? "Маленькая история оживает." : "Нажми «Играть» — приключение начинается.")}</span>

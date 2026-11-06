@@ -16,6 +16,9 @@ export function focusBlock(id: string, at: "start" | "end" = "end"): void {
   setTimeout(() => {
     const el = document.querySelector(`[data-pid="${id}"]`) as HTMLTextAreaElement | null;
     if (!el) return;
+    // A fast click/keystroke may already have focused the new block before this deferred task.
+    // Don't move the caret underneath text the user has started entering.
+    if (document.activeElement === el) return;
     el.focus();
     const pos = at === "end" ? el.value.length : 0;
     el.setSelectionRange(pos, pos);
@@ -112,7 +115,7 @@ export function ParagraphCard({ p, index, active, selected, count }: { p: Paragr
       onClick={() => store.select(p.id)}
     >
       <div className="gutter">
-        <button className="gbtn card-play" data-testid="card-play" title={t.playThis} aria-label={t.playThis} disabled={!canPlay} onClick={(e) => { e.stopPropagation(); playback.playParagraph(p.id); }}><Play size={13} fill="currentColor"/></button>
+        <button className="gbtn card-play" data-testid="card-play" title={t.playThis} aria-label={t.playThis} disabled={!s.stageReady || !canPlay} onClick={(e) => { e.stopPropagation(); playback.playParagraph(p.id); }}><Play size={13} fill="currentColor"/></button>
         <div className="card-menu" ref={menuRef}>
           <button className="gbtn" data-testid="card-menu" aria-label="⋯" onClick={(e) => { e.stopPropagation(); setMenu(!menu); }}><Ellipsis size={16}/></button>
           {menu && (

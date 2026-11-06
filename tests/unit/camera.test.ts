@@ -39,6 +39,19 @@ const SCENE = BS([
 ]);
 
 describe("auto-cinematographer", () => {
+  it("shows a guest's face even when it faces away from the original leads",()=>{
+    for(const facing of [Math.PI,Math.PI/2]) {
+      const state=initialWorldState();state.actors.hare.pos=[0,0];state.actors.hare.facing=facing;
+      const s=compile(BS([B({actor:'hare',verb:'dance',shot:'close'})]),state,{paragraphId:'p',version:1,lang:'en',remix:DEFAULT_REMIX,isFirst:false,carry:EMPTY_CARRY}).segment;
+      const c=s.camera[0].from, dx=c.pos[0]-c.look[0], dz=c.pos[2]-c.look[2];
+      expect((dx*Math.sin(facing)+dz*Math.cos(facing))/Math.hypot(dx,dz)).toBeGreaterThan(.7);
+    }
+  });
+  for(const actor of ['lady_bear','hare','rosie','squirrel','rival_bear'] as const) it(`frames ${actor}'s own action instead of the old lead pair`,()=>{
+    const s=run(BS([B({actor,verb:'dance'})]),false);
+    const p=s.startState.actors[actor].pos;
+    expect(Math.hypot(s.camera[0].from.look[0]-p[0],s.camera[0].from.look[2]-p[1])).toBeLessThan(.1);
+  });
   it("opens the episode on an establishing wide shot", () => {
     const s = run(SCENE, true);
     expect(s.camera[0].start).toBe(0);

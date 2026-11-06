@@ -1,6 +1,6 @@
 // Action grammar (spec §6.2). FROZEN after M1: additive changes only.
 import type { ActorId, Emote, FoleyId, Verb } from "./schema";
-import { WOLF_IDS } from "./schema";
+import { ACTOR_IDS, WOLF_IDS } from "./schema";
 
 export type VerbTarget = "mark" | "actor" | "prop" | "mark_or_actor" | "none";
 export type VerbGroup = "locomotion" | "body" | "gesture" | "emotion" | "objects";
@@ -33,7 +33,7 @@ export interface VerbDef {
 const BOTH: ActorId[] = ["masha", "bear"];
 /** Everyone incl. the Wolves (appended after M1, additive). Wolves get locomotion, body, gesture, emotion and the
  *  simple object verbs; not the household chores/signatures (cook, fish, swing, carry, water_plants, facepalm). */
-const ALL: ActorId[] = ["masha", "bear", "wolf_a", "wolf_b"];
+const ALL: ActorId[] = [...ACTOR_IDS];
 const STEPS: FoleyRule[] = [{ id: "footstep", when: "contacts" }];
 
 const defs: VerbDef[] = [
@@ -65,7 +65,7 @@ const defs: VerbDef[] = [
   { id: "nod", group: "gesture", actors: ALL, target: "none", needsItem: false, baseDuration: 1.0, loopable: false, foley: [], effortVocal: null, description: "Nod yes." },
   { id: "shake_head", group: "gesture", actors: ALL, target: "none", needsItem: false, baseDuration: 1.0, loopable: false, foley: [], effortVocal: null, description: "Shake the head no." },
   { id: "shrug", group: "gesture", actors: ALL, target: "none", needsItem: false, baseDuration: 1.0, loopable: false, foley: [], effortVocal: null, description: "Shrug: who knows?" },
-  { id: "facepalm", group: "gesture", actors: ["bear", "masha"], target: "none", needsItem: false, baseDuration: 2.0, loopable: false, foley: [], effortVocal: "sigh", description: "Bear's signature: paw over the face in long-suffering exasperation." },
+  { id: "facepalm", group: "gesture", actors: ALL, target: "none", needsItem: false, baseDuration: 2.0, loopable: false, foley: [], effortVocal: "sigh", description: "Bear's signature: paw over the face in long-suffering exasperation." },
   { id: "hug", group: "gesture", actors: ALL, target: "actor", needsItem: false, baseDuration: 2.0, loopable: false, foley: [{ id: "cloth_rustle", when: "start" }], effortVocal: null, description: "Hug another character (walks up first if needed)." },
   // Emotion
   { id: "laugh", group: "emotion", actors: ALL, target: "none", needsItem: false, baseDuration: 1.6, loopable: true, foley: [], effortVocal: "laugh", description: "Laugh out loud." },
@@ -85,7 +85,7 @@ const defs: VerbDef[] = [
   { id: "fish", group: "objects", actors: BOTH, target: "none", needsItem: false, baseDuration: 4.0, loopable: true, foley: [{ id: "splash_small", when: "at", t: 0.3 }], effortVocal: null, description: "Fish with the fishing rod at the pier." },
   { id: "swing", group: "objects", actors: ["masha"], target: "none", needsItem: false, baseDuration: 4.0, loopable: true, foley: [{ id: "rope_creak", when: "loop", every: 1.2 }], effortVocal: "wheee", description: "Masha swings on the rope swing." },
   { id: "carry", group: "objects", actors: ["bear"], target: "actor", needsItem: false, baseDuration: 3.0, loopable: true, foley: [{ id: "cloth_rustle", when: "start" }], effortVocal: "grunt", description: "Bear lifts Masha onto his shoulders (she rides there until a later beat puts her down)." },
-  { id: "water_plants", group: "objects", actors: BOTH, target: "none", needsItem: false, baseDuration: 3.0, loopable: true, foley: [{ id: "water_pour", when: "start" }], effortVocal: "hum", description: "Water the garden with the watering can." },
+  { id: "water_plants", group: "objects", actors: ALL.filter(a => !isWolf(a)), target: "none", needsItem: false, baseDuration: 3.0, loopable: true, foley: [{ id: "water_pour", when: "start" }], effortVocal: "hum", description: "Water the garden with the watering can." },
 ];
 
 export const GRAMMAR: Record<Verb, VerbDef> = Object.fromEntries(defs.map((d) => [d.id, d])) as Record<Verb, VerbDef>;
@@ -93,6 +93,12 @@ export const LOCOMOTION_VERBS: Verb[] = ["walk_to", "run_to", "tiptoe_to", "chas
 
 /** Locomotion speeds in m/s (§7.4). */
 export const SPEEDS: Record<ActorId, { walk_to: number; run_to: number; tiptoe_to: number; chase: number; enter: number; exit: number }> = {
+  lady_bear: { walk_to: 1, run_to: 2.1, tiptoe_to: 0.50, chase: 2.1, enter: 1, exit: 1 },
+  hare: { walk_to: 1.1, run_to: 3.4, tiptoe_to: 0.55, chase: 3.4, enter: 1.1, exit: 1.1 },
+  rosie: { walk_to: 0.8, run_to: 1.8, tiptoe_to: 0.40, chase: 1.8, enter: 0.8, exit: 0.8 },
+  squirrel: { walk_to: 0.9, run_to: 2.8, tiptoe_to: 0.45, chase: 2.8, enter: 0.9, exit: 0.9 },
+  rival_bear: { walk_to: 1.2, run_to: 3.0, tiptoe_to: 0.60, chase: 3.0, enter: 1.2, exit: 1.2 },
+
   masha: { walk_to: 1.2, run_to: 3.0, tiptoe_to: 0.6, chase: 3.0, enter: 1.5, exit: 1.5 },
   bear: { walk_to: 1.0, run_to: 2.2, tiptoe_to: 0.6, chase: 2.2, enter: 1.0, exit: 1.0 },
   // Wolves: lanky, light, quick and sneaky.
@@ -101,7 +107,7 @@ export const SPEEDS: Record<ActorId, { walk_to: number; run_to: number; tiptoe_t
 };
 
 /** Stride length per foot contact (m); footsteps = distance / stride. */
-export const STRIDE: Record<ActorId, number> = { masha: 0.35, bear: 0.7, wolf_a: 0.55, wolf_b: 0.55 };
+export const STRIDE: Record<ActorId, number> = { masha: 0.35, bear: 0.7, wolf_a: 0.55, wolf_b: 0.55, lady_bear: 0.6, hare: 0.25, rosie: 0.3, squirrel: 0.18, rival_bear: 0.75 };
 
 /** Where in-place object verbs happen (the compiler walks the actor there first). */
 export const VERB_HOME_MARK: Partial<Record<Verb, string>> = {

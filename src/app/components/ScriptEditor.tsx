@@ -3,7 +3,7 @@ import { useStore, useStrings } from "../useStore";
 import { focusBlock, ParagraphCard } from "./ParagraphCard";
 import { Feather, Plus, Sparkles } from "lucide-react";
 
-const FIXTURE_IDS = ["pancake_morning", "bears_nap", "fishing_trip"] as const;
+const FIXTURE_IDS = ["garden_party", "pancake_morning", "bears_nap", "fishing_trip"] as const;
 
 export function ScriptEditor() {
   const s = useStore();

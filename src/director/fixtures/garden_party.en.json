@@ -1,0 +1,272 @@
+{
+  "id": "garden_party",
+  "lang": "en",
+  "title": "Garden visitors",
+  "paragraphs": [
+    {
+      "text": "Lady Bear visits the garden. Bear waves hello. Masha says, \"Welcome to our garden!\"",
+      "beatScript": {
+        "summary": "Lady Bear visits the garden. Bear waves hello. Masha says, “Welcome to our garden!”",
+        "time_of_day": "morning",
+        "mood": "playful",
+        "music": {
+          "mood": "playful",
+          "intensity": "soft",
+          "change": "start"
+        },
+        "ambience": [
+          "birds_day"
+        ],
+        "beats": [
+          {
+            "actor": "lady_bear",
+            "verb": "walk_to",
+            "target": "clearing",
+            "item": null,
+            "line": null,
+            "emote": "hum",
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "wide"
+          },
+          {
+            "actor": "bear",
+            "verb": "wave",
+            "target": "lady_bear",
+            "item": null,
+            "line": null,
+            "emote": "chuckle",
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": true,
+            "delay_s": 0,
+            "shot": "auto"
+          },
+          {
+            "actor": "masha",
+            "verb": "wave",
+            "target": "lady_bear",
+            "item": null,
+            "line": "Welcome to our garden!",
+            "emote": "giggle",
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "medium"
+          }
+        ],
+        "rule_hits": []
+      }
+    },
+    {
+      "text": "Hare runs to the vegetable beds, takes a carrot and eats it. Rosie walks over and is surprised! Masha says, \"Save a carrot for me!\"",
+      "beatScript": {
+        "summary": "Hare runs to the vegetable beds, takes a carrot and eats it. Rosie walks over and is surprised!",
+        "time_of_day": "morning",
+        "mood": "playful",
+        "music": {
+          "mood": "playful",
+          "intensity": "soft",
+          "change": "continue"
+        },
+        "ambience": [
+          "birds_day"
+        ],
+        "beats": [
+          {
+            "actor": "hare",
+            "verb": "run_to",
+            "target": "garden",
+            "item": null,
+            "line": null,
+            "emote": null,
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "wide"
+          },
+          {
+            "actor": "hare",
+            "verb": "take",
+            "target": "carrot",
+            "item": "carrot",
+            "line": null,
+            "emote": "huff",
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "medium"
+          },
+          {
+            "actor": "hare",
+            "verb": "eat",
+            "target": null,
+            "item": "carrot",
+            "line": null,
+            "emote": null,
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "auto"
+          },
+          {
+            "actor": "rosie",
+            "verb": "walk_to",
+            "target": "garden",
+            "item": null,
+            "line": null,
+            "emote": null,
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "auto"
+          },
+          {
+            "actor": "rosie",
+            "verb": "surprised",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": "gasp",
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "close"
+          },
+          {
+            "actor": "masha",
+            "verb": "wave",
+            "target": null,
+            "item": null,
+            "line": "Save a carrot for me!",
+            "emote": null,
+            "sfx": null,
+            "emotion": "excited",
+            "with_previous": true,
+            "delay_s": 0.2,
+            "shot": "medium"
+          }
+        ],
+        "rule_hits": []
+      }
+    },
+    {
+      "text": "Squirrel jumps with excitement. Rival Bear comes to the clearing and dances. Lady Bear claps, Masha jumps, and Bear laughs. Masha says, \"Everybody dance!\"",
+      "beatScript": {
+        "summary": "Squirrel jumps with excitement. Rival Bear comes to the clearing and dances. Lady Bear claps, Masha jumps, and Bear laughs.",
+        "time_of_day": "morning",
+        "mood": "playful",
+        "music": {
+          "mood": "playful",
+          "intensity": "soft",
+          "change": "continue"
+        },
+        "ambience": [
+          "birds_day"
+        ],
+        "beats": [
+          {
+            "actor": "squirrel",
+            "verb": "jump",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": "chuckle",
+            "sfx": "boing",
+            "emotion": "happy",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "close"
+          },
+          {
+            "actor": "rival_bear",
+            "verb": "walk_to",
+            "target": "clearing",
+            "item": null,
+            "line": null,
+            "emote": null,
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "wide"
+          },
+          {
+            "actor": "rival_bear",
+            "verb": "dance",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": "hum",
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": false,
+            "delay_s": 0,
+            "shot": "medium"
+          },
+          {
+            "actor": "lady_bear",
+            "verb": "clap",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": "chuckle",
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": true,
+            "delay_s": 0,
+            "shot": "auto"
+          },
+          {
+            "actor": "masha",
+            "verb": "jump",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": "giggle",
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": true,
+            "delay_s": 0,
+            "shot": "auto"
+          },
+          {
+            "actor": "bear",
+            "verb": "laugh",
+            "target": null,
+            "item": null,
+            "line": null,
+            "emote": "chuckle",
+            "sfx": null,
+            "emotion": "happy",
+            "with_previous": true,
+            "delay_s": 0,
+            "shot": "auto"
+          },
+          {
+            "actor": "masha",
+            "verb": "wave",
+            "target": null,
+            "item": null,
+            "line": "Everybody dance!",
+            "emote": null,
+            "sfx": null,
+            "emotion": "excited",
+            "with_previous": true,
+            "delay_s": 0.2,
+            "shot": "medium"
+          }
+        ],
+        "rule_hits": []
+      }
+    }
+  ]
+}

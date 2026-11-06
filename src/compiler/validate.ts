@@ -25,7 +25,44 @@ export function otherActor(a: ActorId): ActorId {
 }
 
 /** Synonyms for unknown targets → nearest allowed mark/prop/actor (cast_only). */
+const NEW_CAST_ALIASES: Record<string, ActorId> = {
+  "rabbit": "hare",
+  "bunny": "hare",
+  "заяц": "hare",
+  "зайчик": "hare",
+  "зайца": "hare",
+  "зайцу": "hare",
+  "зайцем": "hare",
+  "зайку": "hare",
+  "lady_bear": "lady_bear",
+  "she_bear": "lady_bear",
+  "female_bear": "lady_bear",
+  "медведица": "lady_bear",
+  "медведице": "lady_bear",
+  "медведицу": "lady_bear",
+  "медведицей": "lady_bear",
+  "pig": "rosie",
+  "piglet": "rosie",
+  "rosie_the_pig": "rosie",
+  "свинка": "rosie",
+  "свинку": "rosie",
+  "свинке": "rosie",
+  "хрюша": "rosie",
+  "розочка": "rosie",
+  "белка": "squirrel",
+  "белочка": "squirrel",
+  "белочку": "squirrel",
+  "белке": "squirrel",
+  "белочке": "squirrel",
+  "himalayan_bear": "rival_bear",
+  "athletic_bear": "rival_bear",
+  "sports_bear": "rival_bear",
+  "медведь_спортсмен": "rival_bear",
+  "медведя_спортсмена": "rival_bear",
+  "гималайский_медведь": "rival_bear"
+};
 const TARGET_SYNONYMS: Record<string, string> = {
+  ...NEW_CAST_ALIASES,
   house: "door", home: "door", cabin: "door", hut: "door", inside: "door", steps: "porch", stairs: "porch",
   yard: "clearing", lawn: "clearing", meadow: "clearing", grass: "clearing", middle: "clearing", center: "clearing",
   tree: "big_tree", pine: "big_tree", oak: "swing", lake: "pond_shore", pond: "pond_shore", water: "pond_shore", shore: "pond_shore",
@@ -41,7 +78,7 @@ const TARGET_SYNONYMS: Record<string, string> = {
   big_wolf: "wolf_a", little_wolf: "wolf_b", small_wolf: "wolf_b", "волк": "wolf_a", "волки": "wolf_a", "волков": "wolf_a",
 };
 /** Synonyms that name a real cast member (no cast_only hit when resolved). */
-const CAST_ALIASES = new Set(["medved", "misha", "mishka", "wolf", "wolves", "wolf_1", "wolf_2", "wolf1", "wolf2", "big_wolf", "little_wolf", "small_wolf", "волк", "волки", "волков"]);
+const CAST_ALIASES = new Set([...Object.keys(NEW_CAST_ALIASES), "medved", "misha", "mishka", "wolf", "wolves", "wolf_1", "wolf_2", "wolf1", "wolf2", "big_wolf", "little_wolf", "small_wolf", "волк", "волки", "волков"]);
 
 /** A canon series character that isn't in the prototype (Hare, Penguin, Panda, Tiger, Dasha, Rosie…) → stand-in id.
  *  Only the whole target or its head noun (last word) counts, and object/food compounds don't: "hot_dog",
@@ -92,6 +129,12 @@ const EMOTE_FALLBACK: Record<ActorId, Partial<Record<Emote, Emote>>> = {
   bear: { giggle: "chuckle", wheee: "hum", uh_oh: "grunt", cry: "sigh", cheer: "hum", scream_fun: "roar_soft", howl: "roar_soft", whimper: "sigh", snicker: "chuckle" },
   wolf_a: WOLF_EMOTE_FALLBACK(),
   wolf_b: WOLF_EMOTE_FALLBACK(),
+  lady_bear: { giggle: "chuckle", cry: "sigh", cheer: "hum", wheee: "hum", uh_oh: "gasp" },
+  hare: { giggle: "chuckle", cry: "sigh", cheer: "hum", wheee: "hum", uh_oh: "gasp" },
+  rosie: { giggle: "chuckle", cry: "sigh", cheer: "hum", wheee: "hum", uh_oh: "gasp" },
+  squirrel: { giggle: "chuckle", cry: "sigh", cheer: "hum", wheee: "hum", uh_oh: "gasp" },
+  rival_bear: { giggle: "chuckle", cry: "sigh", cheer: "hum", wheee: "hum", uh_oh: "gasp" },
+
 };
 export function allowedEmote(actor: ActorId, emote: Emote | null): Emote | null {
   if (emote == null || emote === "none") return null;
@@ -116,7 +159,7 @@ function defaultMarkFor(verb: string, actor: ActorId, ws: WorldState): MarkId | 
 }
 
 /** Default food per character when `eat` names nothing. */
-const DEFAULT_FOOD: Record<ActorId, PropId> = { masha: "jam_jar", bear: "honey_pot", wolf_a: "honey_pot", wolf_b: "pancakes" };
+const DEFAULT_FOOD: Record<ActorId, PropId> = { masha: "jam_jar", bear: "honey_pot", wolf_a: "honey_pot", wolf_b: "pancakes", lady_bear: "cake", hare: "carrot", rosie: "pancakes", squirrel: "carrot", rival_bear: "honey_pot" };
 
 export function validateBeatScript(bs: BeatScript, startState: WorldState, lang: Lang): ValidateResult {
   const hits: RuleHit[] = [];
@@ -251,7 +294,7 @@ export function validateBeatScript(bs: BeatScript, startState: WorldState, lang:
     if (line != null && !CHARACTERS[actor].speaks) {
       const wolf = isWolf(actor);
       const replacement: Emote = wolf ? wolfLineEmote(b.emotion) : ["happy", "proud", "excited"].includes(b.emotion) ? "hum" : "grunt";
-      hit(wolf ? "wolves_silent" : "bear_silent", line, replacement);
+      hit(wolf ? "wolves_silent" : actor === "bear" ? "bear_silent" : "animals_silent", line, replacement);
       line = null;
       if (emote == null) emote = replacement;
       if (b.verb === "idle") b.verb = "nod"; // a fitting gesture instead of words

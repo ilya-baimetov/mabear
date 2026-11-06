@@ -1,6 +1,12 @@
 // A separate, private visual edition. The existing Worker retains ownership of
-// authentication and the AI key; no credentials are copied into this deployment.
+// authentication. This edition has its own director key and expanded character bible.
+import { handleDirect } from "./direct";
+import { directLimiter, rateLimitResponse } from "./rateLimit";
+import { getSessionCookie } from './auth';
+
 interface Env {
+  ANTHROPIC_API_KEY?: string;
+  DIRECTOR_MODEL?: string;
   ASSETS: { fetch(request: Request): Promise<Response> };
   STORY_SERVICE: { fetch(request: Request): Promise<Response> };
 }
@@ -26,7 +32,7 @@ export default {
     try {
       // Forward the original host and cookie: the shared service issues a host-only
       // cookie for THIS edition. Its existing auth and rate limits still apply.
-      if (url.pathname.startsWith("/api/") || url.pathname === "/login" || url.pathname === "/logout") {
+      if ((url.pathname.startsWith("/api/") && url.pathname !== "/api/direct") || url.pathname === "/login" || url.pathname === "/logout") {
         return secured(await env.STORY_SERVICE.fetch(request));
       }
       // An authenticated HEAD on the original protected app is an authorization
@@ -36,9 +42,18 @@ export default {
       }));
       if (probe.status !== 200) {
         if (probe.status === 302 || probe.status === 401 || probe.status === 403) {
+          if (url.pathname.startsWith("/api/")) return secured(Response.json({ error: "unauthorized", login: "/login" }, { status: 401 }));
           return secured(new Response(null, { status: 302, headers: { location: url.searchParams.get("pitch") === "1" ? "/login?pitch=1" : "/login" } }));
         }
         return secured(new Response("The story playground is resting. Please try again shortly.", { status: 503 }));
+      }
+      if (url.pathname === "/api/direct") {
+        if (request.method !== "POST") return secured(Response.json({ error: "method_not_allowed" }, { status: 405, headers: { allow: "POST" } }));
+        const origin=request.headers.get('origin');
+        if(origin && origin!==url.origin) return secured(Response.json({error:'origin_not_allowed'},{status:403}));
+        const decision = directLimiter.check(getSessionCookie(request) ?? request.headers.get("cf-connecting-ip") ?? "anonymous");
+        if (!decision.ok) return secured(rateLimitResponse(decision));
+        return secured(await handleDirect(request, env));
       }
       return secured(await env.ASSETS.fetch(request));
     } catch {

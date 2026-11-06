@@ -94,7 +94,7 @@ function rulesText(): string {
     "Words in the paragraph may already have been replaced by a safety pre-filter (e.g. a knife became a spoon); stage the replaced version. Those replacements are already recorded, so don't add rule hits for them.",
     "cast_only is only for characters (or places) that don't exist in this yard — another franchise's character, a new person or animal. An ordinary object that isn't one of the props (a spoon, a stick, a hat) needs no rule hit: stage the closest fitting prop or simply leave it out.",
     "The Wolves (wolf_a, wolf_b) are canon series characters who live in the old van — NEVER cast_only, never replace them: stage them. \"The wolves\" = both Wolves acting side by side (the second one with_previous: true); \"the wolf\" = wolf_a.",
-    "Other canon series characters are not in this prototype yet (the Hare, the Penguin, the Panda, the Tiger, Dasha, Rosie the pig, the Goat, the Dog, the Squirrels): Masha (or Bear, for the Panda and the Tiger) plays their part, with a cast_only rule hit whose kid_message is honest, e.g. en: \"The Hare isn't in this prototype yet — Masha played the part!\" / ru: \"Зайца пока нет в этой версии — Маша сыграла эту роль!\"",
+    "Other canon series characters not listed in the cast (Penguin, Panda, Tiger, Dasha, Goat, Dog) can be played by Masha or Bear with an honest cast_only note. Lady Bear, Hare, Rosie, Squirrel and Rival Bear ARE available: use their actor IDs. Never substitute them.",
   ].join("\n");
 }
 

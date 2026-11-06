@@ -59,9 +59,9 @@ describe("validator (hard rules + structural clamps)", () => {
       const [hug, walk, point, wave] = r.beatScript.beats;
       expect(hug.target).toBe("bear");
       expect(walk.target).toBe("clearing");
-      expect(point.target).toBe("masha");
+      expect(point.target).toBe("hare");
       expect(wave.line).not.toMatch(/pikachu|пикачу/i);
-      expect(r.hits.filter((h) => h.rule === "cast_only").length).toBeGreaterThanOrEqual(3);
+      expect(r.hits.filter((h) => h.rule === "cast_only").length).toBeGreaterThanOrEqual(2);
     });
   }
 

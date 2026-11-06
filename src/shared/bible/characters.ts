@@ -21,9 +21,40 @@ export interface CharacterBible {
   interjections?: Partial<Record<Emote, Record<Lang, string>>>;
 }
 
-export const BIBLE_VERSION = "2026-11-05.2"; // .2: the Wolves (wolf_a, wolf_b) joined the cast
+export const BIBLE_VERSION = "2026-11-06.cast-3"; // .2: the Wolves (wolf_a, wolf_b) joined the cast
 
 export const CHARACTERS: Record<ActorId, CharacterBible> = {
+  lady_bear: {
+    id: "lady_bear", name: { en: "Lady Bear", ru: "Медведица" }, speaks: false, voice: null,
+    emotes: ["grunt", "hum", "chuckle", "sigh", "huff", "gasp", "yawn", "snore", "sneeze", "hmph", "laugh"],
+    personality: "Warm, graceful and sociable. Bear admires her. She enjoys flowers, music and gardening; kind but independent. Never speaks words.",
+    motionStyle: "Graceful measured steps, gentle gestures and composed posture.", signatures: [],
+  },
+  hare: {
+    id: "hare", name: { en: "Hare", ru: "Заяц" }, speaks: false, voice: null,
+    emotes: ["grunt", "hum", "chuckle", "sigh", "huff", "gasp", "yawn", "snore", "sneeze", "hmph", "laugh"],
+    personality: "A quick, cheeky carrot-loving garden visitor. Steals a carrot, startles, then shares. Wordless and playful, never cruel.",
+    motionStyle: "Light springy steps, curious head tilts and energetic hops.", signatures: [],
+  },
+  rosie: {
+    id: "rosie", name: { en: "Rosie", ru: "Свинка" }, speaks: false, voice: null,
+    emotes: ["grunt", "hum", "chuckle", "sigh", "huff", "gasp", "yawn", "snore", "sneeze", "hmph", "laugh"],
+    personality: "Masha's cheerful pet pig, also called Розочка or Свинка. Loves dancing, music, gardening and playful games. Wordless.",
+    motionStyle: "Plump buoyant body, short waddling steps and enthusiastic dancing.", signatures: [],
+  },
+  squirrel: {
+    id: "squirrel", name: { en: "Squirrel", ru: "Белочка" }, speaks: false, voice: null,
+    emotes: ["grunt", "hum", "chuckle", "sigh", "huff", "gasp", "yawn", "snore", "sneeze", "hmph", "laugh"],
+    personality: "An alert red squirrel with a large fluffy tail. Loves pinecones and the forest, mischievous but friendly. Wordless.",
+    motionStyle: "Tiny rapid steps, quick head turns and lively hops.", signatures: [],
+  },
+  rival_bear: {
+    id: "rival_bear", name: { en: "Rival Bear", ru: "Медведь-спортсмен" }, speaks: false, voice: null,
+    emotes: ["grunt", "hum", "chuckle", "sigh", "huff", "gasp", "yawn", "snore", "sneeze", "hmph", "laugh"],
+    personality: "The athletic Himalayan Bear, a confident show-off with a white chest crescent. Friendly sporting rival to Bear; admiration for Lady Bear stays playful. Wordless.",
+    motionStyle: "Broad shoulders, proud stance, energetic deliberate steps and athletic gestures.", signatures: [],
+  },
+
   masha: {
     id: "masha",
     name: { en: "Masha", ru: "Маша" },

@@ -1,0 +1,97 @@
+{
+  "bear": {
+    "page": "https://www.mashabear.com/en-my/characters/bear",
+    "images": [
+      "https://www.mashabear.com/assets/images/characters/bear/1.png@x3.webp",
+      "https://www.mashabear.com/assets/images/characters/bear/2.png@x3.webp",
+      "https://www.mashabear.com/assets/images/characters/bear/3.png@x3.webp",
+      "https://www.mashabear.com/assets/images/characters/bear/4.png@x3.webp",
+      "https://www.mashabear.com/assets/images/characters/bear/5.png@x3.webp",
+      "https://www.mashabear.com/assets/images/characters/bear/7.png@x3.webp",
+      "https://www.mashabear.com/assets/images/characters/bear/8.png@x3.webp",
+      "https://www.mashabear.com/assets/images/characters/bear/9.png@x3.webp",
+      "https://www.mashabear.com/assets/images/characters/bear/10.png@x3.webp",
+      "https://www.mashabear.com/assets/images/characters/bear/6.png@x3.webp"
+    ],
+    "local": "refs/official-bear.webp"
+  },
+  "lady-bear": {
+    "page": "https://www.mashabear.com/en-my/characters/lady-bear",
+    "images": [
+      "https://www.mashabear.com/assets/images/characters/she-bear/1.png@x3.webp",
+      "https://www.mashabear.com/assets/images/characters/she-bear/2.png@x3.webp",
+      "https://www.mashabear.com/assets/images/characters/she-bear/8.png@x3.webp",
+      "https://www.mashabear.com/assets/images/characters/she-bear/7.png@x3.webp",
+      "https://www.mashabear.com/assets/images/characters/she-bear/6.png@x3.webp",
+      "https://www.mashabear.com/assets/images/characters/she-bear/5.png@x3.webp",
+      "https://www.mashabear.com/assets/images/characters/she-bear/4.png@x3.webp",
+      "https://www.mashabear.com/assets/images/characters/she-bear/3.png@x3.webp"
+    ],
+    "local": "refs/official-lady-bear.webp"
+  },
+  "rosie": {
+    "page": "https://www.mashabear.com/en-my/characters/rosie",
+    "images": [
+      "https://www.mashabear.com/assets/images/characters/rosie/1.png@x3.webp",
+      "https://www.mashabear.com/assets/images/characters/rosie/2.png@x3.webp",
+      "https://www.mashabear.com/assets/images/characters/rosie/3.png@x3.webp",
+      "https://www.mashabear.com/assets/images/characters/rosie/4.png@x3.webp",
+      "https://www.mashabear.com/assets/images/characters/rosie/5.png@x3.webp",
+      "https://www.mashabear.com/assets/images/characters/rosie/6.png@x3.webp",
+      "https://www.mashabear.com/assets/images/characters/rosie/7.png@x3.webp",
+      "https://www.mashabear.com/assets/images/characters/rosie/8.png@x3.webp",
+      "https://www.mashabear.com/assets/images/characters/rosie/rosie_new_05_2024_001.png@x3.webp",
+      "https://www.mashabear.com/assets/images/characters/rosie/rosie_new_05_2024_004.png@x3.webp",
+      "https://www.mashabear.com/assets/images/characters/rosie/rosie_new_05_2024_003.png@x3.webp",
+      "https://www.mashabear.com/assets/images/characters/rosie/rosie_new_05_2024_002.png@x3.webp",
+      "https://www.mashabear.com/assets/images/characters/rosie/rosie_new_05_2024_005.png@x3.webp",
+      "https://www.mashabear.com/assets/images/characters/rosie/rosie_new_05_2024_006.png@x3.webp",
+      "https://www.mashabear.com/assets/images/characters/rosie/rosie_new_05_2024_007.png@x3.webp",
+      "https://www.mashabear.com/assets/images/characters/rosie/rosie_new_05_2024_008.png@x3.webp"
+    ],
+    "local": "refs/official-rosie.webp"
+  },
+  "hare": {
+    "page": "https://www.mashabear.com/en-my/characters/hare",
+    "images": [
+      "https://www.mashabear.com/assets/images/characters/hare/1.png@x3.webp",
+      "https://www.mashabear.com/assets/images/characters/hare/4.png@x3.webp",
+      "https://www.mashabear.com/assets/images/characters/hare/3.png@x3.webp",
+      "https://www.mashabear.com/assets/images/characters/hare/2.png@x3.webp",
+      "https://www.mashabear.com/assets/images/characters/hare/hare_new_05_2024_002.png@x3.webp",
+      "https://www.mashabear.com/assets/images/characters/hare/hare_new_05_2024_001.png@x3.webp",
+      "https://www.mashabear.com/assets/images/characters/hare/hare_new_05_2024_003.png@x3.webp"
+    ],
+    "local": "refs/official-hare.webp"
+  },
+  "squirrel": {
+    "page": "https://www.mashabear.com/en-my/characters/squirrel",
+    "images": [
+      "https://www.mashabear.com/assets/images/characters/squirrel/1.png@x3.webp",
+      "https://www.mashabear.com/assets/images/characters/squirrel/squirrel_new_05_2024_001.png@x3.webp",
+      "https://www.mashabear.com/assets/images/characters/squirrel/squirrel_new_05_2024_012.png@x3.webp",
+      "https://www.mashabear.com/assets/images/characters/squirrel/squirrel_new_05_2024_011.png@x3.webp",
+      "https://www.mashabear.com/assets/images/characters/squirrel/squirrel_new_05_2024_010.png@x3.webp",
+      "https://www.mashabear.com/assets/images/characters/squirrel/squirrel_new_05_2024_009.png@x3.webp",
+      "https://www.mashabear.com/assets/images/characters/squirrel/squirrel_new_05_2024_008.png@x3.webp",
+      "https://www.mashabear.com/assets/images/characters/squirrel/squirrel_new_05_2024_007.png@x3.webp",
+      "https://www.mashabear.com/assets/images/characters/squirrel/squirrel_new_05_2024_006.png@x3.webp",
+      "https://www.mashabear.com/assets/images/characters/squirrel/squirrel_new_05_2024_005.png@x3.webp",
+      "https://www.mashabear.com/assets/images/characters/squirrel/squirrel_new_05_2024_004.png@x3.webp",
+      "https://www.mashabear.com/assets/images/characters/squirrel/squirrel_new_05_2024_003.png@x3.webp",
+      "https://www.mashabear.com/assets/images/characters/squirrel/squirrel_new_05_2024_002.png@x3.webp"
+    ],
+    "local": "refs/official-squirrel.webp"
+  },
+  "rival-bear": {
+    "page": "https://www.mashabear.com/en-my/characters/rival-bear",
+    "images": [
+      "https://www.mashabear.com/assets/images/characters/rival-bear/1.png@x3.webp",
+      "https://www.mashabear.com/assets/images/characters/rival-bear/2.png@x3.webp",
+      "https://www.mashabear.com/assets/images/characters/rival-bear/3.png@x3.webp",
+      "https://www.mashabear.com/assets/images/characters/rival-bear/4.png@x3.webp",
+      "https://www.mashabear.com/assets/images/characters/rival-bear/5.png@x3.webp"
+    ],
+    "local": "refs/official-rival-bear.webp"
+  }
+}

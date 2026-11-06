@@ -11,12 +11,13 @@ export interface RuleDef {
 
 export const RULES: Record<RuleId, RuleDef> = {
   bear_silent: { id: "bear_silent", hard: true, description: "Bear never speaks words (canon; verify with Animaccord). A Bear line becomes a fitting emote + gesture.", kidMessage: { en: "Bear doesn't talk in our show — he grumbled instead!", ru: "Мишка в мультике не разговаривает — он просто заурчал!" } },
-  cast_only: { id: "cast_only", hard: true, description: "Only bible characters (Masha, Bear, the two Wolves), marks and props. Other franchises' characters never appear. The Wolves are canon and never cast_only.", kidMessage: { en: "Only Masha, Bear and the Wolves live in this yard, so they played it themselves!", ru: "В этом дворе живут только Маша, Мишка и Волки — они сыграли всё сами!" } },
+  cast_only: { id: "cast_only", hard: true, description: "Only the nine available bible characters, marks and props. Other franchises' characters never appear. The Wolves are canon and never cast_only.", kidMessage: { en: "The friends in this yard played that part themselves!", ru: "Друзья из нашего двора сыграли эту роль сами!" } },
   no_weapons: { id: "no_weapons", hard: true, description: "No weapons or real violence; soft slapstick is fine. Weapons become toys or are removed; hitting becomes a playful pillow bonk or nothing.", kidMessage: { en: "We swapped that for something safe and silly!", ru: "Мы заменили это на что-то безопасное и смешное!" } },
   no_scary: { id: "no_scary", hard: false, description: "No gore, horror, death or injury. Reframe as a gentle surprise.", kidMessage: { en: "We made it a funny surprise instead of a scary one!", ru: "Мы сделали это весёлым сюрпризом, а не страшилкой!" } },
   kind_language: { id: "kind_language", hard: false, description: "No insults or profanity; replace with a kind equivalent.", kidMessage: { en: "Masha found a kinder way to say it!", ru: "Маша сказала это по-доброму!" } },
   no_brands: { id: "no_brands", hard: false, description: "No real brands or products; use a generic noun.", kidMessage: { en: "We used a regular word instead of a brand name.", ru: "Мы заменили название бренда обычным словом." } },
   no_personal_data: { id: "no_personal_data", hard: false, description: "Strip names, addresses, phone numbers, emails the child types about themselves.", kidMessage: { en: "We left out personal details to keep you safe.", ru: "Мы убрали личные данные, чтобы было безопасно." } },
+  animals_silent: { id: "animals_silent", hard: true, description: "Animal friends communicate with gestures and nonverbal sounds, not spoken words.", kidMessage: { en: "Our animal friends answered with sounds and gestures!", ru: "Зверята ответили звуками и жестами!" } },
   wolves_silent: { id: "wolves_silent", hard: true, description: "The Wolves don't speak words in this prototype (verify with Animaccord). A Wolf line becomes a howl, whimper or snicker + gesture.", kidMessage: { en: "The Wolves don't talk here — they howled and snickered instead!", ru: "Волки тут не разговаривают — они повыли и похихикали!" } },
   in_character: { id: "in_character", hard: false, description: "Masha is mischievous but never cruel; Bear is never aggressive toward Masha. Restage.", kidMessage: { en: "We kept Masha and Bear true to themselves!", ru: "Маша и Мишка остались собой!" } },
 };
@@ -131,7 +132,7 @@ export const CANON_ABSENT: CanonAbsentDef[] = [
     // not «белков»/«белками» (proteins); «белки»/«белок» next to eggs are egg whites (see CANON_ABSENT_NOT)
     forms: ["squirrel", "squirrels", "белка", "белки", "белке", "белку", "белкой", "белок", "белкам", "белках", ...ruNoun("белочк", "а и е у ой ам ами ах"), "белочек",
       "бельчонок", ...ruNoun("бельчонк", "а у ом е"), "бельчата"] },
-];
+].filter(c => !["hare", "rosie", "squirrel"].includes(c.keys[0])) as CanonAbsentDef[];
 
 /** Words before a form that make it an object/food/toy, not the character ("hot dog", «плюшевый зайчик»). */
 const CANON_NOT_BEFORE = /^(?:hot|corn|toy|toys|stuffed|plush|plushie|chocolate|gummy|paper|rubber|wooden|cuddly|dust|guinea|sea|soft|easter|snow|игрушечн\p{L}*|плюшев\p{L}*|шоколадн\p{L}*|мягк\p{L}*|резинов\p{L}*|бумажн\p{L}*|деревянн\p{L}*|морск\p{L}*|надувн\p{L}*|мармеладн\p{L}*|яичн\p{L}*)$/u;

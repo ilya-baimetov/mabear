@@ -28,9 +28,9 @@ export const SEGMENT_TAIL = 0.6;
 export const MAX_LOCO_S = 6;
 const ACTORS: ActorId[] = [...ACTOR_IDS];
 /** Sideways nudge per actor so characters arriving at the same spot don't overlap. */
-const SPREAD_OFFSET: Record<ActorId, Vec2> = { masha: [1.0, 0.2], bear: [-1.0, 0.2], wolf_a: [0.7, 0.8], wolf_b: [-0.7, -0.8] };
+const SPREAD_OFFSET: Record<ActorId, Vec2> = { masha: [1.0, 0.2], bear: [-1.0, 0.2], wolf_a: [0.7, 0.8], wolf_b: [-0.7, -0.8], lady_bear: [-2.2, 0], hare: [1.5, -1.2], rosie: [2, 1], squirrel: [2, -2], rival_bear: [-2.2, 2] };
 /** Where each actor stands after entering from the forest path (offset from the clearing). */
-const ENTER_OFFSET: Record<ActorId, Vec2> = { masha: [0.8, 1.5], bear: [-0.8, 1.5], wolf_a: [1.8, 2.4], wolf_b: [2.6, 1.6] };
+const ENTER_OFFSET: Record<ActorId, Vec2> = { masha: [0.8, 1.5], bear: [-0.8, 1.5], wolf_a: [1.8, 2.4], wolf_b: [2.6, 1.6], lady_bear: [-2.5, 1], hare: [1.5, -.6], rosie: [3.4, 2.2], squirrel: [2.5, -.8], rival_bear: [-3, 3.4] };
 const r3 = (n: number) => Math.round(n * 1000) / 1000;
 const dist = (a: Vec2, b: Vec2) => Math.hypot(a[0] - b[0], a[1] - b[1]);
 const v2 = (p: readonly number[]): Vec2 => [p[0], p[1]];
@@ -605,7 +605,7 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
   const duration = r3(Math.max(1.5, end + SEGMENT_TAIL));
 
   // ---------- ambient life ----------
-  const actorClips = { masha: fillAmbient("masha"), bear: fillAmbient("bear"), wolf_a: fillAmbient("wolf_a"), wolf_b: fillAmbient("wolf_b") };
+  const actorClips = Object.fromEntries(ACTOR_IDS.map(id => [id, fillAmbient(id)])) as Record<ActorId, ActorClip[]>;
 
   /** Who an idle character watches at time t: whoever's beat covers t (latest start), else its partner. */
   function focusAt(a: ActorId, o: ActorId, t: number): ActorId {
@@ -735,6 +735,7 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
     });
   });
   const camera = planCamera({
+    facingAt: (actor,t) => tracks[actor].clips.find(c=>c.start<=t&&t<c.start+c.dur)?.params.facing ?? stateAt(actor,t).facing,
     duration, beats: camBeats, posAt, visibleAt: (x, tt) => postureAt(x, tt) !== "offstage", headY: (x, tt) => headAt(x, tt)[1],
     dialogue: dialogue.map((d) => ({ start: d.start, dur: d.dur, actor: d.actor })), isFirst: opts.isFirst, cameraSeed: opts.remix.cameraSeed,
   });

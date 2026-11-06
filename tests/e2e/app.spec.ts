@@ -368,6 +368,7 @@ test("12. Notion-style editor keys: Enter splits, Shift+Enter breaks the line, B
   await page.getByTestId("add-paragraph").click();
   const first = page.getByTestId("paragraph-text").first();
   await first.pressSequentially("Masha runs to the swing. Bear naps.", { delay: 5 });
+  await expect(first).toHaveValue("Masha runs to the swing. Bear naps.");
   // Enter with the caret before "Bear naps." splits the block in two
   for (let i = 0; i < "Bear naps.".length; i++) await first.press("ArrowLeft");
   await first.press("Enter");

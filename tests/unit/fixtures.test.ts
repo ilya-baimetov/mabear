@@ -13,6 +13,8 @@ import { cloneWorldState, initialWorldState } from "../../src/compiler/worldStat
 import { validateBeatScript } from "../../src/compiler/validate";
 import { compileEpisode } from "../../src/compiler/episode";
 import { FIXTURES, FIXTURE_IDS, findFixtureParagraph, getFixture } from "../../src/director/fixtures";
+import gardenEn from "../../src/director/fixtures/garden_party.en.json";
+import gardenRu from "../../src/director/fixtures/garden_party.ru.json";
 import pancakeEn from "../../src/director/fixtures/pancake_morning.en.json";
 import pancakeRu from "../../src/director/fixtures/pancake_morning.ru.json";
 import napEn from "../../src/director/fixtures/bears_nap.en.json";
@@ -21,11 +23,13 @@ import fishingEn from "../../src/director/fixtures/fishing_trip.en.json";
 import fishingRu from "../../src/director/fixtures/fishing_trip.ru.json";
 
 const RAW: Record<string, unknown> = {
+  "garden_party.en": gardenEn, "garden_party.ru": gardenRu,
   "pancake_morning.en": pancakeEn, "pancake_morning.ru": pancakeRu,
   "bears_nap.en": napEn, "bears_nap.ru": napRu,
   "fishing_trip.en": fishingEn, "fishing_trip.ru": fishingRu,
 };
 const TITLES: Record<string, string> = {
+  "garden_party.en": "Garden visitors", "garden_party.ru": "Гости в саду",
   "pancake_morning.en": "Pancake morning", "pancake_morning.ru": "Блинное утро",
   "bears_nap.en": "Bear's nap", "bears_nap.ru": "Мишкин сон",
   "fishing_trip.en": "Fishing trip", "fishing_trip.ru": "На рыбалке",
@@ -177,7 +181,7 @@ function ruleWordHits(text: string, lang: "en" | "ru"): string[] {
 }
 
 describe("fixture files", () => {
-  it("has exactly the six id × lang files, with the spec titles", () => {
+  it("has every id × lang file, with the spec titles", () => {
     expect(FIXTURES.map(key).sort()).toEqual(Object.keys(RAW).sort());
     expect(new Set(FIXTURES.map((e) => e.id))).toEqual(new Set(FIXTURE_IDS));
     for (const e of FIXTURES) expect(e.title).toBe(TITLES[key(e)]);
@@ -288,7 +292,7 @@ describe.each(FIXTURES.map((e) => [key(e), e] as const))("%s", (_name, ep) => {
     expect(beats.filter((b) => b.emote !== null).length).toBeGreaterThanOrEqual(ep.paragraphs.length * 2);
     for (const p of ep.paragraphs) {
       const actors = new Set(p.beatScript.beats.map((b) => b.actor));
-      expect(actors.size, p.text).toBe(2);
+      expect(actors.size, p.text).toBeGreaterThanOrEqual(2);
     }
   });
 

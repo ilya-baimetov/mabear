@@ -9,12 +9,13 @@ import {
 } from "../../src/engine/audio/scheduler";
 import { childPitch, chooseVoice, pickVoice, interjection } from "../../src/engine/audio/tts";
 import { BEAR_VOCALS, vocalFor } from "../../src/engine/audio/vocals";
-import { MUSIC_MOODS, WOLF_START, type MusicMood, type Segment, type Timeline, type WorldState } from "../../src/shared/schema";
+import { MUSIC_MOODS, WOLF_START, EXTRA_START, type MusicMood, type Segment, type Timeline, type WorldState } from "../../src/shared/schema";
 import type { AudioEngine } from "../../src/engine/api";
 
 const WS: WorldState = {
   timeOfDay: "day",
   actors: {
+    ...structuredClone(EXTRA_START),
     masha: { pos: [0, 0], facing: 0, mark: "clearing", holding: null, posture: "stand" },
     bear: { pos: [-6, -2.6], facing: 0, mark: "porch", holding: null, posture: "stand" },
     wolf_a: { ...WOLF_START.wolf_a },
@@ -26,7 +27,7 @@ const WS: WorldState = {
 function seg(id: string, duration: number, over: Partial<Segment> = {}): Segment {
   return {
     paragraphId: id, version: 1, duration, startState: WS, endState: WS,
-    actorClips: { masha: [], bear: [], wolf_a: [], wolf_b: [] }, dialogue: [], emotes: [], foley: [], camera: [], sfx: [],
+    actorClips: { masha: [], bear: [], wolf_a: [], wolf_b: [], lady_bear: [], hare: [], rosie: [], squirrel: [], rival_bear: [] }, dialogue: [], emotes: [], foley: [], camera: [], sfx: [],
     music: [], ambience: [], ducking: [], lighting: [], fx: [], ...over,
   };
 }
@@ -79,7 +80,7 @@ describe("createAudioEngine (node, no AudioContext)", () => {
     e.setVolume(0.5);
     e.setMuted(true);
     e.setMuted(false);
-    e.updateListener({ pos: [0, 2, 10], look: [0, 1, 0], fov: 40 }, { masha: [1, 0, 0], bear: [-3, 0, 0], wolf_a: [12, 0, 0], wolf_b: [12, 0, -2] });
+    e.updateListener({ pos: [0, 2, 10], look: [0, 1, 0], fov: 40 }, { masha: [1, 0, 0], bear: [-3, 0, 0], wolf_a: [12, 0, 0], wolf_b: [12, 0, -2], lady_bear: [-3.5,0,0.8], hare: [4.1,0,-4.6], rosie: [3.8,0,4], squirrel: [7.2,0,1.1], rival_bear: [-4,0,4.6] });
     e.stop();
     expect(() => e.play(null as unknown as Timeline, 0, "en")).not.toThrow();
     expect(() => e.play({ segments: [], duration: 0 }, 0, "ru")).not.toThrow();

@@ -3,7 +3,7 @@ import { BookOpen, ChevronDown, Plus, Sprout, Volume2, VolumeX } from "lucide-re
 import { useOutsideClose } from "../useOutsideClose";
 import { store } from "../store";
 import { useStore, useStrings } from "../useStore";
-const FIXTURE_IDS = ["pancake_morning", "bears_nap", "fishing_trip"] as const;
+const FIXTURE_IDS = ["garden_party", "pancake_morning", "bears_nap", "fishing_trip"] as const;
 export function TopBar() {
   const s = useStore(), t = useStrings();
   const [open, setOpen] = useState(false);

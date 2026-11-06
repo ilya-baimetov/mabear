@@ -4,19 +4,20 @@ import { useStore, useStrings } from "../useStore";
 import { playback } from "../playback";
 import type { StageHandle, AudioEngine } from "../../engine/api";
 import type { Player } from "../../engine/player/player";
-import type { ActorId } from "../../shared/schema";
+import { ACTOR_IDS, type ActorId } from "../../shared/schema";
+import { CHARACTERS } from "../../shared/bible/characters";
 import { reactionTimeline } from "../react";
 import { castCloseup } from "../castCamera";
 import { MapPin, Maximize, Hand, LoaderCircle } from "lucide-react";
 
 declare global {
   interface Window {
-    __mabear?: { screenOf: (actor: ActorId) => [number, number] | null; closeup: (actor: ActorId | null, angle?: number) => void; wide: (pos: [number, number, number], look: [number, number, number], fov?: number) => void; stats: () => { fps: number; drawCalls: number; triangles: number } | null; t: () => number; playing: () => boolean; segments: () => number; timeline: () => unknown; compiles: () => number; freeze: (on: boolean) => void; snapshot: () => string | null; quality: () => { scale: number; post: number } | null };
+    __mabear?: { assets: () => unknown; rigs: () => unknown; screenOf: (actor: ActorId) => [number, number] | null; closeup: (actor: ActorId | null, angle?: number) => void; wide: (pos: [number, number, number], look: [number, number, number], fov?: number) => void; stats: () => { fps: number; drawCalls: number; triangles: number } | null; t: () => number; playing: () => boolean; segments: () => number; timeline: () => unknown; compiles: () => number; freeze: (on: boolean) => void; snapshot: () => string | null; quality: () => { scale: number; post: number } | null };
   }
 }
 
 /** Approximate standing heights (m) for screen picking and debug close-ups. */
-const HEIGHT: Record<ActorId, number> = { masha: 1.0, bear: 2.4, wolf_a: 2.0, wolf_b: 1.95 };
+const HEIGHT: Record<ActorId, number> = { masha: 1.0, bear: 2.4, wolf_a: 2.0, wolf_b: 1.95, lady_bear: 2.15, hare: .85, rosie: 1.05, squirrel: .65, rival_bear: 2.55 };
 
 export function Stage() {
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -37,6 +38,7 @@ export function Stage() {
 
   useEffect(() => {
     let disposed = false;
+    store.setStageReady(false);
     let ro: ResizeObserver | null = null;
     (async () => {
       const [{ createStage }, { Player }, audioMod, { pickActor }] = await Promise.all([
@@ -85,6 +87,8 @@ export function Stage() {
       ro = new ResizeObserver(fit);
       if (wrap.current) ro.observe(wrap.current);
       window.__mabear = {
+        assets:()=>stage.assets(),
+        rigs:()=>Object.fromEntries(ACTOR_IDS.map(id=>[id,{name:stage.rigs[id].root.name,asset:stage.rigs[id].root.userData.asset,generated:stage.rigs[id].root.userData.generated}])),
         screenOf: (actor) => {
           const f = player.frame;
           if (!f) return null;
@@ -125,7 +129,7 @@ export function Stage() {
         },
       };
       await stage.assetsReady;
-      if (!disposed) setReady(true);
+      if (!disposed) {setReady(true);store.setStageReady(true);}
     })().catch((err) => {
       if (disposed) return;
       console.error("stage init failed", err);
@@ -133,6 +137,7 @@ export function Stage() {
     });
     return () => {
       disposed = true;
+      store.setStageReady(false);
       ro?.disconnect();
       handles.current?.player.dispose();
       handles.current?.stage.dispose();
@@ -183,7 +188,7 @@ export function Stage() {
     </div>
     <div className="cast-bar"><span>{s.lang === "en" ? "Meet your friends" : "Твои друзья"}</span>
       <button className={!focus ? "selected" : ""} onClick={() => { setFocus(null); window.__mabear?.closeup(null); }}>{s.lang === "en" ? "Story view" : "История"}</button>
-      {(["masha","bear","wolf_a","wolf_b"] as ActorId[]).map(id => <button key={id} className={focus === id ? "selected" : ""} disabled={!ready || s.playing || s.waiting} onClick={() => { setFocus(id); window.__mabear?.closeup(id,.18); }}>{({masha: s.lang === "en" ? "Masha" : "Маша",bear: s.lang === "en" ? "Bear" : "Мишка",wolf_a: s.lang === "en" ? "Big Wolf" : "Большой Волк",wolf_b: s.lang === "en" ? "Little Wolf" : "Маленький Волк"})[id]}</button>)}
+      {ACTOR_IDS.map(id => <button key={id} className={focus === id ? "selected" : ""} disabled={!ready || s.playing || s.waiting} onClick={() => { setFocus(id); window.__mabear?.closeup(id,.18); }}>{CHARACTERS[id].name[s.lang]}</button>)}
     </div>
     </div>
   );

@@ -51,7 +51,7 @@ export const CREEK_POINTS: Vec2[] = [
 export const SET_ELEMENTS: Record<SetElementId, SetElementDef> = {
   ground: { id: "ground", pos: [0, 0, 0], rotY: 0, mark: null, description: "Textured meadow ground with the forest path and worn patches" },
   grass: { id: "grass", pos: [0, 0, 0], rotY: 0, mark: null, description: "Instanced grass tufts" },
-  house: { id: "house", pos: [-6, 0, -6.4], rotY: 0, mark: "porch", description: "Bear's two-storey log cabin with porch, door, chimney and carved windows" },
+  house: { id: "house", pos: [-6, 0, -6.4], rotY: 0, mark: "porch", description: "Bear's hollow tree-house with timber facade, mailbox and flower box" },
   garden: { id: "garden", pos: [5.4, 0, -7.1], rotY: 0, mark: "garden", description: "Raised beds with carrots and cabbages, small picket fence" },
   beehive: { id: "beehive", pos: [10.2, 0, -9.1], rotY: 0, mark: "beehive", description: "Wooden beehive on a stump" },
   oak_swing: { id: "oak_swing", pos: [8.6, 0, -0.6], rotY: 0, mark: "swing", description: "Big oak with a rope swing (seat is a separate moving object)" },
@@ -91,11 +91,10 @@ function toLocal(x: number, z: number, def: SetElementDef): [number, number] {
 
 /** Height of the walkable surface under (x, z): porch deck + steps, pier, footbridges. 0 on the ground. */
 export function walkHeightAt(x: number, z: number): number {
-  // porch (world x -8.4..-3.6, z -4.0..-2.0) with full-width steps down to z = -1.4, and soft side ramps
-  if (x > -9.0 && x < -3.0 && z > -4.6 && z < -1.4) {
-    const hz = clamp01((-1.4 - z) / 0.6);
-    const hx = clamp01(Math.min(x + 9.0, -3.0 - x) / 0.6);
-    return PORCH_HEIGHT * Math.min(hz, hx);
+  // The generated house has a small doorstep; the former cabin's broad porch is now grass.
+  if (x > -6.9 && x < -5.1 && z > -4.7 && z < -3.9) {
+    const hz = clamp01((-3.9-z)/.3),hx=clamp01(Math.min(x+6.9,-5.1-x)/.15);
+    return .22*Math.min(hz,hx);
   }
   // pier: local z along the pier from -0.3 (land) to 3.1
   {
@@ -1678,14 +1677,13 @@ export function buildBearsYard(mats: LookMaterials, opts: BuildSetOptions = {}):
     anchor.userData = { setElement: id, mark: def.mark, description: def.description, source: skip.has(id) ? "gltf" : "procedural" };
     root.add(anchor);
     elements[id] = anchor;
-    if (skip.has(id)) continue;
     const ctx: BuildCtx = { bag: new GeoBag(), dyn: [], mats, extra };
     const t0 = performance.now();
     BUILDERS[id](ctx);
     for (const o of ctx.dyn) anchor.add(o);
     if (ctx.bag.parts.size) {
       const cast = SHADOW_CASTERS.has(id);
-      if (merge) {
+      if (merge && !skip.has(id)) {
         anchor.updateMatrix();
         (cast ? global : globalNoCast).absorb(ctx.bag, anchor.matrix);
         anchor.userData.merged = true;

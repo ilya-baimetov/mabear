@@ -1,0 +1,37 @@
+{
+  "status": "submitted",
+  "recipe": {
+    "endpoint_id": "meshy/v7.1/image-to-3d",
+    "input": {
+      "image_url": "local:docs/expansion/inputs/rosie-smooth.jpg",
+      "model_type": "standard",
+      "topology": "triangle",
+      "target_polycount": 40000,
+      "geometry_resolution": "4k",
+      "symmetry_mode": "auto",
+      "should_remesh": true,
+      "should_texture": true,
+      "texture_model": "meshy-7",
+      "enable_pbr": true,
+      "pose_mode": "a-pose",
+      "enable_rigging": true,
+      "rigging_height_meters": 1.05,
+      "enable_animation": false
+    },
+    "note": "These are the submitted inputs, not resolved server defaults. For a variation, copy them and change only requested fields; reuse returned_seed when supported by the schema. Source URLs may expire."
+  },
+  "request_id": "01a1b258-5244-7f42-abeb-961d84e8b69e",
+  "endpoint_id": "meshy/v7.1/image-to-3d",
+  "status_url": "https://queue.fal.run/meshy/v7.1/requests/01a1b258-5244-7f42-abeb-961d84e8b69e/status",
+  "response_url": "https://queue.fal.run/meshy/v7.1/requests/01a1b258-5244-7f42-abeb-961d84e8b69e",
+  "cancel_url": "https://queue.fal.run/meshy/v7.1/requests/01a1b258-5244-7f42-abeb-961d84e8b69e/cancel",
+  "has_result": false,
+  "next_action": {
+    "tool": "check_job",
+    "endpoint_id": "meshy/v7.1/image-to-3d",
+    "request_id": "01a1b258-5244-7f42-abeb-961d84e8b69e",
+    "status_url": "https://queue.fal.run/meshy/v7.1/requests/01a1b258-5244-7f42-abeb-961d84e8b69e/status",
+    "reason": "The job is still running. Call check_job now, without pausing: it waits up to 40 seconds and returns the result as soon as the job finishes. Don't submit another job."
+  },
+  "hint": "Job submitted. Follow next_action: check_job returns the result in the same call once the job finishes."
+}

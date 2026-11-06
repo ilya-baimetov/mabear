@@ -14,7 +14,7 @@ export function castCloseup(rig: CharacterRig, actor: ActorFrame, angle = 0): Ca
   const dist = rig.height < 1.3 ? 1.15 : rig.height * 0.96;
   const yaw = actor.yaw + angle;
   return {
-    pos: [centre.x + Math.sin(yaw) * dist, centre.y + (actor.posture === "carried" ? 0.5 : rig.height * 0.04), centre.z + Math.cos(yaw) * dist],
+    pos: [centre.x + Math.sin(yaw) * dist, centre.y + (actor.posture === "carried" ? 0.8 : rig.height * 0.04), centre.z + Math.cos(yaw) * dist],
     look: [centre.x, centre.y, centre.z],
     fov: 35,
   };

@@ -6,6 +6,12 @@ const W = (s: string) => new RegExp(`\\b(?:${s})\\b`, "u");
 export const LEXICON_EN: Lexicon = {
   lang: "en",
   actors: [
+    { re: W("(?:the )?(?:lady bear|she-bear|female bear)"), id: "lady_bear", nominative: true },
+    { re: W("(?:the )?(?:rival bear|himalayan bear|athletic bear|sports bear)"), id: "rival_bear", nominative: true },
+    { re: W("(?:the )?(?:hare|rabbit|bunny)"), id: "hare", nominative: true },
+    { re: W("(?:rosie(?: the pig)?|(?:the )?(?:pig|piglet|piggy))"), id: "rosie", nominative: true },
+    { re: W("(?:the )?squirrel"), id: "squirrel", nominative: true },
+
     { re: W("masha|mashenka|the girl|little girl"), id: "masha", nominative: true },
     { re: W("bear|mishka|misha|the bear|big bear"), id: "bear", nominative: true },
     // the Wolves (canon): plural = both Wolves acting together; singular = the (big) Wolf
@@ -203,6 +209,6 @@ export const LEXICON_EN: Lexicon = {
     take: "takes something", give: "gives a present", eat: "eats", throw: "throws", cook: "cooks", fish: "fishes",
     swing: "swings", carry: "carries Masha", water_plants: "waters the garden",
   },
-  names: { masha: "Masha", bear: "Bear", wolf_a: "the Big Wolf", wolf_b: "the Little Wolf" },
+  names: { lady_bear: "Lady Bear", hare: "Hare", rosie: "Rosie", squirrel: "Squirrel", rival_bear: "Rival Bear", masha: "Masha", bear: "Bear", wolf_a: "the Big Wolf", wolf_b: "the Little Wolf" },
   says: "says",
 };

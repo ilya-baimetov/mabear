@@ -1,0 +1,204 @@
+{
+  "batch_status": "submitted",
+  "batch_items": [
+    {
+      "index": 6,
+      "endpoint_id": "meshy/v7.1/image-to-3d",
+      "status": "submitted",
+      "field_error_codes": []
+    },
+    {
+      "index": 7,
+      "endpoint_id": "meshy/v7.1/image-to-3d",
+      "status": "submitted",
+      "field_error_codes": []
+    },
+    {
+      "index": 8,
+      "endpoint_id": "meshy/v7.1/image-to-3d",
+      "status": "submitted",
+      "field_error_codes": []
+    },
+    {
+      "index": 9,
+      "endpoint_id": "meshy/v7.1/image-to-3d",
+      "status": "submitted",
+      "field_error_codes": []
+    },
+    {
+      "index": 10,
+      "endpoint_id": "meshy/v7.1/image-to-3d",
+      "status": "submitted",
+      "field_error_codes": []
+    }
+  ],
+  "not_started_count": 0,
+  "status": "submitted",
+  "all_submitted": true,
+  "submitted_count": 5,
+  "rejected_count": 0,
+  "submission_unknown_count": 0,
+  "jobs": [
+    {
+      "index": 6,
+      "endpoint_id": "meshy/v7.1/image-to-3d",
+      "status": "submitted",
+      "request_id": "01a1b23f-2eab-7651-a4f5-75826174b26b",
+      "response_url": "https://queue.fal.run/meshy/v7.1/requests/01a1b23f-2eab-7651-a4f5-75826174b26b",
+      "status_url": "https://queue.fal.run/meshy/v7.1/requests/01a1b23f-2eab-7651-a4f5-75826174b26b/status",
+      "cancel_url": "https://queue.fal.run/meshy/v7.1/requests/01a1b23f-2eab-7651-a4f5-75826174b26b/cancel",
+      "logs": null,
+      "metrics": {},
+      "queue_position": 0,
+      "user_queue_position": 0,
+      "user_queued_count": 1,
+      "recipe": {
+        "endpoint_id": "meshy/v7.1/image-to-3d",
+        "input": {
+          "image_url": "local:docs/expansion/inputs/treehouse.jpg",
+          "model_type": "standard",
+          "topology": "triangle",
+          "target_polycount": 80000,
+          "geometry_resolution": "4k",
+          "symmetry_mode": "off",
+          "should_remesh": true,
+          "should_texture": true,
+          "texture_model": "meshy-7",
+          "enable_pbr": true,
+          "enable_rigging": false,
+          "enable_animation": false
+        },
+        "note": "Submitted inputs, not resolved server defaults. Source URLs may expire."
+      }
+    },
+    {
+      "index": 7,
+      "endpoint_id": "meshy/v7.1/image-to-3d",
+      "status": "submitted",
+      "request_id": "01a1b23f-2ec7-7ae1-93a3-b6d2d6b7c144",
+      "response_url": "https://queue.fal.run/meshy/v7.1/requests/01a1b23f-2ec7-7ae1-93a3-b6d2d6b7c144",
+      "status_url": "https://queue.fal.run/meshy/v7.1/requests/01a1b23f-2ec7-7ae1-93a3-b6d2d6b7c144/status",
+      "cancel_url": "https://queue.fal.run/meshy/v7.1/requests/01a1b23f-2ec7-7ae1-93a3-b6d2d6b7c144/cancel",
+      "logs": null,
+      "metrics": {},
+      "queue_position": 1,
+      "user_queue_position": 1,
+      "user_queued_count": 2,
+      "recipe": {
+        "endpoint_id": "meshy/v7.1/image-to-3d",
+        "input": {
+          "image_url": "local:docs/expansion/inputs/orchard-tree.jpg",
+          "model_type": "standard",
+          "topology": "triangle",
+          "target_polycount": 50000,
+          "geometry_resolution": "4k",
+          "symmetry_mode": "off",
+          "should_remesh": true,
+          "should_texture": true,
+          "texture_model": "meshy-7",
+          "enable_pbr": true,
+          "enable_rigging": false,
+          "enable_animation": false
+        },
+        "note": "Submitted inputs, not resolved server defaults. Source URLs may expire."
+      }
+    },
+    {
+      "index": 8,
+      "endpoint_id": "meshy/v7.1/image-to-3d",
+      "status": "submitted",
+      "request_id": "01a1b23f-2ec5-79d0-8938-9429033ad391",
+      "response_url": "https://queue.fal.run/meshy/v7.1/requests/01a1b23f-2ec5-79d0-8938-9429033ad391",
+      "status_url": "https://queue.fal.run/meshy/v7.1/requests/01a1b23f-2ec5-79d0-8938-9429033ad391/status",
+      "cancel_url": "https://queue.fal.run/meshy/v7.1/requests/01a1b23f-2ec5-79d0-8938-9429033ad391/cancel",
+      "logs": null,
+      "metrics": {},
+      "queue_position": 2,
+      "user_queue_position": 2,
+      "user_queued_count": 3,
+      "recipe": {
+        "endpoint_id": "meshy/v7.1/image-to-3d",
+        "input": {
+          "image_url": "local:docs/expansion/inputs/beehive.jpg",
+          "model_type": "standard",
+          "topology": "triangle",
+          "target_polycount": 12000,
+          "geometry_resolution": "4k",
+          "symmetry_mode": "off",
+          "should_remesh": true,
+          "should_texture": true,
+          "texture_model": "meshy-7",
+          "enable_pbr": true,
+          "enable_rigging": false,
+          "enable_animation": false
+        },
+        "note": "Submitted inputs, not resolved server defaults. Source URLs may expire."
+      }
+    },
+    {
+      "index": 9,
+      "endpoint_id": "meshy/v7.1/image-to-3d",
+      "status": "submitted",
+      "request_id": "01a1b23f-2eb1-7c30-bfc9-1cd16a3685de",
+      "response_url": "https://queue.fal.run/meshy/v7.1/requests/01a1b23f-2eb1-7c30-bfc9-1cd16a3685de",
+      "status_url": "https://queue.fal.run/meshy/v7.1/requests/01a1b23f-2eb1-7c30-bfc9-1cd16a3685de/status",
+      "cancel_url": "https://queue.fal.run/meshy/v7.1/requests/01a1b23f-2eb1-7c30-bfc9-1cd16a3685de/cancel",
+      "logs": null,
+      "metrics": {},
+      "queue_position": 1,
+      "user_queue_position": 1,
+      "user_queued_count": 2,
+      "recipe": {
+        "endpoint_id": "meshy/v7.1/image-to-3d",
+        "input": {
+          "image_url": "local:docs/expansion/inputs/carrot.jpg",
+          "model_type": "standard",
+          "topology": "triangle",
+          "target_polycount": 12000,
+          "geometry_resolution": "4k",
+          "symmetry_mode": "off",
+          "should_remesh": true,
+          "should_texture": true,
+          "texture_model": "meshy-7",
+          "enable_pbr": true,
+          "enable_rigging": false,
+          "enable_animation": false
+        },
+        "note": "Submitted inputs, not resolved server defaults. Source URLs may expire."
+      }
+    },
+    {
+      "index": 10,
+      "endpoint_id": "meshy/v7.1/image-to-3d",
+      "status": "submitted",
+      "request_id": "01a1b23f-2ebd-7cc2-9f38-39292dade3f8",
+      "response_url": "https://queue.fal.run/meshy/v7.1/requests/01a1b23f-2ebd-7cc2-9f38-39292dade3f8",
+      "status_url": "https://queue.fal.run/meshy/v7.1/requests/01a1b23f-2ebd-7cc2-9f38-39292dade3f8/status",
+      "cancel_url": "https://queue.fal.run/meshy/v7.1/requests/01a1b23f-2ebd-7cc2-9f38-39292dade3f8/cancel",
+      "logs": null,
+      "metrics": {},
+      "queue_position": 2,
+      "user_queue_position": 2,
+      "user_queued_count": 3,
+      "recipe": {
+        "endpoint_id": "meshy/v7.1/image-to-3d",
+        "input": {
+          "image_url": "local:docs/expansion/inputs/daisies.jpg",
+          "model_type": "standard",
+          "topology": "triangle",
+          "target_polycount": 18000,
+          "geometry_resolution": "4k",
+          "symmetry_mode": "off",
+          "should_remesh": true,
+          "should_texture": true,
+          "texture_model": "meshy-7",
+          "enable_pbr": true,
+          "enable_rigging": false,
+          "enable_animation": false
+        },
+        "note": "Submitted inputs, not resolved server defaults. Source URLs may expire."
+      }
+    }
+  ],
+  "hint": "Use wait_for_jobs with each accepted item's index and canonical URLs; it waits up to 40 seconds per call and returns every result once its group has finished (check_job and get_job_result also work per item). Retain indexes across waiting and final display. Never replay this whole batch to retry an individual item."
+}

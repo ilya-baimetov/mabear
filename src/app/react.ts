@@ -9,6 +9,12 @@ import type { AppState } from "./store";
 type Partial = Pick<Beat, "verb" | "emote" | "emotion"> & { line?: Record<Lang, string> };
 
 const REACTIONS: Record<ActorId, Partial[]> = {
+  lady_bear: [{ verb: "wave", emote: "hum", emotion: "happy" }, { verb: "dance", emote: "chuckle", emotion: "excited" }],
+  hare: [{ verb: "wave", emote: "hum", emotion: "happy" }, { verb: "dance", emote: "chuckle", emotion: "excited" }],
+  rosie: [{ verb: "wave", emote: "hum", emotion: "happy" }, { verb: "dance", emote: "chuckle", emotion: "excited" }],
+  squirrel: [{ verb: "wave", emote: "hum", emotion: "happy" }, { verb: "dance", emote: "chuckle", emotion: "excited" }],
+  rival_bear: [{ verb: "wave", emote: "hum", emotion: "happy" }, { verb: "dance", emote: "chuckle", emotion: "excited" }],
+
   masha: [
     { verb: "jump", emote: "giggle", emotion: "excited", line: { en: "Hee-hee! That tickles!", ru: "Хи-хи! Щекотно!" } },
     { verb: "spin", emote: "wheee", emotion: "happy" },
@@ -34,7 +40,7 @@ const REACTIONS: Record<ActorId, Partial[]> = {
 };
 
 /** Who answers a tapped character: Masha ⇄ Bear; a Wolf's partner Wolf. */
-const PARTNER: Record<ActorId, ActorId> = { masha: "bear", bear: "masha", wolf_a: "wolf_b", wolf_b: "wolf_a" };
+const PARTNER: Record<ActorId, ActorId> = { masha: "bear", bear: "masha", wolf_a: "wolf_b", wolf_b: "wolf_a", lady_bear: "bear", hare: "masha", rosie: "masha", squirrel: "hare", rival_bear: "bear" };
 
 function beat(actor: ActorId, p: Partial, lang: Lang, withPrev: boolean, delay: number): Beat {
   return { actor, verb: p.verb, target: null, item: null, line: p.line ? p.line[lang] : null, emote: p.emote, sfx: null, emotion: p.emotion, with_previous: withPrev, delay_s: delay, shot: "medium" };

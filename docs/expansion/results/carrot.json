@@ -1,0 +1,288 @@
+{
+  "index": 9,
+  "endpoint_id": "meshy/v7.1/image-to-3d",
+  "request_id": "01a1b23f-2eb1-7c30-bfc9-1cd16a3685de",
+  "status_url": "https://queue.fal.run/meshy/v7.1/requests/01a1b23f-2eb1-7c30-bfc9-1cd16a3685de/status",
+  "response_url": "https://queue.fal.run/meshy/v7.1/requests/01a1b23f-2eb1-7c30-bfc9-1cd16a3685de",
+  "cancel_url": "https://queue.fal.run/meshy/v7.1/requests/01a1b23f-2eb1-7c30-bfc9-1cd16a3685de/cancel",
+  "queue_status": "COMPLETED",
+  "account": {
+    "id": "github|rfop8ikq0ortgxfzf375bafj",
+    "name": "Ilya Baimetov"
+  },
+  "status": "completed",
+  "terminal": true,
+  "result": {
+    "animation_glb": null,
+    "animation_fbx": null,
+    "model_glb": {
+      "url": "https://v3b.fal.media/files/b/0ab16a2a/emdAXaqmUWhFTLbccHvaY_model.glb",
+      "content_type": "model/gltf-binary",
+      "file_name": "model.glb",
+      "file_size": 9970672
+    },
+    "thumbnail": {
+      "url": "https://v3b.fal.media/files/b/0ab16a2b/FmF8K3pCWE3_YOqlB3n6P_preview.png",
+      "content_type": "image/png",
+      "file_name": "preview.png",
+      "file_size": 95907
+    },
+    "model_urls": {
+      "glb": {
+        "url": "https://v3b.fal.media/files/b/0ab16a2a/emdAXaqmUWhFTLbccHvaY_model.glb",
+        "content_type": "model/gltf-binary",
+        "file_name": "model.glb",
+        "file_size": 9970672
+      },
+      "fbx": {
+        "url": "https://v3b.fal.media/files/b/0ab16a2a/whs79siy5fuTnGC2u5Kzv_model.fbx",
+        "content_type": "application/vnd.autodesk.fbx",
+        "file_name": "model.fbx",
+        "file_size": 10209004
+      },
+      "obj": {
+        "url": "https://v3b.fal.media/files/b/0ab16a2a/pLbqZNhBDEt12y5lKjeVl_model.obj",
+        "content_type": "model/obj",
+        "file_name": "model.obj",
+        "file_size": 768374
+      },
+      "usdz": {
+        "url": "https://v3b.fal.media/files/b/0ab16a2a/f-HwjOqaKIGXm0ODcuVt9_model.usdz",
+        "content_type": "model/vnd.usdz+zip",
+        "file_name": "model.usdz",
+        "file_size": 10479950
+      },
+      "blend": null,
+      "stl": {
+        "url": "https://v3b.fal.media/files/b/0ab16a2b/X9j0yRWICBylA1WHjjvBz_model.stl",
+        "content_type": "model/stl",
+        "file_name": "model.stl",
+        "file_size": 283384
+      }
+    },
+    "texture_urls": [
+      {
+        "base_color": {
+          "url": "https://v3b.fal.media/files/b/0ab16a2b/mgYkJm7ZW7t9FTFI40E1C_texture_0.png",
+          "content_type": "image/png",
+          "file_name": "texture_0.png",
+          "file_size": 4449587
+        },
+        "metallic": {
+          "url": "https://v3b.fal.media/files/b/0ab16a2b/tBz-BFg46W97AZX9fb9HP_texture_0_metallic.png",
+          "content_type": "image/png",
+          "file_name": "texture_0_metallic.png",
+          "file_size": 319509
+        },
+        "normal": {
+          "url": "https://v3b.fal.media/files/b/0ab16a2b/79jhpbosTXiHzp0l2gVN7_texture_0_normal.png",
+          "content_type": "image/png",
+          "file_name": "texture_0_normal.png",
+          "file_size": 5131825
+        },
+        "roughness": {
+          "url": "https://v3b.fal.media/files/b/0ab16a2b/o4hbGh1FJaMqowIARqTNL_texture_0_roughness.png",
+          "content_type": "image/png",
+          "file_name": "texture_0_roughness.png",
+          "file_size": 1241139
+        }
+      }
+    ],
+    "seed": 1244342358,
+    "rigged_character_glb": null,
+    "rigged_character_fbx": null,
+    "basic_animations": null,
+    "rig_task_id": null
+  },
+  "media": [
+    {
+      "url": "https://v3b.fal.media/files/b/0ab16a2a/emdAXaqmUWhFTLbccHvaY_model.glb",
+      "json_path": "result.model_glb.url",
+      "output_path": "/model_glb/url",
+      "media_type": "3d",
+      "content_type": "model/gltf-binary",
+      "file_name": "model.glb",
+      "reference": {
+        "$fal_ref": {
+          "kind": "job",
+          "endpoint_id": "meshy/v7.1/image-to-3d",
+          "request_id": "01a1b23f-2eb1-7c30-bfc9-1cd16a3685de",
+          "response_url": "https://queue.fal.run/meshy/v7.1/requests/01a1b23f-2eb1-7c30-bfc9-1cd16a3685de",
+          "output_path": "/model_glb/url"
+        }
+      }
+    },
+    {
+      "url": "https://v3b.fal.media/files/b/0ab16a2b/FmF8K3pCWE3_YOqlB3n6P_preview.png",
+      "json_path": "result.thumbnail.url",
+      "output_path": "/thumbnail/url",
+      "media_type": "image",
+      "content_type": "image/png",
+      "file_name": "preview.png",
+      "reference": {
+        "$fal_ref": {
+          "kind": "job",
+          "endpoint_id": "meshy/v7.1/image-to-3d",
+          "request_id": "01a1b23f-2eb1-7c30-bfc9-1cd16a3685de",
+          "response_url": "https://queue.fal.run/meshy/v7.1/requests/01a1b23f-2eb1-7c30-bfc9-1cd16a3685de",
+          "output_path": "/thumbnail/url"
+        }
+      }
+    },
+    {
+      "url": "https://v3b.fal.media/files/b/0ab16a2a/emdAXaqmUWhFTLbccHvaY_model.glb",
+      "json_path": "result.model_urls.glb.url",
+      "output_path": "/model_urls/glb/url",
+      "media_type": "3d",
+      "content_type": "model/gltf-binary",
+      "file_name": "model.glb",
+      "reference": {
+        "$fal_ref": {
+          "kind": "job",
+          "endpoint_id": "meshy/v7.1/image-to-3d",
+          "request_id": "01a1b23f-2eb1-7c30-bfc9-1cd16a3685de",
+          "response_url": "https://queue.fal.run/meshy/v7.1/requests/01a1b23f-2eb1-7c30-bfc9-1cd16a3685de",
+          "output_path": "/model_urls/glb/url"
+        }
+      }
+    },
+    {
+      "url": "https://v3b.fal.media/files/b/0ab16a2a/whs79siy5fuTnGC2u5Kzv_model.fbx",
+      "json_path": "result.model_urls.fbx.url",
+      "output_path": "/model_urls/fbx/url",
+      "media_type": "3d",
+      "content_type": "application/vnd.autodesk.fbx",
+      "file_name": "model.fbx",
+      "reference": {
+        "$fal_ref": {
+          "kind": "job",
+          "endpoint_id": "meshy/v7.1/image-to-3d",
+          "request_id": "01a1b23f-2eb1-7c30-bfc9-1cd16a3685de",
+          "response_url": "https://queue.fal.run/meshy/v7.1/requests/01a1b23f-2eb1-7c30-bfc9-1cd16a3685de",
+          "output_path": "/model_urls/fbx/url"
+        }
+      }
+    },
+    {
+      "url": "https://v3b.fal.media/files/b/0ab16a2a/pLbqZNhBDEt12y5lKjeVl_model.obj",
+      "json_path": "result.model_urls.obj.url",
+      "output_path": "/model_urls/obj/url",
+      "media_type": "3d",
+      "content_type": "model/obj",
+      "file_name": "model.obj",
+      "reference": {
+        "$fal_ref": {
+          "kind": "job",
+          "endpoint_id": "meshy/v7.1/image-to-3d",
+          "request_id": "01a1b23f-2eb1-7c30-bfc9-1cd16a3685de",
+          "response_url": "https://queue.fal.run/meshy/v7.1/requests/01a1b23f-2eb1-7c30-bfc9-1cd16a3685de",
+          "output_path": "/model_urls/obj/url"
+        }
+      }
+    },
+    {
+      "url": "https://v3b.fal.media/files/b/0ab16a2a/f-HwjOqaKIGXm0ODcuVt9_model.usdz",
+      "json_path": "result.model_urls.usdz.url",
+      "output_path": "/model_urls/usdz/url",
+      "media_type": "3d",
+      "content_type": "model/vnd.usdz+zip",
+      "file_name": "model.usdz",
+      "reference": {
+        "$fal_ref": {
+          "kind": "job",
+          "endpoint_id": "meshy/v7.1/image-to-3d",
+          "request_id": "01a1b23f-2eb1-7c30-bfc9-1cd16a3685de",
+          "response_url": "https://queue.fal.run/meshy/v7.1/requests/01a1b23f-2eb1-7c30-bfc9-1cd16a3685de",
+          "output_path": "/model_urls/usdz/url"
+        }
+      }
+    },
+    {
+      "url": "https://v3b.fal.media/files/b/0ab16a2b/X9j0yRWICBylA1WHjjvBz_model.stl",
+      "json_path": "result.model_urls.stl.url",
+      "output_path": "/model_urls/stl/url",
+      "media_type": "3d",
+      "content_type": "model/stl",
+      "file_name": "model.stl",
+      "reference": {
+        "$fal_ref": {
+          "kind": "job",
+          "endpoint_id": "meshy/v7.1/image-to-3d",
+          "request_id": "01a1b23f-2eb1-7c30-bfc9-1cd16a3685de",
+          "response_url": "https://queue.fal.run/meshy/v7.1/requests/01a1b23f-2eb1-7c30-bfc9-1cd16a3685de",
+          "output_path": "/model_urls/stl/url"
+        }
+      }
+    },
+    {
+      "url": "https://v3b.fal.media/files/b/0ab16a2b/mgYkJm7ZW7t9FTFI40E1C_texture_0.png",
+      "json_path": "result.texture_urls[0].base_color.url",
+      "output_path": "/texture_urls/0/base_color/url",
+      "media_type": "image",
+      "content_type": "image/png",
+      "file_name": "texture_0.png",
+      "reference": {
+        "$fal_ref": {
+          "kind": "job",
+          "endpoint_id": "meshy/v7.1/image-to-3d",
+          "request_id": "01a1b23f-2eb1-7c30-bfc9-1cd16a3685de",
+          "response_url": "https://queue.fal.run/meshy/v7.1/requests/01a1b23f-2eb1-7c30-bfc9-1cd16a3685de",
+          "output_path": "/texture_urls/0/base_color/url"
+        }
+      }
+    },
+    {
+      "url": "https://v3b.fal.media/files/b/0ab16a2b/tBz-BFg46W97AZX9fb9HP_texture_0_metallic.png",
+      "json_path": "result.texture_urls[0].metallic.url",
+      "output_path": "/texture_urls/0/metallic/url",
+      "media_type": "image",
+      "content_type": "image/png",
+      "file_name": "texture_0_metallic.png",
+      "reference": {
+        "$fal_ref": {
+          "kind": "job",
+          "endpoint_id": "meshy/v7.1/image-to-3d",
+          "request_id": "01a1b23f-2eb1-7c30-bfc9-1cd16a3685de",
+          "response_url": "https://queue.fal.run/meshy/v7.1/requests/01a1b23f-2eb1-7c30-bfc9-1cd16a3685de",
+          "output_path": "/texture_urls/0/metallic/url"
+        }
+      }
+    },
+    {
+      "url": "https://v3b.fal.media/files/b/0ab16a2b/79jhpbosTXiHzp0l2gVN7_texture_0_normal.png",
+      "json_path": "result.texture_urls[0].normal.url",
+      "output_path": "/texture_urls/0/normal/url",
+      "media_type": "image",
+      "content_type": "image/png",
+      "file_name": "texture_0_normal.png",
+      "reference": {
+        "$fal_ref": {
+          "kind": "job",
+          "endpoint_id": "meshy/v7.1/image-to-3d",
+          "request_id": "01a1b23f-2eb1-7c30-bfc9-1cd16a3685de",
+          "response_url": "https://queue.fal.run/meshy/v7.1/requests/01a1b23f-2eb1-7c30-bfc9-1cd16a3685de",
+          "output_path": "/texture_urls/0/normal/url"
+        }
+      }
+    },
+    {
+      "url": "https://v3b.fal.media/files/b/0ab16a2b/o4hbGh1FJaMqowIARqTNL_texture_0_roughness.png",
+      "json_path": "result.texture_urls[0].roughness.url",
+      "output_path": "/texture_urls/0/roughness/url",
+      "media_type": "image",
+      "content_type": "image/png",
+      "file_name": "texture_0_roughness.png",
+      "reference": {
+        "$fal_ref": {
+          "kind": "job",
+          "endpoint_id": "meshy/v7.1/image-to-3d",
+          "request_id": "01a1b23f-2eb1-7c30-bfc9-1cd16a3685de",
+          "response_url": "https://queue.fal.run/meshy/v7.1/requests/01a1b23f-2eb1-7c30-bfc9-1cd16a3685de",
+          "output_path": "/texture_urls/0/roughness/url"
+        }
+      }
+    }
+  ],
+  "display_hint": "Present completed media to the user. Forward attached image content blocks to the host's image display helper (for example, image(block)); do not stringify image blocks as text. For Markdown previews use previews[].preview_url, and separately link original_url as the full-resolution file. If no preview is available, show a clearly labeled original-file link. Do not claim a preview rendered unless it is visible. Video, audio and 3D URLs are original result files, not queue URLs.",
+  "has_result": true
+}

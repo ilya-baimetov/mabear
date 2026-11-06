@@ -1,0 +1,55 @@
+{
+  "url": "https://mabear-storybook.ilya-baimetov.workers.dev",
+  "version": "ea262fcb-2e71-4637-b972-d9781f078511",
+  "verified_at": "2026-11-06T19:50:15.559363+00:00",
+  "checks": [
+    {
+      "path": "/api/health",
+      "status": 200,
+      "location": null,
+      "content_type": "application/json",
+      "robots": "noindex, nofollow",
+      "body": {
+        "ok": true,
+        "service": "mabear-storybook",
+        "edition": "codex"
+      }
+    },
+    {
+      "path": "/",
+      "status": 302,
+      "location": "/login",
+      "content_type": null,
+      "robots": "noindex, nofollow"
+    },
+    {
+      "path": "/login",
+      "status": 200,
+      "location": null,
+      "content_type": "text/html; charset=utf-8",
+      "robots": "noindex, nofollow"
+    },
+    {
+      "path": "/assets/generated/rosie.glb",
+      "status": 302,
+      "location": "/login",
+      "content_type": null,
+      "robots": "noindex, nofollow"
+    },
+    {
+      "path": "/api/direct",
+      "status": 401,
+      "location": null,
+      "content_type": "application/json",
+      "robots": "noindex, nofollow"
+    }
+  ],
+  "live_browser": "sign-in page renders; password gate remains active",
+  "authenticated_browser_ai": "not verified: existing demo password not available in this session",
+  "live_key_handler_smoke": "verified locally, source llm, all five new actors",
+  "unit_tests": 527,
+  "full_browser_tests": 15,
+  "post_camera_fix_expanded_cast_tests": 1,
+  "fal_published_estimate_usd": 15.8,
+  "fal_conservative_reserved_usd": 23.2
+}

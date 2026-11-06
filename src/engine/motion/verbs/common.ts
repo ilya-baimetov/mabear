@@ -2,6 +2,7 @@
 // A verb implementation is pure: (localT, params, ctx) → PoseLayer (spec §7.4).
 import type { Quat } from "../../api";
 import type { ActorClip, ActorId, Emotion, Posture, Vec3 } from "../../../shared/schema";
+import { GENERATED_PROPORTIONS } from "../generatedProportions";
 import { CLIPS } from "../clips.generated";
 import {
   IDENTITY, addLayer, clamp01, overrideLayer, qaxis, qeuler, qmul, qnorm, qslerp, smooth,
@@ -46,14 +47,30 @@ export const STYLES: Record<ActorId, ActorStyle> = {
   },
   bear: {
     height: 2.4, hipHeight: 0.72, timeScale: 0.8, bounce: 0.35, stance: 0.09, armOut: 0.46, hipsDrop: 0.035, lieHeight: 0.32,
-    shoulderHeight: 1.97, breathRate: 0.2, breathDepth: 1.3,
+    shoulderHeight: 2.28, breathRate: 0.2, breathDepth: 1.3,
     leg: { x: 0.22, y: -0.03, thigh: 0.32, shin: 0.27, ankle: 0.1, toe: 0.15 },
     cadence: { walk: 0.72, run: 1.15, tiptoe: 0.6 },
   },
   // the Wolves (stand-ins on Bear's rig, lanky): long light legs, quick sneaky cadence, a slight hunch (knees soft)
   wolf_a: wolfStyle(2.05),
   wolf_b: wolfStyle(1.93),
+  lady_bear: guestStyle(2.15, 0.9, 0.35, 0.4),
+  hare: guestStyle(0.85, 1.35, 1.2, 0.18),
+  rosie: guestStyle(1.05, 1.0, 0.6, 0.32),
+  squirrel: guestStyle(0.65, 1.5, 1.3, 0.16),
+  rival_bear: guestStyle(2.55, 1.0, 0.4, 0.46),
 };
+
+for (const [id, proportions] of Object.entries(GENERATED_PROPORTIONS)) Object.assign(STYLES[id as ActorId],proportions);
+
+/** Personality defaults; geometric dimensions are calibrated above from the shipped models. */
+function guestStyle(height: number, timeScale: number, bounce: number, armOut: number): ActorStyle {
+  const k = height;
+  return { height, hipHeight: .38*k, timeScale, bounce, stance: .04, armOut, hipsDrop: 0,
+    lieHeight: .13*k, shoulderHeight: .72*k, breathRate: .28, breathDepth: 1,
+    leg: { x: .08*k, y: -.02*k, thigh: .16*k, shin: .15*k, ankle: .05*k, toe: .08*k },
+    cadence: { walk: timeScale, run: timeScale*1.6, tiptoe: timeScale*.7 } };
+}
 
 /** Wolf style at a variant height; leg lengths mirror src/engine/characters/wolf.ts (base 2.0 m, scaled uniformly). */
 function wolfStyle(height: number): ActorStyle {
@@ -70,7 +87,7 @@ function wolfStyle(height: number): ActorStyle {
 /** Motion family of an actor: Masha (small, bouncy), Bear (big, weighty) or a Wolf (lanky, quick, sneaky). */
 export type Persona = "masha" | "bear" | "wolf";
 export function persona(actor: ActorId): Persona {
-  return actor === "masha" ? "masha" : actor === "bear" ? "bear" : "wolf";
+  return ["masha", "hare", "squirrel"].includes(actor) ? "masha" : ["bear", "lady_bear", "rival_bear", "rosie"].includes(actor) ? "bear" : "wolf";
 }
 /** Pick a per-persona value (so the Wolves never fall into Bear's heavy branch by accident). */
 export function byPersona<T>(actor: ActorId, masha: T, bear: T, wolf: T): T {

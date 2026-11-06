@@ -3,7 +3,7 @@
 // (`source: { gltf: url }`, plus `skeletonMap` when the official rig doesn't use Mixamo bone names).
 // The `robot_test` entry is a working glTF example (three.js RobotExpressive.glb, CC0) loaded as a hidden character.
 import * as THREE from "three";
-import { ACTOR_IDS, PROP_IDS, type Vec3 } from "../shared/schema";
+import { ACTOR_IDS, PROP_IDS, type Vec3, type ActorId } from "../shared/schema";
 import type { ActorFrame, CharacterRig } from "./api";
 import { SET_ELEMENT_IDS, SET_ELEMENTS, type SetElementId } from "./set/bearsYard";
 
@@ -16,6 +16,7 @@ export interface AssetEntry {
   source: AssetSource;
   /** Mixamo bone name → bone name in the source rig (glTF characters whose rig uses other names) */
   skeletonMap?: Record<string, string>;
+  generated?: boolean;
   /** uniform scale applied to the loaded asset (after `height` normalization, if any) */
   scale: number;
   /** local offset [x, y, z] (pivot correction of an exported asset) */
@@ -49,8 +50,8 @@ const CHARACTER_LABELS: Record<string, string> = {
 };
 
 /** Height of each character (m): used for the last-resort capsule when a builder or download fails. */
-const CHARACTER_HEIGHTS: Record<string, number> = { masha: 1.0, bear: 2.4, wolf_a: 2.05, wolf_b: 1.93 };
-const CHARACTER_TINTS: Record<string, number> = { masha: 0xc7317d, bear: 0x7a4a2b, wolf_a: 0x7c8288, wolf_b: 0x76716c };
+const CHARACTER_HEIGHTS: Record<string, number> = { masha: 1.0, bear: 2.4, wolf_a: 2.05, wolf_b: 1.93, lady_bear:2.15,hare:.85,rosie:1.05,squirrel:.65,rival_bear:2.55 };
+const CHARACTER_TINTS: Record<string, number> = { masha: 0xc7317d, bear: 0x7a4a2b, wolf_a: 0x7c8288, wolf_b: 0x76716c,lady_bear:0x976539,hare:0xb9b7b2,rosie:0xeeb7ad,squirrel:0xa45225,rival_bear:0x282421 };
 
 function buildManifest(): Record<string, AssetEntry> {
   const m: Record<string, AssetEntry> = {};
@@ -59,6 +60,8 @@ function buildManifest(): Record<string, AssetEntry> {
     m[e.id] = e;
   };
   for (const id of ACTOR_IDS) put({ id, kind: "character", source: "procedural", scale: 1, offset: [0, 0, 0], label: CHARACTER_LABELS[id] ?? id });
+  const generated: Record<string,number> = {masha:1, bear:2.4, lady_bear:2.15, hare:.85, rosie:1.05, squirrel:.65, rival_bear:2.55};
+  for(const [id,height] of Object.entries(generated)) m[id] = {id,kind:"character",source:{gltf:`assets/generated/${id}.glb`},generated:true,height,scale:1,offset:[0,0,0],label:`${id} — generated textured character with adapted skeletal animation`};
   put({
     id: TEST_GLTF_ID, kind: "character", source: { gltf: TEST_GLTF_URL }, skeletonMap: ROBOT_SKELETON_MAP,
     scale: 1, offset: [0, 0, 0], height: 1.6, hidden: true,
@@ -68,6 +71,9 @@ function buildManifest(): Record<string, AssetEntry> {
     put({ id: `set:${id}`, kind: "set", source: "procedural", scale: 1, offset: [0, 0, 0], label: `${SET_ELEMENTS[id].description} — procedural stand-in` });
   }
   for (const id of PROP_IDS) put({ id: `prop:${id}`, kind: "prop", source: "procedural", scale: 1, offset: [0, 0, 0], label: `${id} — procedural stand-in` });
+  m['set:house'] = {id:'set:house',kind:'set',source:{gltf:'assets/generated/treehouse.glb'},height:10.8,scale:1,offset:[-.85,0,-1.6],label:'Bear’s hollow tree-house'};
+  m['set:beehive'] = {id:'set:beehive',kind:'set',source:{gltf:'assets/generated/beehive.glb'},height:1.45,scale:1,offset:[0,0,0],label:'Painted wooden beehive'};
+  m['prop:carrot'] = {id:'prop:carrot',kind:'prop',source:{gltf:'assets/generated/carrot.glb'},height:.36,scale:1,offset:[0,-.14,0],label:'Textured garden carrot'};
   return m;
 }
 
@@ -115,7 +121,8 @@ function resolveUrl(url: string): string {
 /** Load a glTF/GLB (GLTFLoader is imported lazily so the manifest stays light). */
 export async function loadGltf(url: string): Promise<{ scene: THREE.Group; animations: THREE.AnimationClip[] }> {
   const { GLTFLoader } = await import("three/examples/jsm/loaders/GLTFLoader.js");
-  const gltf = await new GLTFLoader().loadAsync(resolveUrl(url));
+  const { MeshoptDecoder } = await import("three/examples/jsm/libs/meshopt_decoder.module.js");
+  const gltf = await new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).loadAsync(resolveUrl(url));
   return { scene: gltf.scene, animations: gltf.animations };
 }
 
@@ -127,7 +134,9 @@ export async function loadCharacter(id: string, manifest: Record<string, AssetEn
     let rig: CharacterRig;
     if (isGltf(entry.source)) {
       const g = await loadGltf(entry.source.gltf);
-      rig = gltfRig(id, g.scene, entry);
+      rig = entry.generated
+        ? (await import("./characters/generated")).generatedRig(id as ActorId, g.scene, {height:entry.height??1})
+        : gltfRig(id, g.scene, entry);
     } else if (id === "masha") {
       rig = (await import("./characters/masha")).buildMasha();
     } else if (id === "bear") {
@@ -159,21 +168,22 @@ export async function loadCharacter(id: string, manifest: Record<string, AssetEn
 }
 
 /** Load glTF replacements of set elements into their named anchors (non-blocking for the caller). */
-export async function loadSetOverrides(anchors: Record<SetElementId, THREE.Group>, manifest: Record<string, AssetEntry> = ASSET_MANIFEST): Promise<void> {
+export async function loadSetOverrides(anchors: Record<SetElementId, THREE.Group>, manifest: Record<string, AssetEntry> = ASSET_MANIFEST, isDisposed:()=>boolean=()=>false): Promise<void> {
   await Promise.all(
     gltfSetElements(manifest).map(async (id) => {
       const e = manifest[`set:${id}`]!;
       try {
         const g = await loadGltf((e.source as { gltf: string }).gltf);
-        g.scene.scale.setScalar(e.scale);
-        g.scene.position.set(...e.offset);
+        const normalized = normalizeStatic(g.scene,e.height,e.scale,e.offset);
+        if(isDisposed()){disposeGenerated(normalized);return;}
         g.scene.traverse((o) => {
           if ((o as THREE.Mesh).isMesh) {
             o.castShadow = true;
             o.receiveShadow = true;
           }
         });
-        anchors[id].add(g.scene);
+        for(const child of [...anchors[id].children]) if(child.name !== 'set:bees') { anchors[id].remove(child); child.traverse(o=>(o as THREE.Mesh).geometry?.dispose()); }
+        anchors[id].add(normalized);
         status.set(e.id, { id: e.id, source: "gltf", ok: true });
       } catch (err) {
         status.set(e.id, { id: e.id, source: "gltf", ok: false, error: String(err) });
@@ -183,24 +193,43 @@ export async function loadSetOverrides(anchors: Record<SetElementId, THREE.Group
 }
 
 /** Swap glTF-sourced props into their holders (procedural mesh stays if loading fails). */
-export async function loadPropOverrides(holders: Record<string, THREE.Object3D>, manifest: Record<string, AssetEntry> = ASSET_MANIFEST): Promise<void> {
+export async function loadPropOverrides(holders: Record<string, THREE.Object3D>, manifest: Record<string, AssetEntry> = ASSET_MANIFEST,isDisposed:()=>boolean=()=>false): Promise<void> {
   await Promise.all(
     PROP_IDS.map(async (pid) => {
       const e = manifest[`prop:${pid}`];
       if (!e || !isGltf(e.source)) return;
       try {
         const g = await loadGltf(e.source.gltf);
-        g.scene.scale.setScalar(e.scale);
-        g.scene.position.set(...e.offset);
+        const normalized = normalizeStatic(g.scene,e.height,e.scale,e.offset);
+        if(isDisposed()){disposeGenerated(normalized);return;}
         const h = holders[pid];
-        h.clear();
-        h.add(g.scene);
+        h.traverse(o=>(o as THREE.Mesh).geometry?.dispose());h.clear();
+        h.add(normalized);
         status.set(e.id, { id: e.id, source: "gltf", ok: true });
       } catch (err) {
         status.set(e.id, { id: e.id, source: "gltf", ok: false, error: String(err) });
       }
     }),
   );
+}
+
+/** Static models have arbitrary export pivots; place their ground centre at the authored anchor. */
+export function normalizeStatic(model:THREE.Object3D,height?:number,scale=1,offset:Vec3=[0,0,0]):THREE.Group {
+  model.updateMatrixWorld(true);
+  const b=new THREE.Box3().setFromObject(model,true),s=scale*(height?height/Math.max(.001,b.max.y-b.min.y):1);
+  const inner=new THREE.Group();inner.add(model);inner.scale.setScalar(s);
+  inner.position.set(-(b.min.x+b.max.x)*s/2,-b.min.y*s,-(b.min.z+b.max.z)*s/2);
+  const root=new THREE.Group();root.add(inner);root.position.fromArray(offset);
+  model.traverse(o=>{if((o as THREE.Mesh).isMesh){o.castShadow=true;o.receiveShadow=true;const m=o as THREE.Mesh;for(const material of Array.isArray(m.material)?m.material:[m.material]){const mat=material as THREE.MeshStandardMaterial;mat.userData.generated=true;mat.roughness=Math.max(.75,mat.roughness);mat.metalness=0;mat.normalScale?.setScalar(.55);}}});
+  return root;
+}
+
+/** Dispose only imported resources; procedural meshes share the stage's look materials. */
+export function disposeGenerated(root:THREE.Object3D):void {
+  const materials=new Set<THREE.Material>(),textures=new Set<THREE.Texture>();
+  root.traverse(o=>{const mesh=o as THREE.Mesh;if(!mesh.isMesh)return;for(const m of Array.isArray(mesh.material)?mesh.material:[mesh.material])if(m.userData.generated){materials.add(m);mesh.geometry.dispose();}});
+  for(const m of materials){for(const value of Object.values(m))if(value instanceof THREE.Texture)textures.add(value);m.dispose();}
+  for(const texture of textures)texture.dispose();
 }
 
 const _q = new THREE.Quaternion();

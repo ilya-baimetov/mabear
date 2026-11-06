@@ -58,9 +58,9 @@ describe("asset manifest (spec §7.3)", () => {
     expect(e.skeletonMap?.RightHand).toBeDefined();
   });
 
-  it("the shipped stand-ins are all procedural (no set element replaced by default)", () => {
-    expect(gltfSetElements()).toEqual([]);
-    expect(gltfSetElements({ ...ASSET_MANIFEST, "set:van": { ...ASSET_MANIFEST["set:van"], source: { gltf: "x.glb" } } })).toEqual(["van"]);
+  it("ships generated house and hives, and permits additional replacements", () => {
+    expect(gltfSetElements()).toEqual(["house","beehive"]);
+    expect(gltfSetElements({ ...ASSET_MANIFEST, "set:van": { ...ASSET_MANIFEST["set:van"], source: { gltf: "x.glb" } } })).toEqual(["house","beehive","van"]);
   });
 });
 
@@ -87,8 +87,9 @@ describe("set data", () => {
   });
 
   it("walkable heights: porch deck, ramped steps, pier, footbridge; ground elsewhere", () => {
-    expect(walkHeightAt(MARKS.porch.pos[0], MARKS.porch.pos[1])).toBeCloseTo(0.32, 2);
-    expect(walkHeightAt(-6, -1.7)).toBeGreaterThan(0.05);
+    expect(walkHeightAt(MARKS.porch.pos[0], MARKS.porch.pos[1])).toBe(0);
+    expect(walkHeightAt(-6,-4.2)).toBeCloseTo(.22,2);
+    expect(walkHeightAt(-6, -1.7)).toBe(0);
     expect(walkHeightAt(-6, -1.7)).toBeLessThan(0.3);
     expect(walkHeightAt(0, 0)).toBe(0);
     expect(walkHeightAt(MARKS.pier.pos[0], MARKS.pier.pos[1])).toBeGreaterThan(0.2);

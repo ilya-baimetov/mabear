@@ -4,7 +4,7 @@
 // validateBeatScript with 0 errors.
 import { CHARACTERS } from "../../shared/bible/characters";
 import { PROPS } from "../../shared/bible/props";
-import { canonAbsentMessage, detectLang, findCanonAbsent, preFilter } from "../../shared/rules";
+import { canonAbsentMessage, detectLang, findCanonAbsent, isCanonAbsentCompound, preFilter } from "../../shared/rules";
 import { isWolf } from "../../shared/grammar";
 import {
   ACTOR_IDS, MAX_BEATS, MAX_LINE_CHARS, MAX_PARAGRAPH_CHARS, MAX_SUMMARY_CHARS,
@@ -97,10 +97,15 @@ function clampText(s: string, max: number): string {
 }
 
 const QUOTE_RE = /"([^"]+)"|“([^”]+)”|«([^»]+)»|„([^“”]+)[“”]/g;
-const SCREENPLAY_RE = /^\s*(masha|bear|mishka|маша|медведь|мишка|миша)\s*:\s*(.+)$/i;
+const SCREENPLAY_RE = /^\s*(masha|bear|mishka|lady bear|she-bear|rival bear|himalayan bear|hare|rabbit|rosie|pig|squirrel|маша|медведь|мишка|миша|медведица|медведь-спортсмен|гималайский медведь|заяц|зайчик|свинка|розочка|белка|белочка)\s*:\s*(.+)$/i;
 
 function actorFromName(name: string): ActorId {
-  return /^(masha|маша)$/i.test(name.trim()) ? "masha" : "bear";
+  const n = name.trim().toLowerCase();
+  for (const lex of Object.values(LEXICONS)) {
+    const hit = lex.actors.find(a => a.re.test(n));
+    if (hit) return hit.id;
+  }
+  return "masha";
 }
 
 function beat(actor: ActorId, verb: Verb, extra: Partial<Beat> = {}): Beat {
@@ -217,6 +222,9 @@ export function parseParagraph(text: string, lang: Lang, startState: WorldState,
         for (const m of clause.matchAll(re)) {
           const pre = clause.slice(Math.max(0, m.index - 12), m.index);
           const lastWord = pre.trim().split(/\s+/).pop() ?? "";
+          const following = clause.slice(m.index + m[0].length).trim().split(/[^\p{L}]+/u)[0];
+          if (["hare", "rosie", "squirrel"].includes(a.id) && isCanonAbsentCompound(lastWord, m[0], following)) continue;
+          if (a.id === "rosie" && /^розочк[иеу]/u.test(m[0]) && !/(свин|хрюш|порос)/u.test(clause)) continue;
           const possessive = /^['’]s\b/.test(clause.slice(m.index + m[0].length));
           mentions0.push({ i: m.index, len: m[0].length, id: a.id, nominative: a.nominative, plural: !!a.plural, obj: possessive || (lex.objectPrepositions.test(lastWord) && new RegExp(`^(?:${lex.objectPrepositions.source})$`, "u").test(lastWord)) });
         }
@@ -229,7 +237,11 @@ export function parseParagraph(text: string, lang: Lang, startState: WorldState,
       if (subjMention) subject = subjMention.id;
       else {
         const sp = firstMatch(clause, lex.pronouns.filter((p) => p.subject).map((p) => ({ re: p.re, v: p.id })));
-        if (sp && sp.index < 3) subject = sp.value;
+        if (sp && sp.index < 3) {
+          const previous=subjectCarry??lastActor;
+          const feminine=(id:ActorId)=>['masha','lady_bear','rosie','squirrel'].includes(id);
+          subject=previous && feminine(previous)===feminine(sp.value) ? previous : sp.value;
+        }
       }
       const wolvesPlural: boolean = subjMention ? subjMention.plural : subject == null && lastWolvesPlural && (subjectCarry ?? lastActor) === "wolf_a";
       const subjectExplicit = subject != null;

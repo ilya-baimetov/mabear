@@ -6,7 +6,7 @@ import type { ActorClip, Segment, Timeline, Vec2, WorldState } from "../../src/s
 
 function seg(start: WorldState, end: WorldState, duration: number, clips: Pick<Segment["actorClips"], "masha" | "bear"> & Partial<Segment["actorClips"]>, extra: Partial<Segment> = {}): Segment {
   return {
-    paragraphId: "p", version: 1, duration, startState: start, endState: end, actorClips: { wolf_a: [], wolf_b: [], ...clips },
+    paragraphId: "p", version: 1, duration, startState: start, endState: end, actorClips: { wolf_a: [], wolf_b: [], lady_bear: [], hare: [], rosie: [], squirrel: [], rival_bear: [], ...clips },
     dialogue: [], emotes: [], foley: [], camera: [], sfx: [], music: [], ambience: [], ducking: [], lighting: [], fx: [],
     ...extra,
   };

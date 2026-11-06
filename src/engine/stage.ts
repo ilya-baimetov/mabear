@@ -3,7 +3,7 @@
 import * as THREE from "three";
 import { ACTOR_IDS, type ActorId } from "../shared/schema";
 import type { CharacterRig, FrameState, StageHandle, StageStats } from "./api";
-import { assetStatus, gltfSetElements, loadCharacter, loadPropOverrides, loadSetOverrides, TEST_GLTF_ID, type AssetStatus } from "./assets";
+import { assetStatus, disposeGenerated, gltfSetElements, loadCharacter, loadPropOverrides, loadSetOverrides, TEST_GLTF_ID, type AssetStatus } from "./assets";
 import { createFx, type FxHandle } from "./fx/fx";
 import { applyLighting, applyLookTextures, createLook, followCamera, loadHdri, setShadowQuality, setupRenderer, updateEnvironment, type LookRig } from "./look";
 import { adaptStep, createPost, DEFAULT_GRADE, defaultPostQuality, isSoftwareRenderer, parsePostQuality, type PostPipeline, type PostQuality } from "./post/post";
@@ -26,6 +26,8 @@ function rendererName(renderer: THREE.WebGLRenderer): string {
 }
 import { createProps, type PropsHandle } from "./props/props";
 import { buildBearsYard, walkHeightAt, type SetHandle } from "./set/bearsYard";
+import { clearForeground } from './cameraClearance';
+import { loadGeneratedYard } from './set/generatedYard';
 import { assetUrl, loadEnvTextures } from "./set/textures";
 
 /** CC0 HDRI used for image-based lighting (docs/ASSETS.md). */
@@ -134,8 +136,9 @@ export async function createStage(canvas: HTMLCanvasElement, opts: StageOptions 
       r.root.rotation.y = -1.2;
       scene.add(r.root);
     }),
-    loadSetOverrides(set.elements),
-    loadPropOverrides(props.objects),
+    loadSetOverrides(set.elements,undefined,()=>disposed),
+    loadGeneratedYard(set.elements,()=>disposed).catch(error=>console.warn('Garden assets could not load',error)),
+    loadPropOverrides(props.objects,undefined,()=>disposed),
     // A5 environment: CC0 HDRI + PBR textures swap in asynchronously; failures keep the procedural look
     loadHdri(look, assetUrl(HDRI_URL), () => disposed),
     loadEnvTextures(Math.min(8, renderer.capabilities.getMaxAnisotropy())).then(({ textures }) => {
@@ -237,7 +240,7 @@ export async function createStage(canvas: HTMLCanvasElement, opts: StageOptions 
     },
     render(frame: FrameState) {
       // camera
-      const c = frame.camera;
+      const c = clearForeground(frame.camera,frame.actors);
       camera.position.set(c.pos[0], c.pos[1], c.pos[2]);
       if (Math.abs(camera.fov - c.fov) > 1e-3) {
         camera.fov = c.fov;
@@ -297,6 +300,7 @@ export async function createStage(canvas: HTMLCanvasElement, opts: StageOptions 
       for (const id of ACTOR_IDS) rigs[id]?.dispose();
       (testRig as CharacterRig | null)?.dispose();
       props.dispose();
+      disposeGenerated(props.root);disposeGenerated(set.root);
       fx.dispose();
       set.dispose();
       look.dispose();

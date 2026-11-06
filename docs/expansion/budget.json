@@ -1,0 +1,118 @@
+{
+  "currency": "USD",
+  "authorized_remaining": 23.2,
+  "extra_25_authorized": false,
+  "reserved": 23.2,
+  "jobs": [
+    {
+      "asset": "bear",
+      "status": "completed",
+      "reserve_usd": 2.2,
+      "published_estimate_usd": 1.4,
+      "actual_charge_usd": null,
+      "request_id": "01a1b23d-fb78-78a1-92da-75cca4e459f4",
+      "endpoint_id": "meshy/v7.1/image-to-3d"
+    },
+    {
+      "asset": "lady-bear",
+      "status": "completed",
+      "reserve_usd": 2.2,
+      "published_estimate_usd": 1.4,
+      "actual_charge_usd": null,
+      "request_id": "01a1b23d-fb28-78c3-9a76-6a946c053a0d",
+      "endpoint_id": "meshy/v7.1/image-to-3d"
+    },
+    {
+      "asset": "hare",
+      "status": "completed",
+      "reserve_usd": 2.2,
+      "published_estimate_usd": 1.4,
+      "actual_charge_usd": null,
+      "request_id": "01a1b23d-fb25-7212-8bef-c6421e0ea8b1",
+      "endpoint_id": "meshy/v7.1/image-to-3d"
+    },
+    {
+      "asset": "rosie",
+      "status": "completed",
+      "reserve_usd": 2.2,
+      "published_estimate_usd": 1.4,
+      "actual_charge_usd": null,
+      "request_id": "01a1b23d-fb5e-7030-9158-186b4d509c58",
+      "endpoint_id": "meshy/v7.1/image-to-3d"
+    },
+    {
+      "asset": "squirrel",
+      "status": "completed",
+      "reserve_usd": 2.2,
+      "published_estimate_usd": 1.4,
+      "actual_charge_usd": null,
+      "request_id": "01a1b23d-fb23-7ce0-b257-ee3622e35bc0",
+      "endpoint_id": "meshy/v7.1/image-to-3d"
+    },
+    {
+      "asset": "rival-bear",
+      "status": "completed",
+      "reserve_usd": 2.2,
+      "published_estimate_usd": 1.4,
+      "actual_charge_usd": null,
+      "request_id": "01a1b23d-fb26-74e3-8236-fcbd935faa45",
+      "endpoint_id": "meshy/v7.1/image-to-3d"
+    },
+    {
+      "asset": "treehouse",
+      "status": "completed",
+      "reserve_usd": 1.6,
+      "published_estimate_usd": 1.2,
+      "actual_charge_usd": null,
+      "request_id": "01a1b23f-2eab-7651-a4f5-75826174b26b",
+      "endpoint_id": "meshy/v7.1/image-to-3d"
+    },
+    {
+      "asset": "orchard-tree",
+      "status": "completed",
+      "reserve_usd": 1.6,
+      "published_estimate_usd": 1.2,
+      "actual_charge_usd": null,
+      "request_id": "01a1b23f-2ec7-7ae1-93a3-b6d2d6b7c144",
+      "endpoint_id": "meshy/v7.1/image-to-3d"
+    },
+    {
+      "asset": "beehive",
+      "status": "completed",
+      "reserve_usd": 1.6,
+      "published_estimate_usd": 1.2,
+      "actual_charge_usd": null,
+      "request_id": "01a1b23f-2ec5-79d0-8938-9429033ad391",
+      "endpoint_id": "meshy/v7.1/image-to-3d"
+    },
+    {
+      "asset": "carrot",
+      "status": "completed",
+      "reserve_usd": 1.6,
+      "published_estimate_usd": 1.2,
+      "actual_charge_usd": null,
+      "request_id": "01a1b23f-2eb1-7c30-bfc9-1cd16a3685de",
+      "endpoint_id": "meshy/v7.1/image-to-3d"
+    },
+    {
+      "asset": "daisies",
+      "status": "completed",
+      "reserve_usd": 1.6,
+      "published_estimate_usd": 1.2,
+      "actual_charge_usd": null,
+      "request_id": "01a1b23f-2ebd-7cc2-9f38-39292dade3f8",
+      "endpoint_id": "meshy/v7.1/image-to-3d"
+    },
+    {
+      "asset": "rosie-smooth",
+      "status": "completed",
+      "reserve_usd": 2.0,
+      "published_estimate_usd": 1.4,
+      "actual_charge_usd": null,
+      "request_id": "01a1b258-5244-7f42-abeb-961d84e8b69e",
+      "endpoint_id": "meshy/v7.1/image-to-3d",
+      "reason": "Visual review rejected furry pig; replace with smooth skin."
+    }
+  ],
+  "pricing_source": "https://fal.ai/models/meshy/v7.1/image-to-3d"
+}

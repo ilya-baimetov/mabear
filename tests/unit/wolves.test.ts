@@ -108,15 +108,15 @@ describe("Wolves: validator", () => {
   });
 
   it("canon characters not in the prototype are substituted with an honest message (EN/RU)", () => {
-    const en = validateBeatScript(BS([B({ actor: "masha", verb: "hug", target: "hare" })]), initialWorldState(), "en");
+    const en = validateBeatScript(BS([B({ actor: "masha", verb: "hug", target: "penguin" })]), initialWorldState(), "en");
     const h = en.hits.find((x) => x.rule === "cast_only")!;
-    expect(h.kid_message).toBe("The Hare isn't in this prototype yet — Masha played the part!");
+    expect(h.kid_message).toBe("The Penguin isn't in this prototype yet — Masha played the part!");
     expect(h.kid_message).not.toMatch(/foreign/i);
     const ru = validateBeatScript(BS([B({ actor: "masha", verb: "point_at", target: "panda" })]), initialWorldState(), "ru");
     expect(ru.beatScript.beats[0].target).toBe("bear");
     expect(ru.hits[0].kid_message).toMatch(/пока нет в этой версии/);
-    expect(canonAbsentTarget("Rosie the pig")?.sub).toBe("masha");
-    expect(canonAbsentFor("зайчик")).not.toBeNull();
+    expect(canonAbsentTarget("Rosie the pig")).toBeNull();
+    expect(canonAbsentFor("зайчик")).toBeNull();
     expect(canonAbsentFor("wolf")).toBeNull();
   });
 
@@ -153,8 +153,8 @@ describe("Wolves: offline parser", () => {
   });
 
   it("canon-absent characters in a paragraph get the honest note and are played by Masha", () => {
-    const bs = parseParagraph("The hare comes to visit.", "en", initialWorldState());
-    expect(bs.rule_hits[0]).toMatchObject({ rule: "cast_only", original: "hare" });
+    const bs = parseParagraph("The penguin comes to visit.", "en", initialWorldState());
+    expect(bs.rule_hits[0]).toMatchObject({ rule: "cast_only", original: "penguin" });
     expect(bs.rule_hits[0].kid_message).toMatch(/isn't in this prototype yet/);
     expect(bs.beats[0].actor).toBe("masha");
   });
@@ -287,7 +287,7 @@ describe("Wolves: vocals, motion, prompt", () => {
     expect(p).toMatch(/Wolves \(wolf_a, wolf_b\) are canon series characters/);
     expect(p).toContain(CHARACTERS.wolf_a.personality);
     expect((p.match(/The wolves sneak up to steal Bear's honey\./g) ?? []).length).toBe(1);
-    expect(p).toContain("isn't in this prototype yet");
+    expect(p).toContain("ARE available");
     for (const g of golden as { paragraph: string }[]) expect(p).not.toContain(g.paragraph);
     expect(validateBeatScript(BUILTIN_EXAMPLES.wolves_en.beatScript, initialWorldState(), "en").errors).toEqual([]);
   });

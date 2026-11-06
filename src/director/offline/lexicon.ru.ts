@@ -7,6 +7,17 @@ const R = (s: string) => new RegExp(`(?<![\\p{L}])(?:${s.replace(/\$/g, "(?![\\p
 export const LEXICON_RU: Lexicon = {
   lang: "ru",
   actors: [
+    { re: R("медведица$"), id: "lady_bear", nominative: true },
+    { re: R("медведиц(?:ы|е|у|ей|ою|ой)$"), id: "lady_bear", nominative: false },
+    { re: R("(?:гималайский|чёрный|черный|спортивный) медведь$|медведь[ -]спортсмен$"), id: "rival_bear", nominative: true },
+    { re: R("(?:гималайск(?:ого|ому|им|ом)) медвед(?:я|ю|ем|е)$|медвед(?:я|ю|ем|е)[ -]спортсмен(?:а|у|ом|е)$"), id: "rival_bear", nominative: false },
+    { re: R("заяц$|зайчик$|зайка$"), id: "hare", nominative: true },
+    { re: R("зайц(?:а|у|ем|е)$|зайчик(?:а|у|ом|е)$|зайк(?:и|е|у|ой)$"), id: "hare", nominative: false },
+    { re: R("свинка$|свинья$|хрюша$|розочка$"), id: "rosie", nominative: true },
+    { re: R("свинк(?:и|е|у|ой)$|свинь(?:и|е|ю|ёй|ей)$|хрюш(?:и|е|у|ей)$|розочк(?:и|е|у|ой)$"), id: "rosie", nominative: false },
+    { re: R("белочка$|белка$"), id: "squirrel", nominative: true },
+    { re: R("белочк(?:и|е|у|ой)$|белк(?:и|е|у|ой)$"), id: "squirrel", nominative: false },
+
     { re: R("маша$|машенька$|девочка$"), id: "masha", nominative: true },
     { re: R("медведь$|мишка$|миша$|медведик$"), id: "bear", nominative: true },
     { re: R("маш(?:и|е|у|ей|енька|еньку|еньке)$|девочк"), id: "masha", nominative: false },
@@ -206,6 +217,6 @@ export const LEXICON_RU: Lexicon = {
     take: "берёт", give: "дарит", eat: "ест", throw: "бросает", cook: "готовит", fish: "рыбачит",
     swing: "качается", carry: "катает Машу", water_plants: "поливает огород",
   },
-  names: { masha: "Маша", bear: "Мишка", wolf_a: "Большой Волк", wolf_b: "Маленький Волк" },
+  names: { lady_bear: "Медведица", hare: "Заяц", rosie: "Свинка", squirrel: "Белочка", rival_bear: "Медведь-спортсмен", masha: "Маша", bear: "Мишка", wolf_a: "Большой Волк", wolf_b: "Маленький Волк" },
   says: "говорит",
 };

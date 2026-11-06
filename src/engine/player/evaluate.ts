@@ -2,7 +2,7 @@
 // globals mutated; blinks and fidgets are functions of t. The renderer applies the result each frame.
 import type { ActorFrame, FaceParams, FrameState, FxFrame, PropFrame } from "../api";
 import {
-  ACTOR_IDS, MARK_IDS, PROP_IDS, WOLF_START,
+  ACTOR_IDS, MARK_IDS, PROP_IDS, ADDED_ACTOR_START,
   type ActorClip, type ActorId, type CamKey, type MarkId, type Posture, type PropId, type PropLocation,
   type Segment, type TimeOfDay, type Timeline, type Vec2, type Vec3, type Viseme, type WorldState,
 } from "../../shared/schema";
@@ -38,7 +38,7 @@ const isActor = (s: string | undefined | null): s is ActorId => !!s && ACTOR_SET
 const isWolfId = (a: ActorId): boolean => a === "wolf_a" || a === "wolf_b";
 /** An actor's state in a world state (segments saved before the Wolves joined have no wolf entries). */
 function stOf(ws: WorldState, a: ActorId): WorldState["actors"][ActorId] {
-  return ws.actors[a] ?? (WOLF_START as Partial<Record<ActorId, WorldState["actors"][ActorId]>>)[a] ?? ws.actors.bear;
+  return ws.actors[a] ?? (ADDED_ACTOR_START as Partial<Record<ActorId, WorldState["actors"][ActorId]>>)[a] ?? ws.actors.bear;
 }
 /** An actor's clips in a segment (older segments have none for the Wolves). */
 function clipsOf(seg: Segment, a: ActorId): ActorClip[] {
@@ -681,7 +681,7 @@ function emptySegment(): Segment {
   const ws = initialWorldState();
   return {
     paragraphId: "", version: 0, duration: 0, startState: ws, endState: ws,
-    actorClips: { masha: [], bear: [], wolf_a: [], wolf_b: [] }, dialogue: [], emotes: [], foley: [], camera: [], sfx: [], music: [],
+    actorClips: Object.fromEntries(ACTOR_IDS.map(id => [id, [] as ActorClip[]])) as Segment["actorClips"], dialogue: [], emotes: [], foley: [], camera: [], sfx: [], music: [],
     ambience: [], ducking: [], lighting: [], fx: [],
   };
 }
@@ -766,10 +766,9 @@ export function evaluate(timeline: Timeline, t: number): FrameState {
   const carry = carryState(seg, lt, tracks.masha);
   const masha = evalActor("masha", { seg, lt, t, track: tracks.masha, stateAtStart: startOf("masha"), prevLast: lt < CROSSFADE_S ? prevLast("masha") : null }, bear.frame, carry);
   // the Wolves: independent tracks (nobody carries them)
-  const wolf = (a: "wolf_a" | "wolf_b") => evalActor(a, { seg, lt, t, track: resolveTrack(seg, a, [], yaws[a]), stateAtStart: startOf(a), prevLast: lt < CROSSFADE_S ? prevLast(a) : null }, null, null);
-  const wolf_a = wolf("wolf_a");
-  const wolf_b = wolf("wolf_b");
-  const actors: Record<ActorId, ActorFrame> = { masha: masha.frame, bear: bear.frame, wolf_a: wolf_a.frame, wolf_b: wolf_b.frame };
+  const guest = (a: ActorId) => evalActor(a, { seg, lt, t, track: resolveTrack(seg, a, [], yaws[a]), stateAtStart: startOf(a), prevLast: lt < CROSSFADE_S ? prevLast(a) : null }, null, null);
+  const evals = Object.fromEntries(ACTOR_IDS.map(a => [a, a === "masha" ? masha : a === "bear" ? bear : guest(a)])) as Record<ActorId, ActorEval>;
+  const actors = Object.fromEntries(ACTOR_IDS.map(a => [a, evals[a].frame])) as Record<ActorId, ActorFrame>;
 
   // look-at: explicit params.lookAt, else toward the current speaker; the speaker looks at the other actor
   // attention carries across paragraph boundaries (a line's tail / the next line's lead-in)
@@ -778,11 +777,10 @@ export function evaluate(timeline: Timeline, t: number): FrameState {
   for (const cand of [prevSeg ? speakerAt(prevSeg, lt + prevSeg.duration) : null, nextSeg ? speakerAt(nextSeg, lt - seg.duration) : null]) {
     if (cand && (!speaker || cand.w > speaker.w)) speaker = cand;
   }
-  const evals: Record<ActorId, ActorEval> = { masha, bear, wolf_a, wolf_b };
   for (const a of ACTOR_IDS) {
     const f = actors[a];
     // partner for speaker attention: Masha ↔ Bear; the Wolves watch whoever is talking (else each other)
-    const other: ActorId = a === "masha" ? "bear" : a === "bear" ? "masha" : speaker && speaker.actor !== a ? speaker.actor : a === "wolf_a" ? "wolf_b" : "wolf_a";
+    const other: ActorId = a === "masha" ? "bear" : a === "bear" ? "masha" : speaker && speaker.actor !== a ? speaker.actor : a === "wolf_a" ? "wolf_b" : a === "wolf_b" ? "wolf_a" : "masha";
     const o = actors[other];
     const otherHead: Vec3 = [o.pos[0], o.pos[1] + STYLES[other].height * 0.8, o.pos[2]];
     const explicit = f.face.lookAt;

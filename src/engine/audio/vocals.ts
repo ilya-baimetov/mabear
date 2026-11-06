@@ -129,7 +129,8 @@ export function vocalFor(actor: ActorId, emote: Emote): { syl: Syllable[]; voice
     return b ? { syl: b, voice: { pitch: v.pitch * WOLF_FROM_BEAR, formant: v.formant } } : null;
   }
   const b = BEAR_VOCALS[emote] ?? BEAR_VOCALS[BEAR_ALIAS[emote] ?? "none"];
-  return b ? { syl: b, voice: BEAR_VOICE } : null;
+  const voice: VocalVoice = actor === "lady_bear" ? { pitch: 1.3, formant: .95 } : actor === "hare" ? { pitch: 2.5, formant: 1.2 } : actor === "rosie" ? { pitch: 1.9, formant: 1.1 } : actor === "squirrel" ? { pitch: 3.2, formant: 1.4 } : actor === "rival_bear" ? { pitch: .85, formant: .75 } : BEAR_VOICE;
+  return b ? { syl: b, voice } : null;
 }
 
 export function vocalLength(syl: Syllable[]): number {

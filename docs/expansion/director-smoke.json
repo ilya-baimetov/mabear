@@ -1,0 +1,64 @@
+{
+  "http": 200,
+  "source": "llm",
+  "model": "claude-haiku-5-5",
+  "usage": {
+    "input_tokens": 720,
+    "output_tokens": 705,
+    "cache_read_input_tokens": 0,
+    "cache_creation_input_tokens": 17653
+  },
+  "actors": [
+    "lady_bear",
+    "bear",
+    "hare",
+    "rosie",
+    "squirrel",
+    "rival_bear",
+    "masha"
+  ],
+  "beats": [
+    {
+      "actor": "lady_bear",
+      "verb": "wave",
+      "target": "bear",
+      "line": null
+    },
+    {
+      "actor": "bear",
+      "verb": "nod",
+      "target": null,
+      "line": null
+    },
+    {
+      "actor": "hare",
+      "verb": "take",
+      "target": "carrot",
+      "line": null
+    },
+    {
+      "actor": "rosie",
+      "verb": "dance",
+      "target": null,
+      "line": null
+    },
+    {
+      "actor": "squirrel",
+      "verb": "jump",
+      "target": null,
+      "line": null
+    },
+    {
+      "actor": "rival_bear",
+      "verb": "clap",
+      "target": null,
+      "line": null
+    },
+    {
+      "actor": "masha",
+      "verb": "clap",
+      "target": null,
+      "line": "Ура, все танцуют!"
+    }
+  ]
+}
