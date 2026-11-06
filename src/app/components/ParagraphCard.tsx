@@ -36,8 +36,16 @@ export function ParagraphCard({ p, index, active, selected, count }: { p: Paragr
   useEffect(() => {
     const el = ta.current;
     if (!el) return;
-    el.style.height = "auto";
-    el.style.height = `${el.scrollHeight}px`;
+    const fit = () => {
+      el.style.height = "auto";
+      el.style.height = `${el.scrollHeight}px`;
+    };
+    fit();
+    // re-measure once the web font has loaded and whenever the column width changes (wrapping changes)
+    void document.fonts?.ready.then(fit);
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(fit) : null;
+    ro?.observe(el);
+    return () => ro?.disconnect();
   }, [p.text]);
 
   const bs = v?.beatScript;

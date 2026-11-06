@@ -88,3 +88,9 @@ Judgment: Opus stays the deployed default (richer in-character staging); Haiku i
   - Earlier open items unchanged: no IK (foot slip), rigid kerchief/skirt, no shell fur, TTS onboundary lip-sync.
 - **Deploy:** Workers Build `052d6082` for 054bc5a **success** (and `c3379d86` for 40a2d0c). §12 smoke test against https://mabear.ilya-baimetov.workers.dev: health 200 ✅ · noindex ✅ · `/` → login ✅ · `/api/direct` 401 without cookie ✅ · authenticated part not run: DEMO_PASSWORD not in environment.
 - **FPS (owner check, 2026-11-05):** the owner reports the Rendering card's FPS counter always above 50 on their machine (real GPU) — the A5 ≥ 50 FPS target is met. Owner also reports further issues; fixes follow as a FIXES entry.
+
+## Review fixes (2026-11-06)
+- **Process:** independent read-only review in a separate session (17 findings) → owner feedback (fix all except #15; #7 = middle ground) → fixes.
+- **Fixed:** #1 tap during hold · #2 RU/EN false "not in this prototype" matches · #3 the child's quoted/dash/screenplay lines stay verbatim · #4 sessions bound to their story · #5 revert while directing / stale replies · #6 card ▶ waits for re-directs · #7 re-direct on posture/held-item drift only · #8 cleared blocks · #9 RU Wolves parsing + "they" rebinding · #10 bigger, touch-visible controls · #11 no director call outside a ▶ session · #12 version counter only on real edits · #13 editor keys (split, empty Enter, IME) · #14 validator compound targets · #16 late asset loads freed · #17 tests (playback sessions, 71 canon/parser tests, editor-keys e2e). Plus: block height re-measured after the web font loads.
+- **Deferred:** #15 (masked renderer string on non-Chrome browsers) — owner: Chrome-only demo.
+- **Verification on the final code:** typecheck exit 0 · unit 22 files / 454 tests · e2e 13/13 exit 0 · build OK, no `sk-ant` in dist · screenshots re-reviewed.
