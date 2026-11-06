@@ -1,0 +1,10 @@
+{
+  "url": "https://mabear-masha-trial.ilya-baimetov.workers.dev",
+  "worker": "mabear-masha-trial",
+  "version_id": "9593a808-4346-4efe-a8da-d09c2fc63a15",
+  "source_branch": "codex/storybook-upgrade",
+  "private_login_screen_observed": true,
+  "authenticated_live_render_verified": false,
+  "local_render_verified": true,
+  "original_game_replaced": false
+}

@@ -1,0 +1,43 @@
+{
+  "character": "masha",
+  "authorized_fal_cap_usd": 20,
+  "fal_spend_usd": null,
+  "status": "complete: candidate generated, rigged, animated, compared; production game unchanged",
+  "reference": "inputs/masha-reference-front.png",
+  "reference_generator": "built-in image_gen",
+  "scope": "One character trial; no replacement deployment until actual mesh/animation comparison is reviewed",
+  "operations": [
+    {
+      "endpoint": "meshy/v7.1/image-to-3d",
+      "expected_usd": 1.4,
+      "price_basis": "Published endpoint pricing: textured $1.20 + rig with basic walking/running $0.20",
+      "status": "completed",
+      "input_file": "inputs/masha-reference-upload.jpg",
+      "settings": {
+        "model_type": "standard",
+        "target_polycount": 60000,
+        "geometry_resolution": "4k",
+        "enable_pbr": true,
+        "enable_rigging": true,
+        "rigging_height_meters": 1,
+        "pose_mode": "a-pose"
+      },
+      "request_id": "01a1b215-cb49-7a23-999e-6387e3747948",
+      "result": "results/meshy-01.json"
+    }
+  ],
+  "fal_reserved_usd": 0,
+  "fal_estimated_spend_usd": 1.4,
+  "billing_note": "One successful request. $1.40 from published pricing; invoice charge not exposed by connector.",
+  "remaining_budget_usd_at_published_rates": 18.6,
+  "comparison_url": "https://mabear-masha-trial.ilya-baimetov.workers.dev",
+  "local_comparison_url": "http://127.0.0.1:5182",
+  "model_stats": {
+    "current_triangles": 31797,
+    "candidate_triangles": 61827,
+    "candidate_bones": 24,
+    "candidate_facial_morphs": 0,
+    "rigged_glb_bytes": 17794700
+  },
+  "verdict": "Substantial modeling and texture improvement, but not a production replacement: no facial rig and dress weight artifacts."
+}

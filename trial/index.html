@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Masha · Character trial</title></head>
+<body>
+<main>
+  <header><div><span class="eyebrow">MASHA & THE BEAR / CHARACTER LAB</span><h1>A different Masha.</h1><p>Two real 3D characters. One camera, one light rig, the same motion.</p></div><div class="budget"><span>FAL TRIAL</span><strong id="cost">$1.40 estimated</strong><small>of $20 authorized · 1 candidate</small></div></header>
+  <section class="toolbar" aria-label="Comparison controls">
+    <div class="control"><label for="motion">Motion</label><select id="motion"><option value="game_walk">Game walk</option><option value="game_run">Game run</option><option value="idle">Game idle</option><option value="wave">Game wave</option><option value="walk">Meshy walk</option><option value="run">Meshy run</option><option value="talk">Face test</option><option value="rest">Rest pose</option></select></div>
+    <button id="play" aria-pressed="true">Pause</button>
+    <div class="control"><label for="speed">Speed</label><select id="speed"><option value="0.35">Slow · 0.35×</option><option value="1" selected>Normal · 1×</option></select></div>
+    <div class="angles" aria-label="Camera angle"><button data-angle="front" aria-pressed="true">Front</button><button data-angle="three" aria-pressed="false">¾</button><button data-angle="side" aria-pressed="false">Side</button><button data-angle="back" aria-pressed="false">Back</button><button data-angle="face" aria-pressed="false">Face</button></div>
+    <button id="wire" aria-pressed="false">Wireframe</button>
+  </section>
+  <section class="comparison" aria-label="3D model comparison">
+    <article><div class="panel-title"><div><span class="tag">CURRENT</span><h2>Game Masha</h2></div><span class="method">Procedural geometry</span></div><div class="viewport" id="current"><div class="view-hint">Drag to orbit · scroll to zoom</div></div><div class="metrics" id="current-metrics">Loading current character…</div></article>
+    <article><div class="panel-title"><div><span class="tag candidate">CANDIDATE 01</span><h2>Generated Masha</h2></div><span class="method">Meshy 7.1 via fal</span></div><div class="viewport" id="candidate"><div id="loading" role="status">Loading textured mesh and skeleton…</div><div class="view-hint">Cameras stay synchronized</div></div><div class="metrics" id="candidate-metrics">Loading candidate…</div></article>
+  </section>
+  <section class="transport"><span id="motion-note">Matched walk uses the same animation on both characters.</span><label for="timeline">Time</label><input id="timeline" type="range" min="0" max="6" value="0" step="0.01"><output id="time">0.00 s</output><button id="record">Record 8s</button><a id="recording" hidden download="masha-comparison.webm">Download video</a></section>
+  <section class="notes"><div><h3>What this proves</h3><p>These are live meshes with moving skeletons, rendered in Three.js. Scale, camera and lighting match. Inspect the profile and back as well as the face.</p></div><div><h3>What still needs work</h3><p id="limitations">Evaluating skin weights, skirt deformation and facial controls. This is an asset trial; the game deployment is unchanged.</p></div><div><h3>Inspect the asset</h3><p><a href="/models/masha-rigged.glb" download>Download rigged GLB ↗</a><br><a href="/models/masha-walk.glb" download>Download Meshy walk GLB ↗</a><br><a href="/evidence/masha-comparison.mp4">Watch comparison recording ↗</a></p></div></section>
+</main>
+<script type="module" src="/viewer.ts"></script>
+</body></html>

@@ -11,7 +11,10 @@
     "test": "vitest run",
     "e2e": "playwright test",
     "eval:director": "tsx scripts/evalDirector.ts",
-    "deploy": "wrangler deploy"
+    "deploy": "wrangler deploy",
+    "trial:dev": "vite --config vite.trial.config.ts",
+    "trial:build": "vite build --config vite.trial.config.ts",
+    "trial:deploy": "wrangler deploy --config wrangler.trial.toml"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.5.0",

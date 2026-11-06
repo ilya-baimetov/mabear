@@ -1,0 +1,32 @@
+[
+  {
+    "path": "trial/public/models/masha-walk.glb",
+    "bytes": 17774856,
+    "sha256": "4d6c7cec394b998538b686e3160a4035b6969b4c57eba511779f4c633e9de391"
+  },
+  {
+    "path": "trial/public/models/walk-armature.glb",
+    "bytes": 90076,
+    "sha256": "1d01aefc2c2692c7f88475e37b90947f613d607f188b6ee8ce36b38679afb799"
+  },
+  {
+    "path": "trial/public/models/masha-run.glb",
+    "bytes": 17764224,
+    "sha256": "9215669285d29fef405ac0575d3d16fdee71a70cceebbab2a08217483ce0e4f0"
+  },
+  {
+    "path": "trial/public/models/run-armature.glb",
+    "bytes": 79436,
+    "sha256": "86c91fd4e74c8671f88b68dc858c51f6c77fc67ff30d683e1aa7056ee425ad07"
+  },
+  {
+    "path": "trial/public/models/masha-rigged.glb",
+    "bytes": 17794700,
+    "sha256": "280ab09bb51ef654afc4fceedea8e7120d66fc2055008bf68ad586d32c01f632"
+  },
+  {
+    "path": "docs/rebuild/results/masha-comparison.mp4",
+    "bytes": 1098196,
+    "sha256": "30c626618705594c1059fe163dbdb4eab3ed9d4cb09f5f37a22793467b89c5d0"
+  }
+]
