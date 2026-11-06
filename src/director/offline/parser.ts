@@ -4,7 +4,7 @@
 // validateBeatScript with 0 errors.
 import { CHARACTERS } from "../../shared/bible/characters";
 import { PROPS } from "../../shared/bible/props";
-import { canonAbsentFor, canonAbsentMessage, detectLang, preFilter } from "../../shared/rules";
+import { canonAbsentMessage, detectLang, findCanonAbsent, preFilter } from "../../shared/rules";
 import { isWolf } from "../../shared/grammar";
 import {
   ACTOR_IDS, MAX_BEATS, MAX_LINE_CHARS, MAX_PARAGRAPH_CHARS, MAX_SUMMARY_CHARS,
@@ -113,10 +113,15 @@ function beat(actor: ActorId, verb: Verb, extra: Partial<Beat> = {}): Beat {
 export function parseParagraph(text: string, lang: Lang, startState: WorldState, options: ParseOptions = {}): BeatScript {
   const lex = LEXICONS[detectLang(text)];
   const pf = preFilter(text.slice(0, MAX_PARAGRAPH_CHARS), lex.lang, lang);
-  // canon characters not in the prototype (Hare, Penguin, Dasha…) are played by Masha/Bear, with an honest note
-  const ca = substituteCanonAbsent(pf.text, lex.lang, lang);
-  pf.hits.push(...ca.hits);
-  const src = ca.text;
+  const src = pf.text;
+  // canon characters not in the prototype (Hare, Penguin, Dasha…) are played by Masha/Bear, with an honest note —
+  // in the narration only, after the child's words (quotes, dash and screenplay lines) were taken out verbatim (§4.2)
+  const caHits: RuleHit[] = [];
+  const narration = (t: string): string => {
+    const ca = substituteCanonAbsent(t, lex.lang, lang);
+    for (const h of ca.hits) if (!caHits.some((x) => x.original.toLowerCase() === h.original.toLowerCase())) caHits.push(h);
+    return ca.text;
+  };
 
   const quotes: string[] = [];
   const holding = Object.fromEntries(ACTOR_IDS.map((id) => [id, startState.actors[id]?.holding ?? null])) as Record<ActorId, PropId | null>;
@@ -152,8 +157,9 @@ export function parseParagraph(text: string, lang: Lang, startState: WorldState,
       const closes = /[.!?…]$/.test(q) && /\p{L}/u.test(lead.replace(QUOTE_RE, ""));
       return ` ⟦${quotes.length - 1}⟧${closes ? " \u0001" : " "}`;
     });
-    for (const s of body.split(/(?<=[.!?…])\s+|\u0001/)) if (s.trim()) sentences.push({ text: s.trim() });
+    for (const s of body.split(/(?<=[.!?…])\s+|\u0001/)) if (s.trim()) sentences.push({ text: narration(s.trim()) });
   }
+  pf.hits.push(...caHits);
 
   // --- 2. per sentence ---
   for (const sen of sentences) {
@@ -227,6 +233,8 @@ export function parseParagraph(text: string, lang: Lang, startState: WorldState,
       }
       const wolvesPlural: boolean = subjMention ? subjMention.plural : subject == null && lastWolvesPlural && (subjectCarry ?? lastActor) === "wolf_a";
       const subjectExplicit = subject != null;
+      // a sentence that names someone else ("Masha and Bear laugh") ends "they" = the Wolves, parsed or not
+      if ((subjMention && !subjMention.plural) || both || (subjectExplicit && !isWolf(subject!))) lastWolvesPlural = false;
       if (!subject) subject = subjectCarry ?? lastActor ?? "masha";
       let object: ActorId | null = mentions.find((m) => m.id !== subject && !(wolvesPlural && isWolf(m.id)))?.id ?? null;
       if (!object) {
@@ -430,7 +438,7 @@ export function parseParagraph(text: string, lang: Lang, startState: WorldState,
   // --- 4. paragraph-level fields ---
   const finalMusic: MusicCue = music ?? { mood: options.prevMusicMood && options.prevMusicMood !== "none" ? options.prevMusicMood : "playful", intensity: "soft", change: "continue" };
   const mood: Mood = moodFor(finalMusic.mood, beats);
-  const summary = makeSummary(src, quotes, beats, lang);
+  const summary = makeSummary(substituteCanonAbsent(src, lex.lang, lang).text, quotes, beats, lang);
   const bs: BeatScript = {
     summary,
     time_of_day: tod,
@@ -443,21 +451,34 @@ export function parseParagraph(text: string, lang: Lang, startState: WorldState,
   return validateBeatScript(bs, startState, lang).beatScript;
 }
 
-/** Replace canon-but-absent characters in the narration (not inside quotes) with their stand-in's name. */
+/** Replace canon-but-absent characters in the narration with their stand-in's name. The child's words stay verbatim:
+ *  quotes, the speech of a dash-dialogue line («— Зайка, иди сюда! — кричит Маша.») and screenplay lines ("MASHA: …"). */
 export function substituteCanonAbsent(text: string, textLang: Lang, uiLang: Lang): { text: string; hits: RuleHit[] } {
   const hits: RuleHit[] = [];
-  const parts = text.split(/("[^"]*"|“[^”]*”|«[^»]*»|„[^“”]*[“”])/u);
-  const out = parts.map((part, i) => {
-    if (i % 2 === 1) return part; // quoted words stay verbatim
-    return part.replace(/(?<![\p{L}])(?:the |a |an )?([\p{L}]+)/giu, (m, word: string) => {
-      const c = canonAbsentFor(word);
-      if (!c) return m;
-      const rep = c.sub === "masha" ? (textLang === "ru" ? "Маша" : "Masha") : textLang === "ru" ? "Мишка" : "Bear";
-      if (!hits.some((h) => h.original.toLowerCase() === word.toLowerCase())) hits.push({ rule: "cast_only", original: word, replacement: rep, kid_message: canonAbsentMessage(c, uiLang) });
-      return m.replace(/^(?:the |a |an )/i, "").replace(word, rep);
-    });
-  });
-  return { text: out.join(""), hits };
+  const subNarration = (part: string): string => {
+    let out = "";
+    let at = 0;
+    for (const m of findCanonAbsent(part)) {
+      const rep = m.def.sub === "masha" ? (textLang === "ru" ? "Маша" : "Masha") : textLang === "ru" ? "Мишка" : "Bear";
+      const word = part.slice(m.index, m.index + m.length);
+      if (!hits.some((h) => h.original.toLowerCase() === word.toLowerCase())) hits.push({ rule: "cast_only", original: word, replacement: rep, kid_message: canonAbsentMessage(m.def, uiLang) });
+      // drop a leading English article ("the hare" → "Masha")
+      const head = part.slice(at, m.index).replace(/(?<![\p{L}])(?:the|a|an)\s+$/iu, "");
+      out += head + rep;
+      at = m.index + m.length;
+    }
+    return out + part.slice(at);
+  };
+  const subLine = (line: string): string => {
+    if (SCREENPLAY_RE.test(line.trim())) return line; // "MASHA: …" is all the child's line
+    const dash = /^(\s*[—–-]\s*)(.+?)(\s*[—–]\s*)(.+)$/.exec(line);
+    if (dash) return dash[1] + dash[2] + dash[3] + subQuoted(dash[4]); // «— line — narration»
+    if (/^\s*[—–-]/.test(line)) return line; // «— line» with no narration
+    return subQuoted(line);
+  };
+  const subQuoted = (t: string): string =>
+    t.split(/("[^"]*"|“[^”]*”|«[^»]*»|„[^“”]*[“”])/u).map((part, i) => (i % 2 === 1 ? part : subNarration(part))).join("");
+  return { text: text.split(/(\n+)/).map((ln, i) => (i % 2 === 1 ? ln : subLine(ln))).join(""), hits };
 }
 
 /** Unquoted speech: "Bear says thank you to Masha" → "Thank you". Returns null when nothing is left to say. */

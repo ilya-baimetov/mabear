@@ -3,7 +3,7 @@
 import { CHARACTERS } from "../shared/bible/characters";
 import { MARKS } from "../shared/bible/set";
 import { GRAMMAR, VERB_IMPLIED_PROP, isWolf } from "../shared/grammar";
-import { RULES, canonAbsentFor, canonAbsentMessage, preFilter } from "../shared/rules";
+import { CANON_ABSENT_COMPOUNDS, RULES, canonAbsentFor, canonAbsentMessage, isCanonAbsentCompound, preFilter } from "../shared/rules";
 import {
   ACTOR_IDS, AMBIENCES, EMOTES, EMOTIONS, MARK_IDS, MAX_BEATS, MAX_DELAY_S, MAX_LINE_CHARS, MAX_SUMMARY_CHARS,
   MOODS, MUSIC_MOODS, PROP_IDS, SFX_IDS, SHOTS, TIMES_OF_DAY, VERBS,
@@ -43,15 +43,17 @@ const TARGET_SYNONYMS: Record<string, string> = {
 /** Synonyms that name a real cast member (no cast_only hit when resolved). */
 const CAST_ALIASES = new Set(["medved", "misha", "mishka", "wolf", "wolves", "wolf_1", "wolf_2", "wolf1", "wolf2", "big_wolf", "little_wolf", "small_wolf", "волк", "волки", "волков"]);
 
-/** A canon series character that isn't in the prototype (Hare, Penguin, Panda, Tiger, Dasha, Rosie…) → stand-in id. */
+/** A canon series character that isn't in the prototype (Hare, Penguin, Panda, Tiger, Dasha, Rosie…) → stand-in id.
+ *  Only the whole target or its head noun (last word) counts, and object/food compounds don't: "hot_dog",
+ *  "dog_house", "goat_cheese", "rabbit_hole" are not the Dog/Goat/Hare. */
 export function canonAbsentTarget(raw: string | null): { sub: ActorId; message: Record<Lang, string> } | null {
   if (raw == null) return null;
-  const words = raw.trim().toLowerCase().split(/[\s_-]+/).filter(Boolean);
-  for (const w of words.reverse()) {
-    const c = canonAbsentFor(w);
-    if (c) return { sub: c.sub, message: { en: canonAbsentMessage(c, "en"), ru: canonAbsentMessage(c, "ru") } };
-  }
-  return null;
+  const words = raw.trim().toLowerCase().split(/[^\p{L}]+/u).filter(Boolean);
+  if (!words.length || CANON_ABSENT_COMPOUNDS.includes(words.join(" ")) || CANON_ABSENT_COMPOUNDS.includes(words.join(""))) return null;
+  const head = words[words.length - 1];
+  const c = canonAbsentFor(head);
+  if (!c || isCanonAbsentCompound(words.length > 1 ? words[words.length - 2] : null, head, null)) return null;
+  return { sub: c.sub, message: { en: canonAbsentMessage(c, "en"), ru: canonAbsentMessage(c, "ru") } };
 }
 
 /** Map an arbitrary target string to an allowed id, or null when nothing fits. */

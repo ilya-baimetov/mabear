@@ -86,33 +86,114 @@ export const FOREIGN_CHARACTERS = [
 ];
 
 /** Canon series characters that are NOT in this prototype yet (honest substitution, not "foreign").
- *  `keys` are lower-case target words (EN + RU stems); `sub` is the stand-in actor used instead. */
-export const CANON_ABSENT: { keys: string[]; name: Record<Lang, string>; sub: "masha" | "bear" }[] = [
-  { keys: ["hare", "rabbit", "bunny", "заяц", "зайц", "зайк", "зайчик"], name: { en: "The Hare", ru: "Зайца" }, sub: "masha" },
-  { keys: ["penguin", "пингвин"], name: { en: "The Penguin", ru: "Пингвина" }, sub: "masha" },
-  { keys: ["panda", "панд"], name: { en: "The Panda", ru: "Панды" }, sub: "bear" },
-  { keys: ["tiger", "тигр"], name: { en: "The Tiger", ru: "Тигра" }, sub: "bear" },
-  { keys: ["dasha", "даша", "дашу", "даши"], name: { en: "Dasha", ru: "Даши" }, sub: "masha" },
-  { keys: ["rosie", "pig", "piglet", "свин", "розочк", "хрюш"], name: { en: "Rosie the pig", ru: "Розочки-свинки" }, sub: "masha" },
-  { keys: ["goat", "коз"], name: { en: "The Goat", ru: "Козы" }, sub: "masha" },
-  { keys: ["dog", "puppy", "пёс", "пес", "собак"], name: { en: "The Dog", ru: "Пса" }, sub: "masha" },
-  { keys: ["squirrel", "белк", "белоч"], name: { en: "The Squirrels", ru: "Белок" }, sub: "masha" },
+ *  `keys` are the original lower-case stems (kept for reference; FROZEN). Matching uses `forms`: explicit whole-word
+ *  forms (EN singular/plural, RU declensions) — never prefixes, so «песенку», «розочки», «пандусу» don't match.
+ *  `contextForms` count only when the same text also has `context` (Розочка = the pig only next to «свинка»/«хрюша»). */
+export interface CanonAbsentDef {
+  keys: string[];
+  name: Record<Lang, string>;
+  sub: "masha" | "bear";
+  forms: string[];
+  contextForms?: string[];
+  context?: RegExp;
+}
+const ruNoun = (stems: string, endings: string): string[] => stems.split(" ").flatMap((st) => endings.split(" ").map((e) => st + (e === "0" ? "" : e)));
+const RU_FEM = "а ы е у ой ою 0 ам ами ах"; // коза → козы, козе, козу, козой, коз…
+const RU_FEM_I = "а и е у ой ою 0 ам ами ах"; // собака → собаки…
+const RU_MASC = "0 а у ом е ы ов ам ами ах"; // пингвин → пингвина…
+const RU_MASC_I = "0 а у ом е и ов ам ами ах"; // зайчик → зайчики…
+export const CANON_ABSENT: CanonAbsentDef[] = [
+  { keys: ["hare", "rabbit", "bunny", "заяц", "зайц", "зайк", "зайчик"], name: { en: "The Hare", ru: "Зайца" }, sub: "masha",
+    forms: ["hare", "hares", "rabbit", "rabbits", "bunny", "bunnies", "заяц", ...ruNoun("зайц", "а у ем е ы ев ам ами ах"),
+      ...ruNoun("зайк", "а и е у ой 0 ам ами ах"), "заек", ...ruNoun("зайчик", RU_MASC_I), "зайчонок", ...ruNoun("зайчонк", "а у ом е"),
+      ...ruNoun("зайчишк", "а и е у ой"), "зайчата", "зайчат"] },
+  { keys: ["penguin", "пингвин"], name: { en: "The Penguin", ru: "Пингвина" }, sub: "masha",
+    forms: ["penguin", "penguins", ...ruNoun("пингвин", RU_MASC), ...ruNoun("пингвинчик", RU_MASC_I), "пингвинёнок", "пингвиненок", "пингвинята"] },
+  { keys: ["panda", "панд"], name: { en: "The Panda", ru: "Панды" }, sub: "bear",
+    forms: ["panda", "pandas", ...ruNoun("панд", RU_FEM), ...ruNoun("пандочк", "а и е у ой"), "пандочек"] },
+  { keys: ["tiger", "тигр"], name: { en: "The Tiger", ru: "Тигра" }, sub: "bear",
+    forms: ["tiger", "tigers", ...ruNoun("тигр", RU_MASC), "тигрёнок", "тигренок", ...ruNoun("тигрёнк", "а у ом е"), ...ruNoun("тигренк", "а у ом е"), "тигрята"] },
+  { keys: ["dasha", "даша", "дашу", "даши"], name: { en: "Dasha", ru: "Даши" }, sub: "masha",
+    forms: ["dasha", "даша", "даши", "даше", "дашу", "дашей", "дашенька", "дашеньки", "дашеньке", "дашеньку", "дашенькой"] },
+  { keys: ["rosie", "pig", "piglet", "свин", "розочк", "хрюш"], name: { en: "Rosie the pig", ru: "Розочки-свинки" }, sub: "masha",
+    forms: ["rosie", "pig", "pigs", "piglet", "piglets", "piggy", ...ruNoun("свинь", "я и е ю ёй ей"), "свиней", ...ruNoun("свинк", "а и е у ой"), "свинок",
+      ...ruNoun("хрюш", "а и е у ей"), ...ruNoun("хрюшк", "а и е у ой"), "поросёнок", "поросенок", ...ruNoun("поросёнк", "а у ом е"), ...ruNoun("поросенк", "а у ом е"), "поросята"],
+    contextForms: ["розочка", "розочки", "розочке", "розочку", "розочкой"],
+    context: /(?<!\p{L})(?:свин(?:ья|ьи|ье|ью|ьёй|ьей|ка|ки|ке|ку|кой)|хрюш|поросён|поросен|pig|rosie)/iu },
+  { keys: ["goat", "коз"], name: { en: "The Goat", ru: "Козы" }, sub: "masha",
+    forms: ["goat", "goats", ...ruNoun("коз", RU_FEM), ...ruNoun("козочк", "а и е у ой"), "козочек", "козёл", "козел", ...ruNoun("козл", "а у ом е"),
+      ...ruNoun("козлик", RU_MASC_I), "козлёнок", "козленок", ...ruNoun("козлёнк", "а у ом е"), ...ruNoun("козленк", "а у ом е"), "козлята"] },
+  { keys: ["dog", "puppy", "пёс", "пес", "собак"], name: { en: "The Dog", ru: "Пса" }, sub: "masha",
+    forms: ["dog", "dogs", "puppy", "puppies", "doggy", "doggie", "пёс", "пес", ...ruNoun("пс", "а у ом е ы ов ам ами ах"), ...ruNoun("собак", RU_FEM_I),
+      ...ruNoun("собачк", "а и е у ой"), "собачек", "щенок", ...ruNoun("щенк", "а у ом е и ов ам ами"), "щеночек", "щенята",
+      ...ruNoun("пёсик", RU_MASC_I), ...ruNoun("песик", RU_MASC_I)] },
+  { keys: ["squirrel", "белк", "белоч"], name: { en: "The Squirrels", ru: "Белок" }, sub: "masha",
+    // not «белков»/«белками» (proteins); «белки»/«белок» next to eggs are egg whites (see CANON_ABSENT_NOT)
+    forms: ["squirrel", "squirrels", "белка", "белки", "белке", "белку", "белкой", "белок", "белкам", "белках", ...ruNoun("белочк", "а и е у ой ам ами ах"), "белочек",
+      "бельчонок", ...ruNoun("бельчонк", "а у ом е"), "бельчата"] },
 ];
 
-/** Find a canon-but-absent character for a lower-case word (exact EN key or RU stem prefix). */
-export function canonAbsentFor(word: string): (typeof CANON_ABSENT)[number] | null {
+/** Words before a form that make it an object/food/toy, not the character ("hot dog", «плюшевый зайчик»). */
+const CANON_NOT_BEFORE = /^(?:hot|corn|toy|toys|stuffed|plush|plushie|chocolate|gummy|paper|rubber|wooden|cuddly|dust|guinea|sea|soft|easter|snow|игрушечн\p{L}*|плюшев\p{L}*|шоколадн\p{L}*|мягк\p{L}*|резинов\p{L}*|бумажн\p{L}*|деревянн\p{L}*|морск\p{L}*|надувн\p{L}*|мармеладн\p{L}*|яичн\p{L}*)$/u;
+/** Words after a form that make it a compound object ("goat cheese", "rabbit hole", "bunny slippers", "dog house"). */
+const CANON_NOT_AFTER = /^(?:house|houses|kennel|bowl|collar|leash|bed|toy|toys|tag|sled|biscuit|biscuits|cheese|milk|hole|holes|slippers?|ears|costume|mask|suit|lily|lilies|bank|tail|tails|pen|sty|wood|whistle|игрушк\p{L}*|от|яиц|яичн\p{L}*|сыр\p{L}*|молок\p{L}*|будк\p{L}*|мисочк\p{L}*|миск\p{L}*|ошейник\p{L}*)$/u;
+/** Compounds that contain a form but aren't the character. */
+export const CANON_ABSENT_COMPOUNDS = ["hot dog", "hotdog", "corn dog", "dogwood", "doghouse", "dog house", "toy bunny", "bunny slippers", "rabbit hole",
+  "goat cheese", "goat milk", "guinea pig", "piggy bank", "tiger lily", "dust bunny", "морская свинка", "белки от яиц", "яичные белки"];
+
+/** Find a canon-but-absent character for a single lower-case word (an exact whole-word form; no prefixes). */
+export function canonAbsentFor(word: string): CanonAbsentDef | null {
   const w = word.trim().toLowerCase();
   if (!w) return null;
-  for (const c of CANON_ABSENT) {
-    for (const k of c.keys) {
-      if (/[\u0400-\u04FF]/.test(k) ? w.startsWith(k) : w === k || w === k + "s") return c;
-    }
+  return CANON_ABSENT.find((c) => c.forms.includes(w)) ?? null;
+}
+
+/** True when `word` sits in an object/food/toy compound with its neighbours ("hot dog", "rabbit hole", «белки от яиц»). */
+export function isCanonAbsentCompound(prev: string | null, word: string, next: string | null): boolean {
+  const p = prev?.toLowerCase() ?? "";
+  const n = next?.toLowerCase() ?? "";
+  if (p && CANON_NOT_BEFORE.test(p)) return true;
+  if (n && CANON_NOT_AFTER.test(n)) {
+    // «белки от яиц» is egg whites, but «от» alone after another form is just a preposition («убегает от собаки» has it before)
+    if (n === "от" || n === "яиц" || /^яичн/u.test(n)) return /^бел/u.test(word.toLowerCase());
+    return true;
   }
-  return null;
+  return false;
+}
+
+export interface CanonAbsentMention { index: number; length: number; text: string; def: CanonAbsentDef }
+
+/** Every canon-but-absent mention in free text (whole words; compounds and context-only forms handled). Multi-word
+ *  mentions of one character («Розочка-свинка», «свинка Розочка», "Rosie the pig") come back as one mention. */
+export function findCanonAbsent(text: string): CanonAbsentMention[] {
+  const words = [...text.matchAll(/\p{L}+/gu)].map((m) => ({ i: m.index, w: m[0], low: m[0].toLowerCase() }));
+  const out: CanonAbsentMention[] = [];
+  for (let k = 0; k < words.length; k++) {
+    const cur = words[k];
+    let def = canonAbsentFor(cur.low);
+    if (!def) def = CANON_ABSENT.find((c) => c.contextForms?.includes(cur.low) && c.context?.test(text)) ?? null;
+    if (!def) continue;
+    const gap = (a: (typeof words)[number], b: (typeof words)[number]) => text.slice(a.i + a.w.length, b.i);
+    const joined = (g: string) => /^(?:\s+|\s*-\s*)$/.test(g);
+    const prev = k > 0 && joined(gap(words[k - 1], cur)) ? words[k - 1].low : null;
+    const next = k + 1 < words.length && joined(gap(cur, words[k + 1])) ? words[k + 1].low : null;
+    if (isCanonAbsentCompound(prev, cur.low, next)) continue;
+    let end = cur.i + cur.w.length;
+    // merge "Rosie the pig" / «Розочка-свинка» / «свинка Розочка» into one mention
+    for (let j = k + 1; j < words.length && j <= k + 2; j++) {
+      const g = gap(words[j - 1], words[j]);
+      if (!/^(?:\s*-\s*|\s+)$/.test(g)) break;
+      const nd = canonAbsentFor(words[j].low) ?? CANON_ABSENT.find((c) => c.contextForms?.includes(words[j].low)) ?? null;
+      if (nd === def) { end = words[j].i + words[j].w.length; k = j; break; }
+      if (!(j === k + 1 && words[j].low === "the")) break;
+    }
+    out.push({ index: cur.i, length: end - cur.i, text: text.slice(cur.i, end), def });
+  }
+  return out;
 }
 
 /** Honest kid message for a canon character that isn't in the prototype yet. */
-export function canonAbsentMessage(c: (typeof CANON_ABSENT)[number], lang: Lang): string {
+export function canonAbsentMessage(c: CanonAbsentDef, lang: Lang): string {
   return lang === "ru"
     ? `${c.name.ru} пока нет в этой версии — ${c.sub === "masha" ? "Маша" : "Мишка"} сыграл${c.sub === "masha" ? "а" : ""} эту роль!`
     : `${c.name.en} isn't in this prototype yet — ${c.sub === "masha" ? "Masha" : "Bear"} played the part!`;
