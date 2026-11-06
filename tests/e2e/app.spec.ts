@@ -357,3 +357,43 @@ test("11. clicking a card to edit never plays it; each card has its own ▶", as
   const active = await page.getByTestId("paragraph-card").evaluateAll((els) => els.findIndex((e) => e.getAttribute("data-active") === "1"));
   expect(active).toBe(1);
 });
+
+test("12. Notion-style editor keys: Enter splits, Shift+Enter breaks the line, Backspace removes an empty block, arrows move; no director call", async ({ page }) => {
+  await open(page);
+  let calls = 0;
+  await page.route("**/api/direct", async (route) => {
+    calls++;
+    await route.continue();
+  });
+  await page.getByTestId("add-paragraph").click();
+  const first = page.getByTestId("paragraph-text").first();
+  await first.pressSequentially("Masha runs to the swing. Bear naps.", { delay: 5 });
+  // Enter with the caret before "Bear naps." splits the block in two
+  for (let i = 0; i < "Bear naps.".length; i++) await first.press("ArrowLeft");
+  await first.press("Enter");
+  await expect(page.getByTestId("paragraph-text")).toHaveCount(2);
+  await expect(page.getByTestId("paragraph-text").nth(0)).toHaveValue("Masha runs to the swing.");
+  await expect(page.getByTestId("paragraph-text").nth(1)).toHaveValue("Bear naps.");
+  // the caret is in block 2: Shift+Enter is a line break inside it
+  const second = page.getByTestId("paragraph-text").nth(1);
+  await expect(second).toBeFocused();
+  await second.press("End");
+  await second.press("Shift+Enter");
+  await second.pressSequentially("He snores.", { delay: 5 });
+  await expect(second).toHaveValue("Bear naps.\nHe snores.");
+  // Enter at the end makes a new empty block; Enter there does nothing; Backspace removes it
+  await second.press("Enter");
+  await expect(page.getByTestId("paragraph-text")).toHaveCount(3);
+  const third = page.getByTestId("paragraph-text").nth(2);
+  await third.press("Enter");
+  await expect(page.getByTestId("paragraph-text")).toHaveCount(3);
+  await expect(third).toHaveValue("");
+  await third.press("Backspace");
+  await expect(page.getByTestId("paragraph-text")).toHaveCount(2);
+  await expect(page.getByTestId("paragraph-text").nth(1)).toBeFocused();
+  // ArrowUp at the start of block 2 moves to block 1
+  await page.getByTestId("paragraph-text").nth(1).press("Control+Home");
+  await page.getByTestId("paragraph-text").nth(1).press("ArrowUp");
+  await expect(page.getByTestId("paragraph-text").nth(0)).toBeFocused();
+  expect(calls).toBe(0);
+});

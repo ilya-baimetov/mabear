@@ -9,7 +9,7 @@ let player: Player | null = null;
 let audio: AudioEngine | null = null;
 
 /** The current ▶ Play request: the whole story, or one paragraph. */
-type Session = { kind: "all" } | { kind: "one"; id: string };
+type Session = ({ kind: "all" } | { kind: "one"; id: string }) & { episodeId: string };
 let session: Session | null = null;
 /** episode time where the player is holding for the next paragraph */
 let holdAt: number | null = null;
@@ -17,6 +17,7 @@ let unsub: (() => void) | null = null;
 
 function endSession(): void {
   session = null;
+  store.setRunActive(false);
   holdAt = null;
   unsub?.();
   unsub = null;
@@ -37,12 +38,14 @@ function start(from: number, to?: number): void {
 function tick(): void {
   if (!session || !player) return;
   const s = store.getState();
+  // a new story / example replaced the one this ▶ was for: never start playing it by itself
+  if (s.episodeId !== session.episodeId) return endSession();
   if (session.kind === "one") {
     const id = session.id;
     if (!s.paragraphs.some((p) => p.id === id)) return endSession();
     const r = store.segmentRange(id);
     const p = s.paragraphs.find((x) => x.id === id)!;
-    if (r && p.pendingVersion === null) {
+    if (r && p.pendingVersion === null && !store.isRedirectQueued(id)) {
       endSession();
       start(r.start, r.end);
     } else if (!store.hasPending()) endSession(); // nothing left to wait for (e.g. empty text)
@@ -62,6 +65,7 @@ function tick(): void {
 function begin(next: Session, uptoIndex: number): void {
   endSession();
   session = next;
+  store.setRunActive(true);
   store.prepare(uptoIndex);
   unsub = store.subscribe(() => queueMicrotask(tick));
   tick();
@@ -86,7 +90,7 @@ export const playback = {
     const s = store.getState();
     if (s.paragraphs[0]) store.select(s.paragraphs[0].id);
     holdAt = 0;
-    begin({ kind: "all" }, s.paragraphs.length - 1);
+    begin({ kind: "all", episodeId: s.episodeId }, s.paragraphs.length - 1);
   },
   /** ▶ on a card: render that paragraph (and any dirty one before it, for continuity), then play only its segment. */
   playParagraph(id: string) {
@@ -95,7 +99,11 @@ export const playback = {
     const idx = store.getState().paragraphs.findIndex((p) => p.id === id);
     if (idx < 0) return;
     store.select(id);
-    begin({ kind: "one", id }, idx);
+    begin({ kind: "one", id, episodeId: store.getState().episodeId }, idx);
+  },
+  /** Tap-to-react is allowed only when no ▶ session is running or holding ("getting ready…"). */
+  canReact(): boolean {
+    return session === null && !store.getState().waiting;
   },
   /** Called by the Stage when the player stops on its own at the end of what's rendered. */
   onPlayerStopped(t: number) {

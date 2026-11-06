@@ -72,6 +72,9 @@ describe("Play-only rendering (store)", () => {
     await flush();
     const p = store.getState().paragraphs[0];
     expect(p.status).toBe("draft");
-    expect(p.versions[p.current].text).toBe("Masha runs to the swing.");
+    // the reply is kept as a version but doesn't become current: the card never plays text it no longer shows
+    expect(p.versions.map((v) => v.text)).toEqual(["Masha runs to the swing."]);
+    expect(p.current).toBe(-1);
+    expect(store.getState().timeline.segments).toHaveLength(0);
   });
 });

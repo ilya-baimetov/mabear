@@ -1,6 +1,7 @@
 // App store + paragraph pipeline (spec §4.2, §6.5). No React imports here; components subscribe via useStore().
 import { BIBLE_VERSION } from "../shared/bible/characters";
 import {
+  ACTOR_IDS,
   DEFAULT_REMIX,
   MAX_PARAGRAPH_CHARS,
   type BeatScript,
@@ -40,6 +41,8 @@ export interface ParagraphVersion {
   remix: Remix;
   /** served from the director cache: no API call, $0 */
   cached?: boolean;
+  /** material digest (postures + held items) of the start state this version was directed against */
+  startKey?: string;
 }
 
 export interface Paragraph {
@@ -169,6 +172,11 @@ export function exportLog(): string {
   return lsGet(LS.log) ?? "[]";
 }
 
+/** What changes staging between paragraphs: every actor's posture and held item (not position or facing). */
+export function materialDigest(ws: WorldState): string {
+  return ACTOR_IDS.map((id) => `${id}:${ws.actors[id]?.posture ?? "-"}:${ws.actors[id]?.holding ?? "-"}`).join("|");
+}
+
 function emptyTimeline(): Timeline {
   return { segments: [], duration: 0 };
 }
@@ -195,6 +203,10 @@ class Store {
   private queue: (() => void)[] = [];
   private redirected = new Set<string>();
   private active = 0;
+  /** a ▶ Play session is running (set by playback): only then may a broken paragraph be re-directed */
+  private runActive = false;
+  /** paragraphs whose re-direct is queued for the next microtask (they count as pending) */
+  private redirectQueue = new Set<string>();
   /** recompile() calls so far (e2e: typing must not compile) */
   compileCount = 0;
 
@@ -334,7 +346,7 @@ class Store {
 
   revert(id: string): void {
     const p = this.state.paragraphs.find((x) => x.id === id);
-    if (!p || p.current <= 0) return;
+    if (!p || p.current <= 0 || p.pendingVersion !== null) return;
     const prev = p.versions[p.current - 1];
     this.patchParagraph(id, { current: p.current - 1, text: prev.text, status: prev.ruleHits.length ? "adjusted" : "ready", error: null });
     this.recompile({ redirectBroken: "mark" });
@@ -357,9 +369,25 @@ class Store {
     return p.pendingVersion === null && p.status === "draft" && normalizeText(p.text).length > 0;
   }
 
-  /** Any director work in flight (the player may be holding with "getting ready…"). */
+  /** Any director work in flight or queued (the player may be holding with "getting ready…"). */
   hasPending(): boolean {
-    return this.state.paragraphs.some((p) => p.pendingVersion !== null);
+    return this.redirectQueue.size > 0 || this.state.paragraphs.some((p) => p.pendingVersion !== null);
+  }
+
+  isRedirectQueued(id: string): boolean {
+    return this.redirectQueue.has(id);
+  }
+
+  /** playback marks its ▶ session; outside one, nothing is ever sent to the director */
+  setRunActive(on: boolean): void {
+    this.runActive = on;
+  }
+
+  /** Version number for a new render of `p`: the same number when the text didn't change (re-direct / retry). */
+  private nextVersion(p: Paragraph, text: string): number {
+    const cur = p.versions[p.current];
+    if (cur && normalizeText(cur.text) === text) return cur.version;
+    return (p.versions[p.versions.length - 1]?.version ?? 0) + 1;
   }
 
   /**
@@ -383,7 +411,7 @@ class Store {
       let bs: BeatScript | null = null;
       let remix: Remix = p.versions[p.current]?.remix ?? { ...DEFAULT_REMIX };
       if (this.isDirty(p)) {
-        const version = (p.versions[p.versions.length - 1]?.version ?? 0) + 1;
+        const version = this.nextVersion(p, text);
         const previous = paras.slice(Math.max(0, i - 3), i).map((x) => normalizeText(x.text)).filter(Boolean);
         jobs.push({ id: p.id, text, start: state, version, previous });
         try {
@@ -405,7 +433,10 @@ class Store {
         /* keep the previous estimate */
       }
     }
-    if (!jobs.length) return 0;
+    if (!jobs.length) {
+      this.recompile(); // e.g. a cleared paragraph leaves the timeline
+      return 0;
+    }
     const pending = new Map(jobs.map((j) => [j.id, j.version]));
     this.setParagraphs(this.state.paragraphs.map((p) => (pending.has(p.id) ? { ...p, status: "directing", error: null, pendingVersion: pending.get(p.id)! } : p)));
     this.recompile();
@@ -491,12 +522,19 @@ class Store {
       ruleHits: res.beatScript.rule_hits,
       remix: p.versions[p.current]?.remix ?? { ...DEFAULT_REMIX },
       cached,
+      startKey: materialDigest(start),
     };
-    const versions = [...p.versions, nv];
-    // edited again while the director was working → the new text waits for the next ▶ Play
+    // same version number = a re-direct / retry of unchanged text: replace it (the counter only moves on real edits)
+    const versions = [...p.versions];
+    const same = versions.findIndex((v) => v.version === version);
+    if (same >= 0) versions[same] = nv;
+    else versions.push(nv);
+    const nvIndex = same >= 0 ? same : versions.length - 1;
+    // edited again (or reverted) while the director was working → keep it as a version, but it doesn't become
+    // current; the paragraph waits for the next ▶ Play
     const stale = normalizeText(p.text) !== text;
     const status: ParagraphStatus = stale ? "draft" : res.error ? "error" : nv.ruleHits.length ? "adjusted" : "ready";
-    this.patchParagraph(id, { versions, current: versions.length - 1, status, error: res.error ?? null, pendingVersion: null });
+    this.patchParagraph(id, { versions, current: stale ? p.current : nvIndex, status, error: res.error ?? null, pendingVersion: null });
     appendLog({ episodeId: this.state.episodeId, paragraphId: id, version, text: nv.text, lang: nv.lang, beatScript: nv.beatScript, source: nv.source, latencyMs: nv.latencyMs, usage: nv.usage, ruleHits: nv.ruleHits, ts: Date.now() });
     // directed against `start`: re-directing against the same start state can't help (§6.5.4)
     this.redirected.add(`${id}:${directorCacheKey(nv.text, nv.lang, start, this.state.model)}`);
@@ -570,7 +608,8 @@ class Store {
     this.compileCount += 1;
     const playable: Paragraph[] = [];
     for (const p of this.state.paragraphs) {
-      if (p.pendingVersion !== null) break;
+      if (p.pendingVersion !== null || this.redirectQueue.has(p.id)) break;
+      if (!normalizeText(p.text)) continue; // a cleared block never plays its old scene
       if (p.current >= 0 && p.versions[p.current]) playable.push(p);
     }
     let results: CompileResult[] = [];
@@ -591,26 +630,52 @@ class Store {
     const segmentIds = playable.map((p) => p.id);
     this.set({ results, timeline, segmentIds, t: Math.min(this.state.t, timeline.duration) });
     if (!opts.redirectBroken) return;
-    const mode = opts.redirectBroken;
+    // outside a ▶ session nothing goes to the director: only mark ✏️ for the next Play
+    const mode = opts.redirectBroken === "direct" && this.runActive ? "direct" : "mark";
+    let queued = false;
     results.forEach((r, i) => {
       const p = playable[i];
       const v = p.versions[p.current];
       const start = i === 0 ? initialWorldState() : results[i - 1].segment.endState;
       const key = `${p.id}:${directorCacheKey(v.text, v.lang, start, this.state.model)}`;
-      if (!r.errors.length || p.status === "draft" || this.redirected.has(key)) return;
-      // §6.5.4: not trivially repairable against the new start state → draft (+ re-direct inside a Play run)
-      if (mode === "mark") {
-        this.patchParagraph(p.id, { status: "draft" });
-        return;
-      }
+      // §6.5.4 + review #7: not repairable against the real start state, or directed against an estimated start
+      // whose postures / held items differ from the real one → draft (+ one re-direct per real start inside a run)
+      const drifted = v.startKey !== undefined && v.startKey !== materialDigest(start);
+      if ((!r.errors.length && !drifted) || p.status === "draft" || this.redirected.has(key)) return;
+      if (queued) return; // later paragraphs are re-checked once this one is re-directed
+      this.patchParagraph(p.id, { status: "draft" });
+      if (mode === "mark") return;
       this.redirected.add(key);
+      this.redirectQueue.add(p.id);
+      queued = true;
       queueMicrotask(() => {
-        const cur = this.state.paragraphs.find((x) => x.id === p.id);
-        if (!cur || cur.pendingVersion !== null) return;
-        this.patchParagraph(p.id, { status: "draft" });
-        this.prepare(this.state.paragraphs.findIndex((x) => x.id === p.id));
+        this.redirectQueue.delete(p.id);
+        this.directOne(p.id);
       });
     });
+    if (queued) this.recompile(); // the timeline stops before the paragraph going back to the director
+  }
+
+  /** Re-direct one paragraph against its real start state (inside a ▶ run; nothing else is sent). */
+  private directOne(id: string): void {
+    const idx = this.state.paragraphs.findIndex((x) => x.id === id);
+    const p = this.state.paragraphs[idx];
+    if (!p || p.pendingVersion !== null || !this.runActive) {
+      this.recompile();
+      return;
+    }
+    const text = normalizeText(p.text).slice(0, MAX_PARAGRAPH_CHARS);
+    if (!text) {
+      this.recompile();
+      return;
+    }
+    const lang = this.state.lang;
+    const start = this.startStateFor(idx);
+    const version = this.nextVersion(p, text);
+    const previous = this.state.paragraphs.slice(Math.max(0, idx - 3), idx).map((x) => normalizeText(x.text)).filter(Boolean);
+    this.patchParagraph(id, { status: "directing", error: null, pendingVersion: version });
+    this.recompile();
+    this.direct(id, text, lang, start, version, previous);
   }
 
   /** Episode time range of a paragraph's segment. */

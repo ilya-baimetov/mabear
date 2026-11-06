@@ -120,8 +120,13 @@ export async function createStage(canvas: HTMLCanvasElement, opts: StageOptions 
   mark("props_fx");
 
   let testRig: CharacterRig | null = null;
+  let disposed = false;
   const assetsReady = Promise.all([
     loadCharacter(TEST_GLTF_ID).then((r) => {
+      if (disposed) {
+        r.dispose();
+        return;
+      }
       testRig = r;
       r.root.position.set(16.5, 0, 4);
       r.root.rotation.y = -1.2;
@@ -130,8 +135,12 @@ export async function createStage(canvas: HTMLCanvasElement, opts: StageOptions 
     loadSetOverrides(set.elements),
     loadPropOverrides(props.objects),
     // A5 environment: CC0 HDRI + PBR textures swap in asynchronously; failures keep the procedural look
-    loadHdri(look, assetUrl(HDRI_URL)),
+    loadHdri(look, assetUrl(HDRI_URL), () => disposed),
     loadEnvTextures(Math.min(8, renderer.capabilities.getMaxAnisotropy())).then(({ textures }) => {
+      if (disposed) {
+        for (const t of Object.values(textures)) (t as THREE.Texture | null | undefined)?.dispose?.();
+        return;
+      }
       applyLookTextures(look.materials, textures);
       set.applyTextures(textures);
     }),
@@ -282,6 +291,7 @@ export async function createStage(canvas: HTMLCanvasElement, opts: StageOptions 
     resize,
     stats: () => ({ fps: last.fps, drawCalls: last.drawCalls, triangles: last.triangles }),
     dispose() {
+      disposed = true;
       for (const id of ACTOR_IDS) rigs[id]?.dispose();
       (testRig as CharacterRig | null)?.dispose();
       props.dispose();

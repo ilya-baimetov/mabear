@@ -159,7 +159,7 @@ export function Stage() {
           const h = handles.current;
           const d = down.current;
           down.current = null;
-          if (!h || !d || Math.hypot(e.clientX - d.x, e.clientY - d.y) > 6 || h.player.isPlaying) return;
+          if (!h || !d || Math.hypot(e.clientX - d.x, e.clientY - d.y) > 6 || h.player.isPlaying || !playback.canReact()) return;
           const r = e.currentTarget.getBoundingClientRect();
           const actor = h.pick((e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height);
           if (!actor) return;

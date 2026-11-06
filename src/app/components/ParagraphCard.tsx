@@ -50,6 +50,7 @@ export function ParagraphCard({ p, index, active, selected, count }: { p: Paragr
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     const el = e.currentTarget;
+    if (e.nativeEvent.isComposing || e.keyCode === 229) return; // IME composition: Enter confirms the candidate
     const atStart = el.selectionStart === 0 && el.selectionEnd === 0;
     const atEnd = el.selectionStart === el.value.length;
     if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
@@ -57,11 +58,17 @@ export function ParagraphCard({ p, index, active, selected, count }: { p: Paragr
       el.blur();
       return;
     }
-    // Enter = new block below (Notion); Shift+Enter = line break inside the block
-    if (e.key === "Enter" && !e.shiftKey && !e.altKey && atEnd && el.value.trim() !== "") {
+    // Enter = split into a new block at the caret (Notion); Shift+Enter = line break inside the block
+    if (e.key === "Enter" && !e.shiftKey && !e.altKey) {
       e.preventDefault();
-      store.editText(p.id, el.value.replace(/\n+$/, ""));
-      focusBlock(store.addParagraph(p.id), "start");
+      if (el.value.trim() === "") return; // an empty block stays one empty block
+      const before = el.value.slice(0, el.selectionStart).replace(/\s+$/, "");
+      const after = el.value.slice(el.selectionEnd).replace(/^\s+/, "");
+      if (before === "") return; // caret at the very start: nothing to split off
+      store.editText(p.id, before);
+      const id = store.addParagraph(p.id);
+      if (after) store.editText(id, after);
+      focusBlock(id, "start");
       return;
     }
     // Backspace in an empty block removes it and jumps to the end of the previous one
@@ -101,7 +108,7 @@ export function ParagraphCard({ p, index, active, selected, count }: { p: Paragr
           {menu && (
             <div className="menu" onClick={(e) => e.stopPropagation()}>
               <button onClick={() => { store.deleteParagraph(p.id); setMenu(false); }}>{t.menu.delete}</button>
-              <button disabled={p.current <= 0} onClick={() => { store.revert(p.id); setMenu(false); }}>{t.menu.revert}</button>
+              <button disabled={p.current <= 0 || p.pendingVersion !== null} onClick={() => { store.revert(p.id); setMenu(false); }}>{t.menu.revert}</button>
               <button disabled={index === 0} onClick={() => { store.moveParagraph(p.id, -1); setMenu(false); }}>{t.menu.up}</button>
               <button disabled={index === count - 1} onClick={() => { store.moveParagraph(p.id, 1); setMenu(false); }}>{t.menu.down}</button>
             </div>

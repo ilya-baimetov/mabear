@@ -432,11 +432,15 @@ function hdriStats(tex: THREE.DataTexture): { mean: number; sunAz: number } {
 }
 
 /** Load the CC0 HDRI (async). Resolves false (procedural environment stays) if it cannot be loaded. */
-export async function loadHdri(rig: LookRig, url: string): Promise<boolean> {
+export async function loadHdri(rig: LookRig, url: string, isDisposed: () => boolean = () => false): Promise<boolean> {
   try {
     const loader = new HDRLoader();
     loader.setDataType(THREE.HalfFloatType);
     const tex = await loader.loadAsync(url);
+    if (isDisposed()) {
+      tex.dispose(); // the stage was torn down while loading: don't attach (it would never be freed)
+      return false;
+    }
     tex.mapping = THREE.EquirectangularReflectionMapping;
     tex.minFilter = THREE.LinearFilter;
     tex.magFilter = THREE.LinearFilter;
