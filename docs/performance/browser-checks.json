@@ -1,0 +1,9 @@
+{
+  "finite": true,
+  "frames": 363,
+  "maxGripError": 1.576213700060856e-16,
+  "maxPalmTargetError": 0.000010871576838614172,
+  "maxReachError": 0.000034993780865919806,
+  "peakTasteSurfaceGap": 0.000007274917967613742,
+  "seekDeterministic": true
+}

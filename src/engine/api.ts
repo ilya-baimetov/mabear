@@ -8,6 +8,8 @@ export type Quat = [number, number, number, number];
 
 export interface FaceParams {
   emotion: Emotion;
+  /** Time-derived transition; remains deterministic when seeking. */
+  emotionTransition?: { from:Emotion; progress:number };
   /** 0 = eyes open, 1 = closed (blink or sleep) */
   lidClose: number;
   viseme: Viseme;
@@ -34,6 +36,8 @@ export interface ActorFrame {
   posture: Posture;
   /** the clip being played (debug/data view) */
   verb: string;
+  /** Deterministic clip time for geometry-aware contact solving. */
+  action?: { time:number; duration:number };
   /** secondary-motion drivers 0..1 (hem sway, belly jiggle, ear wiggle) */
   secondary: { sway: number; jiggle: number; breathe: number };
 }

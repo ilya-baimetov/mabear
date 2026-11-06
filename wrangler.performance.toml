@@ -1,0 +1,14 @@
+name = "mabear-masha-performance"
+main = "worker/performance.ts"
+compatibility_date = "2026-11-06"
+compatibility_flags = ["nodejs_compat"]
+
+[assets]
+directory = "./dist-performance"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
+run_worker_first = true
+
+[[services]]
+binding = "STORY_SERVICE"
+service = "mabear"

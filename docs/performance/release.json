@@ -1,0 +1,64 @@
+{
+  "date": "2026-11-06",
+  "url": "https://mabear-masha-performance.ilya-baimetov.workers.dev",
+  "workerVersion": "737c6297-89ce-46c1-b139-b1a30c57f9c6",
+  "mainGameCandidateEnabled": false,
+  "scope": "Masha only; private comparison before propagation",
+  "newFalSpendUsd": 0,
+  "validation": {
+    "typecheck": "main, Worker, performance passed",
+    "unitTests": 541,
+    "unitFiles": 31,
+    "browserSweepFrames": 363,
+    "finiteGeometry": true,
+    "deterministicSeek": true,
+    "video": {
+      "path": "proof/masha-before-after-v2.mp4",
+      "width": 1920,
+      "height": 850,
+      "seconds": 24.001867,
+      "bytes": 26517276,
+      "audio": false
+    },
+    "deployment": [
+      {
+        "path": "/api/health",
+        "status": 200,
+        "location": null,
+        "cache_control": "private, no-store",
+        "robots": "noindex, nofollow",
+        "body": {
+          "ok": true,
+          "service": "mabear-masha-performance"
+        }
+      },
+      {
+        "path": "/",
+        "status": 302,
+        "location": "/login",
+        "cache_control": "private, no-store",
+        "robots": "noindex, nofollow"
+      },
+      {
+        "path": "/assets/masha-1Y6NQ2cv.glb",
+        "status": 302,
+        "location": "/login",
+        "cache_control": "private, no-store",
+        "robots": "noindex, nofollow"
+      },
+      {
+        "path": "/login",
+        "status": 200,
+        "location": null,
+        "cache_control": "private, no-store",
+        "robots": "noindex, nofollow"
+      }
+    ]
+  },
+  "limits": [
+    "Authenticated production rendering not exercised; local actual WebGL rendering and production asset packaging verified. Existing original demo password is required.",
+    "Remaining generated hair, clothing shards and small facial surface transitions are not a production-quality asset pass.",
+    "About 2 mm clap pad overlap; numerical anchors do not establish collision-free surfaces.",
+    "Silent animation study; voices, music and audio-aligned lip sync unchanged."
+  ]
+}

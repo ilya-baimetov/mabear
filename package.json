@@ -14,7 +14,10 @@
     "deploy": "wrangler deploy",
     "trial:dev": "vite --config vite.trial.config.ts",
     "trial:build": "vite build --config vite.trial.config.ts",
-    "trial:deploy": "wrangler deploy --config wrangler.trial.toml"
+    "trial:deploy": "wrangler deploy --config wrangler.trial.toml",
+    "performance:dev": "vite --config vite.performance.config.ts",
+    "performance:build": "tsc --noEmit -p tsconfig.performance.json && vite build --config vite.performance.config.ts",
+    "performance:deploy": "wrangler deploy --config wrangler.performance.toml"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.5.0",

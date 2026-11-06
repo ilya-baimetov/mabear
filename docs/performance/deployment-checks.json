@@ -1,0 +1,34 @@
+[
+  {
+    "path": "/api/health",
+    "status": 200,
+    "location": null,
+    "cache_control": "private, no-store",
+    "robots": "noindex, nofollow",
+    "body": {
+      "ok": true,
+      "service": "mabear-masha-performance"
+    }
+  },
+  {
+    "path": "/",
+    "status": 302,
+    "location": "/login",
+    "cache_control": "private, no-store",
+    "robots": "noindex, nofollow"
+  },
+  {
+    "path": "/assets/masha-1Y6NQ2cv.glb",
+    "status": 302,
+    "location": "/login",
+    "cache_control": "private, no-store",
+    "robots": "noindex, nofollow"
+  },
+  {
+    "path": "/login",
+    "status": 200,
+    "location": null,
+    "cache_control": "private, no-store",
+    "robots": "noindex, nofollow"
+  }
+]

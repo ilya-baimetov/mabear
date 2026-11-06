@@ -5,8 +5,10 @@ import type { ActorId, Vec3 } from '../../shared/schema';
 import { BONES, SKELETON, makeSetup, type SourcePoseWorld } from '../motion/retarget';
 import { qmul, qinv, IDENTITY } from '../motion/blend';
 import { STYLES, feetPoints } from '../motion/verbs/common';
+import {createMashaPerformance} from './mashaPerformance';
+import {createMashaContacts} from './mashaContacts';
 
-export interface GeneratedOptions { height: number; }
+export interface GeneratedOptions { height: number; mashaPerformance?: boolean; }
 interface Sample { mesh: THREE.SkinnedMesh; index: number; }
 const p = new THREE.Vector3(), q = new THREE.Quaternion();
 
@@ -69,7 +71,7 @@ export function generatedRig(id: ActorId, model: THREE.Group, options: Generated
 
   // Fix the trial's split dress: magenta skirt vertices belong to the pelvis, not to opposite thighs.
   let dressVertices = 0;
-  if(id === 'masha') for(const mesh of meshes) dressVertices += repairDress(mesh);
+  if(id === 'masha') for(const mesh of meshes) dressVertices += repairDress(mesh,!!options.mashaPerformance);
   // Facial anchors are authored in metres, then converted through the imported skeleton's centimetre scale.
   const headAt=joint('Head');
   for(const side of [-1,1]) {
@@ -77,7 +79,9 @@ export function generatedRig(id: ActorId, model: THREE.Group, options: Generated
     const at=id==='masha'?new THREE.Vector3(side*.055,.742,.139):new THREE.Vector3(headAt.x+side*options.height*.035,headAt.y+options.height*.075,headAt.z+options.height*.08);
     eye.position.copy(bones.Head.worldToLocal(at));bones.Head.add(eye);
   }
-  const faces=id==='masha'?meshes.map(addMashaFace):[];
+  const performance=id==='masha'&&options.mashaPerformance?createMashaPerformance(meshes,bones,root):null;
+  const contacts=performance?createMashaContacts(meshes,bones,root,handSocket,performance.mouthTarget):null;
+  const faces=id==='masha'&&!performance?meshes.map(addMashaFace):[];
   const samples: Sample[] = [];
   for(const mesh of meshes) {
     const pos = mesh.geometry.getAttribute('position');
@@ -127,10 +131,15 @@ export function generatedRig(id: ActorId, model: THREE.Group, options: Generated
       root.position.fromArray(frame.pos); root.rotation.y=frame.yaw;
       root.visible=frame.opacity>.001;
       for(const face of faces)face(frame);
+      root.updateMatrixWorld(true);
+      contacts?.update(frame);
+      performance?.update(frame);
       for(const mat of materials){mat.opacity=frame.opacity;mat.depthWrite=frame.opacity>.98;}
       root.updateMatrixWorld(true);
     },
     dispose(){
+      performance?.dispose();
+      contacts?.dispose();
       const textures=new Set<THREE.Texture>();
       for(const mesh of meshes) mesh.geometry.dispose();
       for(const m of materials){for(const v of Object.values(m))if(v instanceof THREE.Texture)textures.add(v);m.dispose();}
@@ -139,7 +148,7 @@ export function generatedRig(id: ActorId, model: THREE.Group, options: Generated
   };
 }
 
-function repairDress(mesh:THREE.SkinnedMesh):number {
+function repairDress(mesh:THREE.SkinnedMesh,precise=false):number {
   const mat=(Array.isArray(mesh.material)?mesh.material[0]:mesh.material) as THREE.MeshStandardMaterial;
   const tex=mat.map, uv=mesh.geometry.getAttribute('uv'), position=mesh.geometry.getAttribute('position');
   if(!tex?.image || !uv) return 0;
@@ -155,6 +164,9 @@ function repairDress(mesh:THREE.SkinnedMesh):number {
     for(let k=0;k<4;k++){indices[i*4+k]=oldI.getComponent(i,k);weights[i*4+k]=oldW.getComponent(i,k);}
     mesh.getVertexPosition(i,p).applyMatrix4(mesh.matrixWorld);
     if(p.y<.17 || p.y>.49 || Math.abs(p.x)>.24)continue;
+    // The broad colour mask also catches pink highlights on sleeves and hands.
+    // Restrict the repaired candidate to the actual tapered skirt silhouette.
+    if(precise&&Math.abs(p.x)>.115+(.49-p.y)*.30)continue;
     const x=Math.min(canvas.width-1,Math.max(0,Math.round(uv.getX(i)*(canvas.width-1))));
     const y=Math.min(canvas.height-1,Math.max(0,Math.round(uv.getY(i)*(canvas.height-1))));
     const off=(y*canvas.width+x)*4,r=pixels[off],g=pixels[off+1],b=pixels[off+2];

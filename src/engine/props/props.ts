@@ -337,6 +337,7 @@ export function createProps(mats: LookMaterials): PropsHandle {
         o.visible = true;
         const socket = f.attachedTo ? sockets[f.attachedTo] : undefined;
         if (f.attachedTo && socket) {
+          if(socket.userData.preciseGrip){socket.getWorldPosition(o.position);socket.getWorldQuaternion(o.quaternion);continue;}
           const yaw = yaws[f.attachedTo] ?? 0;
           socket.getWorldPosition(_wp);
           const g = PROP_VISUALS[id].grip;

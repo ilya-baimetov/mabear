@@ -574,6 +574,7 @@ function evalActor(actor: ActorId, inp: ActorCtxIn, bear: ActorFrame | null, car
     holding: null,
     posture,
     verb,
+    action: { time:clipLt, duration:inClip&&r?r.clip.dur:0 },
     secondary: { sway, jiggle, breathe: ev.breathe },
   };
   return { frame, carryLift: carry?.k ?? 0, mark, lookW, lookScale };
