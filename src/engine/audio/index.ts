@@ -129,8 +129,8 @@ export function createAudioEngine(opts: AudioEngineOptions = {}): AudioEngine {
   const lookahead = opts.lookahead ?? LOOKAHEAD_S;
   const tickMs = opts.tickMs ?? TICK_MS;
   // AudioDebug plus two diagnostic extras (errors swallowed so playback never breaks)
-  const debug: AudioDebug & { errors: number; lastError: string } = {
-    scheduled: emptyCounts(), ttsAvailable: false, unlocked: false, errors: 0, lastError: "",
+  const debug: AudioDebug & { errors: number; lastError: string; voices: Record<string, string> } = {
+    scheduled: emptyCounts(), ttsAvailable: false, unlocked: false, errors: 0, lastError: "", voices: {},
   };
   const safe = (fn: () => void): void => {
     try {
@@ -150,6 +150,7 @@ export function createAudioEngine(opts: AudioEngineOptions = {}): AudioEngine {
   let tts: Tts | null = null;
   try {
     tts = new Tts();
+    debug.voices = tts.lastVoice; // which TTS voice each language actually used (diagnostics)
     debug.ttsAvailable = tts.available;
     tts.onChange(() => (debug.ttsAvailable = !!tts?.available));
   } catch {

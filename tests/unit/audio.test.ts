@@ -7,7 +7,7 @@ import { MOOD_SPECS, MusicDirector, SCALES, barSeconds, chordTones, composeBar, 
 import {
   flattenTimeline, inWindow, planAmbienceSpans, planMusicSections, stateAt,
 } from "../../src/engine/audio/scheduler";
-import { pickVoice, interjection } from "../../src/engine/audio/tts";
+import { childPitch, pickVoice, interjection } from "../../src/engine/audio/tts";
 import { BEAR_VOCALS, vocalFor } from "../../src/engine/audio/vocals";
 import { MUSIC_MOODS, WOLF_START, type MusicMood, type Segment, type Timeline, type WorldState } from "../../src/shared/schema";
 import type { AudioEngine } from "../../src/engine/api";
@@ -301,7 +301,7 @@ describe("music", () => {
 });
 
 describe("voices, vocals and spatialization", () => {
-  it("picks Google voices first, then exact language, then same base language", () => {
+  it("ranks native voices for the exact language first, then same base language", () => {
     const voices = [
       { name: "Microsoft Irina", lang: "ru-RU" },
       { name: "Google русский", lang: "ru-RU" },
@@ -309,10 +309,45 @@ describe("voices, vocals and spatialization", () => {
       { name: "Daniel", lang: "en_GB" },
       { name: "Google UK English Female", lang: "en-GB" },
     ];
-    expect(pickVoice(voices, "ru-RU")?.name).toBe("Google русский");
+    expect(pickVoice(voices, "ru-RU")?.name).toBe("Microsoft Irina"); // native female voice beats an online one
     expect(pickVoice(voices, "en-US")?.name).toBe("Samantha");
     expect(pickVoice(voices.slice(3), "en-US")?.name).toBe("Google UK English Female");
     expect(pickVoice([], "en-US")).toBeNull();
+  });
+
+  it("never picks an accented macOS novelty voice for Russian when a native one exists; prefers child voices", () => {
+    const mac = [
+      { name: "Eddy (Русский (Россия))", lang: "ru-RU" },
+      { name: "Flo (Русский (Россия))", lang: "ru-RU" },
+      { name: "Shelley (Русский (Россия))", lang: "ru-RU" },
+      { name: "Milena", lang: "ru-RU" },
+      { name: "Yuri", lang: "ru-RU" },
+      { name: "Junior", lang: "en-US" },
+      { name: "Samantha", lang: "en-US" },
+      { name: "Fred", lang: "en-US" },
+    ];
+    expect(pickVoice(mac, "ru-RU")?.name).toBe("Milena");
+    expect(pickVoice(mac, "en-US")?.name).toBe("Junior"); // a real child voice beats an adult one
+    const edge = [
+      { name: "Microsoft Svetlana Online (Natural) - Russian (Russia)", lang: "ru-RU" },
+      { name: "Microsoft Ana Online (Natural) - English (United States)", lang: "en-US" },
+      { name: "Microsoft Aria Online (Natural) - English (United States)", lang: "en-US" },
+    ];
+    expect(pickVoice(edge, "en-US")?.name).toContain("Ana");
+    expect(pickVoice(edge, "ru-RU")?.name).toContain("Svetlana");
+    // only accented novelty voices for a language → still better than silence
+    expect(pickVoice(mac.slice(0, 3), "ru-RU")).not.toBeNull();
+    // no Russian voice at all → silent (lips still move), never an English voice reading Russian
+    expect(pickVoice(mac.slice(5), "ru-RU")).toBeNull();
+    // installed voices beat online ones (an online voice that fails falls back to the English system voice)
+    const chrome = [
+      { name: "Google русский", lang: "ru-RU", localService: false },
+      { name: "Milena", lang: "ru-RU", localService: true },
+    ];
+    expect(pickVoice(chrome, "ru-RU")?.name).toBe("Milena");
+    // pitch: child voices get a small lift, adult voices a big one
+    expect(childPitch({ name: "Junior", lang: "en-US" }, 1.6)).toBeLessThan(1.6);
+    expect(childPitch({ name: "Yuri", lang: "ru-RU" }, 1.6)).toBe(2);
   });
 
   it("Masha interjections come from the bible; Bear has synthesized vocals for every emote", () => {

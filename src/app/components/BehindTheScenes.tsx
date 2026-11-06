@@ -135,6 +135,13 @@ export function BehindTheScenes() {
               <div className="cue-counts">
                 {Object.entries(counts).map(([k, n]) => <span key={k} className="achip">{k}: {n}</span>)}
               </div>
+              <div className="cue-counts" data-testid="tts-voices">
+                {t.bts.voice}:{" "}
+                {Object.entries((window as unknown as { __mabearAudio?: { voices?: Record<string, string> } }).__mabearAudio?.voices ?? {}).map(([k, n]) => (
+                  <span key={k} className="achip">{k} → {n}</span>
+                ))}
+                <span className="achip">{t.bts.voicePlaceholder}</span>
+              </div>
             </section>
           )}
           <details className="bts-sec">

@@ -60,6 +60,8 @@ export const en = {
     economics: "Economics",
     rules: "Rule report",
     noRules: "No rules triggered",
+    voice: "Voice (browser TTS)",
+    voicePlaceholder: "placeholder — studio voice in production",
     audioCues: "Compiled audio cues",
     remixed: "Re-rendered locally in {ms} ms · $0",
     layers: "System layers",
