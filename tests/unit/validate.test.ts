@@ -94,7 +94,7 @@ describe("validator (hard rules + structural clamps)", () => {
     expect(swing.target).toBe("swing");
     expect(carry).toMatchObject({ actor: "bear", verb: "carry", target: "masha" });
     expect(hug.target).toBe("bear");
-    expect(sit.target).toBe("porch"); // where Bear is
+    expect(sit.target).toBe(ws.actors.bear.mark); // where Bear is
     expect(jump.target).toBeNull();
     expect(laugh.emote).toBe("chuckle");
     expect(eat.item).toBe("jam_jar");

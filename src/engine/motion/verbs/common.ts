@@ -27,7 +27,7 @@ export interface ActorStyle {
   hipsDrop: number;
   /** body thickness lying down (m) — hips height when lying flat */
   lieHeight: number;
-  /** shoulder height (m) — where Masha rides when carried */
+  /** Root height for a shoulder ride (m), calibrated to keep the rider clear of the stylized head. */
   shoulderHeight: number;
   breathRate: number;
   breathDepth: number;
@@ -46,7 +46,7 @@ export const STYLES: Record<ActorId, ActorStyle> = {
   },
   bear: {
     height: 2.4, hipHeight: 0.72, timeScale: 0.8, bounce: 0.35, stance: 0.09, armOut: 0.46, hipsDrop: 0.035, lieHeight: 0.32,
-    shoulderHeight: 1.62, breathRate: 0.2, breathDepth: 1.3,
+    shoulderHeight: 1.97, breathRate: 0.2, breathDepth: 1.3,
     leg: { x: 0.22, y: -0.03, thigh: 0.32, shin: 0.27, ankle: 0.1, toe: 0.15 },
     cadence: { walk: 0.72, run: 1.15, tiptoe: 0.6 },
   },

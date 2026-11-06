@@ -1,0 +1,77 @@
+{
+  "url": "https://mabear-storybook.ilya-baimetov.workers.dev",
+  "worker": "mabear-storybook",
+  "version": "08505e20-1aa3-455c-8712-2a14afb0b3f9",
+  "checkedAt": "2026-11-06T07:51:07.019Z",
+  "checks": [
+    {
+      "name": "health",
+      "path": "/api/health",
+      "status": 200,
+      "expected": 200,
+      "location": null,
+      "noindex": "noindex, nofollow",
+      "cache": "private, no-store"
+    },
+    {
+      "name": "password gate",
+      "path": "/",
+      "status": 302,
+      "expected": 302,
+      "location": "/login",
+      "noindex": "noindex, nofollow",
+      "cache": "private, no-store"
+    },
+    {
+      "name": "protected model",
+      "path": "/assets/nature/Pine_1.gltf",
+      "status": 302,
+      "expected": 302,
+      "location": "/login",
+      "noindex": "noindex, nofollow",
+      "cache": "private, no-store"
+    },
+    {
+      "name": "protected code",
+      "path": "/assets/index-CNfIgxLP.js",
+      "status": 302,
+      "expected": 302,
+      "location": "/login",
+      "noindex": "noindex, nofollow",
+      "cache": "private, no-store"
+    },
+    {
+      "name": "director auth",
+      "path": "/api/direct",
+      "status": 401,
+      "expected": 401,
+      "location": null,
+      "noindex": "noindex, nofollow",
+      "cache": "private, no-store"
+    },
+    {
+      "name": "login",
+      "path": "/login",
+      "status": 200,
+      "expected": 200,
+      "location": null,
+      "noindex": "noindex, nofollow",
+      "cache": "private, no-store"
+    },
+    {
+      "name": "robots",
+      "path": "/robots.txt",
+      "status": 200,
+      "expected": 200,
+      "location": null,
+      "noindex": "noindex, nofollow",
+      "cache": "private, no-store"
+    }
+  ],
+  "invalidCookieStatus": 302,
+  "originalHealth": {
+    "ok": true,
+    "service": "mabear"
+  },
+  "authenticatedProductionAI": "Not tested; no demo password available. Local real-auth integration and mock-director E2E passed."
+}

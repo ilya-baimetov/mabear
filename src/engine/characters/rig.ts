@@ -350,10 +350,10 @@ export function skinMaterial(color: string, sheen: string, vertexColors = false)
   const m = new THREE.MeshPhysicalMaterial({
     color: vertexColors ? 0xffffff : col(color),
     vertexColors,
-    roughness: 0.6,
+    roughness: 0.72,
     metalness: 0,
-    specularIntensity: 0.55,
-    sheen: 0.6,
+    specularIntensity: 0.32,
+    sheen: 0.35,
     sheenColor: col(sheen),
     sheenRoughness: 0.5,
   });
@@ -378,16 +378,26 @@ export function skinMaterial(color: string, sheen: string, vertexColors = false)
 }
 
 export function fabricMaterial(color: string, sheenColor: string, vertexColors = false): THREE.MeshPhysicalMaterial {
-  return new THREE.MeshPhysicalMaterial({
-    color: vertexColors ? 0xffffff : col(color),
-    vertexColors,
-    roughness: 0.86,
-    metalness: 0,
-    specularIntensity: 0.35, // cotton: almost no specular, the sheen lobe carries the soft highlight
-    sheen: 1.0,
-    sheenColor: col(sheenColor),
-    sheenRoughness: 0.6,
+  const m = new THREE.MeshPhysicalMaterial({
+    color: vertexColors ? 0xffffff : col(color), vertexColors,
+    roughness: 0.91, metalness: 0, specularIntensity: 0.25,
+    sheen: 0.65, sheenColor: col(sheenColor), sheenRoughness: 0.85,
   });
+  // Fine cotton weave in rest space; derivative filtering prevents moving moiré.
+  m.onBeforeCompile = (shader) => {
+    shader.vertexShader = shader.vertexShader
+      .replace("#include <common>", "#include <common>\nvarying vec3 vClothRest;")
+      .replace("#include <begin_vertex>", "#include <begin_vertex>\nvClothRest = position;");
+    shader.fragmentShader = shader.fragmentShader
+      .replace("#include <common>", "#include <common>\nvarying vec3 vClothRest;")
+      .replace("#include <color_fragment>", `#include <color_fragment>
+        vec3 threadP = vClothRest * 1100.0;
+        float threadFade = 1.0-smoothstep(0.7,2.5,length(fwidth(threadP)));
+        float thread = sin(threadP.x)*sin(threadP.y+threadP.z*0.28);
+        diffuseColor.rgb *= 1.0 + 0.035*thread*threadFade;`);
+  };
+  m.customProgramCacheKey = () => "mabear-woven-cotton-v1";
+  return m;
 }
 
 /**
@@ -395,17 +405,17 @@ export function fabricMaterial(color: string, sheenColor: string, vertexColors =
  * The emissive is masked by the vertex colour squared: white sclera glows a little (reads clean white in shade),
  * dark iris/pupil/nose do not, and highlight discs painted with colour > 1 read as pure white sparkles.
  */
-export const EYE_GLOW = 0.2;
-export const HIGHLIGHT_VALUE = 4;
+export const EYE_GLOW = 0.055;
+export const HIGHLIGHT_VALUE = 1.45;
 
 export function eyeMaterial(): THREE.MeshPhysicalMaterial {
   const m = new THREE.MeshPhysicalMaterial({
     color: 0xffffff,
     vertexColors: true,
-    roughness: 0.32,
+    roughness: 0.42,
     metalness: 0,
-    clearcoat: 1,
-    clearcoatRoughness: 0.1,
+    clearcoat: 0.65,
+    clearcoatRoughness: 0.22,
     emissive: 0xffffff,
     emissiveIntensity: EYE_GLOW,
   });
@@ -415,7 +425,7 @@ export function eyeMaterial(): THREE.MeshPhysicalMaterial {
       "#include <emissivemap_fragment>\ntotalEmissiveRadiance *= vColor.rgb * vColor.rgb;",
     );
   };
-  m.customProgramCacheKey = () => "mabear-eye-v1";
+  m.customProgramCacheKey = () => "mabear-eye-v2";
   return m;
 }
 
@@ -425,7 +435,7 @@ export function eyeMaterial(): THREE.MeshPhysicalMaterial {
  * sticks to the body. It fades out when a strand gets smaller than a pixel (no sparkle in wide shots). Low specular
  * and a soft albedo-tinted fuzz at grazing angles keep it from reading as plastic. No UVs or textures needed.
  */
-export const FUR_STRANDS = { freq: 90, stretch: 0.35, value: 0.07, bump: 0.0014, fuzz: 0.1 };
+export const FUR_STRANDS = { freq: 155, stretch: 0.24, value: 0.14, bump: 0.0028, fuzz: 0.13 };
 
 export function furMaterial(sheenColor: string): THREE.MeshPhysicalMaterial {
   const m = new THREE.MeshPhysicalMaterial({
@@ -436,7 +446,7 @@ export function furMaterial(sheenColor: string): THREE.MeshPhysicalMaterial {
     specularIntensity: 0.25,
     sheen: 1.0,
     sheenColor: col(sheenColor),
-    sheenRoughness: 0.62,
+    sheenRoughness: 0.82,
   });
   m.onBeforeCompile = (shader) => {
     shader.uniforms.furFreq = { value: FUR_STRANDS.freq };
@@ -509,6 +519,60 @@ diffuseColor.rgb *= 1.0 + furValue * furFade * (furH - 0.5) * 2.0;`,
 }
 
 // ---------------------------------------------------------------------------------------------
+
+/** Fine tapered fur geometry. It is authored in the same rest space as the body,
+ * then receives the same bone weights and material in skinBody. The short fibres
+ * therefore follow the animation without extra draw calls or transparency layers. */
+export function plushSurface(g: THREE.BufferGeometry, count: number, length: number, seed = 7): THREE.BufferGeometry {
+  const p = g.getAttribute("position"), n = g.getAttribute("normal"), c = g.getAttribute("color");
+  if (!p || !n || !c || count < 1) return g;
+  const index = g.index;
+  const faces = Math.floor((index ? index.count : p.count) / 3);
+  const positions: number[] = [], normals: number[] = [], colors: number[] = [];
+  const point = new THREE.Vector3(), normal = new THREE.Vector3(), tint = new THREE.Color();
+  const a = new THREE.Vector3(), b = new THREE.Vector3(), tangent = new THREE.Vector3(), bitangent = new THREE.Vector3();
+  const random = () => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return seed / 4294967296; };
+  const append = (q: THREE.Vector3, shade: number) => {
+    positions.push(q.x, q.y, q.z); normals.push(normal.x, normal.y, normal.z);
+    colors.push(tint.r * shade, tint.g * shade, tint.b * shade);
+  };
+  for (let j = 0; j < count; j++) {
+    const f = Math.floor(random() * faces) * 3;
+    const ids = [0, 1, 2].map(k => index ? index.getX(f + k) : f + k);
+    const u = Math.sqrt(random()), v = random(), weights = [1-u, u*(1-v), u*v];
+    point.set(0,0,0); normal.set(0,0,0); tint.setRGB(0,0,0);
+    for (let k=0;k<3;k++) {
+      const i=ids[k], w=weights[k];
+      point.addScaledVector(a.fromBufferAttribute(p,i),w); normal.addScaledVector(a.fromBufferAttribute(n,i),w);
+      tint.r += c.getX(i)*w; tint.g += c.getY(i)*w; tint.b += c.getZ(i)*w;
+    }
+    normal.normalize();
+    // The muzzle and belly have shorter, softer fibres than the darker outer coat.
+    const pale = Math.min(1, (tint.r + tint.g + tint.b) * 0.65);
+    const len = length * (0.55 + random()*0.6) * (1-pale*0.35);
+    tangent.crossVectors(normal, Math.abs(normal.y)>0.9 ? a.set(1,0,0) : a.set(0,1,0)).normalize();
+    bitangent.crossVectors(normal,tangent).normalize();
+    const angle=random()*Math.PI*2;
+    a.copy(tangent).multiplyScalar(Math.cos(angle)).addScaledVector(bitangent,Math.sin(angle));
+    tangent.copy(a);
+    bitangent.crossVectors(normal,tangent).normalize();
+    const width=len*0.13;
+    const tip=point.clone().addScaledVector(normal,len).addScaledVector(bitangent,len*0.27);
+    for (const axis of [tangent,bitangent]) {
+      append(a.copy(point).addScaledVector(axis,-width).addScaledVector(normal,-len*0.08),0.91);
+      append(b.copy(point).addScaledVector(axis,width).addScaledVector(normal,-len*0.08),0.91);
+      append(tip,1.10);
+    }
+  }
+  const fibres=new THREE.BufferGeometry();
+  fibres.setAttribute("position",new THREE.Float32BufferAttribute(positions,3));
+  fibres.setAttribute("normal",new THREE.Float32BufferAttribute(normals,3));
+  fibres.setAttribute("color",new THREE.Float32BufferAttribute(colors,3));
+  fibres.setIndex(Array.from({length:positions.length/3},(_,i)=>i));
+  const result=mergeSame([g,fibres]);
+  return result;
+}
+
 // Skinned body builder: every body part (authored in its bone's local space) is merged PER MATERIAL into one
 // SkinnedMesh bound to the character's bones. Rigid parts get weight 1 on their bone (looks exactly like rigid
 // parenting); sculpted continuous parts (torso, whole arms, whole legs, tails) get smooth weights across joints, so

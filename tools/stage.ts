@@ -62,7 +62,7 @@ function frame(t: number): FrameState {
     t,
     segmentIndex: 0,
     localT: t,
-    actors: { masha: actor(0, 0, 0.25, hold ? "jam_jar" : null), bear: actor(-6, -2.6, 0.35, hold ? "honey_pot" : null) },
+    actors: { masha: actor(0, 0, 0.25, hold ? "jam_jar" : null), bear: actor(-6, -2.6, 0.35, hold ? "honey_pot" : null), wolf_a: actor(12.1,.3,-1.5), wolf_b: actor(12,-1.9,-1.5) },
     camera: cam,
     lighting: { from: tod, to, k },
     props,
@@ -77,7 +77,7 @@ const fit = () => stage.resize(canvas.clientWidth, canvas.clientHeight);
 fit();
 addEventListener("resize", fit);
 const t0 = Number(q.get("t") ?? 3);
-if (q.get("robot") === "1") await stage.assetsReady;
+await stage.assetsReady;
 const robot = stage.testRig();
 if (robot && q.get("robot") === "1") {
   robot.root.visible = true;

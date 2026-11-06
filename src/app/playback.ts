@@ -26,6 +26,7 @@ function endSession(): void {
 
 function start(from: number, to?: number): void {
   if (!player) return;
+  player.cameraOverride = null;
   const s = store.getState();
   player.setTimeline(s.timeline, s.lang);
   player.play(from, to);
@@ -101,7 +102,16 @@ export const playback = {
     store.select(id);
     begin({ kind: "one", id, episodeId: store.getState().episodeId }, idx);
   },
-  /** Tap-to-react is allowed only when no ▶ session is running or holding ("getting ready…"). */
+  /** Replays compiled work without asking the director, even when an earlier paragraph is dirty. */
+  replaySegment(id: string) {
+    if (!player) return;
+    const range = store.segmentRange(id);
+    if (!range) return;
+    void audio?.unlock();
+    endSession();
+    store.select(id);
+    start(range.start, range.end);
+  },
   canReact(): boolean {
     return session === null && !store.getState().waiting;
   },
@@ -118,8 +128,10 @@ export const playback = {
   },
   seek(t: number) {
     endSession();
-    player?.setTimeline(store.getState().timeline, store.getState().lang);
-    player?.seek(t);
-    store.setPlayback(false, t);
+    const s = store.getState();
+    const time = Number.isNaN(t) ? 0 : Math.max(0, Math.min(s.timeline.duration, t));
+    player?.setTimeline(s.timeline, s.lang);
+    player?.seek(time);
+    store.setPlayback(false, time);
   },
 };

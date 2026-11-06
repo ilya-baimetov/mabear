@@ -66,14 +66,11 @@ export function planPath(from: Vec2, to: Vec2): Vec2[] {
     if (!adj[i].includes(j)) adj[i].push(j);
     if (!adj[j].includes(i)) adj[j].push(i);
   };
-  WAYPOINTS.forEach((w, i) => w.links.forEach((l) => { const j = idx.get(l); if (j !== undefined) link(i + 2, j); }));
+  WAYPOINTS.forEach((w, i) => w.links.forEach((l) => { const j = idx.get(l); if (j !== undefined && segmentClear(nodes[i + 2], nodes[j])) link(i + 2, j); }));
   for (let i = 2; i < nodes.length; i++) {
     if (segmentClear(a, nodes[i])) link(0, i);
     if (segmentClear(nodes[i], b)) link(1, i);
   }
-  // Fallback: connect endpoints to their nearest waypoint even if not clear
-  if (adj[0].length === 0) link(0, nearest(nodes, a));
-  if (adj[1].length === 0) link(1, nearest(nodes, b));
 
   // Dijkstra (tiny graph)
   const dist = nodes.map(() => Infinity);
@@ -90,17 +87,12 @@ export function planPath(from: Vec2, to: Vec2): Vec2[] {
       if (nd < dist[v] - 1e-9) { dist[v] = nd; prev[v] = u; }
     }
   }
-  if (prev[1] < 0) return [a, b];
+  // No safe route: hold position rather than walk through scenery.
+  if (prev[1] < 0) return [a, a];
   const chain: number[] = [];
   for (let v = 1; v >= 0; v = prev[v]) chain.unshift(v);
   const path = chain.map((i) => [nodes[i][0], nodes[i][1]] as Vec2);
   return smooth(path);
-}
-
-function nearest(nodes: Vec2[], p: Vec2): number {
-  let best = 2;
-  for (let i = 2; i < nodes.length; i++) if (d(nodes[i], p) < d(nodes[best], p)) best = i;
-  return best;
 }
 
 /** Drop intermediate waypoints that can be skipped with a clear straight segment (string pulling). */

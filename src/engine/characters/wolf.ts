@@ -8,7 +8,7 @@ import type { ActorFrame, CharacterRig } from "../api";
 import { buildFace, type FaceConfig } from "./face";
 import {
   blob, bump, buildSkeleton, col, dir, extraBone, eyeMaterial, frontSurface, furMaterial, limb, makeRig, materialSet, mergeSame,
-  noise3, paintVertices, profile, restWorld, roughen, sdEllipsoid, sdfBlob, skinBody, smin, smoothstep, toLocal,
+  noise3, paintVertices, plushSurface, profile, restWorld, roughen, sdEllipsoid, sdfBlob, skinBody, smin, smoothstep, toLocal,
   welded, type SkeletonProportions, type SkinPart, type Weights,
 } from "./rig";
 
@@ -68,7 +68,7 @@ export const WOLF_LOOK = {
     snoutCenter: [0, 0.075, 0.165] as [number, number, number],
     snoutRadii: [0.072, 0.064, 0.165] as [number, number, number],
   },
-  furNoise: { amp: 0.006, freq: 22 },
+  furNoise: { amp: 0.003, freq: 28 },
 } as const;
 
 type V3 = [number, number, number];
@@ -625,6 +625,11 @@ export function buildWolf(variant: WolfVariant): CharacterRig {
     });
   }
 
+  let furSeed = variant === "a" ? 201 : 307;
+  for (const part of parts) {
+    if (part.material !== fur || /Foot|Leg/.test(part.bone.name) || part.geom.getAttribute("position").count < 600) continue;
+    part.geom = plushSurface(part.geom, Math.min(320, Math.floor(part.geom.getAttribute("position").count * 0.065)), 0.012 * k, ++furSeed);
+  }
   const body = skinBody(root, parts);
 
   // ---- secondary motion: tail sway (lags behind the hips, follows the sway driver), ear twitch

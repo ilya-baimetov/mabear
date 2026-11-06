@@ -42,19 +42,19 @@ export interface LightingParams {
 export const TOD_PRESETS: Record<TimeOfDay, LightingParams> = {
   morning: {
     skyTop: 0x7fb8f0, skyHorizon: 0xffe0bd, skyBottom: 0xd9d2b0,
-    sunDir: [10, 5.5, 6], sunColor: 0xffc994, sunIntensity: 2.7, sunGlow: 0.8,
-    hemiSky: 0xbcd4ff, hemiGround: 0x7d7a45, hemiIntensity: 1.05,
+    sunDir: [10, 5.5, 6], sunColor: 0xffc994, sunIntensity: 2.1, sunGlow: 0.8,
+    hemiSky: 0xbcd4ff, hemiGround: 0x7d7a45, hemiIntensity: 0.58,
     rimColor: 0xffe2c0, rimIntensity: 1.2,
     fogColor: 0xf3e2c8, fogNear: 22, fogFar: 110,
-    exposure: 1.0, envIntensity: 0.45, windowGlow: 0.0, stars: 0,
+    exposure: 0.92, envIntensity: 0.45, windowGlow: 0.0, stars: 0,
   },
   day: {
     skyTop: 0x3a8ae8, skyHorizon: 0x9ccbf5, skyBottom: 0xc8dcc0,
-    sunDir: [6, 13, 9], sunColor: 0xfff0d8, sunIntensity: 3.0, sunGlow: 0.45,
-    hemiSky: 0xcfe2ff, hemiGround: 0x76884a, hemiIntensity: 1.15,
-    rimColor: 0xfff4e0, rimIntensity: 1.1,
-    fogColor: 0xbedbf2, fogNear: 30, fogFar: 140,
-    exposure: 1.0, envIntensity: 0.5, windowGlow: 0.0, stars: 0,
+    sunDir: [6, 13, 9], sunColor: 0xfff0d8, sunIntensity: 2.05, sunGlow: 0.45,
+    hemiSky: 0xcfe2ff, hemiGround: 0x76884a, hemiIntensity: 0.55,
+    rimColor: 0xfff4e0, rimIntensity: 0.85,
+    fogColor: 0xbedbf2, fogNear: 26, fogFar: 110,
+    exposure: 0.92, envIntensity: 0.5, windowGlow: 0.0, stars: 0,
   },
   sunset: {
     skyTop: 0x4d5fa8, skyHorizon: 0xffa261, skyBottom: 0xc98f72,
@@ -209,12 +209,12 @@ export function createLook(scene: THREE.Scene, renderer: THREE.WebGLRenderer): L
 
   const key = new THREE.DirectionalLight(0xfff0d8, 3);
   key.castShadow = true;
-  key.shadow.mapSize.set(2048, 2048);
+  key.shadow.mapSize.set(4096, 4096);
   const sc = key.shadow.camera;
   sc.left = -24; sc.right = 24; sc.top = 24; sc.bottom = -24; sc.near = 1; sc.far = 110;
   key.shadow.bias = -0.0004;
   key.shadow.normalBias = 0.035;
-  key.shadow.radius = 3;
+  key.shadow.radius = 4;
   key.target.position.set(0, 0, 0);
   scene.add(key, key.target);
 
@@ -517,7 +517,7 @@ export function applyLighting(
 }
 
 /** Shadow map resolution (2048 at full quality; 1024 when adaptive resolution drops). */
-export function setShadowQuality(rig: LookRig, size: 1024 | 2048): void {
+export function setShadowQuality(rig: LookRig, size: 1024 | 2048 | 4096): void {
   if (rig.key.shadow.mapSize.x === size) return;
   rig.key.shadow.mapSize.set(size, size);
   rig.key.shadow.map?.dispose();

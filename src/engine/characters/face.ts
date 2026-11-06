@@ -39,6 +39,8 @@ export interface FaceConfig {
     sclera: string;
     /** extra outward yaw of each eye (radians) */
     toeOut: number;
+    /** 0 faces forward, 1 aligns fully with the head surface (default). */
+    surfaceAlignment?: number;
     /** lid colour, lash-line colour, lid open angle (radians, negative = more open) */
     lidColor: string;
     lashColor: string;
@@ -82,6 +84,8 @@ export interface FaceConfig {
     tongue: string;
     /** character signature: one-sided smile added to every emotion (Masha's knowing smirk); 0 = symmetric */
     smirk?: number;
+    /** Masha has two small upper front teeth rather than an adult full-width smile. */
+    frontTeeth?: boolean;
   };
 }
 
@@ -231,7 +235,7 @@ export function buildFace(cfg: FaceConfig, mats: MaterialSet): FaceRig {
 
   for (const side of [1, -1] as const) {
     const x = side * E.x;
-    const n = surfNormal(E.surface, x, E.y);
+    const n = surfNormal(E.surface, x, E.y).lerp(new THREE.Vector3(0,0,1),1-(E.surfaceAlignment ?? 1)).normalize();
     const surf = new THREE.Vector3(x, E.y, surfZ(E.surface, x, E.y));
     const centre = surf.clone().addScaledVector(n, -E.depth * E.r * E.scaleZ);
     const g = new THREE.Bone();
@@ -246,7 +250,10 @@ export function buildFace(cfg: FaceConfig, mats: MaterialSet): FaceRig {
     // sclera
     const sg = new THREE.SphereGeometry(E.r, 22, 14);
     sg.deleteAttribute("uv");
-    paintVertices(sg, (_p, out) => out.copy(scleraC));
+    paintVertices(sg, (p, out) => {
+      const edge = 1 - Math.max(0, p.z / E.r);
+      out.copy(scleraC).multiplyScalar(0.99 - 0.06 * edge);
+    });
     parts.push({ geom: sg, bone: g, material: eyeMat, shadow: false });
 
     // iris + pupil: domed disc with radial vertex colours, on a gaze bone
@@ -255,7 +262,7 @@ export function buildFace(cfg: FaceConfig, mats: MaterialSet): FaceRig {
     g.add(rot);
     const ri = E.r * E.iris;
     const rp = ri * E.pupil;
-    const ig = new THREE.RingGeometry(0, ri, 32, 9);
+    const ig = new THREE.RingGeometry(0, ri, 64, 12);
     const ipos = ig.getAttribute("position") as THREE.BufferAttribute;
     for (let i = 0; i < ipos.count; i++) {
       const px = ipos.getX(i);
@@ -276,7 +283,10 @@ export function buildFace(cfg: FaceConfig, mats: MaterialSet): FaceRig {
       // inner iris lighter, darker rim; subtle top shadow (lid occlusion)
       const base = irisC.clone().lerp(irisRim, smoothstep(0.55, 1.0, t));
       base.lerp(new THREE.Color(1, 1, 1).lerp(irisC, 0.35), (1 - smoothstep(0.45, 0.75, t)) * 0.25 * (p.y < 0 ? 1 : 0.2));
-      base.multiplyScalar(1 - 0.35 * smoothstep(0.2, 1, p.y / ri));
+      // Radial iris fibres add depth without a flat painted disk or oversized reflection.
+      const angle = Math.atan2(p.y, p.x);
+      const fibre = Math.sin(angle * 47 + t * 9) * Math.sin(angle * 19 - t * 16);
+      base.multiplyScalar((1 + fibre * 0.12 * smoothstep(0.3,0.6,t)) * (1 - 0.28 * smoothstep(0.2, 1, p.y / ri)));
       const pupil = 1 - smoothstep(rp * 0.92, rp * 1.08, rr);
       out.copy(base.lerp(black, pupil));
     });
@@ -301,8 +311,8 @@ export function buildFace(cfg: FaceConfig, mats: MaterialSet): FaceRig {
       paintVertices(hg, (_p, out) => out.copy(hiC));
       parts.push({ geom: hg, bone: g, material: eyeMat, shadow: false });
     };
-    addHi(-0.28, 0.32, E.r * 0.2);
-    addHi(0.22, -0.22, E.r * 0.085);
+    addHi(-0.28, 0.32, E.r * 0.115);
+    addHi(0.22, -0.22, E.r * 0.042);
 
     // upper lid: a spherical cap slightly larger than the sclera, rotating about x; lash line at its rim
     const lid = new THREE.Bone();
@@ -417,7 +427,12 @@ export function buildFace(cfg: FaceConfig, mats: MaterialSet): FaceRig {
         // colour bands: lip edge, teeth (top), interior, tongue (bottom)
         const edge = j === 0 || j === V_SEG ? 1 : 0;
         tmpC.copy(cInterior);
-        if (v < 0.34 && s.teeth > 0) tmpC.lerp(cTeeth, Math.min(1, s.teeth * 1.2) * (1 - smoothstep(0.7, 1, Math.abs(u))));
+        if (v < 0.34 && s.teeth > 0) {
+          const toothMask = Mo.frontTeeth
+            ? (1-smoothstep(0.24,0.37,Math.abs(u))) * smoothstep(0.015,0.055,Math.abs(u))
+            : 1-smoothstep(0.7,1,Math.abs(u));
+          tmpC.lerp(cTeeth, Math.min(1,s.teeth*1.2) * toothMask);
+        }
         if (v > 0.68) tmpC.lerp(cTongue, 0.85 * (1 - Math.abs(u)));
         tmpC.lerp(cLip, Math.max(edge * 0.8, 1 - openness));
         mCol[k] = tmpC.r;

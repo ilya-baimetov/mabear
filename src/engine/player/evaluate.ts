@@ -17,7 +17,7 @@ import { swingAngle } from "../motion/verbs/objects";
 // ---------- constants ----------
 
 /** Default wide camera of the yard (empty timeline, or a segment without camera cues). */
-export const DEFAULT_CAMERA: CamKey = { pos: [3, 3.2, 11], look: [-2, 1, -1], fov: 45 };
+export const DEFAULT_CAMERA: CamKey = { pos: [1.4, 2.4, 7.8], look: [-0.8, 1.1, 0.15], fov: 43 };
 
 /** Heights (m) props rest at on a mark (table top, bench seat, porch boards…); others sit on the ground. */
 export const PROP_REST_HEIGHT: Partial<Record<MarkId, number>> = {
@@ -598,7 +598,8 @@ function talkPose(actor: ActorId, t: number, w: number): Record<string, [number,
 /** Where Masha sits when riding on Bear's shoulders (root position). */
 function shoulderSeat(bear: ActorFrame): Vec3 {
   const s = STYLES.bear;
-  const back = qrot(qaxis([0, 1, 0], bear.yaw), [0, 0, -0.08 * s.height]);
+  // The oversized head needs rear clearance; otherwise the rider's face sits inside Bear's skull.
+  const back = qrot(qaxis([0, 1, 0], bear.yaw), [0, 0, -0.16 * s.height]);
   return [bear.pos[0] + back[0], bear.pos[1] + s.shoulderHeight + bear.hipsOffset[1], bear.pos[2] + back[2]];
 }
 

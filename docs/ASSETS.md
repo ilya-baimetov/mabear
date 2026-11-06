@@ -83,3 +83,7 @@ do not match the soft series look, and Quaternius' packs are offered through itc
 
 ## Likeness references (not shipped)
 Three reference images (2019 Russian postage stamps featuring Masha and the Bear, from Wikimedia Commons) were viewed locally in the git-ignored `refs/` folder to measure proportions and sample colours (`docs/LIKENESS.md`). They are Animaccord IP, are **not** committed, and are absent from `public/` and `dist/`. The characters themselves are Animaccord IP; the in-code stand-ins exist only to demonstrate the system to Animaccord and its funders.
+
+## Storybook edition vegetation
+
+The new forest uses eleven locally bundled CC0 Quaternius models and their textures. Full sources, unchanged licenses, local modifications and load-failure behavior are documented in [the environment revision](upgrade/environment.md).

@@ -6,9 +6,10 @@ import { store, type Paragraph } from "../store";
 import { useStore, useStrings } from "../useStore";
 import { playback } from "../playback";
 import { RemixButtons } from "./RemixButtons";
+import { Play, Ellipsis, Pencil, LoaderCircle, Check, Sparkles, CircleAlert, Music2, MessageCircle, Lightbulb, Leaf, CloudRain } from "lucide-react";
 import { MAX_PARAGRAPH_CHARS } from "../../shared/schema";
 
-const CHIP: Record<Paragraph["status"], string> = { draft: "✏️", directing: "⏳", ready: "✅", adjusted: "✨", error: "⚠️" };
+const CHIP = { draft: Pencil, directing: LoaderCircle, ready: Check, adjusted: Sparkles, error: CircleAlert };
 
 /** Focus a block's text, caret at the start or the end. */
 export function focusBlock(id: string, at: "start" | "end" = "end"): void {
@@ -98,6 +99,7 @@ export function ParagraphCard({ p, index, active, selected, count }: { p: Paragr
     }
   };
 
+  const StatusIcon = CHIP[p.status];
   const statusTip = p.status === "error" ? t.errorTip : p.status === "draft" && canPlay ? t.draftTip : t.status[p.status];
 
   return (
@@ -110,9 +112,9 @@ export function ParagraphCard({ p, index, active, selected, count }: { p: Paragr
       onClick={() => store.select(p.id)}
     >
       <div className="gutter">
-        <button className="gbtn card-play" data-testid="card-play" title={t.playThis} aria-label={t.playThis} disabled={!canPlay} onClick={(e) => { e.stopPropagation(); playback.playParagraph(p.id); }}>▶</button>
+        <button className="gbtn card-play" data-testid="card-play" title={t.playThis} aria-label={t.playThis} disabled={!canPlay} onClick={(e) => { e.stopPropagation(); playback.playParagraph(p.id); }}><Play size={13} fill="currentColor"/></button>
         <div className="card-menu" ref={menuRef}>
-          <button className="gbtn" data-testid="card-menu" aria-label="⋯" onClick={(e) => { e.stopPropagation(); setMenu(!menu); }}>⋮⋮</button>
+          <button className="gbtn" data-testid="card-menu" aria-label="⋯" onClick={(e) => { e.stopPropagation(); setMenu(!menu); }}><Ellipsis size={16}/></button>
           {menu && (
             <div className="menu" onClick={(e) => e.stopPropagation()}>
               <button onClick={() => { store.deleteParagraph(p.id); setMenu(false); }}>{t.menu.delete}</button>
@@ -127,6 +129,7 @@ export function ParagraphCard({ p, index, active, selected, count }: { p: Paragr
         <div className="block-line">
           <textarea
             ref={ta}
+            aria-label={`${t.script} ${index + 1}`}
             rows={1}
             data-testid="paragraph-text"
             maxLength={MAX_PARAGRAPH_CHARS}
@@ -138,20 +141,20 @@ export function ParagraphCard({ p, index, active, selected, count }: { p: Paragr
             data-pid={p.id}
           />
           <span className={`status-chip chip-${p.status}`} data-testid="status-chip" title={statusTip} aria-label={t.status[p.status]}>
-            {CHIP[p.status]}
+            <StatusIcon size={13} className={p.status === "directing" ? "spin" : ""}/>
           </span>
         </div>
         {(v || p.status === "error" || p.status === "directing") && (
           <div className="block-meta">
             {p.status === "directing" && <span className="meta-text">{t.status.directing}</span>}
             {dur > 0 && <span className="meta-text">{dur.toFixed(1)}{t.seconds}</span>}
-            {music && music !== "none" && <span className="achip" title={t.remix.music}>🎵 {t.musicMood[music]}</span>}
+            {music && music !== "none" && <span className="achip" title={t.remix.music}><Music2 size={11}/> {t.musicMood[music]}</span>}
             {amb.slice(0, 2).map((a) => (
-              <span key={a} className="achip">{a === "rain" || a === "thunderstorm" ? "🌧" : a === "night_crickets" ? "🦗" : a === "bees" ? "🐝" : a === "creek" ? "💧" : "🌿"} {t.ambience[a]}</span>
+              <span key={a} className="achip">{a === "rain" || a === "thunderstorm" ? <CloudRain size={11}/> : <Leaf size={11}/>} {t.ambience[a]}</span>
             ))}
-            {lines > 0 && <span className="achip">💬 {lines}</span>}
+            {lines > 0 && <span className="achip"><MessageCircle size={11}/> {lines}</span>}
             {hits.length > 0 && (
-              <button className="gbtn notes-btn" data-testid="rule-notes-btn" title={t.ruleNotes} aria-label={t.ruleNotes} aria-expanded={notes} onClick={(e) => { e.stopPropagation(); setNotes(!notes); }}>💡</button>
+              <button className="gbtn notes-btn" data-testid="rule-notes-btn" title={t.ruleNotes} aria-label={t.ruleNotes} aria-expanded={notes} onClick={(e) => { e.stopPropagation(); setNotes(!notes); }}><Lightbulb size={15}/></button>
             )}
             {p.status === "error" && (
               <button className="linkbtn" data-testid="retry" onClick={(e) => { e.stopPropagation(); store.retry(p.id); playback.playParagraph(p.id); }}>↻ {t.retry}</button>

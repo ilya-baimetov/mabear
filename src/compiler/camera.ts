@@ -54,7 +54,7 @@ export function mulberry32(seed: number): () => number {
   };
 }
 
-export const HEAD_HEIGHT: Record<ActorId, number> = { masha: 0.85, bear: 1.75, wolf_a: 1.65, wolf_b: 1.56 };
+export const HEAD_HEIGHT: Record<ActorId, number> = { masha: 0.85, bear: 2.05, wolf_a: 1.65, wolf_b: 1.56 };
 const CHEST: Record<ActorId, number> = { masha: 0.6, bear: 1.25, wolf_a: 1.2, wolf_b: 1.13 };
 const isWolfId = (a: ActorId | null): boolean => a === "wolf_a" || a === "wolf_b";
 /** Default cast of a two-shot / wide: the leads. The Wolves join only when they act (they never steal framing idle). */
@@ -464,9 +464,11 @@ function framing(
   switch (kind) {
     case "wide": {
       const span = c0.span;
-      const d = 11 + Math.min(8, span * 0.6);
-      from = key(mid, dir, d, 5.5, 0.8, 50);
-      to = key(mid, dir, d * 0.94, 5.3, 0.8, 50);
+      // Establish the place at character height; avoid a distant, lawn-heavy aerial view.
+      const d = 7.4 + Math.min(14, span * 0.8);
+      const eyeY = 3.2 + Math.min(2.8, span * 0.08);
+      from = key(mid, dir, d, eyeY, 1.0, 44);
+      to = key(mid, dir, d * 0.94, eyeY - 0.1, 1.0, 44);
       break;
     }
     case "two": {

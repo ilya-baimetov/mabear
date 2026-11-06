@@ -392,8 +392,29 @@ test("12. Notion-style editor keys: Enter splits, Shift+Enter breaks the line, B
   await expect(page.getByTestId("paragraph-text")).toHaveCount(2);
   await expect(page.getByTestId("paragraph-text").nth(1)).toBeFocused();
   // ArrowUp at the start of block 2 moves to block 1
-  await page.getByTestId("paragraph-text").nth(1).press("Control+Home");
+  await page.getByTestId("paragraph-text").nth(1).press(process.platform === "darwin" ? "Meta+ArrowUp" : "Control+Home");
   await page.getByTestId("paragraph-text").nth(1).press("ArrowUp");
   await expect(page.getByTestId("paragraph-text").nth(0)).toBeFocused();
   expect(calls).toBe(0);
+});
+
+test("fullscreen keeps playback controls and timeline keyboard seeks stay bounded", async ({ page }) => {
+  await open(page);
+  await page.getByTestId("chip-bears_nap").click();
+  await allSettled(page);
+  await page.getByRole("button", { name: "Fullscreen", exact: true }).click();
+  await expect.poll(() => page.evaluate(() => document.fullscreenElement?.classList.contains("stage-col"))).toBe(true);
+  await expect(page.getByTestId("play-all")).toBeVisible();
+  await page.getByTestId("play-all").click();
+  await expect(page.getByTestId("pause")).toBeVisible();
+  await page.getByTestId("pause").click();
+  const progress = page.getByRole("slider", { name: "Story progress" });
+  await progress.press("Home");
+  await progress.press("ArrowLeft");
+  await expect(progress).toHaveAttribute("aria-valuenow", "0");
+  await progress.press("End");
+  await progress.press("ArrowRight");
+  expect(await progress.getAttribute("aria-valuenow")).toBe(await progress.getAttribute("aria-valuemax"));
+  await page.getByRole("button", { name: "Fullscreen", exact: true }).click();
+  await expect.poll(() => page.evaluate(() => document.fullscreenElement === null)).toBe(true);
 });

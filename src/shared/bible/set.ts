@@ -56,11 +56,16 @@ export const WAYPOINTS: { id: string; pos: Vec2; links: string[] }[] = [
   { id: "w_ne", pos: [2, -8], links: ["w_north", "w_garden", "w_hive"] },
   { id: "w_garden", pos: [4, -3.5], links: ["w_clear", "w_ne", "w_hive", "w_east"] },
   { id: "w_hive", pos: [9.5, -6.8], links: ["w_garden", "w_ne", "w_east"] },
+  { id: "w_vanNW", pos: [12.5, -3.7], links: ["w_hive", "w_vanNE", "w_vanSW"] },
+  { id: "w_vanNE", pos: [15.7, -3.7], links: ["w_vanNW", "w_vanSE"] },
+  { id: "w_vanSW", pos: [12.5, 1.7], links: ["w_east", "w_vanNW", "w_vanSE"] },
+  { id: "w_vanSE", pos: [15.7, 1.7], links: ["w_vanNE", "w_vanSW"] },
   { id: "w_east", pos: [10.5, 3], links: ["w_clear", "w_garden", "w_hive", "w_creek", "w_south"] },
   { id: "w_creek", pos: [11.5, 8.5], links: ["w_east", "w_south"] },
   { id: "w_south", pos: [1, 10], links: ["w_clear", "w_east", "w_creek", "w_path", "w_pondE"] },
   { id: "w_pondE", pos: [-3.6, 7], links: ["w_clear", "w_south", "w_pondW"] },
   { id: "w_pondW", pos: [-11.8, 6], links: ["w_hammock", "w_west", "w_pondE"] },
+  { id: "w_pondSW", pos: [-12.1, 14.1], links: ["w_pondW", "w_path"] },
   { id: "w_path", pos: [0, 15.5], links: ["w_south"] },
 ];
 

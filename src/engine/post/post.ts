@@ -80,12 +80,12 @@ export interface GradeParams {
 }
 
 export const DEFAULT_GRADE: GradeParams = {
-  gain: [1.03, 1.0, 0.965],
-  lift: [0.016, 0.01, 0.0],
-  saturation: 1.12,
-  contrast: 0.08,
-  vignette: 0.22,
-  bloomStrength: 0.28,
+  gain: [1.015, 1.0, 0.98],
+  lift: [0.008, 0.009, 0.006],
+  saturation: 1.03,
+  contrast: 0.06,
+  vignette: 0.16,
+  bloomStrength: 0.12,
   bloomThreshold: 1.0,
   aoIntensity: 0.85,
 };

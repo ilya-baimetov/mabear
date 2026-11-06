@@ -238,7 +238,10 @@ describe("B12: splashy footsteps in rain", () => {
     expect(footSurface(-6, -2.6, true)).toBe("wood"); // porch
     expect(footSurface(0, 12, true)).toBe("water"); // forest path dirt
     expect(footSurface(0, 0, false)).toBe("grass");
-    const bear = walk(["rain"]).foley.filter((f) => f.actor === "bear" && (f.id === "footstep_heavy" || f.id === "footstep"));
+    const ws = initialWorldState();
+    ws.actors.bear.pos = [-6, -2.6];
+    ws.actors.bear.mark = "porch";
+    const bear = walk(["rain"], ws).foley.filter((f) => f.actor === "bear" && (f.id === "footstep_heavy" || f.id === "footstep"));
     expect(bear.some((f) => f.surface === "wood")).toBe(true); // stepping off the porch
     expect(bear.some((f) => f.surface === "water")).toBe(true);
     const next = compile(BS([B({ actor: "masha", verb: "run_to", target: "swing" })]), initialWorldState(), OPTS({ isFirst: false, carry: { music: null, ambience: ["rain"] } })).segment;

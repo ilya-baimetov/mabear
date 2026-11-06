@@ -2,19 +2,21 @@ import { store, type Paragraph } from "../store";
 import { useStrings } from "../useStore";
 import { playback } from "../playback";
 import { TIMES_OF_DAY, type MusicMood, type TimeOfDay } from "../../shared/schema";
+import { Camera, Music2, Sun, Sunrise, Sunset, Moon } from "lucide-react";
 
 const MOODS: MusicMood[] = ["playful", "calm", "sleepy", "tense", "spooky", "chase", "triumphant", "sad", "romantic_waltz", "none"];
-const TOD_ICON: Record<TimeOfDay, string> = { morning: "🌅", day: "☀️", sunset: "🌇", night: "🌙" };
+const TOD_ICON = { morning: Sunrise, day: Sun, sunset: Sunset, night: Moon };
 
 export function RemixButtons({ p }: { p: Paragraph }) {
   const t = useStrings();
   const v = p.versions[p.current];
   if (!v) return null;
   const tod = v.remix.timeOfDay ?? v.beatScript.time_of_day ?? null;
-  const replay = () => setTimeout(() => playback.playParagraph(p.id), 0);
+  const replay = () => setTimeout(() => playback.replaySegment(p.id), 0);
+  const TimeIcon = TOD_ICON[(tod ?? "day") as TimeOfDay];
   return (
     <div className="remix" onClick={(e) => e.stopPropagation()}>
-      <button className="rbtn" data-testid="remix-camera" title={t.remix.camera} onClick={() => { store.setRemix(p.id, { cameraSeed: v.remix.cameraSeed + 1 }); replay(); }}>🎥</button>
+      <button className="rbtn" data-testid="remix-camera" title={t.remix.camera} aria-label={t.remix.camera} onClick={() => { store.setRemix(p.id, { cameraSeed: v.remix.cameraSeed + 1 }); replay(); }}><Camera size={16}/></button>
       <button
         className="rbtn"
         data-testid="remix-time"
@@ -25,7 +27,7 @@ export function RemixButtons({ p }: { p: Paragraph }) {
           replay();
         }}
       >
-        {TOD_ICON[(tod ?? "day") as TimeOfDay]}
+        <TimeIcon size={16}/>
       </button>
       <button
         className="rbtn"
@@ -38,7 +40,7 @@ export function RemixButtons({ p }: { p: Paragraph }) {
           replay();
         }}
       >
-        🎵
+        <Music2 size={16}/>
       </button>
     </div>
   );

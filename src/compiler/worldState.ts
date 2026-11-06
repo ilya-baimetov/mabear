@@ -10,8 +10,8 @@ export function initialWorldState(): WorldState {
   return {
     timeOfDay: "day",
     actors: {
-      masha: { pos: [...MARKS.clearing.pos] as [number, number], facing: 0, mark: "clearing", holding: null, posture: "stand" },
-      bear: { pos: [...MARKS.porch.pos] as [number, number], facing: 0, mark: "porch", holding: null, posture: "stand" },
+      masha: { pos: [0.25, 0.5], facing: 0, mark: "clearing", holding: null, posture: "stand" },
+      bear: { pos: [-1.65, -0.25], facing: 0.12, mark: "clearing", holding: null, posture: "stand" },
       // the Wolves loiter just west of their van, facing the yard
       wolf_a: { ...WOLF_START.wolf_a, pos: [...WOLF_START.wolf_a.pos] as [number, number] },
       wolf_b: { ...WOLF_START.wolf_b, pos: [...WOLF_START.wolf_b.pos] as [number, number] },

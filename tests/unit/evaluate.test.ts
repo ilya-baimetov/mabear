@@ -27,6 +27,7 @@ function timeline(...segs: Segment[]): Timeline {
 /** Paragraph 1: Masha walks clearing → table and waves; Bear idles then takes the jam from the table area. */
 function para1() {
   const s0 = initialWorldState();
+  s0.actors.masha.pos = [0, 0]; // this hand-authored path starts at the origin
   const s1 = cloneWorldState(s0);
   const table: Vec2 = [MARKS.table.pos[0] - 0.6, MARKS.table.pos[1] + 0.6];
   s1.actors.masha.pos = table;
@@ -113,6 +114,7 @@ describe("evaluate()", () => {
 
   it("turns in place before moving when the path starts behind the actor", () => {
     const s0 = initialWorldState();
+    s0.actors.masha.pos = [0, 0];
     const s1 = cloneWorldState(s0);
     s1.actors.masha.pos = [0, -4];
     const tl = timeline(seg(s0, s1, 3, { masha: [clip(0, 3, "walk_to", { path: [[0, 0], [0, -4]] })], bear: [clip(0, 3, "idle")] }));
@@ -202,6 +204,9 @@ describe("evaluate()", () => {
 
   it("exit and walking through the door fade out, and stay gone", () => {
     const s0 = initialWorldState();
+    s0.actors.masha.pos = [0, 0];
+    s0.actors.bear.pos = [...MARKS.porch.pos];
+    s0.actors.bear.mark = "porch";
     const s1 = cloneWorldState(s0);
     s1.actors.masha.posture = "offstage";
     s1.actors.masha.pos = [...MARKS.path_entry.pos] as Vec2;

@@ -276,7 +276,15 @@ class Store {
   setLang(lang: Lang): void {
     lsSet(LS.lang, lang);
     const fid = this.state.fixtureId;
-    const untouched = fid && this.state.paragraphs.length > 0 && this.state.paragraphs.every((p) => p.versions[p.current]?.source === "fixture" && p.current === 0);
+    const fixture = FIXTURES.find((f) => f.id === fid && f.lang === this.state.lang);
+    // A language switch may translate a pristine example, but must never replace local edits,
+    // cleared/deleted blocks, a new title, pending work, or remixes that have not made a new version.
+    const untouched = fixture && this.state.title === fixture.title && this.state.paragraphs.length === fixture.paragraphs.length && this.state.paragraphs.every((p, i) => {
+      const v = p.versions[p.current];
+      return p.current === 0 && v?.source === "fixture" && p.pendingVersion === null
+        && normalizeText(p.text) === normalizeText(fixture.paragraphs[i].text)
+        && v.remix.cameraSeed === DEFAULT_REMIX.cameraSeed && v.remix.timeOfDay === DEFAULT_REMIX.timeOfDay && v.remix.musicMood === DEFAULT_REMIX.musicMood;
+    });
     this.set({ lang });
     if (untouched && fid) this.loadFixtureById(fid);
   }

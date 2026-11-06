@@ -9,18 +9,18 @@ import type { ActorFrame, CharacterRig } from "../api";
 import { buildFace, type FaceConfig } from "./face";
 import {
   blob, bump, buildSkeleton, col, dir, extraBone, eyeMaterial, furMaterial, limb, makeRig, materialSet, mergeSame,
-  noise3, paintVertices, profile, restWorld, roughen, sdEllipsoid, sdfBlob, skinBody, smin, smoothstep, toLocal,
+  noise3, paintVertices, plushSurface, profile, restWorld, roughen, sdEllipsoid, sdfBlob, skinBody, smin, smoothstep, toLocal,
   type SkeletonProportions, type SkinPart, type Weights,
 } from "./rig";
 
 export const BEAR_LOOK = {
   height: 2.4,
   colors: {
-    fur: "#5E3622",
+    fur: "#6B432C",
     furDark: "#40241A",
     furSheen: "#B07A50",
-    tan: "#D9A062",
-    muzzle: "#E8B676",
+    tan: "#CDA475",
+    muzzle: "#E2BB8B",
     earInner: "#C8955E",
     nose: "#1E1410",
     iris: "#3A261A",
@@ -39,7 +39,7 @@ export const BEAR_LOOK = {
     spine: 0.18,
     spine1: 0.25,
     spine2: 0.27,
-    neck: 0.31,
+    neck: 0.285,
     head: 0.14,
     shoulder: [0.12, 0.2],
     clavicle: 0.22,
@@ -51,18 +51,18 @@ export const BEAR_LOOK = {
     toe: [0.07, 0.15],
   } satisfies SkeletonProportions,
   /** the whole head (cranium, muzzle, ears, face rig) is built at this base size and scaled by `headScale` */
-  headScale: 1.2,
+  headScale: 1.29,
   head: {
     center: [0, 0.2, -0.02] as [number, number, number],
     radius: 0.255,
     /** snout ellipsoid (head space, before headScale) */
     snoutCenter: [0, 0.09, 0.2] as [number, number, number],
-    snoutRadii: [0.15, 0.12, 0.235] as [number, number, number],
+    snoutRadii: [0.174, 0.12, 0.202] as [number, number, number],
   },
   /** tan belly patch ellipse (rest-world metres) */
-  belly: { centerY: 1.0, halfW: 0.38, halfH: 0.5 },
+  belly: { centerY: 1.0, halfW: 0.37, halfH: 0.52 },
   /** fur breakup: displacement amplitude (m) and spatial frequency (1/m) */
-  furNoise: { amp: 0.011, freq: 14 },
+  furNoise: { amp: 0.0035, freq: 24 },
 } as const;
 
 type V3 = [number, number, number];
@@ -120,7 +120,7 @@ export function buildBear(): CharacterRig {
     const caps = [
       { c: v(0.31, armW.y, -0.02), r: v(0.18, 0.18, 0.18) },
       { c: v(-0.31, armW.y, -0.02), r: v(0.18, 0.18, 0.18) },
-      { c: v(0, 1.7, -0.05), r: v(0.31, 0.19, 0.24) }, // neck ruff: the head sinks into it, no visible neck
+      { c: v(0, 1.69, -0.05), r: v(0.30, 0.24, 0.27) }, // neck ruff: the head sinks into it, no visible neck
     ];
     const sdf = (p: THREE.Vector3): number => {
       let d = sdEllipsoid(p, core[0].c, core[0].r);
@@ -202,28 +202,27 @@ export function buildBear(): CharacterRig {
       0.14 * (bump(d, dir(0.8, -0.32, 0.45), 0.36) + bump(d, dir(-0.8, -0.32, 0.45), 0.36)) +
       0.04 * (bump(d, dir(0.35, 0.3, 0.88), 0.25) + bump(d, dir(-0.35, 0.3, 0.88), 0.25)) -
       0.09 * bump(d, dir(0, 1, 0.1), 0.55));
-  const cranium = blob(12, (d, out) => {
-    out.copy(d).multiplyScalar(craniumR(d)).add(hc);
+  // A single implicit sculpt joins the muzzle into the cheeks. The old two
+  // intersecting spheres left a hard circular seam in every three-quarter shot.
+  const headSdf = (p: THREE.Vector3): number => {
+    const delta = p.clone().sub(hc);
+    const cran = delta.length() - craniumR(delta.clone().normalize());
+    const fz = Math.max(0,Math.min(1,((p.z-sc.z)/sr[2]+1)*0.5));
+    const muzzle = sdEllipsoid(p,sc,v(sr[0]*(1-0.18*fz),sr[1]*(1-0.10*fz),sr[2]));
+    return smin(cran,muzzle,0.055);
+  };
+  const headGeom = sdfBlob(14,hc,headSdf,0.7);
+  paintVertices(headGeom,(p,out)=>{
+    const d=p.clone().sub(hc).normalize();
+    const yl=p.y-hc.y;
+    const thr=0.075-0.075*Math.exp(-((p.x/0.05)**2));
+    const mask=smoothstep(0.4,0.68,d.z)*smoothstep(thr+0.02,thr-0.02,yl);
+    const muzzle=smoothstep(sc.z-0.02,sc.z+0.14,p.z)*smoothstep(hc.y+0.03,hc.y-0.04,p.y);
+    out.copy(cFur).lerp(cTan,mask).lerp(cMuzzle,muzzle);
   });
-  const snout = blob(8, (d, out) => {
-    const fz = (d.z + 1) / 2;
-    out.set(d.x * sr[0] * (1 - 0.18 * fz), d.y * sr[1] * (1 - 0.1 * fz), d.z * sr[2]).add(sc);
-  });
-  paintVertices(cranium, (p, out) => {
-    const d = p.clone().sub(hc).normalize();
-    const yl = p.y - hc.y;
-    const thr = 0.075 - 0.075 * Math.exp(-((p.x / 0.05) ** 2)); // brown widow's peak between the eyes
-    const front = smoothstep(0.4, 0.68, d.z);
-    const mask = front * smoothstep(thr + 0.02, thr - 0.02, yl);
-    out.copy(cFur).lerp(cTan, mask);
-  });
-  fuzz(cranium, 0.6);
-  paintVertices(snout, (p, out) => {
-    // a touch darker toward the chin (soft occlusion under the muzzle)
-    out.copy(cMuzzle).multiplyScalar(1 - 0.12 * smoothstep(sc.y, sc.y - sr[1], p.y));
-  });
-  // the head does not cast onto the chest (a hard dark "bib" under the chin read as stacked primitives)
-  parts.push({ geom: mergeSame([cranium, snout]), bone: headS, material: fur, shadow: false });
+  fuzz(headGeom,0.6);
+  // The unified head overlaps the neck ruff, keeping the seam under the jaw.
+  parts.push({geom:headGeom,bone:headS,material:fur,shadow:false});
 
   const noseAt = new THREE.Vector3(0, sc.y + sr[1] * 0.55, sc.z + sr[2] * 0.86);
   const noseGeom = blob(5, (d, out) => {
@@ -277,13 +276,13 @@ export function buildBear(): CharacterRig {
       surface: { center: H.center as V3, radius: H.radius, zAt: craniumZ },
       x: 0.098,
       y: hc.y + 0.05,
-      r: 0.03,
-      scaleX: 0.92,
-      scaleY: 1.12,
+      r: 0.034,
+      scaleX: 0.98,
+      scaleY: 1.06,
       scaleZ: 0.6,
       depth: 0.3,
-      iris: 0.82,
-      pupil: 0.55,
+      iris: 0.70,
+      pupil: 0.58,
       irisColor: C.iris,
       irisRim: C.irisRim,
       sclera: C.sclera,
@@ -411,6 +410,14 @@ export function buildBear(): CharacterRig {
     }
   }
 
+  // Silhouette fibres complement the fine strand shader. Budget stays in the
+  // existing batches: there is no transparent shell stack and no extra draw call.
+  let furSeed = 133;
+  for (const part of parts) {
+    if (part.material !== fur || /Foot|Leg/.test(part.bone.name) || part.geom.getAttribute("position").count < 400) continue;
+    const n = Math.min(750, Math.floor(part.geom.getAttribute("position").count * 0.13));
+    part.geom = plushSurface(part.geom, n, part.shadow === false ? 0.009 : 0.017, ++furSeed);
+  }
   const body = skinBody(root, parts);
 
   // ---- secondary motion: belly jiggle (lags the hips), ear wiggle

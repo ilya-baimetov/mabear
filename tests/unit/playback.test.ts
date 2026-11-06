@@ -27,6 +27,7 @@ const flush = async () => {
 const plays: { from: number; to?: number }[] = [];
 const fakePlayer = {
   isPlaying: false,
+  cameraOverride: null as null | (() => unknown),
   setTimeline: () => undefined,
   play(from: number, to?: number) {
     plays.push({ from, to });
@@ -35,7 +36,7 @@ const fakePlayer = {
   pause() {
     this.isPlaying = false;
   },
-  seek: () => undefined,
+  seek: vi.fn(),
 };
 
 function para(text: string): string {
@@ -57,9 +58,40 @@ describe("▶ sessions (playback.ts)", () => {
     pending.length = 0;
     plays.length = 0;
     fakePlayer.isPlaying = false;
+    fakePlayer.cameraOverride = null;
+    fakePlayer.seek.mockClear();
     store.newStory();
     playback.attach(fakePlayer as never, null);
     await flush();
+  });
+
+  it("clamps keyboard seeks before synchronizing the player and store", () => {
+    store.loadFixture(FIXTURES.find(f => f.id === "pancake_morning" && f.lang === "en")!);
+    const duration = store.getState().timeline.duration;
+    for (const [input, expected] of [[-1, 0], [duration + 1, duration], [Infinity, duration], [NaN, 0], [1.25, 1.25]]) {
+      playback.seek(input);
+      expect(store.getState().t).toBe(expected);
+      expect(fakePlayer.seek).toHaveBeenLastCalledWith(expected);
+    }
+    store.newStory();
+    playback.seek(1);
+    expect(store.getState().t).toBe(0);
+  });
+
+  it("local remixes replay without directing an earlier unplayed edit", async () => {
+    store.loadFixture(FIXTURES.find(f => f.id === "pancake_morning" && f.lang === "en")!);
+    const [first,,third] = store.getState().paragraphs;
+    store.editText(first.id, "Masha dances around Bear.");
+    store.setRemix(third.id, {cameraSeed: 2});
+    fakePlayer.cameraOverride = () => ({ character: "wolf_b" });
+    playback.replaySegment(third.id);
+    await flush();
+    expect(pending).toHaveLength(0);
+    expect(store.getState().waiting).toBe(false);
+    expect(plays).toHaveLength(1);
+    expect(fakePlayer.cameraOverride).toBeNull();
+    expect(plays[0].from).toBe(store.segmentRange(third.id)!.start);
+    expect(store.getState().paragraphs[0].status).toBe("draft");
   });
 
   it("holds with 'getting ready…' when the playhead catches up, blocks taps meanwhile, then resumes (#1)", async () => {

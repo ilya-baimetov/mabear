@@ -160,7 +160,7 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
   }
   function headAt(a: ActorId, t: number): Vec3 {
     const p = posAt(a, t);
-    const h = postureAt(a, t) === "carried" ? HEAD_HEIGHT.bear + 0.6 : postureAt(a, t) === "sleep" ? 0.6 : postureAt(a, t) === "sit" ? HEAD_HEIGHT[a] * 0.65 : HEAD_HEIGHT[a];
+    const h = postureAt(a, t) === "carried" ? HEAD_HEIGHT.bear + 0.4 : postureAt(a, t) === "sleep" ? 0.6 : postureAt(a, t) === "sit" ? HEAD_HEIGHT[a] * 0.65 : HEAD_HEIGHT[a];
     return [r3(p[0]), r3(h), r3(p[1])];
   }
   /** World point for a target id (mark / actor / prop). */
@@ -231,7 +231,7 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
     });
     st.pos = v2(path[path.length - 1]);
     st.facing = r3(finalFacing ?? yaw);
-    st.mark = isMark(target) ? target : nearestMarkWithin(st.pos, 1.5);
+    st.mark = isMark(target) && dist(st.pos, dest) < 0.01 ? target : nearestMarkWithin(st.pos, 1.5);
     record(a, t + dur);
     // a carried Masha rides along
     if (a === "bear" && ws.actors.masha.posture === "carried") {

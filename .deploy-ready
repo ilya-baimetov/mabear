@@ -1,1 +1,0 @@
-Deploy gate for Cloudflare Workers Builds (spec §12). Created once the password gate, unit and e2e tests pass.

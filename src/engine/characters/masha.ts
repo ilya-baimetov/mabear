@@ -16,13 +16,13 @@ import {
 export const MASHA_LOOK = {
   height: 1.0,
   colors: {
-    skin: "#F9CBA8",
+    skin: "#FFD2BA",
     skinSheen: "#FFB59A",
     cheeks: "#F59A8C",
-    kerchief: "#B8327A",
-    kerchiefSheen: "#F48CC4",
-    dress: "#B8327A",
-    dressSheen: "#F48CC4",
+    kerchief: "#AA2C77",
+    kerchiefSheen: "#D685BB",
+    dress: "#AA2C77",
+    dressSheen: "#D685BB",
     hemTrim: "#E8643C",
     /** pink-lilac blouse sleeves (series renders; the printed stamp sample #A2A5B3 is a shadowed, desaturated read) */
     sleeves: "#DBA8D3",
@@ -30,11 +30,11 @@ export const MASHA_LOOK = {
     stockings: "#F2E2EA",
     shoes: "#7A2A5C",
     soles: "#E3B04A",
-    hair: "#DDAA68",
-    hairDark: "#A87440",
-    iris: "#5CB052",
-    irisRim: "#22542A",
-    sclera: "#FFFFFF",
+    hair: "#E8CC94",
+    hairDark: "#BA9863",
+    iris: "#83B570",
+    irisRim: "#3E6C42",
+    sclera: "#FFF9EF",
     brows: "#A0683F",
     lash: "#3A2018",
     mouthInterior: "#6A1E26",
@@ -62,18 +62,18 @@ export const MASHA_LOOK = {
     /** skull sphere centre in Head-bone space and radius */
     center: [0, 0.158, 0.008] as [number, number, number],
     radius: 0.168,
-    cheekBulge: 0.11,
+    cheekBulge: 0.14,
     /** kerchief shell radius factor, face opening (elevation top/bottom, azimuth half width; radians): small, round */
     kerchief: 1.06,
     openTop: 0.6,
     openBottom: -1.0,
     openHalfAz: 0.9,
     /** how far the kerchief's cape falls below the skull centre at the back/sides (m) */
-    capeDrop: 0.2,
+    capeDrop: 0.18,
     /** azimuth where the cape starts to drape (independent of the opening, so the shell never folds onto itself) */
     drapeAz: 1.08,
   },
-  eyes: { x: 0.065, y: 0.131, r: 0.046, iris: 0.72, pupil: 0.38 },
+  eyes: { x: 0.057, y: 0.141, r: 0.035, iris: 0.58, pupil: 0.43 },
 } as const;
 
 type V3 = [number, number, number];
@@ -108,11 +108,23 @@ export function buildMasha(): CharacterRig {
   shoe.name = "shoes";
   const hair = mats.add(
     new THREE.MeshPhysicalMaterial({
-      color: 0xffffff, vertexColors: true, roughness: 0.55, specularIntensity: 0.6, sheen: 0.8, sheenColor: col("#FFE2A0"), sheenRoughness: 0.4,
+      color: 0xffffff, vertexColors: true, roughness: 0.65, specularIntensity: 0.4, sheen: 0.65, sheenColor: col("#FFE2A0"), sheenRoughness: 0.4,
       side: THREE.DoubleSide,
     }),
   );
   hair.name = "hair";
+  hair.onBeforeCompile = (shader) => {
+    shader.vertexShader=shader.vertexShader
+      .replace("#include <common>","#include <common>\nvarying vec3 vHairRest;")
+      .replace("#include <begin_vertex>","#include <begin_vertex>\nvHairRest=position;");
+    shader.fragmentShader=shader.fragmentShader
+      .replace("#include <common>","#include <common>\nvarying vec3 vHairRest;")
+      .replace("#include <color_fragment>",`#include <color_fragment>
+        float strandPhase=vHairRest.x*2300.0+sin(vHairRest.y*38.0)*3.0;
+        float strandFade=1.0-smoothstep(0.7,2.5,fwidth(strandPhase));
+        diffuseColor.rgb*=1.0+0.09*sin(strandPhase)*strandFade;`);
+  };
+  hair.customProgramCacheKey=()=>"mabear-blonde-fibres-v1";
   const eyeMat = mats.add(eyeMaterial());
   eyeMat.name = "eyes";
 
@@ -129,9 +141,18 @@ export function buildMasha(): CharacterRig {
       H.cheekBulge * (bump(d, cheekL, 0.34) + bump(d, cheekR, 0.34)) -
       0.035 * bump(d, chin, 0.28) -
       0.05 * bump(d, jaw, 0.6) +
-      0.02 * bump(d, dir(0, 0.55, 0.85), 0.5));
-  const headGeom = blob(13, (d, out) => {
+      0.02 * bump(d, dir(0, 0.55, 0.85), 0.5) +
+      0.04 * (bump(d, dir(0.35,-0.48,0.85),0.19) + bump(d,dir(-0.35,-0.48,0.85),0.19)) -
+      0.025 * (bump(d,dir(0.35,-0.08,1),0.21)+bump(d,dir(-0.35,-0.08,1),0.21)));
+  // Relief is measured in face x/y rather than radial space: this gives a small
+  // button nose without stretching the whole central face into a long ridge.
+  const noseRelief = (x: number,y: number): number => {
+    const ny=y-(hc.y-0.041);
+    return 0.013*Math.exp(-0.5*((x/0.013)**2+(ny/0.011)**2));
+  };
+  const headGeom = blob(15, (d, out) => {
     out.copy(d).multiplyScalar(headR(d)).add(hc);
+    if(d.z>0.4) out.z+=noseRelief(out.x,out.y);
   });
   const cSkin = col(C.skin);
   const cCheek = col(C.cheeks);
@@ -140,14 +161,7 @@ export function buildMasha(): CharacterRig {
     const blush = Math.max(bump(d, dir(0.58, -0.3, 0.76), 0.24), bump(d, dir(-0.58, -0.3, 0.76), 0.24));
     out.copy(cSkin).lerp(cCheek, smoothstep(0.04, 0.8, blush));
   });
-  // nose: a small soft button
-  const noseDir = dir(0, -0.24, 1);
-  const noseAt = noseDir.clone().multiplyScalar(headR(noseDir) * 0.975).add(hc);
-  const noseGeom = blob(3, (d, out) => {
-    out.set(d.x * 0.017, d.y * 0.0145, d.z * 0.014).add(noseAt);
-  });
-  paintVertices(noseGeom, (_p, out) => out.copy(cSkin).lerp(cCheek, 0.05));
-  parts.push({ geom: mergeSame([headGeom, noseGeom]), bone: B.Head, material: skin });
+  parts.push({ geom: headGeom, bone: B.Head, material: skin });
 
   /** exact skin depth for features (fixed-point iteration over the sculpt function) */
   const skinZ = (x: number, y: number): number => {
@@ -158,7 +172,7 @@ export function buildMasha(): CharacterRig {
       const r = headR(d);
       z = hc.z + Math.sqrt(Math.max(r * r - (x - hc.x) ** 2 - (y - hc.y) ** 2, 0));
     }
-    return z;
+    return z + noseRelief(x,y);
   };
 
   // ---- face opening (ellipse in azimuth/elevation) and the fringe envelope it shares with the kerchief
@@ -180,10 +194,10 @@ export function buildMasha(): CharacterRig {
   /** lower (tip) edge of the fringe and the elevation where it tucks under the kerchief rim (k = 1.12) */
   const fringeEdge = (ax: number) => {
     const a = Math.abs(ax) / FR.az;
-    return 0.34 + 0.22 * a * a - 0.12 * lockTip(ax);
+    return 0.31 + 0.16 * a * a - 0.045 * lockTip(ax) + 0.004 * Math.sin(ax * 51) + 0.0015 * Math.sin(ax * 103);
   };
   const fringeTop = (ax: number) => {
-    const q = 1.12 * 1.12 - (ax / A) ** 2;
+    const q = 1.30 * 1.30 - (ax / A) ** 2;
     const top = q > 0 ? ay0 + Bv * Math.sqrt(q) : fringeEdge(ax);
     return Math.max(fringeEdge(ax) + 0.08, top);
   };
@@ -202,7 +216,7 @@ export function buildMasha(): CharacterRig {
 
   // ---- fringe: a thick swoosh of blond hair visible ONLY in the face opening; its root tucks under the rim
   {
-    const cols = 44;
+    const cols = 88;
     const rows = 12;
     const pos: number[] = [];
     const colr: number[] = [];
@@ -218,11 +232,14 @@ export function buildMasha(): CharacterRig {
         const vv = j / rows;
         const ay = e + (t - e) * vv;
         const d = new THREE.Vector3(Math.cos(ay) * Math.sin(ax), Math.sin(ay), Math.cos(ay) * Math.cos(ax));
-        const ridge = 0.005 * Math.cos(ax * 16) * Math.sqrt(vv) * (1 - vv);
+        const ridge = (0.0012 * Math.cos(ax * 72 + vv * 1.8) + 0.00045 * Math.cos(ax * 119)) * Math.sqrt(vv) * (1 - vv);
         const m = 0.996 + fringeThick(ax, ay + 1e-4) + ridge;
         const p = d.clone().multiplyScalar(headR(d) * m).add(hc);
+        const peak = Math.exp(-((ax / 0.4) ** 2)) * Math.exp(-(((ay - (H.openTop + 0.2)) / 0.22) ** 2));
+        p.z += 0.023 * peak;
+        p.y += 0.025 * peak;
         pos.push(p.x, p.y, p.z);
-        const c = cHair.clone().lerp(cHairDark, 0.45 * vv + 0.35 * (1 - tip) * (1 - vv) + 0.12 * (0.5 - 0.5 * Math.cos(ax * 16)));
+        const c = cHair.clone().lerp(cHairDark, 0.45 * vv + 0.35 * (1 - tip) * (1 - vv) + 0.07 * (0.5 - 0.5 * Math.cos(ax * 72 + vv * 1.8)));
         colr.push(c.r, c.g, c.b);
       }
     }
@@ -263,8 +280,8 @@ export function buildMasha(): CharacterRig {
       out.copy(dd).multiplyScalar(r).add(hc);
       // forward peak over the forehead
       const peak = Math.exp(-((ax / 0.4) ** 2)) * Math.exp(-(((ay - (H.openTop + 0.2)) / 0.22) ** 2));
-      out.z += 0.02 * peak;
-      out.y += 0.01 * peak;
+      out.z += 0.028 * peak;
+      out.y += 0.032 * peak;
       // drape: sides and back become a bell cape over the shoulders; the front under the chin keeps the head shape
       if (ay < -0.05) {
         const t = (-0.05 - ay) / (Math.PI / 2 - 0.05); // 0 at the cheek line .. 1 at the bottom
@@ -342,19 +359,20 @@ export function buildMasha(): CharacterRig {
       x: E.x,
       y: E.y,
       r: E.r,
-      scaleX: 0.94,
-      scaleY: 1.08,
-      scaleZ: 0.55,
-      depth: 0.32,
+      scaleX: 1.03,
+      scaleY: 1.04,
+      scaleZ: 0.28,
+      depth: 0.12,
+      surfaceAlignment: 0.2,
       iris: E.iris,
       pupil: E.pupil,
       irisColor: C.iris,
       irisRim: C.irisRim,
       sclera: C.sclera,
-      toeOut: -0.2,
+      toeOut: 0,
       lidColor: C.skin,
       lashColor: C.lash,
-      lidOpen: -0.66,
+      lidOpen: -0.73,
       lidCap: 1.25,
       lashFlick: true,
       lidMaterial: skin,
@@ -364,15 +382,16 @@ export function buildMasha(): CharacterRig {
     mouth: {
       surface: { center: H.center as V3, radius: H.radius, zAt: skinZ },
       y: H.center[1] - 0.086,
-      halfWidth: 0.03,
-      height: 0.042,
+      halfWidth: 0.034,
+      height: 0.047,
       line: 0.0052,
       curve: 0.01,
       interior: C.mouthInterior,
       lip: C.lip,
       teeth: C.teeth,
       tongue: C.tongue,
-      smirk: 0.35,
+      smirk: 0.1,
+      frontTeeth: true,
     },
   };
   const face = buildFace(faceCfg, mats);
@@ -418,8 +437,8 @@ export function buildMasha(): CharacterRig {
       ],
       {
         sq: 0.86,
-        segments: 40,
-        samples: 30,
+        segments: 72,
+        samples: 28,
         ripple: (phi, y) => 1 + 0.04 * smoothstep(-0.06, -0.28, y) * Math.sin(phi * 9),
       },
     );
@@ -427,8 +446,12 @@ export function buildMasha(): CharacterRig {
       // soft occlusion deep in the folds; orange-red hem stripes
       const phi = Math.atan2(p.x, p.z);
       out.copy(cDress).multiplyScalar(1 - 0.06 * smoothstep(-0.06, -0.28, p.y) * (0.5 - 0.5 * Math.sin(phi * 9)));
-      const band = Math.exp(-(((p.y + 0.292) / 0.006) ** 2)) + Math.exp(-(((p.y + 0.273) / 0.005) ** 2));
+      const band = Math.exp(-(((p.y + 0.292) / 0.0035) ** 2)) + Math.exp(-(((p.y + 0.278) / 0.002) ** 2));
       out.lerp(cTrim, Math.min(1, band));
+      // A woven herringbone border, following the real dress rather than plain stripes.
+      const border = smoothstep(-0.30, -0.294, p.y) * smoothstep(-0.264,-0.273,p.y);
+      const stitch = Math.pow(Math.max(0,Math.cos(phi * 36 + Math.abs(p.y + 0.284) * 850)),6);
+      out.lerp(cTrim.clone().lerp(col("#F4CE76"),0.55), border * stitch * 0.85);
     });
     parts.push({ geom: g, bone: skirt, material: fabric });
   }

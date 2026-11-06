@@ -63,7 +63,7 @@ export interface StageHandleEx extends StageHandle {
 }
 
 /** Drawing-buffer cap: ~1280×720 pixels regardless of canvas size × devicePixelRatio. */
-export const MAX_BUFFER_PIXELS = 1280 * 720;
+export const MAX_BUFFER_PIXELS = 1920 * 1080;
 const SCALE_MIN = 0.5;
 
 const NO_FX: FrameState["fx"] = [];
@@ -121,7 +121,9 @@ export async function createStage(canvas: HTMLCanvasElement, opts: StageOptions 
 
   let testRig: CharacterRig | null = null;
   let disposed = false;
+  let readyAt = Infinity;
   const assetsReady = Promise.all([
+    set.assetsReady,
     loadCharacter(TEST_GLTF_ID).then((r) => {
       if (disposed) {
         r.dispose();
@@ -144,7 +146,7 @@ export async function createStage(canvas: HTMLCanvasElement, opts: StageOptions 
       applyLookTextures(look.materials, textures);
       set.applyTextures(textures);
     }),
-  ]).then(() => undefined);
+  ]).then(() => { readyAt = performance.now(); });
 
   // ---- size / adaptive resolution / point-sprite scale ----
   const size = new THREE.Vector2();
@@ -157,12 +159,12 @@ export async function createStage(canvas: HTMLCanvasElement, opts: StageOptions 
     pointScale = size.y / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2));
   };
   const applyPixelRatio = () => {
-    // cap the drawing buffer at ~1280×720 pixels, then apply the adaptive scale
+    // cap the drawing buffer at ~1920×1080 pixels, then apply the adaptive scale
     const cap = Math.sqrt(MAX_BUFFER_PIXELS / Math.max(1, cssW * cssH));
     const pr = Math.max(0.25, Math.min(dpr, cap) * scale);
     if (Math.abs(renderer.getPixelRatio() - pr) > 1e-3) renderer.setPixelRatio(pr);
     renderer.setSize(cssW, cssH, false);
-    setShadowQuality(look, scale < 1 ? 1024 : 2048);
+    setShadowQuality(look, scale < 1 ? 2048 : 4096);
     updatePointScale();
     post?.setSize(size.x, size.y);
   };
@@ -184,7 +186,7 @@ export async function createStage(canvas: HTMLCanvasElement, opts: StageOptions 
   const last: StageStats = { fps: 0, drawCalls: 0, triangles: 0 };
   let postCeiling: PostQuality = postMax;
   const adapt = (now: number, fps: number) => {
-    if (!adaptive || ringN < 30 || now - lastAdjust < 1500) return;
+    if (!adaptive || now - readyAt < 5000 || ringN < 30 || now - lastAdjust < 1500) return;
     // slow: drop AO, then bloom, then resolution; fast: resolution back up (dropped post tiers stay dropped)
     const next = adaptStep({ quality: post ? post.quality : 0, ceiling: postCeiling, scale }, fps, SCALE_MIN);
     if (!next) return;

@@ -6,6 +6,8 @@ import type { StageHandle, AudioEngine } from "../../engine/api";
 import type { Player } from "../../engine/player/player";
 import type { ActorId } from "../../shared/schema";
 import { reactionTimeline } from "../react";
+import { castCloseup } from "../castCamera";
+import { MapPin, Maximize, Hand, LoaderCircle } from "lucide-react";
 
 declare global {
   interface Window {
@@ -26,6 +28,12 @@ export function Stage() {
   const handles = useRef<{ stage: StageHandle; player: Player; audio: AudioEngine | null; pick: (u: number, v: number) => ActorId | null } | null>(null);
   const down = useRef<{ x: number; y: number } | null>(null);
   const reactCount = useRef(0);
+  const [focus, setFocus] = useState<ActorId | null>(null);
+  useEffect(() => { if (s.playing) setFocus(null); }, [s.playing]);
+  useEffect(() => {
+    setFocus(null);
+    if (handles.current) handles.current.player.cameraOverride = null;
+  }, [s.episodeId]);
 
   useEffect(() => {
     let disposed = false;
@@ -39,6 +47,10 @@ export function Stage() {
       ]);
       if (disposed || !canvas.current) return;
       const stage = await createStage(canvas.current);
+      if (disposed) {
+        stage.dispose();
+        return;
+      }
       let audio: AudioEngine | null = null;
       try {
         audio = audioMod ? audioMod.createAudioEngine() : null;
@@ -86,18 +98,7 @@ export function Stage() {
             player.cameraOverride = null;
             return;
           }
-          player.cameraOverride = (f) => {
-            const a = f.actors[actor];
-            const h = HEIGHT[actor];
-            const headY = h * (actor === "masha" ? 0.78 : 0.86);
-            const dist = actor === "masha" ? 1.15 : h * 0.96;
-            const yaw = a.yaw + angle;
-            return {
-              pos: [a.pos[0] + Math.sin(yaw) * dist, headY + h * 0.04, a.pos[2] + Math.cos(yaw) * dist],
-              look: [a.pos[0], headY, a.pos[2]],
-              fov: 35,
-            };
-          };
+          player.cameraOverride = (f) => castCloseup(stage.rigs[actor], f.actors[actor], angle);
         },
         wide: (pos, look, fov = 45) => {
           player.cameraOverride = () => ({ pos, look, fov });
@@ -123,8 +124,10 @@ export function Stage() {
           player.frozen = on;
         },
       };
-      setReady(true);
+      await stage.assetsReady;
+      if (!disposed) setReady(true);
     })().catch((err) => {
+      if (disposed) return;
       console.error("stage init failed", err);
       setFailed(true);
     });
@@ -148,6 +151,7 @@ export function Stage() {
   }, [s.volume, s.muted, ready]);
 
   return (
+    <div className="stage-presentation">
     <div className="stage-wrap" ref={wrap} data-testid="stage">
       <canvas
         ref={canvas}
@@ -170,10 +174,17 @@ export function Stage() {
           h.player.play(rt.start, rt.end);
         }}
       />
-      {s.waiting && <div className="getting-ready" data-testid="getting-ready">⏳ {t.gettingReady}</div>}
-      {ready && !s.playing && !s.waiting && (s.timeline.duration === 0 || s.t >= s.timeline.duration - 0.05) && <div className="tap-hint">👆 {t.tapToReact}</div>}
-      {!ready && !failed && <div className="stage-loading">{t.loading}</div>}
+      <div className="stage-label"><MapPin size={14}/>{s.lang === "en" ? "Bear’s backyard" : "Во дворе у Мишки"}</div>
+      <button className="fullscreen-btn" title={s.lang === "en" ? "Fullscreen" : "На весь экран"} aria-label={s.lang === "en" ? "Fullscreen" : "На весь экран"} onClick={() => { const el = wrap.current?.closest<HTMLElement>(".stage-col"); if (document.fullscreenElement) void document.exitFullscreen().catch(() => {}); else void el?.requestFullscreen?.().catch(() => {}); }}><Maximize size={18}/></button>
+      {s.waiting && <div className="getting-ready" data-testid="getting-ready"><LoaderCircle size={17} className="spin"/> {t.gettingReady}</div>}
+      {ready && !s.playing && !s.waiting && (s.timeline.duration === 0 || s.t >= s.timeline.duration - 0.05) && <div className="tap-hint"><Hand size={14}/> {t.tapToReact}</div>}
+      {!ready && !failed && <div className="stage-loading"><LoaderCircle size={28} className="spin"/><span>{t.loading}</span></div>}
       {failed && <div className="stage-error">{t.stageError}</div>}
+    </div>
+    <div className="cast-bar"><span>{s.lang === "en" ? "Meet your friends" : "Твои друзья"}</span>
+      <button className={!focus ? "selected" : ""} onClick={() => { setFocus(null); window.__mabear?.closeup(null); }}>{s.lang === "en" ? "Story view" : "История"}</button>
+      {(["masha","bear","wolf_a","wolf_b"] as ActorId[]).map(id => <button key={id} className={focus === id ? "selected" : ""} disabled={!ready || s.playing || s.waiting} onClick={() => { setFocus(id); window.__mabear?.closeup(id,.18); }}>{({masha: s.lang === "en" ? "Masha" : "Маша",bear: s.lang === "en" ? "Bear" : "Мишка",wolf_a: s.lang === "en" ? "Big Wolf" : "Большой Волк",wolf_b: s.lang === "en" ? "Little Wolf" : "Маленький Волк"})[id]}</button>)}
+    </div>
     </div>
   );
 }
