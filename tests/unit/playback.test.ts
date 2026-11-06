@@ -68,14 +68,36 @@ describe("▶ sessions (playback.ts)", () => {
   it("clamps keyboard seeks before synchronizing the player and store", () => {
     store.loadFixture(FIXTURES.find(f => f.id === "pancake_morning" && f.lang === "en")!);
     const duration = store.getState().timeline.duration;
+    store.setPreviewScope({ kind: "story" });
     for (const [input, expected] of [[-1, 0], [duration + 1, duration], [Infinity, duration], [NaN, 0], [1.25, 1.25]]) {
       playback.seek(input);
       expect(store.getState().t).toBe(expected);
-      expect(fakePlayer.seek).toHaveBeenLastCalledWith(expected);
+      expect(fakePlayer.seek).toHaveBeenLastCalledWith(expected, undefined);
     }
     store.newStory();
     playback.seek(1);
     expect(store.getState().t).toBe(0);
+  });
+
+  it("stops a whole-story player while a dirty selected moment prepares", async () => {
+    store.loadFixture(FIXTURES.find(f => f.id === "pancake_morning" && f.lang === "en")!);
+    playback.playAll();
+    expect(fakePlayer.isPlaying).toBe(true);
+    const target = store.getState().paragraphs[1];
+    store.editText(target.id, "Masha jumps. Bear claps.");
+    const before = plays.length;
+    playback.playParagraph(target.id);
+    expect(pending).toHaveLength(1);
+    expect(fakePlayer.isPlaying).toBe(false);
+    expect(store.getState().playing).toBe(false);
+    expect(store.getState().waiting).toBe(true);
+    expect(store.getState().previewScope).toEqual({ kind: "moment", id: target.id });
+    expect(plays).toHaveLength(before);
+    answer();
+    await flush();
+    const range = store.segmentRange(target.id)!;
+    expect(plays.at(-1)).toEqual({ from: range.start, to: range.end });
+    expect(fakePlayer.isPlaying).toBe(true);
   });
 
   it("local remixes replay without directing an earlier unplayed edit", async () => {

@@ -1,47 +1,23 @@
 import { store, type Paragraph } from "../store";
-import { useStrings } from "../useStore";
+import { useStore, useStrings } from "../useStore";
 import { playback } from "../playback";
+import { revealStage } from "./studioView";
 import { TIMES_OF_DAY, type MusicMood, type TimeOfDay } from "../../shared/schema";
-import { Camera, Music2, Sun, Sunrise, Sunset, Moon } from "lucide-react";
+import { Camera, Music2, Sun } from "lucide-react";
 
 const MOODS: MusicMood[] = ["playful", "calm", "sleepy", "tense", "spooky", "chase", "triumphant", "sad", "romantic_waltz", "none"];
-const TOD_ICON = { morning: Sunrise, day: Sun, sunset: Sunset, night: Moon };
 
 export function RemixButtons({ p }: { p: Paragraph }) {
-  const t = useStrings();
+  const t = useStrings(), s = useStore();
   const v = p.versions[p.current];
   if (!v) return null;
-  const tod = v.remix.timeOfDay ?? v.beatScript.time_of_day ?? null;
-  const replay = () => setTimeout(() => playback.replaySegment(p.id), 0);
-  const TimeIcon = TOD_ICON[(tod ?? "day") as TimeOfDay];
-  return (
-    <div className="remix" onClick={(e) => e.stopPropagation()}>
-      <button className="rbtn" data-testid="remix-camera" title={t.remix.camera} aria-label={t.remix.camera} onClick={() => { store.setRemix(p.id, { cameraSeed: v.remix.cameraSeed + 1 }); replay(); }}><Camera size={16}/></button>
-      <button
-        className="rbtn"
-        data-testid="remix-time"
-        title={t.remix.time}
-        onClick={() => {
-          const i = tod ? TIMES_OF_DAY.indexOf(tod) : 1;
-          store.setRemix(p.id, { timeOfDay: TIMES_OF_DAY[(i + 1) % TIMES_OF_DAY.length] });
-          replay();
-        }}
-      >
-        <TimeIcon size={16}/>
-      </button>
-      <button
-        className="rbtn"
-        data-testid="remix-music"
-        title={`${t.remix.music}${v.remix.musicMood ? `: ${t.musicMood[v.remix.musicMood]}` : ""}`}
-        onClick={() => {
-          const cur = v.remix.musicMood ?? v.beatScript.music.mood;
-          const i = MOODS.indexOf(cur);
-          store.setRemix(p.id, { musicMood: MOODS[(i + 1) % MOODS.length] });
-          replay();
-        }}
-      >
-        <Music2 size={16}/>
-      </button>
-    </div>
-  );
+  const result = s.results[s.segmentIds.indexOf(p.id)];
+  const time = v.remix.timeOfDay ?? v.beatScript.time_of_day ?? result?.segment.startState.timeOfDay ?? "day";
+  const music = v.remix.musicMood ?? result?.carry.music?.mood ?? v.beatScript.music.mood;
+  const replay = () => { revealStage(); setTimeout(() => playback.replaySegment(p.id), 0); };
+  return <div className="moment-look-controls" onClick={e => e.stopPropagation()}>
+    <label><span><Sun size={13}/>{s.lang === "en" ? "Time of day" : "Время суток"}</span><select data-testid="remix-time" aria-label={t.remix.time} value={time} onChange={e => { store.setRemix(p.id, { timeOfDay: e.target.value as TimeOfDay }); replay(); }}>{TIMES_OF_DAY.map(value => <option key={value} value={value}>{t.timeOfDay[value]}</option>)}</select></label>
+    <label><span><Music2 size={13}/>{s.lang === "en" ? "Music mood" : "Настроение музыки"}</span><select data-testid="remix-music" aria-label={t.remix.music} value={music} onChange={e => { store.setRemix(p.id, { musicMood: e.target.value as MusicMood }); replay(); }}>{MOODS.map(value => <option key={value} value={value}>{t.musicMood[value]}</option>)}</select></label>
+    <button className="angle-variation" data-testid="remix-camera" aria-label={s.lang === "en" ? "Try another angle" : "Попробовать другой ракурс"} onClick={() => { store.setRemix(p.id, { cameraSeed: v.remix.cameraSeed + 1 }); replay(); }}><Camera size={14}/>{s.lang === "en" ? "Try another angle" : "Попробовать другой ракурс"}</button>
+  </div>;
 }

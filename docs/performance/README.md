@@ -8,7 +8,7 @@ npm run performance:build
 npm run performance:deploy  # separate authenticated Worker
 ```
 
-Preview Worker: `mabear-masha-performance`. It shares the original app's authentication service and uses no director API key. See `release.json` for deployment status and verification.
+Live comparison: https://mabear-masha-performance.ilya-baimetov.workers.dev (existing demo password). Preview Worker: `mabear-masha-performance`. It shares the original app's authentication service and uses no director API key. See `release.json` for deployment status and verification.
 
 The comparison supports linked orbit, a shared scrubber, quarter/half speed, camera presets, and a recording made directly from the two WebGL renderers. Three scenes cover facial expression, a lollipop grasp/taste, and palm contact. The recording is silent; it does not demonstrate improved voice generation or audio-aligned lip sync.
 

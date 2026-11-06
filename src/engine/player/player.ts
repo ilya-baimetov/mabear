@@ -12,6 +12,9 @@ export interface PlayerOptions {
 
 export class Player {
   private timeline: Timeline = { segments: [], duration: 0 };
+  /** A moment preview retains earlier context but excludes later moments from rendering and audio. */
+  private previewTimeline: Timeline = this.timeline;
+  private previewEnd: number | null = null;
   private lang: Lang = "en";
   private t = 0;
   private playing = false;
@@ -40,12 +43,21 @@ export class Player {
     const changed = tl !== this.timeline;
     this.timeline = tl;
     this.lang = lang;
+    this.setPreviewEnd(this.previewEnd ?? undefined);
     if (this.t > tl.duration) this.t = tl.duration;
     if (changed && wasPlaying) {
       // timeline edited during playback: re-schedule from the current time (the engine keeps lines/music running)
-      this.opts.audio?.play(tl, this.t, lang);
+      this.opts.audio?.play(this.previewTimeline, this.t, lang);
     }
-    if (this.endT > tl.duration || !wasPlaying || this.toEnd) this.endT = tl.duration;
+    if (this.endT > tl.duration || !wasPlaying || this.toEnd) this.endT = this.previewTimeline.duration;
+  }
+
+  private setPreviewEnd(end?: number): void {
+    this.previewEnd = end === undefined ? null : Math.max(0, Math.min(end, this.timeline.duration));
+    this.previewTimeline = this.previewEnd === null ? this.timeline : {
+      segments: this.timeline.segments.filter(s => s.offset < this.previewEnd!),
+      duration: this.previewEnd,
+    };
   }
 
   get time(): number {
@@ -59,14 +71,15 @@ export class Player {
   }
 
   play(from: number, to?: number): void {
-    this.t = Math.max(0, Math.min(from, this.timeline.duration));
+    this.setPreviewEnd(to);
+    this.t = Math.max(0, Math.min(from, this.previewTimeline.duration));
     this.toEnd = to === undefined;
-    this.endT = Math.min(to ?? this.timeline.duration, this.timeline.duration);
+    this.endT = this.previewTimeline.duration;
     this.playing = true;
     this.tStart = this.t;
     this.wallStart = performance.now();
     this.opts.audio?.stop();
-    this.opts.audio?.play(this.timeline, this.t, this.lang);
+    this.opts.audio?.play(this.previewTimeline, this.t, this.lang);
     this.opts.onTime?.(this.t, true);
   }
 
@@ -77,9 +90,10 @@ export class Player {
     this.opts.onTime?.(this.t, false);
   }
 
-  seek(t: number): void {
+  seek(t: number, boundEnd?: number): void {
     if (this.playing) this.pause();
-    this.t = Math.max(0, Math.min(t, this.timeline.duration));
+    this.setPreviewEnd(boundEnd);
+    this.t = Math.max(0, Math.min(t, this.previewTimeline.duration));
     this.idleT = 0;
     this.opts.onTime?.(this.t, false);
   }
@@ -103,11 +117,15 @@ export class Player {
     } else {
       this.idleT += dt;
     }
-    // After the end, hold the final frame with idle motion: evaluate slightly past the end (evaluate clamps + idles).
-    const atEnd = !this.playing && this.timeline.duration > 0 && this.t >= this.timeline.duration - 1e-3;
-    const evalT = atEnd ? this.timeline.duration + this.idleT : this.t;
+    // Excluding later segments keeps an exact moment endpoint on that moment's final
+    // camera/lighting/pose. A partial-clip preview holds its frame instead of running on.
+    const view = this.previewTimeline;
+    const last = view.segments.at(-1);
+    const atSegmentEnd = last && Math.abs(last.offset + last.segment.duration - view.duration) < 1e-6;
+    const atEnd = !this.playing && view.duration > 0 && this.t >= view.duration - 1e-3;
+    const evalT = atEnd && atSegmentEnd ? view.duration + this.idleT : this.t;
     try {
-      let frame = evaluate(this.timeline, evalT);
+      let frame = evaluate(view, evalT);
       if (this.cameraOverride) frame = { ...frame, camera: this.cameraOverride(frame) };
       this.lastFrame = frame;
       this.opts.stage.render(frame);

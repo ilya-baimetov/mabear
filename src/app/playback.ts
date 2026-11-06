@@ -65,6 +65,9 @@ function tick(): void {
 
 function begin(next: Session, uptoIndex: number): void {
   endSession();
+  // A new preview owns the stage immediately, even while its direction is being prepared.
+  player?.pause();
+  store.setPlayback(false);
   session = next;
   store.setRunActive(true);
   store.prepare(uptoIndex);
@@ -89,7 +92,8 @@ export const playback = {
     if (!player) return; // stage still loading
     void audio?.unlock();
     const s = store.getState();
-    if (s.paragraphs[0]) store.select(s.paragraphs[0].id);
+    store.setPreviewScope({ kind: "story" });
+    if (!s.selectedId && s.paragraphs[0]) store.select(s.paragraphs[0].id);
     holdAt = 0;
     begin({ kind: "all", episodeId: s.episodeId }, s.paragraphs.length - 1);
   },
@@ -99,6 +103,7 @@ export const playback = {
     void audio?.unlock();
     const idx = store.getState().paragraphs.findIndex((p) => p.id === id);
     if (idx < 0) return;
+    store.setPreviewScope({ kind: "moment", id });
     store.select(id);
     begin({ kind: "one", id, episodeId: store.getState().episodeId }, idx);
   },
@@ -109,6 +114,7 @@ export const playback = {
     if (!range) return;
     void audio?.unlock();
     endSession();
+    store.setPreviewScope({ kind: "moment", id });
     store.select(id);
     start(range.start, range.end);
   },
@@ -130,8 +136,13 @@ export const playback = {
     endSession();
     const s = store.getState();
     const time = Number.isNaN(t) ? 0 : Math.max(0, Math.min(s.timeline.duration, t));
+    const momentId = s.previewScope?.kind === "moment" ? s.previewScope.id : s.selectedId;
+    const index = s.paragraphs.findIndex(p => p.id === momentId);
+    const range = momentId ? store.segmentRange(momentId) : null;
+    const previous = s.paragraphs.slice(0, Math.max(0, index)).reverse().map(p => store.segmentRange(p.id)).find(Boolean);
+    const boundEnd = s.previewScope?.kind === "story" ? undefined : range?.end ?? previous?.end;
     player?.setTimeline(s.timeline, s.lang);
-    player?.seek(time);
+    player?.seek(time, boundEnd);
     store.setPlayback(false, time);
   },
 };

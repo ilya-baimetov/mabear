@@ -60,6 +60,8 @@ export interface Paragraph {
 
 export interface AppState {
   stageReady: boolean;
+  /** The user-facing scope of the latest explicit preview. */
+  previewScope: { kind: "moment"; id: string } | { kind: "story" } | null;
   episodeId: string;
   title: string;
   lang: Lang;
@@ -215,6 +217,7 @@ class Store {
     const vol = Number(lsGet(LS.volume) ?? "0.8");
     this.state = {
       stageReady: false,
+      previewScope: null,
       episodeId: newId("e"),
       title: "",
       lang: initialLang(),
@@ -307,6 +310,7 @@ class Store {
   setModel(model: DirectorModel | null): void {
     this.set({ model });
   }
+  setPreviewScope(previewScope: AppState["previewScope"]): void { this.set({ previewScope }); }
   setStageReady(stageReady:boolean):void { if(this.state.stageReady!==stageReady)this.set({stageReady}); }
   select(id: string | null): void {
     this.set({ selectedId: id });
@@ -325,7 +329,7 @@ class Store {
   newStory(): void {
     for (const c of this.inflight.values()) c.abort();
     this.inflight.clear();
-    this.set({ episodeId: newId("e"), title: "", paragraphs: [], selectedId: null, timeline: emptyTimeline(), results: [], segmentIds: [], t: 0, playing: false, fixtureId: null, waiting: false });
+    this.set({ episodeId: newId("e"), title: "", paragraphs: [], selectedId: null, previewScope: null, timeline: emptyTimeline(), results: [], segmentIds: [], t: 0, playing: false, fixtureId: null, waiting: false });
     this.persist();
   }
 
@@ -578,7 +582,7 @@ class Store {
       const v: ParagraphVersion = { version: 1, text: fp.text, lang: fx.lang, beatScript: fp.beatScript, source: "fixture", latencyMs: 0, usage: null, model: "fixture", ruleHits: fp.beatScript.rule_hits, remix: { ...DEFAULT_REMIX } };
       return { id: newId(), text: fp.text, versions: [v], current: 0, status: fp.beatScript.rule_hits.length ? "adjusted" : "ready", error: null, pendingVersion: null, lastRemixMs: null };
     });
-    this.set({ episodeId: newId("e"), title: fx.title, paragraphs, selectedId: paragraphs[0]?.id ?? null, t: 0, playing: false, fixtureId: fx.id, waiting: false });
+    this.set({ episodeId: newId("e"), title: fx.title, paragraphs, selectedId: paragraphs[0]?.id ?? null, previewScope: null, t: 0, playing: false, fixtureId: fx.id, waiting: false });
     this.recompile();
     this.persist();
   }

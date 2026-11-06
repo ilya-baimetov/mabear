@@ -8,7 +8,7 @@ import { ACTOR_IDS, type ActorId } from "../../shared/schema";
 import { CHARACTERS } from "../../shared/bible/characters";
 import { reactionTimeline } from "../react";
 import { castCloseup } from "../castCamera";
-import { MapPin, Maximize, Hand, LoaderCircle } from "lucide-react";
+import { MapPin, Maximize, Hand, LoaderCircle, Trees, ChevronRight, Users } from "lucide-react";
 
 declare global {
   interface Window {
@@ -16,14 +16,19 @@ declare global {
   }
 }
 
+import { PORTRAITS } from "./castPortraits";
+
 /** Approximate standing heights (m) for screen picking and debug close-ups. */
 const HEIGHT: Record<ActorId, number> = { masha: 1.0, bear: 2.4, wolf_a: 2.0, wolf_b: 1.95, lady_bear: 2.15, hare: .85, rosie: 1.05, squirrel: .65, rival_bear: 2.55 };
 
-export function Stage() {
+export function Stage({ exploring = false }: { exploring?: boolean }) {
   const canvas = useRef<HTMLCanvasElement>(null);
+  const cast = useRef<HTMLDivElement>(null);
   const wrap = useRef<HTMLDivElement>(null);
   const s = useStore();
   const t = useStrings();
+  const activeIndex = s.timeline.segments.findIndex(seg => s.t >= seg.offset && s.t < seg.offset + seg.segment.duration);
+  const activeMoment = s.paragraphs.findIndex(p => p.id === s.segmentIds[activeIndex]);
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
   const handles = useRef<{ stage: StageHandle; player: Player; audio: AudioEngine | null; pick: (u: number, v: number) => ActorId | null } | null>(null);
@@ -168,7 +173,7 @@ export function Stage() {
           const h = handles.current;
           const d = down.current;
           down.current = null;
-          if (!h || !d || Math.hypot(e.clientX - d.x, e.clientY - d.y) > 6 || h.player.isPlaying || !playback.canReact()) return;
+          if (!exploring || !h || !d || Math.hypot(e.clientX - d.x, e.clientY - d.y) > 6 || h.player.isPlaying || !playback.canReact()) return;
           const r = e.currentTarget.getBoundingClientRect();
           const actor = h.pick((e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height);
           if (!actor) return;
@@ -179,17 +184,22 @@ export function Stage() {
           h.player.play(rt.start, rt.end);
         }}
       />
-      <div className="stage-label"><MapPin size={14}/>{s.lang === "en" ? "Bear’s backyard" : "Во дворе у Мишки"}</div>
+      <div className="stage-label"><span><MapPin size={12}/>{s.lang === "en" ? "THE LITTLE FOREST" : "МАЛЕНЬКИЙ ЛЕС"}</span><strong>{focus ? CHARACTERS[focus].name[s.lang] : s.lang === "en" ? "Bear’s backyard" : "Во дворе у Мишки"}</strong></div>
       <button className="fullscreen-btn" title={s.lang === "en" ? "Fullscreen" : "На весь экран"} aria-label={s.lang === "en" ? "Fullscreen" : "На весь экран"} onClick={() => { const el = wrap.current?.closest<HTMLElement>(".stage-col"); if (document.fullscreenElement) void document.exitFullscreen().catch(() => {}); else void el?.requestFullscreen?.().catch(() => {}); }}><Maximize size={18}/></button>
-      {s.waiting && <div className="getting-ready" data-testid="getting-ready"><LoaderCircle size={17} className="spin"/> {t.gettingReady}</div>}
-      {ready && !s.playing && !s.waiting && (s.timeline.duration === 0 || s.t >= s.timeline.duration - 0.05) && <div className="tap-hint"><Hand size={14}/> {t.tapToReact}</div>}
-      {!ready && !failed && <div className="stage-loading"><LoaderCircle size={28} className="spin"/><span>{t.loading}</span></div>}
+      {ready && !s.waiting && <div className="stage-scope"><span className={s.playing ? "scope-live" : ""}/>{s.previewScope?.kind === "story" ? (s.lang === "en" ? `Whole-story preview${activeMoment >= 0 ? ` · moment ${activeMoment + 1}` : ""}` : `Просмотр всей истории${activeMoment >= 0 ? ` · момент ${activeMoment + 1}` : ""}`) : (s.lang === "en" ? `Moment ${Math.max(0, s.paragraphs.findIndex(p => p.id === s.selectedId)) + 1} preview` : `Просмотр момента ${Math.max(0, s.paragraphs.findIndex(p => p.id === s.selectedId)) + 1}`)}</div>}
+      {s.waiting && <div className="getting-ready" data-testid="getting-ready" role="status"><LoaderCircle size={17} className="spin"/> {t.gettingReady}</div>}
+      {exploring && ready && !s.playing && !s.waiting && (s.timeline.duration === 0 || s.t >= s.timeline.duration - 0.05) && <div className="tap-hint"><Hand size={14}/> {t.tapToReact}</div>}
+      {!ready && !failed && <div className="stage-loading" role="status"><span className="loading-mark"><Trees size={43} strokeWidth={1.2}/></span><strong>{t.loading}</strong><span>{s.lang === "en" ? "A little world is waking up." : "Маленький мир просыпается."}</span><LoaderCircle size={20} className="spin"/></div>}
       {failed && <div className="stage-error">{t.stageError}</div>}
     </div>
-    <div className="cast-bar"><span>{s.lang === "en" ? "Meet your friends" : "Твои друзья"}</span>
-      <button className={!focus ? "selected" : ""} onClick={() => { setFocus(null); window.__mabear?.closeup(null); }}>{s.lang === "en" ? "Story view" : "История"}</button>
-      {ACTOR_IDS.map(id => <button key={id} className={focus === id ? "selected" : ""} disabled={!ready || s.playing || s.waiting} onClick={() => { setFocus(id); window.__mabear?.closeup(id,.18); }}>{CHARACTERS[id].name[s.lang]}</button>)}
-    </div>
+    {exploring && <div className="cast-deck">
+      <div className="cast-heading"><span><Users size={13}/>{s.lang === "en" ? "THE CAST" : "ГЕРОИ"}</span><small>{s.lang === "en" ? "Use their names in your story" : "Добавь их имена в историю"}</small></div>
+      <div className="cast-bar" ref={cast}>
+        <button className={`cast-friend cast-world ${!focus ? "selected" : ""}`} aria-pressed={!focus} aria-label={s.lang === "en" ? "Story view" : "История"} onClick={() => { setFocus(null); window.__mabear?.closeup(null); }}><span className="cast-portrait"><Trees size={25} strokeWidth={1.5}/></span><span>{s.lang === "en" ? "Story view" : "История"}</span></button>
+        {ACTOR_IDS.map(id => <button key={id} className={`cast-friend ${focus === id ? "selected" : ""}`} aria-pressed={focus === id} aria-label={CHARACTERS[id].name[s.lang]} title={CHARACTERS[id].name[s.lang]} disabled={!ready || s.playing || s.waiting} onClick={() => { setFocus(id); window.__mabear?.closeup(id, .18); }}><span className="cast-portrait"><img src={PORTRAITS[id]} alt="" width={44} height={44} loading="lazy"/></span><span>{CHARACTERS[id].name[s.lang]}</span></button>)}
+      </div>
+      <button className="cast-next" aria-label={s.lang === "en" ? "More friends" : "Другие герои"} onClick={() => { const row = cast.current; if (row) row.scrollTo({ left: row.scrollLeft + row.clientWidth >= row.scrollWidth - 5 ? 0 : row.scrollLeft + row.clientWidth * .7, behavior: "smooth" }); }}><ChevronRight size={17}/></button>
+    </div>}
     </div>
   );
 }

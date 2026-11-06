@@ -1,0 +1,79 @@
+{
+  "date": "2026-11-06",
+  "url": "https://mabear-storybook.ilya-baimetov.workers.dev",
+  "status": "deployed; health and access gate verified",
+  "scope": "Incremental moment authoring UI; Masha candidate remains in separate comparison",
+  "validation": {
+    "typecheck": "passed main and Worker",
+    "unitTests": 547,
+    "unitFiles": 32,
+    "unitSeconds": 5.46,
+    "productionBuild": "passed",
+    "indexSha256": "9f839d6cff847a3b07432f1a25f76a1be2dc328aa549d0c3024d5a11c5164e81",
+    "momentBrowserScenarios": 4,
+    "legacyBrowserScenarios": 15,
+    "castCameraRerun": 1,
+    "legacyBrowserSeconds": 666.38,
+    "headlessFps": 21.7,
+    "drawCalls": 93,
+    "deployment": [
+      {
+        "path": "/api/health",
+        "status": 200,
+        "location": null,
+        "cache_control": "private, no-store",
+        "robots": "noindex, nofollow",
+        "body": {
+          "ok": true,
+          "service": "mabear-storybook",
+          "edition": "codex"
+        }
+      },
+      {
+        "path": "/",
+        "status": 302,
+        "location": "/login",
+        "cache_control": "private, no-store",
+        "robots": "noindex, nofollow"
+      },
+      {
+        "path": "/assets/index-CX5Z7XIi.js",
+        "status": 302,
+        "location": "/login",
+        "cache_control": "private, no-store",
+        "robots": "noindex, nofollow"
+      },
+      {
+        "path": "/assets/generated/masha.glb",
+        "status": 302,
+        "location": "/login",
+        "cache_control": "private, no-store",
+        "robots": "noindex, nofollow"
+      },
+      {
+        "path": "/api/direct",
+        "status": 401,
+        "location": null,
+        "cache_control": "private, no-store",
+        "robots": "noindex, nofollow"
+      },
+      {
+        "path": "/login",
+        "status": 200,
+        "location": null,
+        "cache_control": "private, no-store",
+        "robots": "noindex, nofollow"
+      }
+    ],
+    "finalLabelCorrection": "Post-browser display-only correction; main/Worker typecheck and build passed."
+  },
+  "review": "adversarial-review.md",
+  "newFalSpendUsd": 0,
+  "limits": [
+    "Browser directing uses mock responses, not a live production AI quality assessment.",
+    "One story stored locally; no production export/share workflow.",
+    "Responsive layout checked in narrow desktop browser, not a physical phone.",
+    "Authenticated production rendering and live AI directing were not exercised after deployment; local built-Worker UI and production access gate were checked."
+  ],
+  "workerVersion": "f41e45cf-e639-4f97-a2bc-871fe88b4b07"
+}
