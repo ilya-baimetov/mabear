@@ -10,6 +10,7 @@ import { playback } from "../playback";
 import { DataView } from "./DataView";
 import { Economics, bytes, usd } from "./Economics";
 import { SystemLayers } from "./SystemLayers";
+import { VoicePicker } from "./VoicePicker";
 
 /** Mean usage of real director calls in the tracking log (null if none). */
 function meanLlmUsage(): Usage | null {
@@ -136,12 +137,11 @@ export function BehindTheScenes() {
                 {Object.entries(counts).map(([k, n]) => <span key={k} className="achip">{k}: {n}</span>)}
               </div>
               <div className="cue-counts" data-testid="tts-voices">
-                {t.bts.voice}:{" "}
                 {Object.entries((window as unknown as { __mabearAudio?: { voices?: Record<string, string> } }).__mabearAudio?.voices ?? {}).map(([k, n]) => (
                   <span key={k} className="achip">{k} → {n}</span>
                 ))}
-                <span className="achip">{t.bts.voicePlaceholder}</span>
               </div>
+              <VoicePicker />
             </section>
           )}
           <details className="bts-sec">

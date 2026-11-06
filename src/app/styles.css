@@ -181,3 +181,7 @@ summary { cursor: pointer; font-weight: 800; color: var(--honey); }
   .gutter, .block-meta { opacity: 1; }
   .remix { display: flex; }
 }
+.voice-picker { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+.voice-picker h4 { margin: 0; font-size: 13px; }
+.voice-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.voice-row select { max-width: 330px; font: inherit; font-size: 12px; padding: 3px 6px; border-radius: 8px; }

@@ -68,6 +68,27 @@ export function childPitch(v: VoiceLike, profilePitch: number): number {
   return Math.min(2, profilePitch);
 }
 
+/** localStorage key for a voice the person picked for a language (Behind the scenes → voice picker). */
+export function voicePrefKey(bcp47: string): string {
+  return `mabear.voice.${norm(bcp47).split("-")[0]}`;
+}
+export function preferredVoiceName(bcp47: string): string | null {
+  try {
+    return globalThis.localStorage?.getItem(voicePrefKey(bcp47)) || null;
+  } catch {
+    return null;
+  }
+}
+/** The person's picked voice when it's installed and speaks this language, else the best-ranked one. */
+export function chooseVoice<V extends VoiceLike>(voices: readonly V[], bcp47: string, preferred: string | null = preferredVoiceName(bcp47)): V | null {
+  if (preferred) {
+    const base = norm(bcp47).split("-")[0];
+    const v = voices.find((x) => x.name === preferred && norm(x.lang).split("-")[0] === base);
+    if (v) return v;
+  }
+  return pickVoice(voices, bcp47);
+}
+
 /** Fallback voice profile for a character with `voice: null` (e.g. if Bear's `speaks` flag is ever flipped). */
 const FALLBACK_PROFILE: VoiceProfile = { lang: { en: "en-US", ru: "ru-RU" }, pitch: 0.5, rate: 0.9 };
 
@@ -139,7 +160,7 @@ export class Tts {
     const s = synth();
     if (!s || !text.trim() || !this.available) return false;
     try {
-      const voice = pickVoice(this.voices, bcp47);
+      const voice = chooseVoice(this.voices, bcp47);
       if (!voice) return false;
       this.lastVoice[bcp47] = voice.name;
       const U = (globalThis as unknown as { SpeechSynthesisUtterance: typeof SpeechSynthesisUtterance }).SpeechSynthesisUtterance;

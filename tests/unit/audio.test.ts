@@ -7,7 +7,7 @@ import { MOOD_SPECS, MusicDirector, SCALES, barSeconds, chordTones, composeBar, 
 import {
   flattenTimeline, inWindow, planAmbienceSpans, planMusicSections, stateAt,
 } from "../../src/engine/audio/scheduler";
-import { childPitch, pickVoice, interjection } from "../../src/engine/audio/tts";
+import { childPitch, chooseVoice, pickVoice, interjection } from "../../src/engine/audio/tts";
 import { BEAR_VOCALS, vocalFor } from "../../src/engine/audio/vocals";
 import { MUSIC_MOODS, WOLF_START, type MusicMood, type Segment, type Timeline, type WorldState } from "../../src/shared/schema";
 import type { AudioEngine } from "../../src/engine/api";
@@ -345,6 +345,10 @@ describe("voices, vocals and spatialization", () => {
       { name: "Milena", lang: "ru-RU", localService: true },
     ];
     expect(pickVoice(chrome, "ru-RU")?.name).toBe("Milena");
+    // a voice the person picked in Behind the scenes wins when it exists for that language
+    expect(chooseVoice(chrome, "ru-RU", "Google русский")?.name).toBe("Google русский");
+    expect(chooseVoice(chrome, "ru-RU", "Samantha")?.name).toBe("Milena"); // wrong language → ignored
+    expect(chooseVoice(chrome, "ru-RU", null)?.name).toBe("Milena");
     // pitch: child voices get a small lift, adult voices a big one
     expect(childPitch({ name: "Junior", lang: "en-US" }, 1.6)).toBeLessThan(1.6);
     expect(childPitch({ name: "Yuri", lang: "ru-RU" }, 1.6)).toBe(2);
