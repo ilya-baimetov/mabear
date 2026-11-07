@@ -6,6 +6,6 @@ export const GENERATED_PROPORTIONS = {
   lady_bear:{height:2.15,hipHeight:.744025,leg:{x:.129225,y:-.067062,thigh:.278702,shin:.263124,ankle:.159974,toe:.13975}},
   hare:{height:.85,hipHeight:.266302,leg:{x:.043362,y:-.02558,thigh:.100809,shin:.099715,ankle:.04613,toe:.05525}},
   rosie:{height:1.05,hipHeight:.297899,leg:{x:.070099,y:-.030207,thigh:.132134,shin:.102214,ankle:.058878,toe:.06825}},
-  squirrel:{height:.65,hipHeight:.195576,leg:{x:.022588,y:-.024866,thigh:.083686,shin:.073799,ankle:.035818,toe:.04225}},
+  squirrel:{height:.65,hipHeight:.182061,leg:{x:.016546,y:-.012839,thigh:.076170,shin:.065805,ankle:.032533,toe:.04225}},
   rival_bear:{height:2.55,hipHeight:1.100033,leg:{x:.19775,y:-.108262,thigh:.456724,shin:.365715,ankle:.226609,toe:.16575}},
 };

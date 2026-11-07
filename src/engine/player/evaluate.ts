@@ -3,7 +3,7 @@
 import type { ActorFrame, FaceParams, FrameState, FxFrame, PropFrame } from "../api";
 import {
   ACTOR_IDS, MARK_IDS, PROP_IDS, ADDED_ACTOR_START,
-  type ActorClip, type ActorId, type CamKey, type MarkId, type Posture, type PropId, type PropLocation,
+  type ActorClip, type ActorId, type CamKey, type Emotion, type MarkId, type Posture, type PropId, type PropLocation,
   type Segment, type TimeOfDay, type Timeline, type Vec2, type Vec3, type Viseme, type WorldState,
 } from "../../shared/schema";
 import { LOCOMOTION_VERBS } from "../../shared/grammar";
@@ -13,16 +13,14 @@ import { CROSSFADE_S, addLayer, applyLookAt, blendLayers, qmul, clamp, clamp01, 
 import { SEAT_HEIGHT, STYLES, evaluatePose, type VerbCtx } from "../motion/library";
 import { hash1 } from "../motion/verbs/common";
 import { swingAngle } from "../motion/verbs/objects";
+import {emotionWeights,emotionBlendSeconds,type EmotionWeights} from '../motion/emotion';
+import {propRestPosition as restPos,propPlacementAtMark} from '../../shared/propPlacement';
+export {PROP_REST_HEIGHT} from '../../shared/propPlacement';
 
 // ---------- constants ----------
 
 /** Default wide camera of the yard (empty timeline, or a segment without camera cues). */
 export const DEFAULT_CAMERA: CamKey = { pos: [1.4, 2.4, 7.8], look: [-0.8, 1.1, 0.15], fov: 43 };
-
-/** Heights (m) props rest at on a mark (table top, bench seat, porch boards…); others sit on the ground. */
-export const PROP_REST_HEIGHT: Partial<Record<MarkId, number>> = {
-  table: 0.78, bench: 0.47, porch: 0.32, pier: 0.28, hammock: 0.66, beehive: 0.62, woodpile: 0.55, swing: 0.47, house_kitchen: .78, house_living: .47,
-};
 
 /** Seconds for enter/exit/door fades. */
 const FADE_S = 0.6;
@@ -183,6 +181,7 @@ function resolveTrack(seg: Segment, actor: ActorId, extraPosture: { t: number; p
         if (clip.verb === "wave" || clip.verb === "point_at" || clip.verb === "peek") endYaw = lerpAngle(yaw, endYaw, 0.5);
       }
       if (isMark(p.target) && (clip.verb === "sit" || clip.verb === "sleep" || clip.verb === "hide")) mark = p.target;
+      if(clip.verb==='stand_up'&&p.to&&fromPosture==='sit')mark=null;
     }
     posture = derivedPosture(clip, fromPosture);
     out.push({ clip, end: clip.start + clip.dur, startPos: pos, endPos, startYaw: yaw, endYaw, fromPosture, posture, mark, path, length, turnDur, firstYaw, slide, heavy: actor === "bear" });
@@ -222,7 +221,9 @@ function kinematics(r: Resolved, lt: number): Kin {
     return {pos:arrived?r.endPos:r.startPos,yaw:arrived?r.endYaw:r.startYaw,dist:0,turned:0,speed:0};
   }
   if (r.path && r.slide) {
-    const k = smooth(clamp01(lt / Math.max(clip.dur, 1e-3)));
+    // Clear the furniture before the pelvis lowers to its standing height.
+    const moveDur=clip.verb==='stand_up'&&r.fromPosture==='sit'?clip.dur*.65:clip.dur;
+    const k = smooth(clamp01(lt / Math.max(moveDur, 1e-3)));
     return { pos: pointAt(r.path, k * r.length), yaw: lerpAngle(r.startYaw, r.endYaw, smooth(clamp01(lt / 0.4))), dist: 0, turned: 0 };
   }
   if (r.path) {
@@ -269,7 +270,8 @@ function propLocationsAt(seg: Segment, localT: number): { at: Record<PropId, Pro
       const item = c.params.item;
       const end = c.start + c.dur;
       if (item) touched.set(item, Math.max(touched.get(item) ?? 0, end));
-      if (c.verb === "take" && item) events.push({ t: c.start + c.dur * 0.5, prop: item, at: a });
+      if (c.params.putDown && item) events.push({ t: c.start + c.dur * 0.5, prop: item, at: c.params.putDown });
+      else if (c.verb === "take" && item) events.push({ t: c.start + c.dur * 0.5, prop: item, at: a });
       else if (c.verb === "give" && item && isActor(c.params.target)) events.push({ t: c.start + c.dur * 0.6, prop: item, at: c.params.target });
       else if (c.verb === "throw" && item) {
         const tgt = c.params.target;
@@ -315,14 +317,6 @@ function propLocationsAt(seg: Segment, localT: number): { at: Record<PropId, Pro
     else flights.delete(e.prop);
   }
   return { at, flights };
-}
-
-function restPos(prop: PropId, mark: MarkId): Vec3 {
-  const i = PROP_IDS.indexOf(prop);
-  const ang = i * 2.399963; // golden angle: props sharing a mark spread out
-  const r = mark === "table" ? 0.32 : 0.4;
-  const p = MARKS[mark].pos;
-  return [p[0] + Math.cos(ang) * r, PROP_REST_HEIGHT[mark] ?? 0.03, p[1] + Math.sin(ang) * r];
 }
 
 function handPos(a: ActorFrame, actor: ActorId): Vec3 {
@@ -408,7 +402,8 @@ function makeCtx(actor: ActorId, r: Resolved | null, kin: Kin, lt: number, t: nu
   }
   // only sit/lie on a raised surface when actually at it (the stage already lifts roots on the porch / pier)
   const seatMark0 = (clip?.params.target && isMark(clip.params.target) ? clip.params.target : null) ?? mark;
-  const seatMark = seatMark0 && Math.hypot(MARKS[seatMark0].pos[0] - pos[0], MARKS[seatMark0].pos[1] - pos[1]) < 1.0 ? seatMark0 : null;
+  const seatPosition=clip?.verb==='stand_up'&&fromPosture==='sit'&&r?r.startPos:pos;
+  const seatMark = seatMark0 && Math.hypot(MARKS[seatMark0].pos[0] - seatPosition[0], MARKS[seatMark0].pos[1] - seatPosition[1]) < 1.0 ? seatMark0 : null;
   void seg;
   return {
     actor, style, dur: clip ? clip.dur : 1, emotion: clip ? clip.emotion : "neutral", t,
@@ -493,7 +488,11 @@ function evalActor(actor: ActorId, inp: ActorCtxIn, bear: ActorFrame | null, car
     }
   }
   const ctx = makeCtx(actor, inClip ? r : null, kin, clipLt, t, seg, posture, fromPosture, mark, yaw, pos);
-  let ev = evaluatePose(verb, clipLt, inClip && r ? r.clip.params : {}, ctx);
+  const poseTime=(clip:ActorClip|undefined,local:number)=>clip?.params.putDown?Math.max(0,clip.dur-local):local;
+  let ev = evaluatePose(verb, poseTime(inClip?r?.clip:undefined,clipLt), inClip && r ? r.clip.params : {}, ctx);
+  // A previous seated idle has no groundW field. Body blending defaults that
+  // absent value to 1, so retain the getting-up verb's explicit support ramp.
+  const transitionGroundWeight=(verb==='stand_up'||verb==='wake_up')&&fromPosture!=='stand'&&fromPosture!=='offstage'?ev.layer.groundW:undefined;
   // 0.2 s crossfade from the previous clip (or from the clip that just ended)
   let prevR: Resolved | null = null;
   let prevSeg = seg;
@@ -508,7 +507,7 @@ function evalActor(actor: ActorId, inp: ActorCtxIn, bear: ActorFrame | null, car
   }
   if (prevR && since < CROSSFADE_S) {
     const pctx = makeCtx(actor, prevR, { pos: prevR.endPos, yaw: prevR.endYaw, dist: prevR.length, turned: 0 }, prevR.clip.dur, t, prevSeg, prevR.posture, prevR.fromPosture, prevR.mark, prevR.endYaw, prevR.endPos);
-    const prev = evaluatePose(prevR.clip.verb, prevR.clip.dur, prevR.clip.params, pctx);
+    const prev = evaluatePose(prevR.clip.verb, poseTime(prevR.clip,prevR.clip.dur), prevR.clip.params, pctx);
     const k = smooth(since / CROSSFADE_S);
     ev = { layer: blendLayers(prev.layer, ev.layer, k), breathe: ev.breathe };
   }
@@ -576,7 +575,7 @@ function evalActor(actor: ActorId, inp: ActorCtxIn, bear: ActorFrame | null, car
     const lt2 = Math.max(0, clipLt - dt);
     const k2 = kinematics(r, lt2);
     const c2 = makeCtx(actor, r, k2, lt2, t - dt, seg, posture, fromPosture, mark, k2.yaw, k2.pos);
-    return evaluatePose(verb, lt2, r.clip.params, c2).layer;
+    return evaluatePose(verb, poseTime(r.clip,lt2), r.clip.params, c2).layer;
   };
   // the hem follows the hips' side-to-side roll a beat late (overlap), and flares in spins
   const roll = (q: [number, number, number, number] | undefined) => (q ? 2 * Math.atan2(q[2], q[3]) : 0);
@@ -592,17 +591,20 @@ function evalActor(actor: ActorId, inp: ActorCtxIn, bear: ActorFrame | null, car
     jiggle += 4 * (y1 - y0) - 2 * (y2 - y1);
   }
   jiggle = clamp01(jiggle);
+  const release=inClip&&r?.clip.params.putDown&&r.clip.params.item?{item:r.clip.params.item,...propPlacementAtMark(r.clip.params.item,r.clip.params.putDown)}:null;
   const frame: ActorFrame = {
     pos: pos3,
     yaw: finalYaw,
     opacity,
     bones: L.bones,
     hipsOffset: L.hipsOffset,
+    groundWeight:transitionGroundWeight??L.groundW??1,
     face: faceOut,
     holding: null,
     posture,
     verb,
-    action: { time:clipLt, duration:inClip&&r?r.clip.dur:0 },
+    action: { time:clipLt, duration:inClip&&r?r.clip.dur:0,...(inClip&&r&&verb==='fish'&&seg.endState.props.fish?.at===actor?{contactEnd:r.clip.dur*.7}:{}) },
+    ...(release?{putDown:{item:release.item,position:release.pos,rotation:release.rot,release:.5}}:{}),
     secondary: { sway, jiggle, breathe: ev.breathe },
   };
   return { frame, carryLift: carry?.k ?? 0, mark, lookW, lookScale };
@@ -718,6 +720,52 @@ function emptySegment(): Segment {
   };
 }
 
+interface EmotionCue {time:number;emotion:Emotion}
+const emotionCueCache=new WeakMap<Segment,Partial<Record<ActorId,{signature:string;cues:EmotionCue[]}>>>();
+
+/** Expression intent is evaluated independently of the body's enum-switching
+ * crossfade. Cache only semantic inputs; edits to a saved segment invalidate it. */
+function emotionCues(seg:Segment,actor:ActorId):EmotionCue[]{
+ const clips=[...clipsOf(seg,actor)].sort((a,b)=>a.start-b.start);
+ const signature=JSON.stringify([stOf(seg.startState,actor).posture,seg.duration,clips.map(c=>[c.start,c.dur,c.verb,c.emotion,c.params.posture])]);
+ let cache=emotionCueCache.get(seg);if(!cache){cache={};emotionCueCache.set(seg,cache);}
+ if(cache[actor]?.signature===signature)return cache[actor]!.cues;
+ let posture=stOf(seg.startState,actor).posture;
+ const states=clips.map(clip=>{const from=posture;posture=derivedPosture(clip,from);return {clip,from,posture};});
+ const breaks=new Set([0]);
+ for(const {clip,from} of states){breaks.add(clip.start);breaks.add(clip.start+clip.dur);if(clip.verb==='stand_up'&&from==='sleep')breaks.add(clip.start+clip.dur*.5);}
+ const cues:EmotionCue[]=[];
+ for(const time of [...breaks].sort((a,b)=>a-b)){
+  if(time<0||time>=seg.duration)continue;
+  let state:typeof states[number]|undefined;for(const s of states)if(s.clip.start<=time)state=s;
+  const active=state&&time<state.clip.start+state.clip.dur,clip=active?state!.clip:null;
+  const from=active?state!.from:state?.posture??stOf(seg.startState,actor).posture;
+  const ctx:VerbCtx={actor,style:STYLES[actor],dur:clip?.dur??1,emotion:clip?.emotion??'neutral',t:time,dist:0,turned:0,speed:0,fromPosture:from,posture:state?.posture??from,targetLocal:null,seat:0};
+  const emotion=evaluatePose(clip?.verb??'idle',clip?time-clip.start+1e-8:0,clip?.params??{},ctx).layer.face?.emotion??clip?.emotion??'neutral';
+  if(!cues.length||cues[cues.length-1].emotion!==emotion)cues.push({time,emotion});
+ }
+ cache[actor]={signature,cues};return cues;
+}
+
+/** Replay only expression targets, never renderer state. This keeps a reaction
+ * continuous through short beats, gaps, paragraph cuts and arbitrary seeks. */
+function storyEmotion(timeline:Timeline,actor:ActorId,time:number):Pick<FaceParams,'emotion'|'emotionTransition'>{
+ let target:Emotion='neutral',source:EmotionWeights={neutral:1},start=-Infinity;
+ for(const {segment,offset} of timeline.segments){
+  if(offset>time)break;
+  for(const cue of emotionCues(segment,actor)){
+   const at=offset+cue.time;if(at>time)break;
+   if(cue.emotion===target)continue;
+   source=emotionWeights({emotion:target,emotionTransition:{from:'neutral',fromWeights:source,progress:(at-start)/emotionBlendSeconds(target)}});
+   target=cue.emotion;start=at;
+  }
+ }
+ const progress=clamp01((time-start)/emotionBlendSeconds(target));
+ if(progress>=1)return {emotion:target};
+ const from=(Object.entries(source).sort((a,b)=>(b[1]??0)-(a[1]??0))[0]?.[0]??'neutral') as Emotion;
+ return {emotion:target,emotionTransition:{from,fromWeights:source,progress}};
+}
+
 /** Carry state for Masha: progress 0..1 of being lifted (null = not carried). */
 function carryState(seg: Segment, lt: number, mashaTrack: Resolved[]): { k: number } | null {
   let k: number | null = null;
@@ -801,6 +849,7 @@ export function evaluate(timeline: Timeline, t: number): FrameState {
   const guest = (a: ActorId) => evalActor(a, { seg, lt, t, track: resolveTrack(seg, a, [], yaws[a]), stateAtStart: startOf(a), prevLast: lt < CROSSFADE_S ? prevLast(a) : null }, null, null);
   const evals = Object.fromEntries(ACTOR_IDS.map(a => [a, a === "masha" ? masha : a === "bear" ? bear : guest(a)])) as Record<ActorId, ActorEval>;
   const actors = Object.fromEntries(ACTOR_IDS.map(a => [a, evals[a].frame])) as Record<ActorId, ActorFrame>;
+  if(segs.length)for(const actor of ACTOR_IDS)Object.assign(actors[actor].face,storyEmotion(timeline,actor,t));
 
   // look-at: explicit params.lookAt, else toward the current speaker; the speaker looks at the other actor
   // attention carries across paragraph boundaries (a line's tail / the next line's lead-in)

@@ -9,7 +9,7 @@ export type Quat = [number, number, number, number];
 export interface FaceParams {
   emotion: Emotion;
   /** Time-derived transition; remains deterministic when seeking. */
-  emotionTransition?: { from:Emotion; progress:number };
+  emotionTransition?: { from:Emotion; progress:number; fromWeights?:Partial<Record<Emotion,number>> };
   /** 0 = eyes open, 1 = closed (blink or sleep) */
   lidClose: number;
   viseme: Viseme;
@@ -31,13 +31,17 @@ export interface ActorFrame {
   bones: Record<string, Quat>;
   /** extra Hips translation in metres (bounce, crouch, sit) */
   hipsOffset: Vec3;
+  /** Blend of measured sole correction during posture transitions (default 1). */
+  groundWeight?:number;
   face: FaceParams;
   holding: PropId | null;
   posture: Posture;
   /** the clip being played (debug/data view) */
   verb: string;
   /** Deterministic clip time for geometry-aware contact solving. */
-  action?: { time:number; duration:number };
+  action?: { time:number; duration:number; contactEnd?:number };
+  /** Authored prop release: world origin/Euler YXZ; release is normalized clip progress. */
+  putDown?: {item:PropId;position:Vec3;rotation:Vec3;release:number};
   /** secondary-motion drivers 0..1 (hem sway, belly jiggle, ear wiggle) */
   secondary: { sway: number; jiggle: number; breathe: number };
 }

@@ -1,0 +1,165 @@
+import * as THREE from 'three';
+import type {ActorFrame,CharacterRig} from '../api';
+import {PROP_CONTACTS} from '../../shared/propContacts';
+import {clapOpen} from '../../shared/contactTiming';
+import {solveArm} from './mashaContacts';
+
+type Sample={mesh:THREE.SkinnedMesh;index:number;local:THREE.Vector3;u:number};
+type Hand={side:number;arm:THREE.Bone;elbow:THREE.Bone;wrist:THREE.Bone;restQ:THREE.Quaternion;basis:THREE.Quaternion;scale:THREE.Vector3;samples:Sample[];palm:Sample[];length:number;normal:THREE.Vector3};
+const at=(o:THREE.Object3D)=>o.getWorldPosition(new THREE.Vector3());
+const smooth=(v:number)=>{v=THREE.MathUtils.clamp(v,0,1);return v*v*(3-2*v);};
+function measure(rig:CharacterRig,side:number,meshes:THREE.SkinnedMesh[]):Hand|null{
+ const prefix=side>0?'Left':'Right',arm=rig.bones[prefix+'Arm'],elbow=rig.bones[prefix+'ForeArm'],wrist=rig.bones[prefix+'Hand'];
+ if(!arm||!elbow||!wrist)return null;
+ const origin=at(wrist),long=origin.clone().sub(at(elbow)).normalize(),normal=new THREE.Vector3(0,0,1).addScaledVector(long,-long.z).normalize(),width=new THREE.Vector3().crossVectors(normal,long),samples:Sample[]=[];
+ const handBones=new Set<THREE.Object3D>();wrist.traverse(o=>handBones.add(o));
+ for(const mesh of meshes){
+  const si=mesh.geometry.attributes.skinIndex,sw=mesh.geometry.attributes.skinWeight;if(!si||!sw)continue;
+  for(let i=0;i<si.count;i++){
+   let weight=0;for(let k=0;k<4;k++)if(handBones.has(mesh.skeleton.bones[si.getComponent(i,k)]))weight+=sw.getComponent(i,k);
+   if(weight<.7)continue;
+   const world=mesh.getVertexPosition(i,new THREE.Vector3()).applyMatrix4(mesh.matrixWorld),u=world.clone().sub(origin).dot(long);
+   if(u<-.015*rig.height||u>.22*rig.height)continue;
+   samples.push({mesh,index:i,local:wrist.worldToLocal(world),u});
+  }
+ }
+ if(samples.length<15)return null;
+ // The imported paw can droop 40 degrees beyond its wrist. Its surface axis
+ // differs from the forearm; using the arm direction makes thumbs clap while
+ // both pads face the audience. Recover the wrist-to-paw direction first.
+ const centroid=new THREE.Vector3();for(const sample of samples)centroid.add(wrist.localToWorld(sample.local.clone()).sub(origin));centroid.multiplyScalar(1/samples.length);
+ if(centroid.lengthSq()>1e-9)long.copy(centroid).normalize();
+ normal.set(0,0,1).addScaledVector(long,-long.z).normalize();width.crossVectors(normal,long).normalize();
+ for(const sample of samples)sample.u=wrist.localToWorld(sample.local.clone()).sub(origin).dot(long);
+ const lengths=samples.map(s=>s.u).sort((a,b)=>a-b),length=lengths[Math.floor(lengths.length*.95)];
+ const palm=samples.filter(s=>s.u>length*.3&&s.u<length*.75);
+ if(palm.length<8)return null;
+ // Broad paw axis comes from its source surface, not the humanoid wrist roll.
+ let xx=0,xy=0,yy=0;const palmCentre=new THREE.Vector3();for(const sample of palm)palmCentre.add(wrist.localToWorld(sample.local.clone()));palmCentre.multiplyScalar(1/palm.length);
+ for(const sample of palm){const d=wrist.localToWorld(sample.local.clone()).sub(palmCentre),x=d.dot(width),y=d.dot(normal);xx+=x*x;xy+=x*y;yy+=y*y;}
+ const angle=.5*Math.atan2(2*xy,xx-yy),broad=width.clone().multiplyScalar(Math.cos(angle)).addScaledVector(normal,Math.sin(angle));width.copy(broad);normal.crossVectors(long,width).normalize();if(normal.z<0){normal.negate();width.negate();}
+ return{side,arm,elbow,wrist,restQ:wrist.getWorldQuaternion(new THREE.Quaternion()),scale:wrist.getWorldScale(new THREE.Vector3()),basis:new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(long,width,normal)),samples,palm,length,normal};
+}
+function orient(h:Hand,long:THREE.Vector3,normal:THREE.Vector3):THREE.Quaternion{
+ long=long.clone().normalize();normal=normal.clone().addScaledVector(long,-normal.dot(long)).normalize();
+ const width=new THREE.Vector3().crossVectors(normal,long).normalize();
+ return new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(long,width,normal)).multiply(h.basis.clone().invert()).multiply(h.restQ);
+}
+function setWorldRotation(b:THREE.Bone,q:THREE.Quaternion){b.quaternion.copy(b.parent!.getWorldQuaternion(new THREE.Quaternion()).invert().multiply(q));b.updateWorldMatrix(false,true);}
+function surface(h:Hand,direction:THREE.Vector3,palmOnly=false):THREE.Vector3{
+ let best=-Infinity,result=new THREE.Vector3();
+ for(const sample of palmOnly?h.palm:h.samples){const v=sample.mesh.getVertexPosition(sample.index,new THREE.Vector3()).applyMatrix4(sample.mesh.matrixWorld),d=v.dot(direction);if(d>best){best=d;result=v;}}
+ return result;
+}
+
+/** Source-preserving paw/hoof contacts. No human fingers are added to animal meshes. */
+export function addSourceContacts(rig:CharacterRig):boolean{
+ const meshes:THREE.SkinnedMesh[]=[];rig.root.updateMatrixWorld(true);rig.root.traverse(o=>{if((o as THREE.SkinnedMesh).isSkinnedMesh)meshes.push(o as THREE.SkinnedMesh);});
+ const measured=[measure(rig,1,meshes),measure(rig,-1,meshes)];
+ if(measured.some(h=>!h))return false;
+ const hands=measured as Hand[],torso=rig.bones.Spine2??rig.bones.Spine,restTorso=torso.getWorldQuaternion(new THREE.Quaternion()).invert(),height=rig.height,restShoulderY=rig.root.worldToLocal(at((measured as Hand[])[1].arm)).y;
+ const baseApply=rig.apply.bind(rig),metrics:Record<string,unknown>={},socketPosition=rig.handSocket.position.clone(),socketRotation=rig.handSocket.quaternion.clone();rig.root.userData.contacts=metrics;
+ const place=(h:Hand,local:THREE.Vector3,target:THREE.Vector3,q:THREE.Quaternion)=>{
+  const wristTarget=target.clone().sub(local.clone().multiply(h.scale).applyQuaternion(q)),pole=at(h.arm).add(new THREE.Vector3(h.side*height*.2,-height*.2,0).applyQuaternion(rig.root.quaternion));
+  const error=solveArm(h.arm,h.elbow,h.wrist,wristTarget,pole);setWorldRotation(h.wrist,q);return error;
+ };
+ rig.apply=(frame:ActorFrame)=>{
+  baseApply(frame);rig.root.updateMatrixWorld(true);for(const key of Object.keys(metrics))delete metrics[key];metrics.mode='free';
+  rig.handSocket.userData.preciseGrip=false;
+  rig.handSocket.position.copy(socketPosition);rig.handSocket.quaternion.copy(socketRotation);
+  const delta=torso.getWorldQuaternion(new THREE.Quaternion()).multiply(restTorso),vec=(x:number,y:number,z:number)=>new THREE.Vector3(x,y,z).applyQuaternion(delta),time=frame.action?.time??0;
+  if(frame.verb==='clap'&&!frame.holding){
+   const open=clapOpen(time),gap=.001+open*height*.115,center=at(hands[0].arm).add(at(hands[1].arm)).multiplyScalar(.5).add(vec(0,-height*.065,height*.18));
+   const entry=smooth(time/.15),exit=frame.action?.duration?smooth((frame.action.duration-time)/.12):1,strength=Math.min(entry,exit),errors:number[]=[];
+   const plans=hands.map(h=>{
+    const base=[h.arm,h.elbow,h.wrist].map(b=>b.quaternion.clone()),angle=.16,sa=Math.sin(angle),ca=Math.cos(angle),q=orient(h,vec(-h.side*sa,ca,0),vec(-h.side*ca,-sa,0)),inward=vec(-h.side,0,0);
+    // Support of the complete imported hand, including claws. Put its extreme
+    // surface on this side of the contact plane so paws cannot cross each other.
+    let best=-Infinity,local=new THREE.Vector3();for(const sample of h.samples){const p=sample.local.clone().multiply(h.scale).applyQuaternion(q),d=p.dot(inward);if(d>best){best=d;local=sample.local;}}
+    const offset=local.clone().multiply(h.scale).applyQuaternion(q),reach=at(h.arm).distanceTo(at(h.elbow))+at(h.elbow).distanceTo(at(h.wrist))-.001*height;
+    return{h,base,q,local,reach,ball:at(h.arm).add(offset).addScaledVector(vec(1,0,0),-h.side*gap*.5)};
+   });
+   // Find a common meeting point reachable by both measured arm chains. Short
+   // hare paws and Rosie's wide shoulders cannot use Bear's chest coordinates.
+   for(let i=0;i<12;i++)for(const plan of plans){const d=center.clone().sub(plan.ball);if(d.length()>plan.reach)center.copy(plan.ball).add(d.setLength(plan.reach));}
+   for(const {h,base,q,local} of plans){
+    const target=center.clone().addScaledVector(vec(1,0,0),h.side*gap*.5);let error=place(h,local,target,q);
+    // Mixed wrist/forearm skin weights move the real surface differently from
+    // a rigid socket. Refit to the evaluated surface instead of trusting it.
+    for(let i=0;i<2;i++){
+      const contact=surface(h,vec(-h.side,0,0)),actual=h.wrist.worldToLocal(contact.clone());
+      error=place(h,actual,target,q);
+    }
+    errors.push(error);
+    // Restore the exact authored entrance pose and blend toward the IK result.
+    if(strength<1)[h.arm,h.elbow,h.wrist].forEach((b,i)=>{const target=b.quaternion.clone();b.quaternion.copy(base[i]).slerp(target,strength);});
+   }
+   rig.root.updateMatrixWorld(true);
+   const axis=vec(1,0,0),left=surface(hands[0],axis.clone().negate()),right=surface(hands[1],axis);
+   const normals=hands.map(h=>h.normal.clone().applyQuaternion(h.restQ.clone().invert()).applyQuaternion(h.wrist.getWorldQuaternion(new THREE.Quaternion())));
+   const padOverlap=[vec(0,1,0),vec(0,0,1)].map(axis=>{
+    const ranges=hands.map(h=>{const values=h.palm.map(s=>s.mesh.getVertexPosition(s.index,new THREE.Vector3()).applyMatrix4(s.mesh.matrixWorld).dot(axis));return[Math.min(...values),Math.max(...values)];});
+    return Math.max(0,Math.min(ranges[0][1],ranges[1][1])-Math.max(ranges[0][0],ranges[1][0]))/Math.max(1e-6,Math.min(ranges[0][1]-ranges[0][0],ranges[1][1]-ranges[1][0]));
+   });
+   Object.assign(metrics,{mode:'clap',targetGap:gap,surfaceGap:left.clone().sub(right).dot(axis),reachError:Math.max(...errors),strength,palmNormalDot:normals[0].dot(normals[1]),padOverlap,planeNormal:axis.toArray()});
+  }
+  if(frame.putDown){
+   const drop=frame.putDown,h=hands[1],grip=PROP_CONTACTS[drop.item],duration=frame.action?.duration??1,release=duration*drop.release;
+   // Meet the actual resting object before ownership changes, then withdraw
+   // the empty paw. Both sides of the release evaluate the same contact pose.
+   const strength=time<=release?smooth(time/Math.max(release,1e-6)):1-smooth((time-release)/Math.max(duration-release,1e-6));
+   const base=[h.arm,h.elbow,h.wrist].map(b=>b.quaternion.clone()),targetQ=new THREE.Quaternion().setFromEuler(new THREE.Euler(...drop.rotation,'YXZ'));
+   const normal=grip.support?new THREE.Vector3(0,1,0):new THREE.Vector3(0,0,1).applyQuaternion(targetQ),long=new THREE.Vector3(...(grip.support?[0,0,1]:[0,1,0]) as [number,number,number]).applyQuaternion(targetQ);
+   // Reach down with fingers pointing down. An upright-paw assumption puts
+   // the wrist below a low object, wasting an entire paw length of reach.
+   const gripHeight=drop.position[1]+new THREE.Vector3(...grip.point).applyQuaternion(targetQ).y;
+   if(!grip.support&&gripHeight<frame.pos[1]+restShoulderY-height*.08)long.negate();
+   const handQ=orient(h,long,normal);
+   const restingOrigin=new THREE.Vector3(...drop.position);
+   // Stage converts this target into the same pre-support-lift rig space.
+   const target=restingOrigin.clone().add(new THREE.Vector3(...grip.point).applyQuaternion(targetQ)).addScaledVector(normal,-grip.radius-.0005);
+   let best=-Infinity,local=h.palm[0].local;
+   for(const sample of h.palm){const d=sample.local.clone().multiply(h.scale).applyQuaternion(handQ).dot(normal);if(d>best){best=d;local=sample.local;}}
+   let error=place(h,local,target,handQ);
+   for(let i=0;i<4;i++)error=place(h,h.wrist.worldToLocal(surface(h,normal,true)),target,handQ);
+   if(strength<1)[h.arm,h.elbow,h.wrist].forEach((b,i)=>{const solved=b.quaternion.clone();b.quaternion.copy(base[i]).slerp(solved,strength);});
+   rig.root.updateMatrixWorld(true);
+   const heldQ=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),frame.yaw).multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(...(grip.rotation??[0,0,0]),'YXZ'))),objectQ=heldQ.slerp(targetQ,strength);
+   const direction=grip.support?new THREE.Vector3(0,1,0):new THREE.Vector3(0,0,1).applyQuaternion(objectQ),touch=surface(h,direction,true),anchor=touch.clone().addScaledVector(direction,grip.radius+.0005),origin=anchor.clone().sub(new THREE.Vector3(...grip.point).applyQuaternion(objectQ));
+   rig.handSocket.position.copy(h.wrist.worldToLocal(origin.clone()));rig.handSocket.quaternion.copy(h.wrist.getWorldQuaternion(new THREE.Quaternion()).invert().multiply(objectQ));rig.handSocket.userData.preciseGrip=true;rig.handSocket.updateWorldMatrix(false,true);
+   Object.assign(metrics,{mode:'putDown',prop:drop.item,strength,reachError:error,releaseGap:origin.distanceTo(restingOrigin),contactPoint:touch.toArray(),targetPoint:target.toArray(),radius:grip.radius});
+  }else if(frame.holding){
+   const h=hands[1],grip=PROP_CONTACTS[frame.holding],fishing=frame.holding==='fishing_rod'&&frame.verb==='fish',yaw=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),frame.yaw),rot=new THREE.Quaternion().setFromEuler(new THREE.Euler(...(grip.rotation??[0,0,0]),'YXZ')),q=yaw.multiply(rot),defaultDirection=grip.support?new THREE.Vector3(0,1,0):new THREE.Vector3(0,0,1).applyQuaternion(q),fishingDirection=vec(1,0,0);
+   // The caught fish replaces the rod before the authored clip ends. Ease both
+   // arms back before that handoff, as well as easing into the initial grip.
+   const contactEnd=frame.action?.contactEnd??frame.action?.duration;
+   const fishingWeight=fishing?Math.min(smooth(time/.2),contactEnd===undefined?1:smooth((contactEnd-time)/.2)):0;
+   const direction=defaultDirection.clone().lerp(fishingDirection,fishingWeight).normalize();
+   if(fishing){
+    const base=[h.arm,h.elbow,h.wrist].map(b=>b.quaternion.clone()),long=new THREE.Vector3(0,1,0).applyQuaternion(q),handQ=orient(h,long,fishingDirection),centre=at(hands[0].arm).add(at(h.arm)).multiplyScalar(.5).add(vec(-height*.04,-height*.10,height*.16));
+    let best=-Infinity,local=h.palm[0].local;for(const sample of h.palm){const d=sample.local.clone().multiply(h.scale).applyQuaternion(handQ).dot(fishingDirection);if(d>best){best=d;local=sample.local;}}
+    const target=centre.addScaledVector(fishingDirection,-grip.radius-.0005);let error=place(h,local,target,handQ);
+    for(let i=0;i<2;i++)error=place(h,h.wrist.worldToLocal(surface(h,fishingDirection,true)),target,handQ);
+    if(fishingWeight<1)[h.arm,h.elbow,h.wrist].forEach((b,i)=>{const solved=b.quaternion.clone();b.quaternion.copy(base[i]).slerp(solved,fishingWeight);});
+    rig.root.updateMatrixWorld(true);
+    Object.assign(metrics,{primaryReachError:error,strength:fishingWeight});
+   }
+   const touch=surface(h,direction,true),anchor=touch.clone().addScaledVector(direction,grip.radius+.0005),origin=anchor.clone().sub(new THREE.Vector3(...grip.point).applyQuaternion(q));
+   rig.handSocket.position.copy(h.wrist.worldToLocal(origin.clone()));rig.handSocket.quaternion.copy(h.wrist.getWorldQuaternion(new THREE.Quaternion()).invert().multiply(q));rig.handSocket.userData.preciseGrip=true;rig.handSocket.updateWorldMatrix(false,true);
+   Object.assign(metrics,{mode:'prop',prop:frame.holding,contactPoint:touch.toArray(),gripPoint:anchor.toArray(),radius:grip.radius});
+   if(frame.holding==='fishing_rod'&&frame.verb==='fish'){
+    const left=hands[0],normal=direction.clone().negate(),long=new THREE.Vector3(0,1,0).applyQuaternion(q),leftQ=orient(left,long,normal),base=[left.arm,left.elbow,left.wrist].map(b=>b.quaternion.clone());
+    let best=-Infinity,local=left.palm[0].local;
+    for(const sample of left.palm){const d=sample.local.clone().multiply(left.scale).applyQuaternion(leftQ).dot(normal);if(d>best){best=d;local=sample.local;}}
+    const target=new THREE.Vector3(0,.34,0).applyQuaternion(q).add(origin).addScaledVector(normal,-.0145);
+    let error=place(left,local,target,leftQ);
+    for(let i=0;i<2;i++)error=place(left,left.wrist.worldToLocal(surface(left,normal,true)),target,leftQ);
+    if(fishingWeight<1)[left.arm,left.elbow,left.wrist].forEach((b,i)=>{const target=b.quaternion.clone();b.quaternion.copy(base[i]).slerp(target,fishingWeight);});
+    Object.assign(metrics,{secondaryReachError:error,secondaryContact:target.toArray()});
+   }
+  }
+  rig.root.updateMatrixWorld(true);
+ };
+ rig.root.userData.contactCalibration=hands.map(h=>({side:h.side,vertices:h.samples.length,palmVertices:h.palm.length,length:h.length}));
+ return true;
+}

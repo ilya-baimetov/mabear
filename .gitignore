@@ -15,3 +15,27 @@ playwright-report/
 docs/expansion/raw/
 
 .playwright-mcp/
+
+# Large intermediate animation captures stay local and are reproducible with
+# scripts/captureAnimationStories.ts. Keep the final videos and review metrics.
+docs/animation-story-release/proof/*
+!docs/animation-story-release/proof/bear-face-happy.png
+!docs/animation-story-release/proof/rosie-face-oblique-blink.png
+!docs/animation-story-release/proof/squirrel-face-blink.png
+!docs/animation-story-release/proof/ground-release-review/
+docs/animation-story-release/proof/ground-release-review/*
+!docs/animation-story-release/proof/ground-release-review/hare-0.5-side.png
+!docs/animation-story-release/proof/ground-release-review/squirrel-0.5-side.png
+!docs/animation-story-release/proof/final/
+docs/animation-story-release/proof/final/*
+!docs/animation-story-release/proof/final/*.json
+!docs/animation-story-release/proof/final/*.mp4
+!docs/animation-story-release/proof/final/13-pancake_morning-masha-take.png
+!docs/animation-story-release/proof/final/video-review/
+!docs/animation-story-release/proof/final/face-video-review/
+docs/animation-story-release/proof/final/video-review/*
+docs/animation-story-release/proof/final/face-video-review/*
+!docs/animation-story-release/proof/final/video-review/review.json
+!docs/animation-story-release/proof/final/video-review/full-sequence-contact-sheet.png
+!docs/animation-story-release/proof/final/face-video-review/review.json
+!docs/animation-story-release/proof/final/face-video-review/full-sequence-contact-sheet.png

@@ -7,13 +7,16 @@ import { qmul, qinv, IDENTITY } from '../motion/blend';
 import { STYLES, feetPoints } from '../motion/verbs/common';
 import {createMashaPerformance} from './mashaPerformance';
 import {createMashaContacts} from './mashaContacts';
+import {repairSquirrelBind} from './squirrelBind';
+import {createGeneratedFace} from './generatedFace';
 
-export interface GeneratedOptions { height: number; mashaPerformance?: boolean; }
+export interface GeneratedOptions { height: number; mashaPerformance?: boolean; animalPerformance?:boolean; }
 interface Sample { mesh: THREE.SkinnedMesh; index: number; }
 const p = new THREE.Vector3(), q = new THREE.Quaternion();
 
 /** Keep the source's skeleton and materials; map canonical game poses through world-space rest transforms. */
 export function generatedRig(id: ActorId, model: THREE.Group, options: GeneratedOptions): CharacterRig {
+  if(id==='squirrel')model=repairSquirrelBind(model);
   const root = new THREE.Group(); root.name = `character:${id}:generated`;
   const holder = new THREE.Group(); root.add(holder); holder.add(model);
   const byName: Record<string, THREE.Bone> = {}, bones: Record<string, THREE.Bone> = {};
@@ -56,7 +59,8 @@ export function generatedRig(id: ActorId, model: THREE.Group, options: Generated
   if(!Number.isFinite(h) || h < .001) throw new Error(`${id}: empty generated geometry`);
   const scale = options.height/h;
   holder.scale.setScalar(scale);
-  holder.position.set(-(box.min.x+box.max.x)*.5*scale,-box.min.y*scale,-(box.min.z+box.max.z)*.5*scale);
+  const anatomicalRoot=id==='squirrel'?bones.Hips.getWorldPosition(new THREE.Vector3()):null;
+  holder.position.set(-(anatomicalRoot?.x??(box.min.x+box.max.x)*.5)*scale,-box.min.y*scale,-(anatomicalRoot?.z??(box.min.z+box.max.z)*.5)*scale);
   root.updateMatrixWorld(true);
   const setup = makeSetup(map,capture());
   const localRest = new Map<THREE.Bone,{q:THREE.Quaternion;p:THREE.Vector3}>();
@@ -82,7 +86,10 @@ export function generatedRig(id: ActorId, model: THREE.Group, options: Generated
   }
   const performance=id==='masha'&&options.mashaPerformance?createMashaPerformance(meshes,bones,root):null;
   const contacts=performance?createMashaContacts(meshes,bones,root,handSocket,performance.mouthTarget):null;
-  const faces=id==='masha'&&!performance?meshes.map(mesh=>addMashaFace(mesh,bones.Hips.getWorldPosition(new THREE.Vector3()).y)):[];
+  const animalPerformance=options.animalPerformance?createGeneratedFace(id,meshes,bones,root):null;
+  // The seated skirt morph is independent of the chosen face. Install it for
+  // the articulated candidate too, while leaving its rebuilt facial skin alone.
+  const faces=id==='masha'?meshes.map(mesh=>addMashaFace(mesh,bones.Hips.getWorldPosition(new THREE.Vector3()).y,!performance)):[];
   const samples: Sample[] = [];
   for(const mesh of meshes) {
     const pos = mesh.geometry.getAttribute('position');
@@ -97,7 +104,8 @@ export function generatedRig(id: ActorId, model: THREE.Group, options: Generated
   }
   const hip=joint('Hips'),thigh=joint('LeftUpLeg'),knee=joint('LeftLeg'),ankle=joint('LeftFoot');
   const measured={height:options.height,hipHeight:hip.y,leg:{x:Math.abs(thigh.x-hip.x),y:thigh.y-hip.y,thigh:thigh.distanceTo(knee),shin:knee.distanceTo(ankle),ankle:ankle.y,toe:options.height*.065}};
-  root.userData.generated = {mapping:map,dressVertices,source:'Meshy 7.1',facialRig:faces.length>0,measured,calibrationError:Math.abs(style.hipHeight-measured.hipHeight)};
+  root.userData.generated = {mapping:map,dressVertices,source:'Meshy 7.1',facialRig:!!performance||!!animalPerformance||faces.length>0,performance:performance?'masha-v3':animalPerformance?'animal-v1':null,measured,calibrationError:Math.abs(style.hipHeight-measured.hipHeight)};
+  if(id==='squirrel')root.userData.squirrelBind=model.userData.squirrelBind;
 
   return {
     id,root,bones,rest,height:options.height,handSocket,
@@ -127,7 +135,7 @@ export function generatedRig(id: ActorId, model: THREE.Group, options: Generated
         const intended=Math.max(0,Math.min(...feet.left.map(v=>v[1]),...feet.right.map(v=>v[1])));
         let low=Infinity;
         for(const sample of samples){sample.mesh.getVertexPosition(sample.index,p).applyMatrix4(sample.mesh.matrixWorld);low=Math.min(low,p.y);}
-        if(Number.isFinite(low)) holder.position.y += intended-low;
+        if(Number.isFinite(low)) holder.position.y += (intended-low)*THREE.MathUtils.clamp(frame.groundWeight??1,0,1);
       }
       root.position.fromArray(frame.pos); root.rotation.y=frame.yaw;
       root.visible=frame.opacity>.001;
@@ -135,14 +143,18 @@ export function generatedRig(id: ActorId, model: THREE.Group, options: Generated
       root.updateMatrixWorld(true);
       contacts?.update(frame);
       performance?.update(frame);
+      animalPerformance?.update(frame);
       for(const mat of materials){mat.opacity=frame.opacity;mat.depthWrite=frame.opacity>.98;}
       root.updateMatrixWorld(true);
     },
     dispose(){
       performance?.dispose();
       contacts?.dispose();
+      animalPerformance?.dispose();
       const textures=new Set<THREE.Texture>();
-      for(const mesh of meshes) mesh.geometry.dispose();
+      const skeletons=new Set<THREE.Skeleton>();
+      for(const mesh of meshes) {mesh.geometry.dispose();skeletons.add(mesh.skeleton);}
+      for(const skeleton of skeletons)skeleton.dispose();
       for(const m of materials){for(const v of Object.values(m))if(v instanceof THREE.Texture)textures.add(v);m.dispose();}
       for(const t of textures)t.dispose();
     },
@@ -224,7 +236,7 @@ function repairDress(mesh:THREE.SkinnedMesh):number {
 }
 
 /** Subtle local facial deformation over the generated face, preserving the source texture and rest shape. */
-function addMashaFace(mesh:THREE.SkinnedMesh,hipY:number):(frame:ActorFrame)=>void {
+function addMashaFace(mesh:THREE.SkinnedMesh,hipY:number,facial=true):(frame:ActorFrame)=>void {
   const positions=mesh.geometry.getAttribute('position');
   const blink=new Float32Array(positions.count*3),mouth=new Float32Array(positions.count*3),seated=new Float32Array(positions.count*3);
   const skirt=new Set<number>(mesh.userData.skirtVertices??[]),cloth=new THREE.Vector3(),axis=new THREE.Vector3(1,0,0);
@@ -233,11 +245,11 @@ function addMashaFace(mesh:THREE.SkinnedMesh,hipY:number):(frame:ActorFrame)=>vo
   for(let i=0;i<positions.count;i++) {
     mesh.getVertexPosition(i,world).applyMatrix4(mesh.matrixWorld);
     let blinkY=0,mouthY=0;
-    for(const [cx,cy] of [[.0556,.7374],[-.053,.7449]]) {
+    for(const [cx,cy] of facial?[[.0556,.7374],[-.053,.7449]]:[]) {
       const radius=Math.hypot((world.x-cx)/.036,(world.y-cy)/.038);
       if(radius<1.3 && world.z>.11){const w=Math.min(1,Math.max(0,(1.3-radius)/.35));blinkY=-(world.y-cy)*w*.98;}
     }
-    if(world.z>.12&&Math.abs(world.x)<.067&&world.y>.59&&world.y<.662){
+    if(facial&&world.z>.12&&Math.abs(world.x)<.067&&world.y>.59&&world.y<.662){
       const x=Math.max(0,1-(world.x/.067)**4),y=Math.min(1,(.662-world.y)/.012)*Math.min(1,(world.y-.59)/.025);mouthY=-.018*x*y;
     }
     cloth.set(0,0,0);
@@ -262,7 +274,7 @@ function addMashaFace(mesh:THREE.SkinnedMesh,hipY:number):(frame:ActorFrame)=>vo
   mesh.geometry.morphAttributes.position=[new THREE.Float32BufferAttribute(blink,3),new THREE.Float32BufferAttribute(mouth,3),new THREE.Float32BufferAttribute(seated,3)];
   mesh.geometry.morphTargetsRelative=true;mesh.updateMorphTargets();
   return frame=>{
-    const a=mesh.morphTargetInfluences!;a[0]=frame.face.lidClose;a[1]=frame.face.viseme==='rest'?0:frame.face.visemeWeight*(frame.face.viseme==='open_wide'?1:.65);
+    const a=mesh.morphTargetInfluences!;a[0]=facial?frame.face.lidClose:0;a[1]=!facial||frame.face.viseme==='rest'?0:frame.face.visemeWeight*(frame.face.viseme==='open_wide'?1:.65);
     const bend=['LeftUpLeg','RightUpLeg'].reduce((sum,name)=>{const q=frame.bones[name];return sum+(q?Math.abs(2*Math.atan2(q[0],q[3])):0);},0)*.5;
     const k=frame.posture==='sit'||frame.verb==='stand_up'?Math.min(1,Math.max(0,(bend-.35)/1.05)):0;
     a[2]=k*k*(3-2*k);

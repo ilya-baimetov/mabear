@@ -3,7 +3,7 @@
 // episode are a story gag, not their rest anatomy. Keep the common Mixamo rig so all story verbs work.
 import * as THREE from "three";
 import type { ActorFrame, CharacterRig } from "../api";
-import { buildFace, mouthShapeFor, type FaceConfig } from "./face";
+import { buildFace, blendedMouthShape, type FaceConfig } from "./face";
 import {
   blob, bump, buildSkeleton, col, dir, extraBone, eyeMaterial, furMaterial, limb, makeRig, materialSet, mergeSame,
   noise3, paintVertices, plushSurface, profile, restWorld, roughen, sdEllipsoid, sdfBlob, skinBody, smin, smoothstep, toLocal,
@@ -469,7 +469,7 @@ export function buildWolf(variant: WolfVariant): CharacterRig {
   const faceUpdate = face.update.bind(face);
   face.update = (params, sleeping) => {
     faceUpdate(params, sleeping);
-    const shape = mouthShapeFor(params.emotion, params.viseme, params.visemeWeight);
+    const shape = blendedMouthShape(params);
     jaw.rotation.x = sleeping ? .035 : .035 + shape.open * .72;
     jaw.rotation.z = shape.asym * .025;
     jaw.updateMatrixWorld(true);

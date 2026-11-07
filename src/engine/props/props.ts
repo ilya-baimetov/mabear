@@ -6,7 +6,9 @@ import { FISHING_WATER_TARGET, MARKS } from "../../shared/bible/set";
 import { PROP_IDS, type ActorId, type MarkId, type PropId, type Vec3 } from "../../shared/schema";
 import type { ActorFrame, PropFrame } from "../api";
 import { GeoBag, bagToSingle, rng, xf, type LookMaterials } from "../look";
-import { PIER_HEIGHT, PORCH_HEIGHT, SAMOVAR_TOP, TABLE_TOP, restHeightAt } from "../set/bearsYard";
+import { restHeightAt } from "../set/bearsYard";
+import {PROP_SLOTS} from '../../shared/propPlacement';
+export {PROP_SLOTS} from '../../shared/propPlacement';
 
 type R3 = [number, number, number];
 
@@ -219,26 +221,6 @@ export const PROP_VISUALS: Record<PropId, PropVisual> = {
 };
 
 /** Hand-placed resting spots for each prop at its home mark (the set's own layout). */
-export const PROP_SLOTS: Partial<Record<PropId, { mark: MarkId; pos: Vec3; rot?: R3 }>> = {
-  jam_jar: { mark: "table", pos: [1.62, TABLE_TOP, 1.74] },
-  frying_pan: { mark: "table", pos: [1.6, TABLE_TOP, 1.2], rot: [0, 0.8, 0] },
-  flour_bag: { mark: "table", pos: [2.42, TABLE_TOP, 1.8] },
-  teapot: { mark: "table", pos: [2.22, SAMOVAR_TOP, 1.28] },
-  pancakes: { mark: "table", pos: [1.92, TABLE_TOP, 1.88] },
-  cake: { mark: "table", pos: [1.9, TABLE_TOP, 1.6] },
-  honey_pot: { mark: "beehive", pos: [9.55, 0, -8.55] },
-  fishing_rod: { mark: "pier", pos: [-5.15, PIER_HEIGHT, 8.95], rot: [Math.PI / 2, 0.37, 0] },
-  bucket: { mark: "pier", pos: [-5.0, PIER_HEIGHT, 8.4] },
-  fish: { mark: "pier", pos: [-5.35, PIER_HEIGHT, 9.25], rot: [0, 0.6, 0] },
-  flowers: { mark: "garden", pos: [3.9, 0, -4.7], rot: [Math.PI / 2.2, 0.8, 0] },
-  carrot: { mark: "garden", pos: [4.6, 0.11, -5.9] },
-  watering_can: { mark: "garden", pos: [6.5, 0, -4.75], rot: [0, -0.6, 0] },
-  broom: { mark: "porch", pos: [-7.5, PORCH_HEIGHT, -3.75], rot: [-0.22, 0, 0.05] },
-  book: { mark: "bench", pos: [2.45, 0.47, 3.0], rot: [0, 0.3, 0] },
-  pillow: { mark: "hammock", pos: [-11.62, 0.77, 2.85], rot: [0, 0.8, 0.12] },
-  ball: { mark: "clearing", pos: [1.3, 0, 0.9] },
-  lollipop: { mark: "table", pos: [2.3, TABLE_TOP + 0.01, 1.62], rot: [Math.PI / 2, 0.9, 0] },
-};
 
 /** Rest heights the player assigns per mark (player/evaluate PROP_REST_HEIGHT); used to recognise a resting prop. */
 const PLAYER_REST_Y: Partial<Record<MarkId, number>> = {

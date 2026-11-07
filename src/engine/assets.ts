@@ -135,7 +135,7 @@ export async function loadCharacter(id: string, manifest: Record<string, AssetEn
     if (isGltf(entry.source)) {
       const g = await loadGltf(entry.source.gltf);
       rig = entry.generated
-        ? (await import("./characters/generated")).generatedRig(id as ActorId, g.scene, {height:entry.height??1})
+        ? (await import("./characters/generated")).generatedRig(id as ActorId, g.scene, {height:entry.height??1,mashaPerformance:id==='masha',animalPerformance:id!=='masha'})
         : gltfRig(id, g.scene, entry);
     } else if (id === "masha") {
       rig = (await import("./characters/masha")).buildMasha();
@@ -154,6 +154,9 @@ export async function loadCharacter(id: string, manifest: Record<string, AssetEn
       wrap.position.set(...entry.offset);
       for (const c of inner) wrap.add(c);
       rig.root.add(wrap);
+    }
+    if(id!=='masha'&&(entry.generated||id==='wolf_a'||id==='wolf_b')){
+      (await import('./characters/sourceContacts')).addSourceContacts(rig);
     }
     if (entry.hidden) rig.root.visible = false;
     rig.root.userData.asset = { id, source: isGltf(entry.source) ? "gltf" : "procedural", label: entry.label };

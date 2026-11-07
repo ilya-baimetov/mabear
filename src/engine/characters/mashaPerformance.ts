@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import type {ActorFrame} from '../api';
 import {EMOTION_PRESETS,mouthShapeFor,type MouthShape} from './face';
+import {emotionWeights} from '../motion/emotion';
 
 // A local retopology pass over the generated model: replace the closed facial
 // surface with continuous skin rings, real eye openings and a recessed mouth.
@@ -250,15 +251,18 @@ function mashaMouth(emotion:ActorFrame['face']['emotion'],viseme:ActorFrame['fac
  return shape;
 }
 function expression(frame:ActorFrame){
- const target=EMOTION_PRESETS[frame.face.emotion],transition=frame.face.emotionTransition;if(!transition)return target;
- const from=EMOTION_PRESETS[transition.from],w=smooth(transition.progress),b=smooth((transition.progress-.06)/.94);
- // Lids lead the reaction; brows settle a few frames later. The offsets use
- // absolute transition progress, so reverse seeking produces the same surface.
- return {...target,browL:mix(from.browL,target.browL,b),browR:mix(from.browR,target.browR,b),tilt:mix(from.tilt,target.tilt,w),lid:mix(from.lid,target.lid,smooth(transition.progress/.88)),mouth:{...target.mouth,smile:mix(from.mouth.smile,target.mouth.smile,w),asym:mix(from.mouth.asym,target.mouth.asym,w)}};
+ const target=EMOTION_PRESETS[frame.face.emotion],transition=frame.face.emotionTransition;
+ const weighted=(select:(preset:typeof target)=>number,progress=transition?.progress??1)=>Object.entries(emotionWeights(frame.face,progress)).reduce((sum,[emotion,weight])=>sum+select(EMOTION_PRESETS[emotion as keyof typeof EMOTION_PRESETS])*(weight??0),0);
+ const progress=transition?.progress??1,interruptedSource=!!transition?.fromWeights;
+ // Lids lead the reaction; brows settle a few frames later. Interrupted
+ // reactions retain their displayed source mixture, including reverse seeks.
+ return {...target,browL:weighted(p=>p.browL,interruptedSource?progress:(progress-.06)/.94),browR:weighted(p=>p.browR,interruptedSource?progress:(progress-.06)/.94),tilt:weighted(p=>p.tilt),lid:weighted(p=>p.lid,interruptedSource?progress:progress/.88),mouth:{...target.mouth,smile:weighted(p=>p.mouth.smile),asym:weighted(p=>p.mouth.asym)}};
 }
 function mouthExpression(frame:ActorFrame):MouthShape{
- const f=frame.face,target=mashaMouth(f.emotion,f.viseme,f.visemeWeight),transition=f.emotionTransition;if(!transition)return target;
- const from=mashaMouth(transition.from,f.viseme,f.visemeWeight),w=smooth(transition.progress);for(const key of Object.keys(target) as (keyof MouthShape)[])target[key]=mix(from[key],target[key],w);return target;
+ const f=frame.face,target=mashaMouth(f.emotion,f.viseme,f.visemeWeight);
+ const weights=Object.entries(emotionWeights(f));
+ for(const key of Object.keys(target) as (keyof MouthShape)[])target[key]=weights.reduce((sum,[emotion,weight])=>sum+mashaMouth(emotion as ActorFrame['face']['emotion'],f.viseme,f.visemeWeight)[key]*(weight??0),0);
+ return target;
 }
 export interface MashaPerformance { update(frame:ActorFrame):void; mouthTarget(frame:ActorFrame):THREE.Vector3; dispose():void; }
 export function createMashaPerformance(meshes:THREE.SkinnedMesh[],bones:Record<string,THREE.Bone>,root:THREE.Object3D):MashaPerformance{

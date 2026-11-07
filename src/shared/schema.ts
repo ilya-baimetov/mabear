@@ -216,6 +216,7 @@ export const ActorClipSchema = z.object({
     posture: PostureSchema.optional(), // posture during/after the clip
     ambient: z.boolean().optional(), // true = filled in by the compiler (ambient life), not from a beat
     sceneCut: z.boolean().optional(), // short offscreen travel between separate outdoor locations
+    putDown: MarkIdSchema.optional(), // compiler-authored reverse take, releases the held prop halfway through
   }),
 });
 export type ActorClip = z.infer<typeof ActorClipSchema>;

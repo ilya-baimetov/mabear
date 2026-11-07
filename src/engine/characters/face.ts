@@ -3,6 +3,7 @@
 // eye look-at toward a world point. Shared by every character through FaceConfig. Lives under the Head bone.
 import * as THREE from "three";
 import type { FaceParams } from "../api";
+import {emotionWeights} from "../motion/emotion";
 import type { Emotion, Viseme } from "../../shared/schema";
 import {
   blob, col, eyeMaterial, HIGHLIGHT_VALUE, mergeSame, paintVertices, smoothstep, type MaterialSet, type SkinPart,
@@ -168,6 +169,16 @@ export function mouthShapeFor(emotion: Emotion, viseme: Viseme, weight: number):
     teeth: lerp(base.teeth, v.teeth ?? base.teeth, w),
     asym: lerp(base.asym, 0, w),
   };
+}
+
+/** Evaluate the same deterministic emotional blend for visible lips and a separate jaw. */
+export function blendedMouthShape(p:FaceParams):MouthShape {
+  const out={w:0,smile:0,open:0,round:0,teeth:0,asym:0};
+  for(const [emotion,weight] of Object.entries(emotionWeights(p))){
+    const shape=mouthShapeFor(emotion as Emotion,p.viseme,p.visemeWeight);
+    for(const key of Object.keys(out) as (keyof MouthShape)[])out[key]+=shape[key]*(weight??0);
+  }
+  return out;
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -445,9 +456,8 @@ export function buildFace(cfg: FaceConfig, mats: MaterialSet): FaceRig {
     mouthGeom.computeVertexNormals();
   }
 
-  // ---- state (light smoothing between emotion changes so faces don't pop)
+  // ---- deterministic expression state, driven by timeline transition weights
   const cur = { browL: 0, browR: 0, tilt: 0, lid: 0, mouth: { ...EMOTION_PRESETS.neutral.mouth } };
-  let first = true;
   const v3 = new THREE.Vector3();
   const eyeMid = new THREE.Vector3();
   const gazeDir = new THREE.Vector3();
@@ -457,24 +467,12 @@ export function buildFace(cfg: FaceConfig, mats: MaterialSet): FaceRig {
   writeMouth(cur.mouth);
 
   function update(p: FaceParams, sleeping: boolean): void {
-    const pre = EMOTION_PRESETS[p.emotion] ?? EMOTION_PRESETS.neutral;
-    const target = mouthShapeFor(p.emotion, p.viseme, p.visemeWeight);
+    const weights=Object.entries(emotionWeights(p));
+    for(const key of ['browL','browR','tilt','lid'] as const)cur[key]=weights.reduce((sum,[emotion,weight])=>sum+EMOTION_PRESETS[emotion as Emotion][key]*(weight??0),0);
+    const target=blendedMouthShape(p);
     target.asym += (Mo.smirk ?? 0) * (1 - Math.min(1, Math.max(0, p.visemeWeight)));
-    const k = first ? 1 : 0.35;
-    first = false;
-    cur.browL = lerp(cur.browL, pre.browL, k);
-    cur.browR = lerp(cur.browR, pre.browR, k);
-    cur.tilt = lerp(cur.tilt, pre.tilt, k);
-    cur.lid = lerp(cur.lid, pre.lid, k);
-    const km = p.visemeWeight > 0 ? 0.6 : k; // visemes are fast
-    const m = cur.mouth;
-    m.w = lerp(m.w, target.w, km);
-    m.smile = lerp(m.smile, target.smile, km);
-    m.open = lerp(m.open, target.open, km);
-    m.round = lerp(m.round, target.round, km);
-    m.teeth = lerp(m.teeth, target.teeth, km);
-    m.asym = lerp(m.asym, target.asym, km);
-    writeMouth(m);
+    Object.assign(cur.mouth,target);
+    writeMouth(cur.mouth);
 
     // lids: emotion openness then blink/sleep
     const lidBase = cur.lid < 0 ? lerp(E.lidOpen, E.lidOpen - 0.35, -cur.lid / 0.3) : lerp(E.lidOpen, LID_CLOSED, cur.lid * 0.85);

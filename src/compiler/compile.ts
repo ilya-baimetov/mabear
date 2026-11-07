@@ -11,6 +11,9 @@ import { PROPS } from "../shared/bible/props";
 import { FISHING_WATER_TARGET, isInsideHouse, isInteriorMark, MARKS, OBSTACLES, sceneLocationAt, SEAT_HEIGHT } from "../shared/bible/set";
 import { GRAMMAR, LOCOMOTION_VERBS, SPEEDS, VERB_HOME_MARK, VERB_IMPLIED_PROP, isWolf } from "../shared/grammar";
 import { ACTOR_IDS } from "../shared/schema";
+import {propPlacementAtMark,propGripWorld} from '../shared/propPlacement';
+import {PROP_CONTACTS} from '../shared/propContacts';
+import {CHARACTER_REACH} from '../shared/characterReach';
 import type {
   ActorClip, ActorId, Beat, BeatScript, Emotion, FxCue, FxId, LightingCue, MarkId, Posture, PropId, SfxId,
   Vec2, Vec3, Verb, WorldState,
@@ -152,6 +155,15 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
   }
   function postureAt(a: ActorId, t: number): Posture {
     return stateAt(a, t).posture;
+  }
+  /** Getting up from furniture includes leaving its footprint. Keeping the
+   * floor root at the seat centre makes a short actor descend through it. */
+  function seatExit(a:ActorId):{from:Vec2;to:Vec2;path:Vec2[];target:MarkId;facing:number}|null {
+    const st=ws.actors[a],mark=st.mark;
+    if(st.posture!=='sit'||!mark||(SEAT_HEIGHT[mark]??0)<=.15||dist(st.pos,MARKS[mark].pos)>1.05)return null;
+    const facing=mark==='house_living'?MARKS[mark].facing:st.facing,distance=mark==='house_living'?.9:.65,from=v2(st.pos);
+    const to=clampWalkable([r3(from[0]+Math.sin(facing)*distance),r3(from[1]+Math.cos(facing)*distance)]);
+    return{from,to,path:[from,to],target:mark,facing};
   }
   function addClip(a: ActorId, start: number, dur: number, verb: Verb, emotion: Emotion, params: ActorClip["params"]): ActorClip {
     const c: ActorClip = { start, dur: Math.max(0.05, dur), verb, emotion, params };
@@ -338,11 +350,13 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
       st.posture = "stand";
       record(a, t);
     }
-    if (st.posture === "sit" && !SIT_OK.has(b.verb)) {
-      addClip(a, t, GRAMMAR.stand_up.baseDuration, "stand_up", b.emotion, { from: v2(st.pos), facing: st.facing, posture: "stand", item: st.holding ?? undefined });
+    if (st.posture === "sit" && b.verb!=='stand_up' && !SIT_OK.has(b.verb)) {
+      const exit=seatExit(a);
+      addClip(a, t, GRAMMAR.stand_up.baseDuration, "stand_up", b.emotion, { from: v2(st.pos), facing: st.facing, posture: "stand", item: st.holding ?? undefined,...exit });
       events.push({ actor: a, verb: "stand_up", start: t, dur: GRAMMAR.stand_up.baseDuration, emote: null, hasLine: false, sfx: null, sfxAt: t, pos: v2(st.pos), main: false });
       t += GRAMMAR.stand_up.baseDuration;
       st.posture = "stand";
+      if(exit){st.pos=v2(exit.to);st.facing=exit.facing;st.mark=null;}
       record(a, t);
     }
 
@@ -367,6 +381,37 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
       t = locomote(a, t, verb, walkDest, b.emotion, walkTarget, faceAfter);
       events.push({ actor: a, verb, start: s0, dur: t - s0, emote: null, hasLine: false, sfx: null, sfxAt: s0, pos: v2(st.pos), main: false });
       walkInfo = { start: s0, dur: t - s0, verb, from: wFrom, to: v2(st.pos) };
+    }
+
+    // Free both hands before applause. A visible reverse pickup preserves the
+    // prop in world state, so it can be picked up again in a later paragraph.
+    if(b.verb==='clap'&&st.holding&&st.posture!=='carried'){
+      const item=st.holding,reach=CHARACTER_REACH[a],small=reach.shoulder[1]<.9,tiny=reach.shoulder[1]<.45,inside=isInsideHouse(...st.pos);
+      const mark:MarkId=tiny?'clearing':inside?(small?'house_living':'house_kitchen'):(small?'bench':'table');
+      const placement=propPlacementAtMark(item,mark),grip=propGripWorld(placement.pos,placement.rot,PROP_CONTACTS[item].point);
+      if(st.posture==='sit'){
+        const exit=seatExit(a);addClip(a,t,GRAMMAR.stand_up.baseDuration,'stand_up',b.emotion,{from:v2(st.pos),facing:st.facing,posture:'stand',item,...exit});
+        if(exit)st.pos=v2(exit.to);st.posture='stand';st.mark=null;t+=GRAMMAR.stand_up.baseDuration;record(a,t);
+      }
+      // Approach the actual rotated grip, on furniture the rig can reach.
+      // Short actors use the bench instead of the tall table; shoulder offset
+      // keeps a broad Bear from aiming the right paw at his chest centre.
+      let yaw=0;
+      if(mark==='bench')yaw=grip[2]>=MARKS.bench.pos[1]?Math.PI:0;
+      else if(mark==='table')yaw=yawTo([grip[0],grip[2]],MARKS.table.pos,Math.PI);
+      else if(mark==='clearing')yaw=yawTo(st.pos,[grip[0],grip[2]],st.facing);
+      const lead=small?.07+reach.length*.1:reach.length*.28,c=Math.cos(yaw),s=Math.sin(yaw);
+      let dest:Vec2=[grip[0]-c*reach.shoulder[0]-s*(reach.shoulder[2]+lead),grip[2]+s*reach.shoulder[0]-c*(reach.shoulder[2]+lead)];
+      if(mark==='bench')dest[1]=yaw===0?Math.min(dest[1],2.75):Math.max(dest[1],3.25);
+      if(mark==='table'){
+        const centre=MARKS.table.pos,dx=dest[0]-centre[0],dz=dest[1]-centre[1],length=Math.hypot(dx,dz),clearance=.82+Math.abs(reach.shoulder[0])*.75;
+        if(length<clearance)dest=[centre[0]+dx/Math.max(length,.001)*clearance,centre[1]+dz/Math.max(length,.001)*clearance];
+      }else if(!inside)dest=clampWalkable(dest);
+      const s0=t;
+      if(dist(st.pos,dest)>.04){t=locomote(a,t,'walk_to',dest,b.emotion,mark,yaw);events.push({actor:a,verb:'walk_to',start:s0,dur:t-s0,emote:null,hasLine:false,sfx:null,sfxAt:s0,pos:v2(st.pos),main:false});}
+      st.facing=yaw;
+      addClip(a,t,.8,'take',b.emotion,{from:v2(st.pos),facing:st.facing,posture:st.posture,item,putDown:mark,lookAt:grip});
+      ws.props[item]={at:mark};st.holding=null;t+=.8;record(a,t);
     }
 
     // --- main clip ---
@@ -475,7 +520,10 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
       }
       const lookAt = b.target ? targetPoint(b.target, t) : lineText && ws.actors[o].posture !== "offstage" ? headAt(o, t) : null;
       if(VERB_IMPLIED_PROP[b.verb]&&item&&st.holding!==item)giveTo(a,item);
-      addClip(a, mainStart, mainDur, b.verb, b.emotion, { ...baseParams(), facing: r3(facing), posture, item, lookAt: lookAt ?? undefined });
+      const exit=b.verb==='stand_up'?seatExit(a):null;
+      if(exit)facing=exit.facing;
+      addClip(a, mainStart, mainDur, b.verb, b.emotion, { ...baseParams(), facing: r3(facing), posture, item, lookAt: lookAt ?? undefined,...exit });
+      if(exit){st.pos=v2(exit.to);st.mark=null;}
       st.facing = r3(facing);
       t = mainStart + mainDur;
 

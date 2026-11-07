@@ -353,6 +353,13 @@ export function planCamera(input: CameraPlanInput): CameraCue[] {
     to.location=sceneLocationAt(...posAt(primary,Math.max(s.start,s.end-.001)));
     let cutAt:number|undefined;
     if(from.location!==to.location){
+      // A shot ending outdoors must still begin inside the room's open-side
+      // composition. Framing both endpoints together otherwise chooses an
+      // exterior orbit for its indoor half, looking through a retained wall.
+      if(from.location==='house'){
+        const origin=framing(s.kind,primary,cast,s.start,s.start,angle,side,posAt,visibleAt,rnd,input.headY,input.facingAt).from;
+        Object.assign(from,origin,{location:from.location});
+      }
       const endTime=Math.max(s.start,s.end-.001),destinationCast=requestedCast.filter(a=>sceneLocationAt(...posAt(a,endTime))===to.location);
       if(!destinationCast.includes(primary))destinationCast.push(primary);
       const destination=framing(s.kind,primary,destinationCast,endTime,endTime,angle,side,posAt,visibleAt,rnd,input.headY,input.facingAt).from;

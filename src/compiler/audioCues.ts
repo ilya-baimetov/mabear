@@ -13,6 +13,7 @@ import { panFor } from "./camera";
 import { pathLength, pointAlong } from "./path";
 import type { CarryAudio } from "./types";
 import { allowedEmote } from "./validate";
+import { clapContactTimes } from "../shared/contactTiming";
 
 export const EMPTY_CARRY: CarryAudio = { music: null, ambience: [] };
 export const DUCK_DEPTH_DB = 8;
@@ -119,6 +120,14 @@ export function foleyForClip(actor: ActorId, c: ActorClip, camera: CameraCue[], 
     const gl = id === "footstep" ? gain * light : gain;
     out.push({ start: r3(t), actor, id, surface, gain: Math.round(gl * 100) / 100, pan: panFor(camera, pos, t) });
   };
+  if(c.params.putDown){
+    push(c.start+c.dur*.5,'prop_putdown',.8,clipPosAt(c,c.start+c.dur*.5));
+    return out;
+  }
+  if(c.verb==='clap'){
+    for(const t of clapContactTimes(c.dur))push(c.start+t,'clap',1,clipPosAt(c,c.start+t));
+    return out;
+  }
   for (const rule of GRAMMAR[c.verb].foley as FoleyRule[]) {
     const g = rule.gain ?? 1;
     if (rule.when === "contacts") {

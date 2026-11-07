@@ -18,13 +18,15 @@ test("generated cast and garden load; whole-story playback, seeking and characte
 
   const assets = await page.evaluate(() => window.__mabear!.assets()) as { id: string; ok: boolean }[];
   for (const id of [...GENERATED_CAST, "set:house", "set:beehive", "prop:carrot"]) expect(assets.find(asset => asset.id === id), id).toMatchObject({ ok: true });
-  const rigs = await page.evaluate(() => window.__mabear!.rigs()) as Record<string, { name: string; generated?: { dressVertices: number; facialRig: boolean; calibrationError: number; mapping: Record<string, string> } }>;
+  const rigs = await page.evaluate(() => window.__mabear!.rigs()) as Record<string, { name: string; generated?: { dressVertices: number; facialRig: boolean; performance: string | null; calibrationError: number; mapping: Record<string, string> } }>;
   for (const id of GENERATED_CAST) {
     expect(rigs[id].name).toContain(":generated");
     expect(Object.keys(rigs[id].generated!.mapping).length).toBeGreaterThan(20);
     expect(rigs[id].generated!.calibrationError, id).toBeLessThan(.002);
+    expect(rigs[id].generated!.facialRig, id).toBe(true);
+    expect(rigs[id].generated!.performance, id).toBe(id === 'masha' ? 'masha-v3' : 'animal-v1');
   }
-  // Main-game Masha stays on the shipped rig until the separate candidate is accepted.
+  // The accepted Masha performance is active in the game and retains the seated skirt repair.
   expect(rigs.masha.generated!.dressVertices).toBeGreaterThan(100);
   expect(rigs.masha.generated!.facialRig).toBe(true);
 

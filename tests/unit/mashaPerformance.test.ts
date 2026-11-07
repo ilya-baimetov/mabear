@@ -11,7 +11,7 @@ import {evaluatePose,STYLES,type VerbCtx} from '../../src/engine/motion/library'
 import {getFixture} from '../../src/director/fixtures';
 import {compileEpisode} from '../../src/compiler/episode';
 import {evaluate} from '../../src/engine/player/evaluate';
-import {DEFAULT_REMIX} from '../../src/shared/schema';
+import {DEFAULT_REMIX,type Beat,type BeatScript} from '../../src/shared/schema';
 
 type Pixels={width:number;height:number;data:Uint8ClampedArray};
 
@@ -45,6 +45,46 @@ describe('Masha performance on the shipped GLB',()=>{
   rig=generatedRig('masha',gltf.scene,{height:1,mashaPerformance:true});
  },30_000);
  afterAll(()=>{rig?.dispose();vi.unstubAllGlobals();});
+
+ it('keeps actual story claps and pan release continuous at ownership and clip boundaries',()=>{
+  const f=getFixture('pancake_morning','en')!,tl=compileEpisode(f.paragraphs.map((p,i)=>({paragraphId:String(i),version:1,beatScript:p.beatScript,remix:DEFAULT_REMIX})),'en').timeline;
+  const sample=(t:number)=>{const frame=evaluate(tl,t).actors.masha;rig.apply(frame);return{frame,right:rig.bones.RightHand.getWorldPosition(new THREE.Vector3()),left:rig.bones.LeftHand.getWorldPosition(new THREE.Vector3()),socket:rig.handSocket.getWorldPosition(new THREE.Vector3()),rotation:rig.handSocket.getWorldQuaternion(new THREE.Quaternion())};};
+  let claps=0,releases=0;
+  for(const segment of tl.segments)for(const clip of segment.segment.actorClips.masha){
+   if(clip.verb==='clap'){
+    claps++;
+    for(const local of [clip.start,clip.start+clip.dur]){
+     const a=sample(segment.offset+local-.0001),b=sample(segment.offset+local+.0001);
+     for(const hand of ['right','left'] as const)expect(a[hand].distanceTo(b[hand]),`${hand} at clap boundary`).toBeLessThan(.003);
+    }
+   }
+   if(clip.params.putDown){
+    releases++;const t=segment.offset+clip.start+clip.dur*.5,a=sample(t-.0001),b=sample(t+.0001);
+    expect(a.frame.holding).toBe('frying_pan');expect(b.frame.holding).toBeNull();
+    expect(a.socket.distanceTo(new THREE.Vector3(...b.frame.putDown!.position))).toBeLessThan(.001);
+    expect(a.rotation.angleTo(new THREE.Quaternion().setFromEuler(new THREE.Euler(...b.frame.putDown!.rotation,'YXZ')))).toBeLessThan(.001);
+    expect(a.right.distanceTo(b.right)).toBeLessThan(.001);
+    expect(a.socket.distanceTo(b.socket)).toBeLessThan(.001);
+   }
+  }
+  expect(claps).toBeGreaterThan(0);expect(releases).toBe(1);
+ });
+
+ it('blends into tasting and back to gestures without snapping the hand or candy',()=>{
+  const beat=(verb:Beat['verb'],overrides:Partial<Beat>={}):Beat=>({actor:'masha',verb,target:null,item:null,line:null,emote:null,sfx:null,emotion:'happy',with_previous:false,delay_s:0,shot:'close',...overrides});
+  const beatScript:BeatScript={summary:'Candy contacts',time_of_day:'day',mood:'playful',music:{mood:'playful',intensity:'soft',change:'continue'},ambience:null,rule_hits:[],beats:[beat('take',{target:'lollipop',item:'lollipop'}),beat('eat',{item:'lollipop'}),beat('surprised',{emotion:'surprised'}),beat('give',{target:'bear',item:'lollipop'})]};
+  const tl=compileEpisode([{paragraphId:'candy',version:1,beatScript,remix:DEFAULT_REMIX}],'en').timeline;
+  const sample=(t:number)=>{rig.apply(evaluate(tl,t).actors.masha);return[rig.bones.RightHand,rig.handSocket].map(o=>o.getWorldPosition(new THREE.Vector3()));};
+  let checks=0;
+  for(const s of tl.segments)for(const c of s.segment.actorClips.masha)if(['eat','surprised','give'].includes(c.verb)){
+   for(const local of [c.start,c.start+c.dur]){
+    const a=sample(s.offset+local-.0001),b=sample(s.offset+local+.0001);
+    for(let i=0;i<2;i++)expect(a[i].distanceTo(b[i]),`${c.verb} boundary, hand/socket ${i}`).toBeLessThan(.003);
+    checks++;
+   }
+  }
+  expect(checks).toBeGreaterThanOrEqual(6);
+ });
 
  it('fades the rebuilt face together with the source body and restores it when seeking',()=>{
   const face=rig.root.getObjectByName('masha:articulated-face')!;
@@ -138,6 +178,55 @@ describe('Masha performance on the shipped GLB',()=>{
     expect(nearest,`${suffix} must actually touch the stem at ${time}s`).toBeLessThan(.001);
    }
   }
+ });
+
+ it('keeps the accepted face and seated skirt active in an actual compiled indoor story',()=>{
+  const fixture=getFixture('cozy_evening','en')!;
+  const {timeline}=compileEpisode(fixture.paragraphs.map((p,i)=>({paragraphId:`p${i}`,version:1,beatScript:p.beatScript,remix:DEFAULT_REMIX})),'en');
+  const segment=timeline.segments.find(s=>s.segment.actorClips.masha.some(c=>c.verb==='eat'))!;
+  const clip=segment.segment.actorClips.masha.find(c=>c.verb==='eat')!;
+  for(const offset of [.45,1,1.5,2]){
+   const frame=evaluate(timeline,segment.offset+clip.start+offset).actors.masha;rig.apply(frame);
+   expect(rig.root.getObjectByName('masha:articulated-face')).toBeDefined();
+   let draped=0;
+   rig.root.traverse(object=>{const mesh=object as THREE.SkinnedMesh;if(mesh.isSkinnedMesh&&mesh.userData.skirtVertices?.length){
+    expect(mesh.morphTargetInfluences?.[2]).toBeGreaterThan(.8);draped++;
+    // Facial baseline morphs must not move the newly rebuilt face.
+    expect(mesh.morphTargetInfluences?.slice(0,2)).toEqual([0,0]);
+   }});
+   expect(draped).toBeGreaterThan(0);
+   for(const foot of ['LeftFoot','RightFoot'])expect(rig.bones[foot].getWorldPosition(new THREE.Vector3()).z).toBeGreaterThan(-5.31);
+   expect(rig.root.userData.contacts.reachError??0).toBeLessThan(.001);
+  }
+ });
+
+ it('preserves authored gesture arms and a precise candy grip instead of forcing every verb into the idle hold',()=>{
+  for(const verb of ['give','take','wave','clap'] as const){
+   const time=.3,ctx:VerbCtx={actor:'masha',style:STYLES.masha,t:time,dur:1,emotion:'happy',posture:'stand',fromPosture:'stand',speed:0,dist:0,turned:0,targetLocal:null,seat:0};
+   const pose=evaluatePose(verb,time,{},ctx),frame=restFrame({bones:pose.layer.bones,hipsOffset:pose.layer.hipsOffset,verb,action:{time,duration:1}});
+   // A held object suppresses the empty two-hand contact solver, while the
+   // authored arm pose survives unchanged. The object follows its new grip.
+   rig.apply({...frame,holding:'lollipop'});
+   expect(rig.root.userData.contacts.mode).toBe('lollipop');
+   expect(rig.root.userData.contacts.authoredArm).toBe(true);
+   expect(rig.root.userData.contacts.gripError).toBeLessThan(.0001);
+   expect(rig.handSocket.userData.preciseGrip).toBe(true);
+   const held=rig.bones.RightArm.quaternion.toArray();
+   if(verb!=='clap'){
+    rig.apply(frame);expect(rig.bones.RightArm.quaternion.toArray()).toEqual(held);
+   }
+  }
+ });
+
+ it('keeps the pelvis at the chair when beginning to stand, then eases into sole contact',()=>{
+  const fixture=getFixture('cozy_evening','en')!;
+  const {timeline}=compileEpisode(fixture.paragraphs.map((p,i)=>({paragraphId:`p${i}`,version:1,beatScript:p.beatScript,remix:DEFAULT_REMIX})),'en');
+  const segment=timeline.segments.find(s=>s.segment.actorClips.masha.some(c=>c.verb==='stand_up'))!,clip=segment.segment.actorClips.masha.find(c=>c.verb==='stand_up')!,start=segment.offset+clip.start;
+  rig.apply(evaluate(timeline,start-1e-5).actors.masha);const seatedY=rig.bones.Hips.getWorldPosition(new THREE.Vector3()).y;
+  const first=evaluate(timeline,start+.001).actors.masha;rig.apply(first);
+  expect(first.groundWeight).toBeLessThan(.01);
+  expect(Math.abs(rig.bones.Hips.getWorldPosition(new THREE.Vector3()).y-seatedY)).toBeLessThan(.01);
+  expect(evaluate(timeline,start+clip.dur*.9).actors.masha.groundWeight).toBeGreaterThan(.95);
  });
 });
 

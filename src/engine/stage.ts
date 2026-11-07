@@ -268,9 +268,12 @@ export async function createStage(canvas: HTMLCanvasElement, opts: StageOptions 
         const a = frame.actors?.[id];
         const rig = rigs[id];
         if (!a || !rig) continue;
-        rig.apply(a);
-        rig.root.visible=rig.root.visible&&(!frame.cast||frame.cast.includes(id))&&sceneLocationAt(a.pos[0],a.pos[2])===location;
         const lift = walkHeightAt(a.pos[0], a.pos[2]);
+        // Contacts solve before the stage lifts the complete rig onto decking.
+        // Convert the resting prop's world target into that same coordinate space.
+        const contactFrame=a.putDown&&lift!==0?{...a,putDown:{...a.putDown,position:[a.putDown.position[0],a.putDown.position[1]-lift,a.putDown.position[2]] as [number,number,number]}}:a;
+        rig.apply(contactFrame);
+        rig.root.visible=rig.root.visible&&(!frame.cast||frame.cast.includes(id))&&sceneLocationAt(a.pos[0],a.pos[2])===location;
         if (lift !== 0) rig.root.position.y += lift; // world matrices refresh in renderer.render / getWorldPosition
         sockets[id] = rig.handSocket;
         yaws[id] = a.yaw;
