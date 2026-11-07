@@ -1,0 +1,12 @@
+{
+  "actors": 6,
+  "frontFrames": 24,
+  "expressions": [
+    "happy",
+    "sad",
+    "surprised",
+    "closed blink"
+  ],
+  "factory": "production loadCharacter",
+  "errors": []
+}

@@ -1,0 +1,225 @@
+{
+  "input": "/Users/ilya.baimetov/Projects/mabear/codex/docs/animation-story-release/proof/final/actual-story-animation.mp4",
+  "playback": {
+    "duration": 41.926633,
+    "width": 1280,
+    "height": 784,
+    "decoded": 1258,
+    "dropped": 0,
+    "callbacks": 1258,
+    "largestFrameGap": 0.037666999999999895,
+    "firstFrame": 0,
+    "lastFrame": 41.893333,
+    "ended": true
+  },
+  "targets": [
+    {
+      "time": 0.56,
+      "label": "masha_contacts · masha: eat"
+    },
+    {
+      "time": 1.44,
+      "label": "masha_contacts · masha: eat"
+    },
+    {
+      "time": 2.28,
+      "label": "masha_contacts · masha: surprised"
+    },
+    {
+      "time": 2.72,
+      "label": "masha_contacts · masha: surprised"
+    },
+    {
+      "time": 3.448,
+      "label": "masha_contacts · masha: clap"
+    },
+    {
+      "time": 3.5,
+      "label": "masha_contacts · masha: clap"
+    },
+    {
+      "time": 4.152,
+      "label": "masha_contacts · masha: clap"
+    },
+    {
+      "time": 4.936,
+      "label": "masha_contacts · masha: sit"
+    },
+    {
+      "time": 5.464,
+      "label": "masha_contacts · masha: sit"
+    },
+    {
+      "time": 8.135,
+      "label": "pancake_morning · Masha: approach, put down pan, clap"
+    },
+    {
+      "time": 11.805,
+      "label": "pancake_morning · Masha: approach, put down pan, clap"
+    },
+    {
+      "time": 12.19,
+      "label": "pancake_morning · Masha: approach, put down pan, clap"
+    },
+    {
+      "time": 12.29,
+      "label": "pancake_morning · Masha: approach, put down pan, clap"
+    },
+    {
+      "time": 13.04,
+      "label": "pancake_morning · Masha: approach, put down pan, clap"
+    },
+    {
+      "time": 14.7,
+      "label": "garden_party · hare: eat"
+    },
+    {
+      "time": 15.58,
+      "label": "garden_party · hare: eat"
+    },
+    {
+      "time": 16.42,
+      "label": "garden_party · rosie: surprised"
+    },
+    {
+      "time": 16.86,
+      "label": "garden_party · rosie: surprised"
+    },
+    {
+      "time": 17.588,
+      "label": "garden_party · lady_bear: clap"
+    },
+    {
+      "time": 17.64,
+      "label": "garden_party · lady_bear: clap"
+    },
+    {
+      "time": 18.292,
+      "label": "garden_party · lady_bear: clap"
+    },
+    {
+      "time": 19.02,
+      "label": "garden_party · squirrel: jump"
+    },
+    {
+      "time": 19.46,
+      "label": "garden_party · squirrel: jump"
+    },
+    {
+      "time": 20.86,
+      "label": "garden_party · rival_bear: dance"
+    },
+    {
+      "time": 22.62,
+      "label": "garden_party · rival_bear: dance"
+    },
+    {
+      "time": 23.79,
+      "label": "fishing_trip · bear: fish"
+    },
+    {
+      "time": 24.972,
+      "label": "fishing_trip · bear: fish"
+    },
+    {
+      "time": 26.69,
+      "label": "fishing_trip · bear: fish"
+    },
+    {
+      "time": 26.79,
+      "label": "fishing_trip · bear: fish"
+    },
+    {
+      "time": 26.908,
+      "label": "fishing_trip · bear: fish"
+    },
+    {
+      "time": 28.09,
+      "label": "fishing_trip · bear: fish"
+    },
+    {
+      "time": 28.7,
+      "label": "cozy_evening · masha: eat"
+    },
+    {
+      "time": 29.58,
+      "label": "cozy_evening · masha: eat"
+    },
+    {
+      "time": 30.42,
+      "label": "cozy_evening · masha: stand_up"
+    },
+    {
+      "time": 30.86,
+      "label": "cozy_evening · masha: stand_up"
+    },
+    {
+      "time": 31.98,
+      "label": "bears_nap · bear: carry"
+    },
+    {
+      "time": 33.3,
+      "label": "bears_nap · bear: carry"
+    },
+    {
+      "time": 34.42,
+      "label": "wolves_reactions · wolf_a: surprised"
+    },
+    {
+      "time": 34.86,
+      "label": "wolves_reactions · wolf_a: surprised"
+    },
+    {
+      "time": 35.588,
+      "label": "wolves_reactions · wolf_b: clap"
+    },
+    {
+      "time": 35.64,
+      "label": "wolves_reactions · wolf_b: clap"
+    },
+    {
+      "time": 36.292,
+      "label": "wolves_reactions · wolf_b: clap"
+    },
+    {
+      "time": 37.39,
+      "label": "hare · actual story: put down flowers, clap"
+    },
+    {
+      "time": 37.468,
+      "label": "hare · actual story: put down flowers, clap"
+    },
+    {
+      "time": 37.49,
+      "label": "hare · actual story: put down flowers, clap"
+    },
+    {
+      "time": 38.24,
+      "label": "hare · actual story: put down flowers, clap"
+    },
+    {
+      "time": 38.612,
+      "label": "hare · actual story: put down flowers, clap"
+    },
+    {
+      "time": 39.99,
+      "label": "squirrel · actual story: put down flowers, clap"
+    },
+    {
+      "time": 40.068,
+      "label": "squirrel · actual story: put down flowers, clap"
+    },
+    {
+      "time": 40.09,
+      "label": "squirrel · actual story: put down flowers, clap"
+    },
+    {
+      "time": 40.84,
+      "label": "squirrel · actual story: put down flowers, clap"
+    },
+    {
+      "time": 41.212,
+      "label": "squirrel · actual story: put down flowers, clap"
+    }
+  ]
+}

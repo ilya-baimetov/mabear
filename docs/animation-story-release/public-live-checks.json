@@ -1,0 +1,15 @@
+{
+  "/api/health": {
+    "status": 200,
+    "body": "{\"ok\":true,\"service\":\"mabear-storybook\",\"edition\":\"codex\"}"
+  },
+  "/": {
+    "status": 302
+  },
+  "/assets/generated-DV8d2FG3.js": {
+    "status": 302
+  },
+  "/api/director": {
+    "status": 401
+  }
+}

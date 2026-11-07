@@ -1,0 +1,309 @@
+{
+  "note": "Node CPU-only microbenchmark on this host. No GPU, UI, or device-level FPS claim. Setup includes disk GLB parse and face construction. Five batches of 60 precomputed frames after 60 warmup frames. Idle benchmark varies blink every frame.",
+  "results": [
+    {
+      "id": "bear",
+      "setupMs": 348.24062499999997,
+      "baselineIdle": {
+        "medianMs": 0.7503166666666667,
+        "maxBatchMs": 0.8075569333333343
+      },
+      "baselineClap": {
+        "medianMs": 0.0926333333333332,
+        "maxBatchMs": 0.09729721666666553
+      },
+      "withContactsIdle": {
+        "medianMs": 0.705786816666667,
+        "maxBatchMs": 0.7157340333333309
+      },
+      "withContactsClap": {
+        "medianMs": 1.860356950000001,
+        "maxBatchMs": 1.9311402833333355
+      },
+      "flowers": {
+        "medianMs": 0.8399159833333328,
+        "maxBatchMs": 0.8455243000000033
+      },
+      "calibration": [
+        {
+          "side": 1,
+          "vertices": 1240,
+          "palmVertices": 765,
+          "length": 0.35078000063346426
+        },
+        {
+          "side": -1,
+          "vertices": 1185,
+          "palmVertices": 716,
+          "length": 0.339109532427241
+        }
+      ]
+    },
+    {
+      "id": "lady_bear",
+      "setupMs": 206.09179200000017,
+      "baselineIdle": {
+        "medianMs": 0.7102104166666702,
+        "maxBatchMs": 0.7199444500000027
+      },
+      "baselineClap": {
+        "medianMs": 0.08953333333333073,
+        "maxBatchMs": 0.0923041666666677
+      },
+      "withContactsIdle": {
+        "medianMs": 0.7081708333333381,
+        "maxBatchMs": 0.7136520833333331
+      },
+      "withContactsClap": {
+        "medianMs": 2.4082263833333326,
+        "maxBatchMs": 2.888436116666662
+      },
+      "flowers": {
+        "medianMs": 0.877968050000004,
+        "maxBatchMs": 0.8867520833333326
+      },
+      "calibration": [
+        {
+          "side": 1,
+          "vertices": 1609,
+          "palmVertices": 855,
+          "length": 0.27858992269205957
+        },
+        {
+          "side": -1,
+          "vertices": 1723,
+          "palmVertices": 984,
+          "length": 0.26008782697716565
+        }
+      ]
+    },
+    {
+      "id": "hare",
+      "setupMs": 139.3021660000004,
+      "baselineIdle": {
+        "medianMs": 0.6903402833333379,
+        "maxBatchMs": 0.6987007000000024
+      },
+      "baselineClap": {
+        "medianMs": 0.08872013333334508,
+        "maxBatchMs": 0.09454513333333428
+      },
+      "withContactsIdle": {
+        "medianMs": 0.7053173500000108,
+        "maxBatchMs": 0.7136201333333247
+      },
+      "withContactsClap": {
+        "medianMs": 1.672855566666658,
+        "maxBatchMs": 1.7089222166666636
+      },
+      "flowers": {
+        "medianMs": 0.7781555500000044,
+        "maxBatchMs": 0.7868479166666627
+      },
+      "calibration": [
+        {
+          "side": 1,
+          "vertices": 1111,
+          "palmVertices": 571,
+          "length": 0.07069626785126072
+        },
+        {
+          "side": -1,
+          "vertices": 1063,
+          "palmVertices": 513,
+          "length": 0.07267033764048857
+        }
+      ]
+    },
+    {
+      "id": "rosie",
+      "setupMs": 84.76258400000006,
+      "baselineIdle": {
+        "medianMs": 0.6729479166666654,
+        "maxBatchMs": 0.6829034666666758
+      },
+      "baselineClap": {
+        "medianMs": 0.08378264999999677,
+        "maxBatchMs": 0.09107223333333726
+      },
+      "withContactsIdle": {
+        "medianMs": 0.6830006833333452,
+        "maxBatchMs": 0.6949708333333243
+      },
+      "withContactsClap": {
+        "medianMs": 2.6513520833333435,
+        "maxBatchMs": 3.532990283333326
+      },
+      "flowers": {
+        "medianMs": 0.8416506833333339,
+        "maxBatchMs": 0.8463222333333306
+      },
+      "calibration": [
+        {
+          "side": 1,
+          "vertices": 2107,
+          "palmVertices": 1078,
+          "length": 0.1090022491843987
+        },
+        {
+          "side": -1,
+          "vertices": 1629,
+          "palmVertices": 956,
+          "length": 0.10312617210185188
+        }
+      ]
+    },
+    {
+      "id": "squirrel",
+      "setupMs": 594.6840420000008,
+      "baselineIdle": {
+        "medianMs": 0.6994784833333445,
+        "maxBatchMs": 0.711012499999985
+      },
+      "baselineClap": {
+        "medianMs": 0.0901520833333052,
+        "maxBatchMs": 0.09430624999998448
+      },
+      "withContactsIdle": {
+        "medianMs": 0.7067333333333409,
+        "maxBatchMs": 0.7238743166666609
+      },
+      "withContactsClap": {
+        "medianMs": 0.6287937499999923,
+        "maxBatchMs": 0.6540944500000175
+      },
+      "flowers": {
+        "medianMs": 0.7208423499999905,
+        "maxBatchMs": 0.739904866666681
+      },
+      "calibration": [
+        {
+          "side": 1,
+          "vertices": 303,
+          "palmVertices": 74,
+          "length": 0.05617292483309903
+        },
+        {
+          "side": -1,
+          "vertices": 233,
+          "palmVertices": 75,
+          "length": 0.03441719108858655
+        }
+      ]
+    },
+    {
+      "id": "rival_bear",
+      "setupMs": 215.23324999999932,
+      "baselineIdle": {
+        "medianMs": 0.7077062500000163,
+        "maxBatchMs": 0.7142756833333199
+      },
+      "baselineClap": {
+        "medianMs": 0.08384929999998955,
+        "maxBatchMs": 0.0863715333333251
+      },
+      "withContactsIdle": {
+        "medianMs": 0.7110138833333318,
+        "maxBatchMs": 0.7256770833333576
+      },
+      "withContactsClap": {
+        "medianMs": 2.6848673666666705,
+        "maxBatchMs": 2.7000110999999984
+      },
+      "flowers": {
+        "medianMs": 0.887843750000017,
+        "maxBatchMs": 0.8943305666666674
+      },
+      "calibration": [
+        {
+          "side": 1,
+          "vertices": 1697,
+          "palmVertices": 1045,
+          "length": 0.4095617408590037
+        },
+        {
+          "side": -1,
+          "vertices": 1736,
+          "palmVertices": 1137,
+          "length": 0.3914694877749516
+        }
+      ]
+    },
+    {
+      "id": "wolf_a",
+      "setupMs": 109.42070799999965,
+      "baselineIdle": {
+        "medianMs": 0.1202687499999835,
+        "maxBatchMs": 0.1256805666666575
+      },
+      "baselineClap": {
+        "medianMs": 0.1196916666666463,
+        "maxBatchMs": 0.12333333333332727
+      },
+      "withContactsIdle": {
+        "medianMs": 0.12966736666667203,
+        "maxBatchMs": 0.13755903333333966
+      },
+      "withContactsClap": {
+        "medianMs": 1.2682506833333416,
+        "maxBatchMs": 1.29845416666667
+      },
+      "flowers": {
+        "medianMs": 0.18026806666666745,
+        "maxBatchMs": 0.18382151666667898
+      },
+      "calibration": [
+        {
+          "side": 1,
+          "vertices": 1232,
+          "palmVertices": 490,
+          "length": 0.16391596145374365
+        },
+        {
+          "side": -1,
+          "vertices": 1220,
+          "palmVertices": 451,
+          "length": 0.15810732963082663
+        }
+      ]
+    },
+    {
+      "id": "wolf_b",
+      "setupMs": 68.81687500000044,
+      "baselineIdle": {
+        "medianMs": 0.12070138333335005,
+        "maxBatchMs": 0.12476319999999154
+      },
+      "baselineClap": {
+        "medianMs": 0.12314859999999801,
+        "maxBatchMs": 0.12616528333334523
+      },
+      "withContactsIdle": {
+        "medianMs": 0.13077083333334183,
+        "maxBatchMs": 0.13252708333335855
+      },
+      "withContactsClap": {
+        "medianMs": 1.2869312499999979,
+        "maxBatchMs": 1.2939868166666808
+      },
+      "flowers": {
+        "medianMs": 0.18253541666666326,
+        "maxBatchMs": 0.1845354166666766
+      },
+      "calibration": [
+        {
+          "side": 1,
+          "vertices": 1248,
+          "palmVertices": 496,
+          "length": 0.155191586848357
+        },
+        {
+          "side": -1,
+          "vertices": 1216,
+          "palmVertices": 460,
+          "length": 0.15358128654729114
+        }
+      ]
+    }
+  ]
+}

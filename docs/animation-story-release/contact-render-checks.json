@@ -1,0 +1,352 @@
+[
+  {
+    "id": "bear",
+    "angle": 0,
+    "contacts": {
+      "mode": "clap",
+      "targetGap": 0.001,
+      "surfaceGap": 0.0010002607587103612,
+      "reachError": 9.891854055717478e-9,
+      "strength": 1
+    },
+    "calibration": [
+      {
+        "side": 1,
+        "vertices": 1240,
+        "palmVertices": 814,
+        "length": 0.3523166154996043
+      },
+      {
+        "side": -1,
+        "vertices": 1185,
+        "palmVertices": 748,
+        "length": 0.33985970242150626
+      }
+    ]
+  },
+  {
+    "id": "bear",
+    "angle": 0.65,
+    "contacts": {
+      "mode": "clap",
+      "targetGap": 0.001,
+      "surfaceGap": 0.0010002607587103612,
+      "reachError": 9.891854055717478e-9,
+      "strength": 1
+    },
+    "calibration": [
+      {
+        "side": 1,
+        "vertices": 1240,
+        "palmVertices": 814,
+        "length": 0.3523166154996043
+      },
+      {
+        "side": -1,
+        "vertices": 1185,
+        "palmVertices": 748,
+        "length": 0.33985970242150626
+      }
+    ]
+  },
+  {
+    "id": "lady_bear",
+    "angle": 0,
+    "contacts": {
+      "mode": "clap",
+      "targetGap": 0.001,
+      "surfaceGap": 0.0010001591379908991,
+      "reachError": 1.4467145532128884e-8,
+      "strength": 1
+    },
+    "calibration": [
+      {
+        "side": 1,
+        "vertices": 1609,
+        "palmVertices": 844,
+        "length": 0.27772653550038373
+      },
+      {
+        "side": -1,
+        "vertices": 1723,
+        "palmVertices": 998,
+        "length": 0.2595629962465542
+      }
+    ]
+  },
+  {
+    "id": "lady_bear",
+    "angle": 0.65,
+    "contacts": {
+      "mode": "clap",
+      "targetGap": 0.001,
+      "surfaceGap": 0.0010001591379908991,
+      "reachError": 1.4467145532128884e-8,
+      "strength": 1
+    },
+    "calibration": [
+      {
+        "side": 1,
+        "vertices": 1609,
+        "palmVertices": 844,
+        "length": 0.27772653550038373
+      },
+      {
+        "side": -1,
+        "vertices": 1723,
+        "palmVertices": 998,
+        "length": 0.2595629962465542
+      }
+    ]
+  },
+  {
+    "id": "hare",
+    "angle": 0,
+    "contacts": {
+      "mode": "clap",
+      "targetGap": 0.001,
+      "surfaceGap": 0.0010013521438540479,
+      "reachError": 1.834311300811533e-9,
+      "strength": 1
+    },
+    "calibration": [
+      {
+        "side": 1,
+        "vertices": 1111,
+        "palmVertices": 584,
+        "length": 0.07078156107820284
+      },
+      {
+        "side": -1,
+        "vertices": 1063,
+        "palmVertices": 518,
+        "length": 0.07228463036754869
+      }
+    ]
+  },
+  {
+    "id": "hare",
+    "angle": 0.65,
+    "contacts": {
+      "mode": "clap",
+      "targetGap": 0.001,
+      "surfaceGap": 0.0010013521438540479,
+      "reachError": 1.834311300811533e-9,
+      "strength": 1
+    },
+    "calibration": [
+      {
+        "side": 1,
+        "vertices": 1111,
+        "palmVertices": 584,
+        "length": 0.07078156107820284
+      },
+      {
+        "side": -1,
+        "vertices": 1063,
+        "palmVertices": 518,
+        "length": 0.07228463036754869
+      }
+    ]
+  },
+  {
+    "id": "rosie",
+    "angle": 0,
+    "contacts": {
+      "mode": "clap",
+      "targetGap": 0.001,
+      "surfaceGap": 0.0010034607026699076,
+      "reachError": 2.2596234739755822e-8,
+      "strength": 1
+    },
+    "calibration": [
+      {
+        "side": 1,
+        "vertices": 2107,
+        "palmVertices": 1089,
+        "length": 0.1091466295434612
+      },
+      {
+        "side": -1,
+        "vertices": 1629,
+        "palmVertices": 960,
+        "length": 0.10317157221513014
+      }
+    ]
+  },
+  {
+    "id": "rosie",
+    "angle": 0.65,
+    "contacts": {
+      "mode": "clap",
+      "targetGap": 0.001,
+      "surfaceGap": 0.0010034607026699076,
+      "reachError": 2.2596234739755822e-8,
+      "strength": 1
+    },
+    "calibration": [
+      {
+        "side": 1,
+        "vertices": 2107,
+        "palmVertices": 1089,
+        "length": 0.1091466295434612
+      },
+      {
+        "side": -1,
+        "vertices": 1629,
+        "palmVertices": 960,
+        "length": 0.10317157221513014
+      }
+    ]
+  },
+  {
+    "id": "rival_bear",
+    "angle": 0,
+    "contacts": {
+      "mode": "clap",
+      "targetGap": 0.001,
+      "surfaceGap": 0.0010000158900436355,
+      "reachError": 9.934163173867764e-8,
+      "strength": 1
+    },
+    "calibration": [
+      {
+        "side": 1,
+        "vertices": 1779,
+        "palmVertices": 1157,
+        "length": 0.410801828654194
+      },
+      {
+        "side": -1,
+        "vertices": 1774,
+        "palmVertices": 1192,
+        "length": 0.3924379010774271
+      }
+    ]
+  },
+  {
+    "id": "rival_bear",
+    "angle": 0.65,
+    "contacts": {
+      "mode": "clap",
+      "targetGap": 0.001,
+      "surfaceGap": 0.0010000158900436355,
+      "reachError": 9.934163173867764e-8,
+      "strength": 1
+    },
+    "calibration": [
+      {
+        "side": 1,
+        "vertices": 1779,
+        "palmVertices": 1157,
+        "length": 0.410801828654194
+      },
+      {
+        "side": -1,
+        "vertices": 1774,
+        "palmVertices": 1192,
+        "length": 0.3924379010774271
+      }
+    ]
+  },
+  {
+    "id": "wolf_a",
+    "angle": 0,
+    "contacts": {
+      "mode": "clap",
+      "targetGap": 0.001,
+      "surfaceGap": 0.00100000000000015,
+      "reachError": 4.445768331151997e-16,
+      "strength": 1
+    },
+    "calibration": [
+      {
+        "side": 1,
+        "vertices": 1230,
+        "palmVertices": 490,
+        "length": 0.1638771723320428
+      },
+      {
+        "side": -1,
+        "vertices": 1212,
+        "palmVertices": 450,
+        "length": 0.15804065242941318
+      }
+    ]
+  },
+  {
+    "id": "wolf_a",
+    "angle": 0.65,
+    "contacts": {
+      "mode": "clap",
+      "targetGap": 0.001,
+      "surfaceGap": 0.00100000000000015,
+      "reachError": 4.445768331151997e-16,
+      "strength": 1
+    },
+    "calibration": [
+      {
+        "side": 1,
+        "vertices": 1230,
+        "palmVertices": 490,
+        "length": 0.1638771723320428
+      },
+      {
+        "side": -1,
+        "vertices": 1212,
+        "palmVertices": 450,
+        "length": 0.15804065242941318
+      }
+    ]
+  },
+  {
+    "id": "wolf_b",
+    "angle": 0,
+    "contacts": {
+      "mode": "clap",
+      "targetGap": 0.001,
+      "surfaceGap": 0.0010000000000003981,
+      "reachError": 5.282681600680761e-16,
+      "strength": 1
+    },
+    "calibration": [
+      {
+        "side": 1,
+        "vertices": 1246,
+        "palmVertices": 498,
+        "length": 0.15501923708140572
+      },
+      {
+        "side": -1,
+        "vertices": 1204,
+        "palmVertices": 462,
+        "length": 0.15367540669500798
+      }
+    ]
+  },
+  {
+    "id": "wolf_b",
+    "angle": 0.65,
+    "contacts": {
+      "mode": "clap",
+      "targetGap": 0.001,
+      "surfaceGap": 0.0010000000000003981,
+      "reachError": 5.282681600680761e-16,
+      "strength": 1
+    },
+    "calibration": [
+      {
+        "side": 1,
+        "vertices": 1246,
+        "palmVertices": 498,
+        "length": 0.15501923708140572
+      },
+      {
+        "side": -1,
+        "vertices": 1204,
+        "palmVertices": 462,
+        "length": 0.15367540669500798
+      }
+    ]
+  }
+]

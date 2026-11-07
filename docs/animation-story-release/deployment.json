@@ -1,0 +1,55 @@
+{
+  "url": "https://mabear-storybook.ilya-baimetov.workers.dev",
+  "worker": "mabear-storybook",
+  "version": "e6df8d1e-04ea-4da0-bf80-c8719e111518",
+  "runtimeCommit": "7c80d37cf03695ff861751ff19b4e02b7c3772a5",
+  "verifiedAtUtc": "2026-11-07T01:46:58.542512+00:00",
+  "build": {
+    "entry": "studio-B9iKQ6tN.js",
+    "generatedRig": "generated-DV8d2FG3.js",
+    "sourceContacts": "sourceContacts-BLxc0Y1b.js",
+    "indexSha256": "28de93da973bdbcb9954dcca9b38039781914e9314937e4e2df1c1232a90e9d1"
+  },
+  "checks": {
+    "unit": {
+      "passed": 711,
+      "files": 56
+    },
+    "browserFull": {
+      "passed": 24
+    },
+    "browserFinalFrozenRuntime": {
+      "passed": 3
+    },
+    "typecheck": "main and Worker passed",
+    "productionBuild": "passed",
+    "comparisonCompatibilityBuild": "passed",
+    "adversarialReview": "resolved R1-R3 and recommended deployment"
+  },
+  "live": {
+    "publicChecks": "public-live-checks.json",
+    "authenticatedChrome": {
+      "status": "passed",
+      "observedEntryScript": "https://mabear-storybook.ilya-baimetov.workers.dev/assets/studio-B9iKQ6tN.js",
+      "existingStoryPreserved": true,
+      "visibleLocations": [
+        "yard",
+        "house"
+      ],
+      "playbackAdvancedToSeconds": 18.30069923400879,
+      "seekedToSeconds": 1,
+      "resumedAndPausedAtSeconds": 5.323299884796143,
+      "initialConsoleWarningsAndErrors": []
+    }
+  },
+  "videos": {
+    "actualStories": "proof/final/actual-story-animation.mp4",
+    "faceDiagnostics": "proof/final/diagnostic-story-faces.mp4"
+  },
+  "limits": [
+    "Animal muzzle interiors and source mesh coarseness remain.",
+    "Known-set choreography is not general collision simulation.",
+    "Existing carry/hug contact and some camera occlusion remain outside this pass.",
+    "Proof videos are silent; the facial diagnostic changes camera/background."
+  ]
+}

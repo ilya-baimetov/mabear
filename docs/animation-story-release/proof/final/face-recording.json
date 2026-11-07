@@ -1,0 +1,107 @@
+{
+  "mime": "video/mp4;codecs=avc1.42e01e",
+  "frames": 1014,
+  "maxGapMs": 33.399999999999636,
+  "sections": [
+    {
+      "story": "masha_contacts",
+      "actor": "masha",
+      "verb": "surprised",
+      "start": 3,
+      "dur": 1,
+      "emotion": "surprised",
+      "time": 2.85,
+      "duration": 1.5,
+      "label": "masha · surprised · compiled story input"
+    },
+    {
+      "story": "garden_party",
+      "actor": "bear",
+      "verb": "laugh",
+      "start": 22.448999999999998,
+      "dur": 1.6,
+      "emotion": "happy",
+      "time": 22.299,
+      "duration": 2.1,
+      "label": "bear · laugh · compiled story input"
+    },
+    {
+      "story": "garden_party",
+      "actor": "lady_bear",
+      "verb": "clap",
+      "start": 22.448999999999998,
+      "dur": 1.2,
+      "emotion": "happy",
+      "time": 22.299,
+      "duration": 1.7,
+      "label": "lady_bear · clap · compiled story input"
+    },
+    {
+      "story": "garden_party",
+      "actor": "hare",
+      "verb": "eat",
+      "start": 5.792,
+      "dur": 2,
+      "emotion": "happy",
+      "item": "carrot",
+      "time": 5.6419999999999995,
+      "duration": 2.5,
+      "label": "hare · eat · compiled story input"
+    },
+    {
+      "story": "garden_party",
+      "actor": "rosie",
+      "verb": "surprised",
+      "start": 13.008,
+      "dur": 1,
+      "emotion": "happy",
+      "time": 12.857999999999999,
+      "duration": 1.5,
+      "label": "rosie · surprised · compiled story input"
+    },
+    {
+      "story": "garden_party",
+      "actor": "squirrel",
+      "verb": "jump",
+      "start": 15.722999999999999,
+      "dur": 1,
+      "emotion": "happy",
+      "time": 15.572999999999999,
+      "duration": 1.5,
+      "label": "squirrel · jump · compiled story input"
+    },
+    {
+      "story": "garden_party",
+      "actor": "rival_bear",
+      "verb": "dance",
+      "start": 22.448999999999998,
+      "dur": 4,
+      "emotion": "happy",
+      "time": 22.299,
+      "duration": 2.8,
+      "label": "rival_bear · dance · compiled story input"
+    },
+    {
+      "story": "wolves_reactions",
+      "actor": "wolf_a",
+      "verb": "surprised",
+      "start": 1.003,
+      "dur": 1,
+      "emotion": "surprised",
+      "time": 0.8529999999999999,
+      "duration": 1.5,
+      "label": "wolf_a · surprised · compiled story input"
+    },
+    {
+      "story": "wolves_reactions",
+      "actor": "wolf_b",
+      "verb": "laugh",
+      "start": 2.003,
+      "dur": 1.6,
+      "emotion": "happy",
+      "time": 1.8530000000000002,
+      "duration": 2.1,
+      "label": "wolf_b · laugh · compiled story input"
+    }
+  ]
+}

@@ -1,0 +1,841 @@
+[
+  {
+    "story": "fishing_trip",
+    "time": 19.485,
+    "camera": {
+      "pos": [
+        -9.103133468047636,
+        1.8239999999999998,
+        11.142872244404604
+      ],
+      "look": [
+        -5.5,
+        1.56,
+        9.5
+      ],
+      "fov": 36,
+      "location": "pond"
+    },
+    "closeup": "bear",
+    "actors": {
+      "masha": {
+        "verb": "idle",
+        "holding": null,
+        "posture": "stand",
+        "pos": [
+          -5.278,
+          0,
+          7.278
+        ],
+        "hipsOffset": [
+          -0.0004078980750000012,
+          0.00572378626929853,
+          -0.0008785497000000049
+        ],
+        "groundWeight": 1,
+        "face": {
+          "emotion": "neutral",
+          "lidClose": 0,
+          "viseme": "rest",
+          "visemeWeight": 0,
+          "lookAt": [
+            -5.5,
+            1.333,
+            9.5
+          ],
+          "browRaise": 0
+        },
+        "finite": true,
+        "performance": true,
+        "facialPerformance": null,
+        "contacts": {
+          "mode": "free"
+        },
+        "generated": {
+          "mapping": {
+            "Hips": "Hips",
+            "Spine": "Spine02",
+            "Head": "Head",
+            "LeftShoulder": "LeftShoulder",
+            "LeftArm": "LeftArm",
+            "LeftForeArm": "LeftForeArm",
+            "LeftHand": "LeftHand",
+            "RightShoulder": "RightShoulder",
+            "RightArm": "RightArm",
+            "RightForeArm": "RightForeArm",
+            "RightHand": "RightHand",
+            "LeftUpLeg": "LeftUpLeg",
+            "LeftLeg": "LeftLeg",
+            "LeftFoot": "LeftFoot",
+            "LeftToeBase": "LeftToeBase",
+            "RightUpLeg": "RightUpLeg",
+            "RightLeg": "RightLeg",
+            "RightFoot": "RightFoot",
+            "RightToeBase": "RightToeBase",
+            "Spine1": "Spine01",
+            "Spine2": "Spine",
+            "Neck": "neck"
+          },
+          "dressVertices": 6747,
+          "source": "Meshy 7.1",
+          "facialRig": true,
+          "measured": {
+            "height": 1,
+            "hipHeight": 0.41835682263661705,
+            "leg": {
+              "x": 0.03852491126089056,
+              "y": -0.037290382927239185,
+              "thigh": 0.15734719526757823,
+              "shin": 0.17254787662389695,
+              "ankle": 0.06392445830106896,
+              "toe": 0.065
+            }
+          },
+          "calibrationError": 1.7736338292495546e-7
+        }
+      },
+      "bear": {
+        "verb": "fish",
+        "holding": "fishing_rod",
+        "posture": "sit",
+        "pos": [
+          -5.5,
+          0,
+          9.5
+        ],
+        "hipsOffset": [
+          0,
+          -0.6408213,
+          -0.20447375
+        ],
+        "groundWeight": 1,
+        "face": {
+          "emotion": "curious",
+          "lidClose": 0,
+          "viseme": "rest",
+          "visemeWeight": 0,
+          "lookAt": null,
+          "browRaise": 0
+        },
+        "finite": true,
+        "performance": false,
+        "facialPerformance": {
+          "type": "source-preserving animal face",
+          "activeVertices": 232,
+          "lidClose": 0,
+          "browL": 0.5,
+          "browR": 0.1,
+          "jaw": 0.13
+        },
+        "contacts": {
+          "mode": "prop",
+          "primaryReachError": 0.000020038402362632735,
+          "prop": "fishing_rod",
+          "contactPoint": [
+            -5.656922893826527,
+            0.8592047578388594,
+            9.411083557967642
+          ],
+          "gripPoint": [
+            -5.65387700314146,
+            0.8591965959538156,
+            9.426281336861884
+          ],
+          "radius": 0.015,
+          "secondaryReachError": 0.00001940184103692085,
+          "secondaryContact": [
+            -5.819999413886412,
+            0.9959431536615467,
+            9.47436340505326
+          ]
+        },
+        "generated": {
+          "mapping": {
+            "Hips": "Hips",
+            "Spine": "Spine02",
+            "Head": "Head",
+            "LeftShoulder": "LeftShoulder",
+            "LeftArm": "LeftArm",
+            "LeftForeArm": "LeftForeArm",
+            "LeftHand": "LeftHand",
+            "RightShoulder": "RightShoulder",
+            "RightArm": "RightArm",
+            "RightForeArm": "RightForeArm",
+            "RightHand": "RightHand",
+            "LeftUpLeg": "LeftUpLeg",
+            "LeftLeg": "LeftLeg",
+            "LeftFoot": "LeftFoot",
+            "LeftToeBase": "LeftToeBase",
+            "RightUpLeg": "RightUpLeg",
+            "RightLeg": "RightLeg",
+            "RightFoot": "RightFoot",
+            "RightToeBase": "RightToeBase",
+            "Spine1": "Spine01",
+            "Spine2": "Spine",
+            "Neck": "neck"
+          },
+          "dressVertices": 0,
+          "source": "Meshy 7.1",
+          "facialRig": false,
+          "measured": {
+            "height": 2.4,
+            "hipHeight": 0.8178952899977556,
+            "leg": {
+              "x": 0.1720303391809529,
+              "y": -0.07058219154537171,
+              "thigh": 0.337916466288418,
+              "shin": 0.2375745922857525,
+              "ankle": 0.20811729521430294,
+              "toe": 0.156
+            }
+          },
+          "calibrationError": 2.899977555870237e-7
+        }
+      }
+    },
+    "stats": {
+      "fps": 0,
+      "drawCalls": 168,
+      "triangles": 2869989
+    }
+  },
+  {
+    "story": "cozy_evening",
+    "time": 21.372,
+    "camera": {
+      "pos": [
+        -7.423837086166939,
+        0.76,
+        -4.193450448241132
+      ],
+      "look": [
+        -7.8,
+        0.65,
+        -5.8
+      ],
+      "fov": 36,
+      "location": "house"
+    },
+    "closeup": "masha",
+    "actors": {
+      "masha": {
+        "verb": "eat",
+        "holding": "pancakes",
+        "posture": "sit",
+        "pos": [
+          -7.8,
+          0,
+          -5.8
+        ],
+        "hipsOffset": [
+          0,
+          0.16164299999999998,
+          0.4
+        ],
+        "groundWeight": 1,
+        "face": {
+          "emotion": "happy",
+          "lidClose": 0.0350933335321526,
+          "viseme": "open_small",
+          "visemeWeight": 1,
+          "lookAt": [
+            -6.837,
+            2.05,
+            -6.071
+          ],
+          "browRaise": 0
+        },
+        "finite": true,
+        "performance": true,
+        "facialPerformance": null,
+        "contacts": {
+          "mode": "prop",
+          "prop": "pancakes",
+          "contactPoint": [
+            -7.881177604326303,
+            0.7119364277204796,
+            -5.223324517863334
+          ],
+          "gripPoint": [
+            -7.881177604326303,
+            0.7124364277204795,
+            -5.223324517863334
+          ],
+          "radius": 0
+        },
+        "generated": {
+          "mapping": {
+            "Hips": "Hips",
+            "Spine": "Spine02",
+            "Head": "Head",
+            "LeftShoulder": "LeftShoulder",
+            "LeftArm": "LeftArm",
+            "LeftForeArm": "LeftForeArm",
+            "LeftHand": "LeftHand",
+            "RightShoulder": "RightShoulder",
+            "RightArm": "RightArm",
+            "RightForeArm": "RightForeArm",
+            "RightHand": "RightHand",
+            "LeftUpLeg": "LeftUpLeg",
+            "LeftLeg": "LeftLeg",
+            "LeftFoot": "LeftFoot",
+            "LeftToeBase": "LeftToeBase",
+            "RightUpLeg": "RightUpLeg",
+            "RightLeg": "RightLeg",
+            "RightFoot": "RightFoot",
+            "RightToeBase": "RightToeBase",
+            "Spine1": "Spine01",
+            "Spine2": "Spine",
+            "Neck": "neck"
+          },
+          "dressVertices": 6747,
+          "source": "Meshy 7.1",
+          "facialRig": true,
+          "measured": {
+            "height": 1,
+            "hipHeight": 0.41835682263661705,
+            "leg": {
+              "x": 0.03852491126089056,
+              "y": -0.037290382927239185,
+              "thigh": 0.15734719526757823,
+              "shin": 0.17254787662389695,
+              "ankle": 0.06392445830106896,
+              "toe": 0.065
+            }
+          },
+          "calibrationError": 1.7736338292495546e-7
+        }
+      },
+      "bear": {
+        "verb": "surprised",
+        "holding": null,
+        "posture": "stand",
+        "pos": [
+          -6.837,
+          0,
+          -6.071
+        ],
+        "hipsOffset": [
+          0,
+          -0.011376678035369838,
+          -0.029935222715999996
+        ],
+        "groundWeight": 1,
+        "face": {
+          "emotion": "surprised",
+          "lidClose": 0,
+          "viseme": "o",
+          "visemeWeight": 1,
+          "lookAt": [
+            -7.8,
+            1.023,
+            -5.8
+          ],
+          "browRaise": 1
+        },
+        "finite": true,
+        "performance": false,
+        "facialPerformance": {
+          "type": "source-preserving animal face",
+          "activeVertices": 232,
+          "lidClose": 0,
+          "browL": 1.1,
+          "browR": 1.1,
+          "jaw": 0.39
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "generated": {
+          "mapping": {
+            "Hips": "Hips",
+            "Spine": "Spine02",
+            "Head": "Head",
+            "LeftShoulder": "LeftShoulder",
+            "LeftArm": "LeftArm",
+            "LeftForeArm": "LeftForeArm",
+            "LeftHand": "LeftHand",
+            "RightShoulder": "RightShoulder",
+            "RightArm": "RightArm",
+            "RightForeArm": "RightForeArm",
+            "RightHand": "RightHand",
+            "LeftUpLeg": "LeftUpLeg",
+            "LeftLeg": "LeftLeg",
+            "LeftFoot": "LeftFoot",
+            "LeftToeBase": "LeftToeBase",
+            "RightUpLeg": "RightUpLeg",
+            "RightLeg": "RightLeg",
+            "RightFoot": "RightFoot",
+            "RightToeBase": "RightToeBase",
+            "Spine1": "Spine01",
+            "Spine2": "Spine",
+            "Neck": "neck"
+          },
+          "dressVertices": 0,
+          "source": "Meshy 7.1",
+          "facialRig": false,
+          "measured": {
+            "height": 2.4,
+            "hipHeight": 0.8178952899977556,
+            "leg": {
+              "x": 0.1720303391809529,
+              "y": -0.07058219154537171,
+              "thigh": 0.337916466288418,
+              "shin": 0.2375745922857525,
+              "ankle": 0.20811729521430294,
+              "toe": 0.156
+            }
+          },
+          "calibrationError": 2.899977555870237e-7
+        }
+      }
+    },
+    "stats": {
+      "fps": 0,
+      "drawCalls": 217,
+      "triangles": 1432894
+    }
+  },
+  {
+    "story": "garden_party",
+    "time": 6.792,
+    "camera": {
+      "pos": [
+        4.679705290920741,
+        0.646,
+        -6.365436761382904
+      ],
+      "look": [
+        5,
+        0.5525,
+        -5
+      ],
+      "fov": 36,
+      "location": "yard"
+    },
+    "closeup": "hare",
+    "actors": {
+      "masha": {
+        "verb": "idle",
+        "holding": null,
+        "posture": "stand",
+        "pos": [
+          0.25,
+          0,
+          0.5
+        ],
+        "hipsOffset": [
+          -0.00016734279999999999,
+          0.00720218369101014,
+          -0.00020917849999999935
+        ],
+        "groundWeight": 1,
+        "face": {
+          "emotion": "neutral",
+          "lidClose": 0,
+          "viseme": "rest",
+          "visemeWeight": 0,
+          "lookAt": [
+            5,
+            0.58,
+            -5
+          ],
+          "browRaise": 0
+        },
+        "finite": true,
+        "performance": true,
+        "facialPerformance": null,
+        "contacts": {
+          "mode": "free"
+        },
+        "generated": {
+          "mapping": {
+            "Hips": "Hips",
+            "Spine": "Spine02",
+            "Head": "Head",
+            "LeftShoulder": "LeftShoulder",
+            "LeftArm": "LeftArm",
+            "LeftForeArm": "LeftForeArm",
+            "LeftHand": "LeftHand",
+            "RightShoulder": "RightShoulder",
+            "RightArm": "RightArm",
+            "RightForeArm": "RightForeArm",
+            "RightHand": "RightHand",
+            "LeftUpLeg": "LeftUpLeg",
+            "LeftLeg": "LeftLeg",
+            "LeftFoot": "LeftFoot",
+            "LeftToeBase": "LeftToeBase",
+            "RightUpLeg": "RightUpLeg",
+            "RightLeg": "RightLeg",
+            "RightFoot": "RightFoot",
+            "RightToeBase": "RightToeBase",
+            "Spine1": "Spine01",
+            "Spine2": "Spine",
+            "Neck": "neck"
+          },
+          "dressVertices": 6747,
+          "source": "Meshy 7.1",
+          "facialRig": true,
+          "measured": {
+            "height": 1,
+            "hipHeight": 0.41835682263661705,
+            "leg": {
+              "x": 0.03852491126089056,
+              "y": -0.037290382927239185,
+              "thigh": 0.15734719526757823,
+              "shin": 0.17254787662389695,
+              "ankle": 0.06392445830106896,
+              "toe": 0.065
+            }
+          },
+          "calibrationError": 1.7736338292495546e-7
+        }
+      },
+      "bear": {
+        "verb": "idle",
+        "holding": null,
+        "posture": "stand",
+        "pos": [
+          -1.65,
+          0,
+          -0.25
+        ],
+        "hipsOffset": [
+          0.000007197475999999499,
+          -0.005650663285132683,
+          0.0004835395240000005
+        ],
+        "groundWeight": 1,
+        "face": {
+          "emotion": "neutral",
+          "lidClose": 0,
+          "viseme": "rest",
+          "visemeWeight": 0,
+          "lookAt": [
+            5,
+            0.58,
+            -5
+          ],
+          "browRaise": 0
+        },
+        "finite": true,
+        "performance": false,
+        "facialPerformance": {
+          "type": "source-preserving animal face",
+          "activeVertices": 232,
+          "lidClose": 0,
+          "browL": 0,
+          "browR": 0,
+          "jaw": 0
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "generated": {
+          "mapping": {
+            "Hips": "Hips",
+            "Spine": "Spine02",
+            "Head": "Head",
+            "LeftShoulder": "LeftShoulder",
+            "LeftArm": "LeftArm",
+            "LeftForeArm": "LeftForeArm",
+            "LeftHand": "LeftHand",
+            "RightShoulder": "RightShoulder",
+            "RightArm": "RightArm",
+            "RightForeArm": "RightForeArm",
+            "RightHand": "RightHand",
+            "LeftUpLeg": "LeftUpLeg",
+            "LeftLeg": "LeftLeg",
+            "LeftFoot": "LeftFoot",
+            "LeftToeBase": "LeftToeBase",
+            "RightUpLeg": "RightUpLeg",
+            "RightLeg": "RightLeg",
+            "RightFoot": "RightFoot",
+            "RightToeBase": "RightToeBase",
+            "Spine1": "Spine01",
+            "Spine2": "Spine",
+            "Neck": "neck"
+          },
+          "dressVertices": 0,
+          "source": "Meshy 7.1",
+          "facialRig": false,
+          "measured": {
+            "height": 2.4,
+            "hipHeight": 0.8178952899977556,
+            "leg": {
+              "x": 0.1720303391809529,
+              "y": -0.07058219154537171,
+              "thigh": 0.337916466288418,
+              "shin": 0.2375745922857525,
+              "ankle": 0.20811729521430294,
+              "toe": 0.156
+            }
+          },
+          "calibrationError": 2.899977555870237e-7
+        }
+      },
+      "lady_bear": {
+        "verb": "idle",
+        "holding": null,
+        "posture": "stand",
+        "pos": [
+          -4.4,
+          0,
+          0
+        ],
+        "hipsOffset": [
+          0.000006547419999999544,
+          0.020670100682360328,
+          0.0004398675800000005
+        ],
+        "groundWeight": 1,
+        "face": {
+          "emotion": "neutral",
+          "lidClose": 0,
+          "viseme": "rest",
+          "visemeWeight": 0,
+          "lookAt": [
+            5,
+            0.58,
+            -5
+          ],
+          "browRaise": 0
+        },
+        "finite": true,
+        "performance": false,
+        "facialPerformance": {
+          "type": "source-preserving animal face",
+          "activeVertices": 465,
+          "lidClose": 0,
+          "browL": 0,
+          "browR": 0,
+          "jaw": 0
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "generated": {
+          "mapping": {
+            "Hips": "Hips",
+            "Spine": "Spine02",
+            "Head": "Head",
+            "LeftShoulder": "LeftShoulder",
+            "LeftArm": "LeftArm",
+            "LeftForeArm": "LeftForeArm",
+            "LeftHand": "LeftHand",
+            "RightShoulder": "RightShoulder",
+            "RightArm": "RightArm",
+            "RightForeArm": "RightForeArm",
+            "RightHand": "RightHand",
+            "LeftUpLeg": "LeftUpLeg",
+            "LeftLeg": "LeftLeg",
+            "LeftFoot": "LeftFoot",
+            "LeftToeBase": "LeftToeBase",
+            "RightUpLeg": "RightUpLeg",
+            "RightLeg": "RightLeg",
+            "RightFoot": "RightFoot",
+            "RightToeBase": "RightToeBase",
+            "Spine1": "Spine01",
+            "Spine2": "Spine",
+            "Neck": "neck"
+          },
+          "dressVertices": 0,
+          "source": "Meshy 7.1",
+          "facialRig": false,
+          "measured": {
+            "height": 2.15,
+            "hipHeight": 0.7440247730804364,
+            "leg": {
+              "x": 0.12922529503760594,
+              "y": -0.06706169938115092,
+              "thigh": 0.278701500365961,
+              "shin": 0.26312430262473185,
+              "ankle": 0.15997380313359516,
+              "toe": 0.13974999999999999
+            }
+          },
+          "calibrationError": 2.269195636950272e-7
+        }
+      },
+      "hare": {
+        "verb": "eat",
+        "holding": "carrot",
+        "posture": "stand",
+        "pos": [
+          5,
+          0,
+          -5
+        ],
+        "hipsOffset": [
+          -0.0001065208,
+          0.0019402303455705078,
+          -0.0001331509999999996
+        ],
+        "groundWeight": 1,
+        "face": {
+          "emotion": "happy",
+          "lidClose": 0.035093333532153194,
+          "viseme": "open_small",
+          "visemeWeight": 0.2472710911450549,
+          "lookAt": null,
+          "browRaise": 0
+        },
+        "finite": true,
+        "performance": false,
+        "facialPerformance": {
+          "type": "source-preserving animal face",
+          "activeVertices": 2696,
+          "lidClose": 0.12224166659691399,
+          "browL": 0.25,
+          "browR": 0.25,
+          "jaw": 0.3057128548906857
+        },
+        "contacts": {
+          "mode": "prop",
+          "prop": "carrot",
+          "contactPoint": [
+            5.050708958311024,
+            0.3383100711858365,
+            -5.160489227132558
+          ],
+          "gripPoint": [
+            5.050694497513861,
+            0.3383100711858365,
+            -5.195989224187281
+          ],
+          "radius": 0.035
+        },
+        "generated": {
+          "mapping": {
+            "Hips": "Hips",
+            "Spine": "Spine02",
+            "Head": "Head",
+            "LeftShoulder": "LeftShoulder",
+            "LeftArm": "LeftArm",
+            "LeftForeArm": "LeftForeArm",
+            "LeftHand": "LeftHand",
+            "RightShoulder": "RightShoulder",
+            "RightArm": "RightArm",
+            "RightForeArm": "RightForeArm",
+            "RightHand": "RightHand",
+            "LeftUpLeg": "LeftUpLeg",
+            "LeftLeg": "LeftLeg",
+            "LeftFoot": "LeftFoot",
+            "LeftToeBase": "LeftToeBase",
+            "RightUpLeg": "RightUpLeg",
+            "RightLeg": "RightLeg",
+            "RightFoot": "RightFoot",
+            "RightToeBase": "RightToeBase",
+            "Spine1": "Spine01",
+            "Spine2": "Spine",
+            "Neck": "neck"
+          },
+          "dressVertices": 0,
+          "source": "Meshy 7.1",
+          "facialRig": false,
+          "measured": {
+            "height": 0.85,
+            "hipHeight": 0.2663022244163854,
+            "leg": {
+              "x": 0.04336232755066524,
+              "y": -0.02558036178509221,
+              "thigh": 0.10080870066465536,
+              "shin": 0.09971546858552748,
+              "ankle": 0.04612970282508222,
+              "toe": 0.05525
+            }
+          },
+          "calibrationError": 2.2441638541925713e-7
+        }
+      },
+      "rosie": {
+        "verb": "idle",
+        "holding": null,
+        "posture": "stand",
+        "pos": [
+          4,
+          0,
+          -1.1
+        ],
+        "hipsOffset": [
+          0.0000026215111999998177,
+          0.024934121484035163,
+          0.0001761178888000002
+        ],
+        "groundWeight": 1,
+        "face": {
+          "emotion": "neutral",
+          "lidClose": 0,
+          "viseme": "rest",
+          "visemeWeight": 0,
+          "lookAt": [
+            5,
+            0.58,
+            -5
+          ],
+          "browRaise": 0
+        },
+        "finite": true,
+        "performance": false,
+        "facialPerformance": {
+          "type": "source-preserving animal face",
+          "activeVertices": 1582,
+          "lidClose": 0,
+          "browL": 0,
+          "browR": 0,
+          "jaw": 0
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "generated": {
+          "mapping": {
+            "Hips": "Hips",
+            "Spine": "Spine02",
+            "Head": "Head",
+            "LeftShoulder": "LeftShoulder",
+            "LeftArm": "LeftArm",
+            "LeftForeArm": "LeftForeArm",
+            "LeftHand": "LeftHand",
+            "RightShoulder": "RightShoulder",
+            "RightArm": "RightArm",
+            "RightForeArm": "RightForeArm",
+            "RightHand": "RightHand",
+            "LeftUpLeg": "LeftUpLeg",
+            "LeftLeg": "LeftLeg",
+            "LeftFoot": "LeftFoot",
+            "LeftToeBase": "LeftToeBase",
+            "RightUpLeg": "RightUpLeg",
+            "RightLeg": "RightLeg",
+            "RightFoot": "RightFoot",
+            "RightToeBase": "RightToeBase",
+            "Spine1": "Spine01",
+            "Spine2": "Spine",
+            "Neck": "neck"
+          },
+          "dressVertices": 0,
+          "source": "Meshy 7.1",
+          "facialRig": false,
+          "measured": {
+            "height": 1.05,
+            "hipHeight": 0.2978994331905926,
+            "leg": {
+              "x": 0.07009934289046946,
+              "y": -0.030206944290500914,
+              "thigh": 0.13213358721687835,
+              "shin": 0.10221392161864158,
+              "ankle": 0.05887820031520567,
+              "toe": 0.06825
+            }
+          },
+          "calibrationError": 4.33190592563637e-7
+        }
+      }
+    },
+    "stats": {
+      "fps": 0,
+      "drawCalls": 157,
+      "triangles": 2614644
+    }
+  }
+]

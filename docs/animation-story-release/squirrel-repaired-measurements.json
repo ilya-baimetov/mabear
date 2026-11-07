@@ -1,0 +1,153 @@
+{
+  "height": 0.65,
+  "bones": {
+    "Head": [
+      0.03165097282073598,
+      0.36765790119289493,
+      0.00041980672948814177
+    ],
+    "Neck": [
+      0.028493777162149885,
+      0.35057107192451176,
+      -0.012493343695570324
+    ],
+    "LeftArm": [
+      0.07040262620056663,
+      0.3332839014503259,
+      -0.012014697525519933
+    ],
+    "LeftForeArm": [
+      0.11477876517958213,
+      0.26894869962951407,
+      -0.0037114672177831643
+    ],
+    "LeftHand": [
+      0.14105364904937076,
+      0.21910258083647438,
+      0.00922290335489821
+    ],
+    "RightArm": [
+      -0.014514243698144979,
+      0.3332839014503258,
+      -0.01201469752551991
+    ],
+    "RightForeArm": [
+      -0.07690978456560917,
+      0.2783100435420505,
+      -0.011216493511089068
+    ],
+    "RightHand": [
+      -0.12655960962618878,
+      0.23784149422460865,
+      -0.009198193789842976
+    ]
+  },
+  "regions": {
+    "Head": {
+      "min": [
+        -0.04461146935268387,
+        0.35734985310338147,
+        -0.07868889273361775
+      ],
+      "max": [
+        0.14665118866634125,
+        0.6499999999999997,
+        0.09093858087679063
+      ],
+      "count": 5114
+    },
+    "LeftHand": {
+      "min": [
+        0.1360744914882165,
+        0.17302110178113592,
+        -0.02216991635583325
+      ],
+      "max": [
+        0.1770655236320896,
+        0.21958046842361578,
+        0.03261286578650094
+      ],
+      "count": 303
+    },
+    "RightHand": {
+      "min": [
+        -0.15207172760273588,
+        0.21404007952436968,
+        -0.041329971238291255
+      ],
+      "max": [
+        -0.11341815119543094,
+        0.24841291129346382,
+        0.017413169809700535
+      ],
+      "count": 239
+    }
+  },
+  "generated": {
+    "mapping": {
+      "Hips": "Hips",
+      "Spine": "Spine",
+      "Spine1": "Spine1",
+      "Spine2": "Spine2",
+      "Neck": "Neck",
+      "Head": "Head",
+      "LeftShoulder": "LeftShoulder",
+      "LeftArm": "LeftArm",
+      "LeftForeArm": "LeftForeArm",
+      "LeftHand": "LeftHand",
+      "RightShoulder": "RightShoulder",
+      "RightArm": "RightArm",
+      "RightForeArm": "RightForeArm",
+      "RightHand": "RightHand",
+      "LeftUpLeg": "LeftUpLeg",
+      "LeftLeg": "LeftLeg",
+      "LeftFoot": "LeftFoot",
+      "LeftToeBase": "LeftToeBase",
+      "RightUpLeg": "RightUpLeg",
+      "RightLeg": "RightLeg",
+      "RightFoot": "RightFoot",
+      "RightToeBase": "RightToeBase"
+    },
+    "dressVertices": 0,
+    "source": "Meshy 7.1",
+    "facialRig": false,
+    "measured": {
+      "height": 0.65,
+      "hipHeight": 0.18206050148722436,
+      "leg": {
+        "x": 0.016546043914441887,
+        "y": -0.01283930779444642,
+        "thigh": 0.07616997239971866,
+        "shin": 0.06580500074961336,
+        "ankle": 0.03253256677606142,
+        "toe": 0.04225
+      }
+    },
+    "calibrationError": 4.985127756429453e-7
+  },
+  "repair": {
+    "revision": 1,
+    "totalVertices": 93918,
+    "dominantVertices": {
+      "RightHand": 277,
+      "RightForeArm": 68,
+      "Spine2": 627,
+      "RightArm": 77,
+      "RightFoot": 262,
+      "Head": 5151,
+      "Hips": 561,
+      "RightLeg": 175,
+      "RightUpLeg": 49,
+      "Tail": 85078,
+      "LeftUpLeg": 54,
+      "Spine": 622,
+      "LeftLeg": 179,
+      "LeftFoot": 251,
+      "LeftArm": 92,
+      "LeftForeArm": 60,
+      "LeftHand": 335
+    },
+    "maxRestError": 0.00002602717825125474,
+    "anatomicalRoot": true
+  }
+}

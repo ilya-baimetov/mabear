@@ -1,0 +1,93 @@
+{
+  "input": "/Users/ilya.baimetov/Projects/mabear/codex/docs/animation-story-release/proof/final/diagnostic-story-faces.mp4",
+  "playback": {
+    "duration": 17.163267,
+    "width": 1280,
+    "height": 784,
+    "decoded": 496,
+    "dropped": 0,
+    "callbacks": 492,
+    "largestFrameGap": 0.0672330000000001,
+    "firstFrame": 0,
+    "lastFrame": 17.129967,
+    "ended": true
+  },
+  "targets": [
+    {
+      "time": 0.42,
+      "label": "masha · surprised · compiled story input"
+    },
+    {
+      "time": 1.08,
+      "label": "masha · surprised · compiled story input"
+    },
+    {
+      "time": 2.088,
+      "label": "bear · laugh · compiled story input"
+    },
+    {
+      "time": 3.012,
+      "label": "bear · laugh · compiled story input"
+    },
+    {
+      "time": 4.05,
+      "label": "lady_bear · clap · compiled story input"
+    },
+    {
+      "time": 4.076,
+      "label": "lady_bear · clap · compiled story input"
+    },
+    {
+      "time": 4.824,
+      "label": "lady_bear · clap · compiled story input"
+    },
+    {
+      "time": 6,
+      "label": "hare · eat · compiled story input"
+    },
+    {
+      "time": 7.1,
+      "label": "hare · eat · compiled story input"
+    },
+    {
+      "time": 8.22,
+      "label": "rosie · surprised · compiled story input"
+    },
+    {
+      "time": 8.88,
+      "label": "rosie · surprised · compiled story input"
+    },
+    {
+      "time": 9.72,
+      "label": "squirrel · jump · compiled story input"
+    },
+    {
+      "time": 10.38,
+      "label": "squirrel · jump · compiled story input"
+    },
+    {
+      "time": 11.584,
+      "label": "rival_bear · dance · compiled story input"
+    },
+    {
+      "time": 12.816,
+      "label": "rival_bear · dance · compiled story input"
+    },
+    {
+      "time": 14.02,
+      "label": "wolf_a · surprised · compiled story input"
+    },
+    {
+      "time": 14.68,
+      "label": "wolf_a · surprised · compiled story input"
+    },
+    {
+      "time": 15.688,
+      "label": "wolf_b · laugh · compiled story input"
+    },
+    {
+      "time": 16.612,
+      "label": "wolf_b · laugh · compiled story input"
+    }
+  ]
+}

@@ -1,0 +1,207 @@
+{
+  "bear": {
+    "added": true,
+    "calibration": [
+      {
+        "side": 1,
+        "vertices": 1240,
+        "palmVertices": 814,
+        "length": 0.3523166154996043
+      },
+      {
+        "side": -1,
+        "vertices": 1185,
+        "palmVertices": 748,
+        "length": 0.33985970242150626
+      }
+    ],
+    "arm": [
+      0.43960955299838833,
+      0.37278720671494564
+    ],
+    "minGap": 0.0010001795072493596,
+    "maxReach": 0.00007524903717957356,
+    "contact": {
+      "time": 0.3,
+      "mode": "clap",
+      "targetGap": 0.001,
+      "surfaceGap": 0.0010002607587112709,
+      "reachError": 9.891853502382277e-9,
+      "strength": 1,
+      "palmNormalDot": -0.9492354190194975,
+      "padOverlap": [
+        1,
+        0.9828170956857867
+      ],
+      "planeNormal": [
+        0.9978480130249682,
+        -0.009831081077102148,
+        0.06482817864924335
+      ]
+    }
+  },
+  "lady_bear": {
+    "added": true,
+    "calibration": [
+      {
+        "side": 1,
+        "vertices": 1609,
+        "palmVertices": 844,
+        "length": 0.27772653550038373
+      },
+      {
+        "side": -1,
+        "vertices": 1723,
+        "palmVertices": 998,
+        "length": 0.2595629962465542
+      }
+    ],
+    "arm": [
+      0.3669628559582872,
+      0.3275005730358675
+    ],
+    "minGap": 0.001000148609370388,
+    "maxReach": 0.00002033196183095712,
+    "contact": {
+      "time": 0.3,
+      "mode": "clap",
+      "targetGap": 0.001,
+      "surfaceGap": 0.0010001591379899181,
+      "reachError": 1.446714620351969e-8,
+      "strength": 1,
+      "palmNormalDot": -0.9492354301684436,
+      "padOverlap": [
+        0.9131006838303062,
+        0.9701845602540792
+      ],
+      "planeNormal": [
+        0.9978480130249682,
+        -0.009831081077102153,
+        0.06482817864924331
+      ]
+    }
+  },
+  "hare": {
+    "added": true,
+    "calibration": [
+      {
+        "side": 1,
+        "vertices": 1111,
+        "palmVertices": 584,
+        "length": 0.07078156107820284
+      },
+      {
+        "side": -1,
+        "vertices": 1063,
+        "palmVertices": 518,
+        "length": 0.07228463036754869
+      }
+    ],
+    "arm": [
+      0.08557396426806155,
+      0.07664632867421105
+    ],
+    "minGap": 0.0010013521438539427,
+    "maxReach": 0.00000199026269481667,
+    "contact": {
+      "time": 0.3,
+      "mode": "clap",
+      "targetGap": 0.001,
+      "surfaceGap": 0.0010013521438539427,
+      "reachError": 1.834311237398226e-9,
+      "strength": 1,
+      "palmNormalDot": -0.9492354188531322,
+      "padOverlap": [
+        1,
+        0.9829362189361426
+      ],
+      "planeNormal": [
+        0.9978399813177306,
+        -0.010199751447665661,
+        0.06489481299947572
+      ]
+    }
+  },
+  "rosie": {
+    "added": true,
+    "calibration": [
+      {
+        "side": 1,
+        "vertices": 2107,
+        "palmVertices": 1089,
+        "length": 0.1091466295434612
+      },
+      {
+        "side": -1,
+        "vertices": 1629,
+        "palmVertices": 960,
+        "length": 0.10317157221513014
+      }
+    ],
+    "arm": [
+      0.12720687690649454,
+      0.1193452472691622
+    ],
+    "minGap": 0.0009997089414242933,
+    "maxReach": 0.000006943992009216979,
+    "contact": {
+      "time": 0.3,
+      "mode": "clap",
+      "targetGap": 0.001,
+      "surfaceGap": 0.0010034607026700598,
+      "reachError": 2.2596234576560578e-8,
+      "strength": 1,
+      "palmNormalDot": -0.9492354680219441,
+      "padOverlap": [
+        0.7925530699644744,
+        0.9872212682063752
+      ],
+      "planeNormal": [
+        0.9978480130249682,
+        -0.009831081077102545,
+        0.06482817864924441
+      ]
+    }
+  },
+  "rival_bear": {
+    "added": true,
+    "calibration": [
+      {
+        "side": 1,
+        "vertices": 1779,
+        "palmVertices": 1157,
+        "length": 0.410801828654194
+      },
+      {
+        "side": -1,
+        "vertices": 1774,
+        "palmVertices": 1192,
+        "length": 0.3924379010774271
+      }
+    ],
+    "arm": [
+      0.5093840915171615,
+      0.40590106765588274
+    ],
+    "minGap": 0.0010000039981108906,
+    "maxReach": 0.00004591776814735947,
+    "contact": {
+      "time": 0.3,
+      "mode": "clap",
+      "targetGap": 0.001,
+      "surfaceGap": 0.00100001589004356,
+      "reachError": 9.934163155884782e-8,
+      "strength": 1,
+      "palmNormalDot": -0.9492353569821497,
+      "padOverlap": [
+        0.9802592384684482,
+        1
+      ],
+      "planeNormal": [
+        0.9978480130249682,
+        -0.009831081077102155,
+        0.06482817864924333
+      ]
+    }
+  }
+}
