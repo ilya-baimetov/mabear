@@ -11,6 +11,7 @@ playwright-report/
 .secrets.env
 .e2e-dist/
 .scene-proof/
+docs/music-upgrade/*.wav
 
 docs/expansion/raw/
 

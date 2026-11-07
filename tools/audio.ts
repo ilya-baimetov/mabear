@@ -122,7 +122,10 @@ function group(title: string, items: string[], onClick: (x: string) => Timeline)
     b.textContent = it;
     b.onclick = async () => {
       await engine.unlock();
-      engine.play(onClick(it), 0, "en");
+      engine.stop();
+      const timeline = onClick(it);
+      await engine.prepare?.(timeline, "en", 0);
+      engine.play(timeline, 0, "en");
       log(`${title}: ${it} → ${JSON.stringify(getAudioDebug()?.scheduled)}`);
     };
     g.appendChild(b);

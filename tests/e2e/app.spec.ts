@@ -339,12 +339,12 @@ test("12. multiline editing stays in one moment; insertion, removal and keyboard
   await expect(editor).toHaveValue("");
   await expect(page.getByTestId("moment-card")).toHaveCount(2);
   await editor.fill("A temporary moment.");
-  await page.getByRole("button", { name: "Moment options", exact: true }).click();
+  await page.getByRole("button", { name: "Scene options", exact: true }).click();
   await page.getByTestId("request-remove-moment").click();
   await page.getByTestId("keep-moment").click();
   await expect(page.getByTestId("moment-card")).toHaveCount(2);
   await expect(editor).toHaveValue("A temporary moment.");
-  if (!(await page.getByTestId("request-remove-moment").isVisible())) await page.getByRole("button", { name: "Moment options", exact: true }).click();
+  if (!(await page.getByTestId("request-remove-moment").isVisible())) await page.getByRole("button", { name: "Scene options", exact: true }).click();
   await page.getByTestId("request-remove-moment").click();
   await page.getByTestId("remove-moment").click();
   await expect(page.getByTestId("moment-card")).toHaveCount(1);
@@ -371,7 +371,7 @@ test("fullscreen retains controls; keyboard seeks respect whole-story and select
   await expect.poll(() => page.evaluate(() => document.fullscreenElement === null)).toBe(true);
   await page.getByTestId("moment-card").nth(1).click();
   await page.getByTestId("scope-moment").click();
-  const moment = page.getByRole("slider", { name: "Moment progress", exact: true });
+  const moment = page.getByRole("slider", { name: "Scene progress", exact: true });
   const expected = (await segments(page))[1];
   await moment.press("Home"); await moment.press("ArrowLeft");
   await expect(moment).toHaveAttribute("aria-valuenow", "0");

@@ -34,9 +34,9 @@ export function PlayerScope() {
     <span className="player-label"><Film size={14}/>{s.lang === "en" ? "MOVIE" : "ФИЛЬМ"}</span>
     <div className="player-scope-switch" role="group" aria-label={s.lang === "en" ? "Playback scope" : "Что смотреть"}>
       <button data-testid="scope-story" aria-pressed={story} onClick={() => playback.setScope({ kind: "story" })}><Film size={15}/>{s.lang === "en" ? "Entire story" : "Вся история"}<span>{s.paragraphs.length}</span></button>
-      <button data-testid="scope-moment" aria-pressed={!story} disabled={!p} onClick={() => p && playback.setScope({ kind: "moment", id: p.id })}><Clapperboard size={15}/>{s.lang === "en" ? `Moment ${index + 1}` : `Момент ${index + 1}`}</button>
+      <button data-testid="scope-moment" aria-pressed={!story} disabled={!p} onClick={() => p && playback.setScope({ kind: "moment", id: p.id })}><Clapperboard size={15}/>{s.lang === "en" ? `Scene ${index + 1}` : `Сцена ${index + 1}`}</button>
     </div>
-    <span className="player-scope-caption">{story ? (s.lang === "en" ? "All moments, in order" : "Все моменты по порядку") : (s.lang === "en" ? "Selected moment only" : "Только выбранный момент")}</span>
+    <span className="player-scope-caption">{story ? (s.lang === "en" ? "All scenes, in order" : "Все сцены по порядку") : (s.lang === "en" ? "Selected scene only" : "Только выбранная сцена")}</span>
   </div>;
 }
 export function Timeline() {
@@ -59,9 +59,9 @@ export function Timeline() {
     {s.voiceError&&<div className="voice-error" role="alert" data-testid="voice-error">{voiceErrorText(s.voiceError, s.lang)}</div>}
     <div className="compact-scope" role="group" aria-label={s.lang === "en" ? "Player scope" : "Режим просмотра"}>
       <button data-testid="mobile-scope-story" aria-pressed={wholeStory} onClick={() => playback.setScope({ kind: "story" })}>{s.lang === "en" ? "Entire story" : "Вся история"}</button>
-      <button aria-pressed={!wholeStory} disabled={!p} onClick={() => p && playback.setScope({ kind: "moment", id: p.id })}>{s.lang === "en" ? `Moment ${s.paragraphs.findIndex(x => x.id === p?.id) + 1}` : `Момент ${s.paragraphs.findIndex(x => x.id === p?.id) + 1}`}</button>
+      <button aria-pressed={!wholeStory} disabled={!p} onClick={() => p && playback.setScope({ kind: "moment", id: p.id })}>{s.lang === "en" ? `Scene ${s.paragraphs.findIndex(x => x.id === p?.id) + 1}` : `Сцена ${s.paragraphs.findIndex(x => x.id === p?.id) + 1}`}</button>
     </div>
-    <div className="storybar-wrap"><div className="storybar" ref={bar} data-testid="timeline" data-duration={scopeDur.toFixed(2)} data-scope={wholeStory ? "story" : "moment"} role="slider" tabIndex={0} aria-label={wholeStory ? (s.lang === "en" ? "Story progress" : "Ход истории") : (s.lang === "en" ? "Moment progress" : "Ход момента")} aria-valuemin={0} aria-valuemax={scopeDur} aria-valuenow={scopeT} aria-valuetext={`${timecode(scopeT)} / ${timecode(scopeDur)}`}
+    <div className="storybar-wrap"><div className="storybar" ref={bar} data-testid="timeline" data-duration={scopeDur.toFixed(2)} data-scope={wholeStory ? "story" : "moment"} role="slider" tabIndex={0} aria-label={wholeStory ? (s.lang === "en" ? "Story progress" : "Ход истории") : (s.lang === "en" ? "Scene progress" : "Ход сцены")} aria-valuemin={0} aria-valuemax={scopeDur} aria-valuenow={scopeT} aria-valuetext={`${timecode(scopeT)} / ${timecode(scopeDur)}`}
       onKeyDown={e => { if (["ArrowRight", "ArrowLeft", "Home", "End"].includes(e.key)) { e.preventDefault(); seekTo(e.key === "Home" ? 0 : e.key === "End" ? scopeDur : scopeT + (e.key === "ArrowRight" ? 1 : -1)); } }}
       onPointerDown={e => { e.currentTarget.setPointerCapture?.(e.pointerId); seekTo(toT(e.clientX)); }} onPointerMove={e => { if (e.buttons & 1) seekTo(toT(e.clientX)); }}>
       {!scopeDur && <span className="timeline-empty">{s.lang === "en" ? "Your movie will appear here" : "Здесь появится твой фильм"}</span>}
@@ -69,7 +69,7 @@ export function Timeline() {
         const pid = s.segmentIds[i], idx = s.paragraphs.findIndex(x => x.id === pid);
         return <div key={pid} className={`band ${activeIndex === i ? "playing" : ""}`} data-testid="timeline-band" style={{ left: `${(seg.offset / scopeDur) * 100}%`, width: `${(seg.segment.duration / scopeDur) * 100}%`, background: BAND_COLORS[idx % BAND_COLORS.length] }}><span>{String(idx + 1).padStart(2, "0")}</span></div>;
       })}
-      {!wholeStory && scopeDur > 0 && <div className="band sel moment-band" data-testid="timeline-band" style={{ left: 0, width: "100%", background: BAND_COLORS[Math.max(0, index) % BAND_COLORS.length] }}>{s.lang === "en" ? `MOMENT ${index + 1}` : `МОМЕНТ ${index + 1}`}</div>}
+      {!wholeStory && scopeDur > 0 && <div className="band sel moment-band" data-testid="timeline-band" style={{ left: 0, width: "100%", background: BAND_COLORS[Math.max(0, index) % BAND_COLORS.length] }}>{s.lang === "en" ? `SCENE ${index + 1}` : `СЦЕНА ${index + 1}`}</div>}
       {scopeDur > 0 && <div className="playhead" data-testid="playhead" data-t={scopeT.toFixed(2)} style={{ left: `${(scopeT / scopeDur) * 100}%` }}/>}
     </div></div>
     <div className="transport-row">

@@ -10,7 +10,7 @@ import { CHARACTERS } from "../../shared/bible/characters";
 import { AmbienceDirector } from "./ambience";
 import { MIX, createBuses, getSharedContext, masterLevel, mergeDuckWindows, resetDuck, scheduleDuck, setMaster, type Buses, type DuckWindow } from "./bus";
 import { FOLEY_LENGTH, renderFoley } from "./foley";
-import { MusicDirector } from "./music";
+import { RecordedMusicBank, RecordedMusicDirector as MusicDirector } from "./recordedMusic";
 import {
   LOOKAHEAD_S, TICK_MS, flattenTimeline, inWindow, planAmbienceSpans, planMusicSections, startLoop, stateAt,
   type FlatTimeline, type LookaheadLoop,
@@ -154,6 +154,7 @@ export function createAudioEngine(opts: AudioEngineOptions = {}): AudioEngine {
 
   let ctx: AudioContext | null = null;
   const speech = new RecordedSpeechBank(() => ctx);
+  const score = new RecordedMusicBank(() => ctx);
   debug.voices = { 'en-US': 'MiniMax Lively_Girl', 'ru-RU': 'MiniMax Lively_Girl' };
   debug.recordedSpeech={voice:'Lively_Girl',scheduled:[]};
   debug.ttsAvailable = false;
@@ -224,6 +225,7 @@ export function createAudioEngine(opts: AudioEngineOptions = {}): AudioEngine {
     }
     const flat = flattenTimeline(tl);
     const t0 = Number.isFinite(fromT) ? Math.max(0, fromT) : 0;
+    if (real) void score.prepare(tl, t0);
     const anchorCtx = real && ctx ? ctx.currentTime + START_LATENCY : 0;
     const toCtx = (ep: number): number => Math.max(0, anchorCtx + (ep - t0));
     const sources = new Set<AudioScheduledSourceNode>();
@@ -255,7 +257,7 @@ export function createAudioEngine(opts: AudioEngineOptions = {}): AudioEngine {
     const s: Session = {
       tl, flat, lang, fromT: t0, real, anchorCtx, anchorWall: wallNow(),
       scheduledUntil: t0 - 0.03, firstTick: true, loop: null, counted,
-      music: new MusicDirector(musicOut, planMusicSections(flat.music, flat.duration), toCtx),
+      music: new MusicDirector(musicOut, planMusicSections(flat.music, flat.duration), toCtx, score),
       amb: new AmbienceDirector(ambOut, planAmbienceSpans(flat.ambience, flat.duration), toCtx),
       duck: mergeDuckWindows(flat.ducking), duckDone: new Set(), outs, sources, timers: new Map(), heldTimers: [], pausedAt: null, pausedWall: 0,
     };
@@ -440,6 +442,7 @@ export function createAudioEngine(opts: AudioEngineOptions = {}): AudioEngine {
   function updateSession(s: Session, tl: Timeline, lang: Lang): void {
     const flat = flattenTimeline(tl);
     const now = nowEp(s);
+    if (s.real) void score.prepare(tl, now);
     // cues before the scheduled horizon were already handled by the old timeline
     const counted = new Set<string>();
     const mark = (track: Track, list: { t: number; i: number }[]): void => {
@@ -470,7 +473,17 @@ export function createAudioEngine(opts: AudioEngineOptions = {}): AudioEngine {
     async prepare(timeline,lang,from,to) {
       if(opts.noContext)return {};
       ensureAudio(true);
-      return speech.prepare(timeline,lang,from,to);
+      // Give a cold score a short head start; a slow optional download must not
+      // hold narration/the movie hostage. It can join at the correct phase later.
+      const musicReady = new Promise<void>(resolve => {
+        const timer = setTimeout(resolve, 1200);
+        void score.prepare(timeline,from,to).finally(() => { clearTimeout(timer); resolve(); });
+      });
+      const [durations] = await Promise.all([
+        speech.prepare(timeline,lang,from,to),
+        musicReady,
+      ]);
+      return durations;
     },
     async unlock(): Promise<void> {
       try {

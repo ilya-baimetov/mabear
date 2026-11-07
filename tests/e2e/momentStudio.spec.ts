@@ -47,7 +47,7 @@ test("moment loop: add, bounded preview, revise, append, then watch the whole st
     const seg = (window.__mabear!.timeline() as { segments: { offset: number; segment: { duration: number } }[] }).segments[1];
     return { start: seg.offset, end: seg.offset + seg.segment.duration };
   });
-  const progress = page.getByRole("slider", { name: "Moment progress", exact: true });
+  const progress = page.getByRole("slider", { name: "Scene progress", exact: true });
   await progress.press("Home"); await progress.press("ArrowLeft");
   expect(await page.evaluate(() => window.__mabear!.t())).toBeCloseTo(momentBounds.start, 2);
   await progress.press("End"); await progress.press("ArrowRight");
@@ -84,7 +84,7 @@ test("middle insertion preserves future writing; cast authoring never plays; ups
   await expect(page.locator(".context-actors")).toContainText("Lady Bear");
   const beforeIds = await page.getByTestId("moment-card").evaluateAll(els => els.map(el => el.getAttribute("data-moment-id")));
   await page.getByTestId("moment-card").nth(1).click();
-  await expect(page.getByTestId("insert-position")).toContainText("after moment 2, before 3");
+  await expect(page.getByTestId("insert-position")).toContainText("after scene 2, before 3");
   const oldThird = await page.getByTestId("moment-card").nth(2).innerText();
   await page.getByTestId("add-next-moment").click();
   const ids = await page.getByTestId("moment-card").evaluateAll(els => els.map(el => el.getAttribute("data-moment-id")));
@@ -98,7 +98,7 @@ test("middle insertion preserves future writing; cast authoring never plays; ups
   await page.getByTestId("moment-card").first().click();
   await page.getByTestId("moment-text").fill("Masha walks to the garden.");
   await page.getByTestId("moment-card").nth(1).click();
-  await expect(page.getByTestId("continuity-warning")).toContainText("Moment 1 changed");
+  await expect(page.getByTestId("continuity-warning")).toContainText("Scene 1 changed");
   await page.setViewportSize({ width: 390, height: 844 });
   await page.screenshot({ path: `${SHOTS}/03-mobile-continuity.png`, fullPage: true });
   expect(await page.evaluate(() => document.body.scrollWidth)).toBe(390);
@@ -106,6 +106,8 @@ test("middle insertion preserves future writing; cast authoring never plays; ups
   expect(dock!.y + dock!.height).toBeLessThanOrEqual(844);
   await page.getByTestId("lang-ru").click();
   await expect(page.getByTestId("preview-moment")).toContainText("Смотреть с изменениями");
+  await expect(page.getByRole("region", { name: "Сцены истории", exact: true })).toBeVisible();
+  await expect(page.getByTestId("moment-workbench").getByRole("heading", { name: "Сцена 2", exact: true })).toBeVisible();
   await page.screenshot({ path: `${SHOTS}/04-mobile-russian.png`, fullPage: true });
 });
 
@@ -155,7 +157,7 @@ test("in-app replacement keeps authored writing on cancel and replaces only afte
   await expect(page.getByTestId("moment-card")).toHaveCount(3);
   await expect(direction).toHaveValue(/Lady Bear visits the garden/);
   const originalIds = await page.getByTestId("moment-card").evaluateAll(els => els.map(el => el.getAttribute("data-moment-id")));
-  await page.getByRole("button", { name: "Moment options", exact: true }).click();
+  await page.getByRole("button", { name: "Scene options", exact: true }).click();
   await page.getByTestId("move-moment-later").click();
   const reordered = await page.getByTestId("moment-card").evaluateAll(els => els.map(el => el.getAttribute("data-moment-id")));
   expect(reordered).toEqual([originalIds[1], originalIds[0], originalIds[2]]);

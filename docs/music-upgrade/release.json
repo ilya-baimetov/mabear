@@ -1,0 +1,14 @@
+{
+  "url": "https://mabear-storybook.ilya-baimetov.workers.dev",
+  "cloudflareVersion": "28ae1445-313a-45e7-b4ce-9beeee9d3e52",
+  "validation": {
+    "typecheck": "passed",
+    "build": "passed",
+    "focusedAudioUnitTests": 36,
+    "browserTests": 2,
+    "processedMoodSignalChecks": 9,
+    "adversarialReview": "fixed optional-load delay and retiring-fade truncation",
+    "liveBrowser": "signed-in story played through to end without console errors; exact EN/RU scene labels verified; restored Russian interface"
+  },
+  "cost": {"approvedCeilingUSD": 5, "estimatedUSD": 4.05, "actualChargesVerified": false}
+}

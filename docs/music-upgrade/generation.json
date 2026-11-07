@@ -1,0 +1,98 @@
+{
+  "budgetUSD": 5,
+  "estimatedUSD": 4.05,
+  "actualChargesVerified": false,
+  "model": "elevenlabs/music/v2.5",
+  "tracks": [
+    {
+      "mood": "playful",
+      "endpoint": "elevenlabs/music/v2.5",
+      "requestId": "01a1b3d9-51e0-7de3-85f5-28ee6b834cef",
+      "url": "https://v3b.fal.media/files/b/0ab17491/0NQxpRCTY-MS1GrrpoDoq_music_generated.mp3",
+      "file": "/assets/music/playful-v1.mp3",
+      "seconds": 45,
+      "estimatedUSD": 0.45,
+      "prompt": "Original instrumental underscore for a beautifully animated woodland family comedy. A small acoustic chamber ensemble recorded naturally: expressive clarinet and bassoon, warm bowed and pizzicato strings, felt piano, delicate harp, occasional celesta and soft brushed percussion. Lifelike articulation, elegant voice leading, tasteful countermelodies, warm stereo room, polished film-score production. Clear restrained arrangement with space for dialogue; no huge dynamic jumps, no synth presets, no electronic drums, no vocals, no choir. Continuous flowing underscore, no opening fanfare, no final slowdown or fadeout; steady level and pulse so it can be edited into a repeating background cue. Mischievous sunny garden antics. 112 BPM, D major, nimble pizzicato strings with witty clarinet question-and-answer phrases, light bassoon staccato and tiny brushed snare accents. Eight-bar phrases with small evolving variations, charming restrained comedy, musical rests between phrases, never a busy nursery rhyme."
+    },
+    {
+      "mood": "calm",
+      "endpoint": "elevenlabs/music/v2.5",
+      "requestId": "01a1b3d9-93c2-7193-aa8d-6fc2efe028b9",
+      "url": "https://v3b.fal.media/files/b/0ab17492/qA-sloOi1QiixWb76w3dx_music_generated.mp3",
+      "file": "/assets/music/calm-v1.mp3",
+      "seconds": 45,
+      "estimatedUSD": 0.45,
+      "prompt": "Original instrumental underscore for a beautifully animated woodland family comedy. A small acoustic chamber ensemble recorded naturally: expressive clarinet and bassoon, warm bowed and pizzicato strings, felt piano, delicate harp, occasional celesta and soft brushed percussion. Lifelike articulation, elegant voice leading, tasteful countermelodies, warm stereo room, polished film-score production. Clear restrained arrangement with space for dialogue; no huge dynamic jumps, no synth presets, no electronic drums, no vocals, no choir. Continuous flowing underscore, no opening fanfare, no final slowdown or fadeout; steady level and pulse so it can be edited into a repeating background cue. Peaceful fishing by a woodland pond. 78 BPM, G major, lilting harp and felt piano broken chords, gentle clarinet melody and warm sustained strings, tasteful added-sixth and major-ninth color. Quiet graceful pastoral chamber music, expressive human phrasing."
+    },
+    {
+      "mood": "sleepy",
+      "endpoint": "elevenlabs/music/v2.5",
+      "requestId": "01a1b3d9-9829-7f53-8198-3c7affc7bb4b",
+      "url": "https://v3b.fal.media/files/b/0ab17493/jzCI2zLyZO43ui0LLtEzB_music_generated.mp3",
+      "file": "/assets/music/sleepy-v1.mp3",
+      "seconds": 45,
+      "estimatedUSD": 0.45,
+      "prompt": "Original instrumental underscore for a beautifully animated woodland family comedy. A small acoustic chamber ensemble recorded naturally: expressive clarinet and bassoon, warm bowed and pizzicato strings, felt piano, delicate harp, occasional celesta and soft brushed percussion. Lifelike articulation, elegant voice leading, tasteful countermelodies, warm stereo room, polished film-score production. Clear restrained arrangement with space for dialogue; no huge dynamic jumps, no synth presets, no electronic drums, no vocals, no choir. Continuous flowing underscore, no opening fanfare, no final slowdown or fadeout; steady level and pulse so it can be edited into a repeating background cue. Bear drifting to sleep. 66 BPM, gentle three-quarter time, F major, sparse felt piano lullaby, soft celesta accents, muted warm strings and delicate harp. Long tender phrases and breathing spaces, a sophisticated quiet bedtime film underscore."
+    },
+    {
+      "mood": "tense",
+      "endpoint": "elevenlabs/music/v2.5",
+      "requestId": "01a1b3d9-9ccc-73a2-9e54-8deeaadab2b0",
+      "url": "https://v3b.fal.media/files/b/0ab17493/ggcl1hQfjOaRBKrxWfc9f_music_generated.mp3",
+      "file": "/assets/music/tense-v1.mp3",
+      "seconds": 45,
+      "estimatedUSD": 0.45,
+      "prompt": "Original instrumental underscore for a beautifully animated woodland family comedy. A small acoustic chamber ensemble recorded naturally: expressive clarinet and bassoon, warm bowed and pizzicato strings, felt piano, delicate harp, occasional celesta and soft brushed percussion. Lifelike articulation, elegant voice leading, tasteful countermelodies, warm stereo room, polished film-score production. Clear restrained arrangement with space for dialogue; no huge dynamic jumps, no synth presets, no electronic drums, no vocals, no choir. Continuous flowing underscore, no opening fanfare, no final slowdown or fadeout; steady level and pulse so it can be edited into a repeating background cue. Sneaking toward a comic surprise, suspense without fear. 96 BPM, A minor, hushed pizzicato ostinato, bassoon tiptoe phrases, muted string suspensions, sparse soft low percussion, restrained chromatic passing tones. Continuous anticipation, no climactic crash."
+    },
+    {
+      "mood": "spooky",
+      "endpoint": "elevenlabs/music/v2.5",
+      "requestId": "01a1b3d9-a20d-74f0-9572-7477f1b1a4fe",
+      "url": "https://v3b.fal.media/files/b/0ab17493/-8305ON1v7P7ggA74Gs33_music_generated.mp3",
+      "file": "/assets/music/spooky-v1.mp3",
+      "seconds": 45,
+      "estimatedUSD": 0.45,
+      "prompt": "Original instrumental underscore for a beautifully animated woodland family comedy. A small acoustic chamber ensemble recorded naturally: expressive clarinet and bassoon, warm bowed and pizzicato strings, felt piano, delicate harp, occasional celesta and soft brushed percussion. Lifelike articulation, elegant voice leading, tasteful countermelodies, warm stereo room, polished film-score production. Clear restrained arrangement with space for dialogue; no huge dynamic jumps, no synth presets, no electronic drums, no vocals, no choir. Continuous flowing underscore, no opening fanfare, no final slowdown or fadeout; steady level and pulse so it can be edited into a repeating background cue. A mysterious but friendly moonlit forest. 76 BPM, D minor, airy clarinet, bassoon, quiet tremolo strings, low pizzicato cello and occasional delicate celesta. Curious, playful unease, elegant subtle harmonic movement, child-friendly mystery, no horror stingers."
+    },
+    {
+      "mood": "chase",
+      "endpoint": "elevenlabs/music/v2.5",
+      "requestId": "01a1b3d9-a63b-7c20-a515-b89c9f82f45d",
+      "url": "https://v3b.fal.media/files/b/0ab17493/gOV2tFFHzUNjZuBMhlVEO_music_generated.mp3",
+      "file": "/assets/music/chase-v1.mp3",
+      "seconds": 45,
+      "estimatedUSD": 0.45,
+      "prompt": "Original instrumental underscore for a beautifully animated woodland family comedy. A small acoustic chamber ensemble recorded naturally: expressive clarinet and bassoon, warm bowed and pizzicato strings, felt piano, delicate harp, occasional celesta and soft brushed percussion. Lifelike articulation, elegant voice leading, tasteful countermelodies, warm stereo room, polished film-score production. Clear restrained arrangement with space for dialogue; no huge dynamic jumps, no synth presets, no electronic drums, no vocals, no choir. Continuous flowing underscore, no opening fanfare, no final slowdown or fadeout; steady level and pulse so it can be edited into a repeating background cue. A funny energetic woodland chase. 144 BPM, E minor turning sunny, agile staccato strings, bounding bassoon, playful clarinet runs, acoustic double bass and restrained brushed snare. Light chamber-orchestra scherzo with coherent motifs, buoyant momentum, no epic action trailer drums."
+    },
+    {
+      "mood": "triumphant",
+      "endpoint": "elevenlabs/music/v2.5",
+      "requestId": "01a1b3d9-aa60-7a81-ae70-e909f5b2632c",
+      "url": "https://v3b.fal.media/files/b/0ab17493/_e0ukNRsRgOt-MjCQMwlz_music_generated.mp3",
+      "file": "/assets/music/triumphant-v1.mp3",
+      "seconds": 45,
+      "estimatedUSD": 0.45,
+      "prompt": "Original instrumental underscore for a beautifully animated woodland family comedy. A small acoustic chamber ensemble recorded naturally: expressive clarinet and bassoon, warm bowed and pizzicato strings, felt piano, delicate harp, occasional celesta and soft brushed percussion. Lifelike articulation, elegant voice leading, tasteful countermelodies, warm stereo room, polished film-score production. Clear restrained arrangement with space for dialogue; no huge dynamic jumps, no synth presets, no electronic drums, no vocals, no choir. Continuous flowing underscore, no opening fanfare, no final slowdown or fadeout; steady level and pulse so it can be edited into a repeating background cue. A small heartfelt victory shared by friends. 108 BPM, C major, warm chamber strings, rounded soft French horn, bright clarinet, piano and gentle timpani taps. Joyful lyrical eight-bar theme, graceful harmonic lift, intimate celebratory film score without a loud fanfare."
+    },
+    {
+      "mood": "sad",
+      "endpoint": "elevenlabs/music/v2.5",
+      "requestId": "01a1b3d9-ae72-78c2-8d50-404728421a4e",
+      "url": "https://v3b.fal.media/files/b/0ab17493/wi6oVIk2tT7K-O9ui7mjr_music_generated.mp3",
+      "file": "/assets/music/sad-v1.mp3",
+      "seconds": 45,
+      "estimatedUSD": 0.45,
+      "prompt": "Original instrumental underscore for a beautifully animated woodland family comedy. A small acoustic chamber ensemble recorded naturally: expressive clarinet and bassoon, warm bowed and pizzicato strings, felt piano, delicate harp, occasional celesta and soft brushed percussion. Lifelike articulation, elegant voice leading, tasteful countermelodies, warm stereo room, polished film-score production. Clear restrained arrangement with space for dialogue; no huge dynamic jumps, no synth presets, no electronic drums, no vocals, no choir. Continuous flowing underscore, no opening fanfare, no final slowdown or fadeout; steady level and pulse so it can be edited into a repeating background cue. A tender moment of regret with hope underneath. 70 BPM, A minor, expressive solo cello, very soft felt piano, muted strings and a few harp notes. Lyrical restrained melody with moving inner voices, gentle resolutions, intimate warmth, no melodramatic swelling."
+    },
+    {
+      "mood": "romantic_waltz",
+      "endpoint": "elevenlabs/music/v2.5",
+      "requestId": "01a1b3d9-b35d-7552-ae45-0b25e697ddd4",
+      "url": "https://v3b.fal.media/files/b/0ab17493/OR5x8aXBtITPyra0ApP4b_music_generated.mp3",
+      "file": "/assets/music/romantic_waltz-v1.mp3",
+      "seconds": 45,
+      "estimatedUSD": 0.45,
+      "prompt": "Original instrumental underscore for a beautifully animated woodland family comedy. A small acoustic chamber ensemble recorded naturally: expressive clarinet and bassoon, warm bowed and pizzicato strings, felt piano, delicate harp, occasional celesta and soft brushed percussion. Lifelike articulation, elegant voice leading, tasteful countermelodies, warm stereo room, polished film-score production. Clear restrained arrangement with space for dialogue; no huge dynamic jumps, no synth presets, no electronic drums, no vocals, no choir. Continuous flowing underscore, no opening fanfare, no final slowdown or fadeout; steady level and pulse so it can be edited into a repeating background cue. Bear and Lady Bear sharing an affectionate dance. 138 BPM in three-quarter time, F major, elegant violin and clarinet duet, warm cello bass, delicate harp and soft piano. Flowing intimate chamber waltz, graceful melody, sophisticated passing chords, a touch of old-world romance."
+    }
+  ]
+}
