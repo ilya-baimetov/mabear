@@ -83,7 +83,7 @@ describe('Masha comparison recording cleanup',()=>{
   now.mockReturnValue(24_001);advance();
   const blob=await recording;
   expect(await blob.text()).toBe('recorded video');
-  expect(api.setScene.mock.calls).toEqual([['face','front'],['hold','three'],['clap','front']]);
+  expect(api.setScene.mock.calls).toEqual([['face','front'],['hold','three'],['clap','front'],['clap','three']]);
   expect(stopTrack).toHaveBeenCalledOnce();
   expect(state()).toEqual({ratio:2,width:640,height:480,aspect:4/3});
  });

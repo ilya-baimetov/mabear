@@ -1,0 +1,5813 @@
+{
+  "errors": [],
+  "sweep": [
+    {
+      "mode": "face",
+      "t": 0,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "face",
+      "t": 0.1,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "face",
+      "t": 0.2,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "face",
+      "t": 0.3,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "face",
+      "t": 0.4,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "face",
+      "t": 0.5,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "face",
+      "t": 0.6,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "face",
+      "t": 0.7,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "face",
+      "t": 0.8,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "face",
+      "t": 0.9,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "face",
+      "t": 1,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "face",
+      "t": 1.1,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.0023609012961772337
+      }
+    },
+    {
+      "mode": "face",
+      "t": 1.2,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.023832929040154844
+      }
+    },
+    {
+      "mode": "face",
+      "t": 1.3,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.066149851565982
+      }
+    },
+    {
+      "mode": "face",
+      "t": 1.4,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.10033933924109256
+      }
+    },
+    {
+      "mode": "face",
+      "t": 1.5,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.1098237679268348
+      }
+    },
+    {
+      "mode": "face",
+      "t": 1.6,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.11
+      }
+    },
+    {
+      "mode": "face",
+      "t": 1.7,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.11
+      }
+    },
+    {
+      "mode": "face",
+      "t": 1.8,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.11
+      }
+    },
+    {
+      "mode": "face",
+      "t": 1.9,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.11
+      }
+    },
+    {
+      "mode": "face",
+      "t": 2,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.11
+      }
+    },
+    {
+      "mode": "face",
+      "t": 2.1,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.11
+      }
+    },
+    {
+      "mode": "face",
+      "t": 2.2,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.11
+      }
+    },
+    {
+      "mode": "face",
+      "t": 2.3,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.11
+      }
+    },
+    {
+      "mode": "face",
+      "t": 2.4,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.11
+      }
+    },
+    {
+      "mode": "face",
+      "t": 2.5,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.11
+      }
+    },
+    {
+      "mode": "face",
+      "t": 2.6,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.11
+      }
+    },
+    {
+      "mode": "face",
+      "t": 2.7,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.11
+      }
+    },
+    {
+      "mode": "face",
+      "t": 2.8,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.11
+      }
+    },
+    {
+      "mode": "face",
+      "t": 2.9,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.11090594816
+      }
+    },
+    {
+      "mode": "face",
+      "t": 3,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.11853450752000003
+      }
+    },
+    {
+      "mode": "face",
+      "t": 3.1,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.13146549248000003
+      }
+    },
+    {
+      "mode": "face",
+      "t": 3.2,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.13909405184000004
+      }
+    },
+    {
+      "mode": "face",
+      "t": 3.3,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.20853529524333314
+      }
+    },
+    {
+      "mode": "face",
+      "t": 3.4,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.3001755705483598
+      }
+    },
+    {
+      "mode": "face",
+      "t": 3.5,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "face",
+      "t": 3.6,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.2601316779112698
+      }
+    },
+    {
+      "mode": "face",
+      "t": 3.7,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.19140147143249986
+      }
+    },
+    {
+      "mode": "face",
+      "t": 3.8,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.2713593158830552
+      }
+    },
+    {
+      "mode": "face",
+      "t": 3.9,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.4470031768843562
+      }
+    },
+    {
+      "mode": "face",
+      "t": 4,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "face",
+      "t": 4.1,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.3001755705483593
+      }
+    },
+    {
+      "mode": "face",
+      "t": 4.2,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.20853529524333314
+      }
+    },
+    {
+      "mode": "face",
+      "t": 4.3,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "face",
+      "t": 4.4,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "face",
+      "t": 4.5,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "face",
+      "t": 4.6,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "face",
+      "t": 4.7,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "face",
+      "t": 4.8,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "face",
+      "t": 4.9,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "face",
+      "t": 5,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "face",
+      "t": 5.1,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.25449254807348715
+      }
+    },
+    {
+      "mode": "face",
+      "t": 5.2,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.49436671239140384
+      }
+    },
+    {
+      "mode": "face",
+      "t": 5.3,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.5
+      }
+    },
+    {
+      "mode": "face",
+      "t": 5.4,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.5
+      }
+    },
+    {
+      "mode": "face",
+      "t": 5.5,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.5
+      }
+    },
+    {
+      "mode": "face",
+      "t": 5.6,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.5
+      }
+    },
+    {
+      "mode": "face",
+      "t": 5.7,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.5
+      }
+    },
+    {
+      "mode": "face",
+      "t": 5.8,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.5
+      }
+    },
+    {
+      "mode": "face",
+      "t": 5.9,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.5
+      }
+    },
+    {
+      "mode": "face",
+      "t": 6,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.5
+      }
+    },
+    {
+      "mode": "face",
+      "t": 6.1,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.5
+      }
+    },
+    {
+      "mode": "face",
+      "t": 6.2,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.5
+      }
+    },
+    {
+      "mode": "face",
+      "t": 6.3,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.5
+      }
+    },
+    {
+      "mode": "face",
+      "t": 6.4,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.5
+      }
+    },
+    {
+      "mode": "face",
+      "t": 6.5,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.5
+      }
+    },
+    {
+      "mode": "face",
+      "t": 6.6,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.5
+      }
+    },
+    {
+      "mode": "face",
+      "t": 6.7,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.49600853674717965
+      }
+    },
+    {
+      "mode": "face",
+      "t": 6.8,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.4533468788740287
+      }
+    },
+    {
+      "mode": "face",
+      "t": 6.9,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.34098257212015415
+      }
+    },
+    {
+      "mode": "face",
+      "t": 7,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.18832879022048782
+      }
+    },
+    {
+      "mode": "face",
+      "t": 7.1,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.06352300818984413
+      }
+    },
+    {
+      "mode": "face",
+      "t": 7.2,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.007824010567494655
+      }
+    },
+    {
+      "mode": "face",
+      "t": 7.3,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.000007730893491431079
+      }
+    },
+    {
+      "mode": "face",
+      "t": 7.4,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "face",
+      "t": 7.5,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "face",
+      "t": 7.6,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "face",
+      "t": 7.7,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "face",
+      "t": 7.8,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "face",
+      "t": 7.9,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "face",
+      "t": 8,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "face",
+      "t": 8.1,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "face",
+      "t": 8.2,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "face",
+      "t": 8.3,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "face",
+      "t": 8.4,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "face",
+      "t": 8.5,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "face",
+      "t": 8.6,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "face",
+      "t": 8.7,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "face",
+      "t": 8.8,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "face",
+      "t": 8.9,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "face",
+      "t": 9,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "face",
+      "t": 9.1,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "face",
+      "t": 9.2,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "face",
+      "t": 9.3,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "face",
+      "t": 9.4,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "face",
+      "t": 9.5,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "face",
+      "t": 9.6,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "face",
+      "t": 9.7,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "face",
+      "t": 9.8,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "face",
+      "t": 9.9,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "face",
+      "t": 10,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "face",
+      "t": 10.1,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "face",
+      "t": 10.2,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "face",
+      "t": 10.3,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "face",
+      "t": 10.4,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "face",
+      "t": 10.5,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "face",
+      "t": 10.6,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.0030047834678618855
+      }
+    },
+    {
+      "mode": "face",
+      "t": 10.7,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.030332818778378588
+      }
+    },
+    {
+      "mode": "face",
+      "t": 10.8,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.08419072017488657
+      }
+    },
+    {
+      "mode": "face",
+      "t": 10.9,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.1277046135795725
+      }
+    },
+    {
+      "mode": "face",
+      "t": 11,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.1397757046341534
+      }
+    },
+    {
+      "mode": "face",
+      "t": 11.1,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "face",
+      "t": 11.2,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "face",
+      "t": 11.3,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "face",
+      "t": 11.4,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "face",
+      "t": 11.5,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "face",
+      "t": 11.6,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.13951735257863457
+      }
+    },
+    {
+      "mode": "face",
+      "t": 11.7,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.11664888482446852
+      }
+    },
+    {
+      "mode": "face",
+      "t": 11.8,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.05273206126173673
+      }
+    },
+    {
+      "mode": "face",
+      "t": 11.9,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.006126353529020572
+      }
+    },
+    {
+      "mode": "face",
+      "t": 12,
+      "contacts": {
+        "mode": "free"
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 0,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.00003443686464181993,
+        "gripError": 6.359601310784502e-17,
+        "mouthDistance": 0.16588308332389246,
+        "surfaceGap": 0.16356114210653436,
+        "taste": 0
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 0.1,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000015852985411632863,
+        "gripError": 1.2412670766236366e-16,
+        "mouthDistance": 0.16015121539216207,
+        "surfaceGap": 0.15783816415631552,
+        "taste": 0.010926199633097156
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 0.2,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000014014529661644713,
+        "gripError": 7.850462293418876e-17,
+        "mouthDistance": 0.14685774949273536,
+        "surfaceGap": 0.14449750166232944,
+        "taste": 0.04322727117869957
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 0.3,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000011710239260490814,
+        "gripError": 6.206335383118183e-17,
+        "mouthDistance": 0.1328120614480179,
+        "surfaceGap": 0.130233640702187,
+        "taste": 0.09549150281252627
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 0.4,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000016032961238941676,
+        "gripError": 8.777083671441753e-17,
+        "mouthDistance": 0.11754976949650207,
+        "surfaceGap": 0.11474122479542641,
+        "taste": 0.16543469682057088
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 0.5,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000011170721974825401,
+        "gripError": 1.1443916996305594e-16,
+        "mouthDistance": 0.10291865636640093,
+        "surfaceGap": 0.09999385336050795,
+        "taste": 0.24999999999999994
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 0.6,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000014603372569527406,
+        "gripError": 1.2719202621569003e-16,
+        "mouthDistance": 0.08959654186721788,
+        "surfaceGap": 0.08658664953651839,
+        "taste": 0.3454915028125263
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 0.7,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.0000047213846999095515,
+        "gripError": 1.1188630228279524e-16,
+        "mouthDistance": 0.07587820439207095,
+        "surfaceGap": 0.07272585798058485,
+        "taste": 0.4477357683661732
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 0.8,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.0000022954625407078395,
+        "gripError": 2.7755575615628914e-17,
+        "mouthDistance": 0.06054430125420709,
+        "surfaceGap": 0.05723789688873939,
+        "taste": 0.5522642316338267
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 0.9,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 9.043984199834714e-7,
+        "gripError": 0,
+        "mouthDistance": 0.04738558743103562,
+        "surfaceGap": 0.04374340471941671,
+        "taste": 0.6545084971874737
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.00018753688985393373
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 1,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000002543839606407139,
+        "gripError": 8.777083671441753e-17,
+        "mouthDistance": 0.036233823083309094,
+        "surfaceGap": 0.032006584569714905,
+        "taste": 0.7499999999999999
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.07533527696792987
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 1.1,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000002820425528470836,
+        "gripError": 1.1123893155135927e-16,
+        "mouthDistance": 0.026371080052164087,
+        "surfaceGap": 0.021196376538396955,
+        "taste": 0.8345653031794291
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.20556226611049738
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 1.2,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000003540368320409066,
+        "gripError": 2.8609792490763984e-17,
+        "mouthDistance": 0.018486465942542073,
+        "surfaceGap": 0.012087024828625928,
+        "taste": 0.9045084971874737
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.3105758332853994
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 1.3,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.00000780473305873043,
+        "gripError": 8.777083671441753e-17,
+        "mouthDistance": 0.013971744090374081,
+        "surfaceGap": 0.0054877195730522535,
+        "taste": 0.9567727288213005
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.36404240961181467
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 1.4,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000010529986544617446,
+        "gripError": 1.4224732503009818e-16,
+        "mouthDistance": 0.012638608962830878,
+        "surfaceGap": 0.001399844501511082,
+        "taste": 0.9890738003669028
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.378912139538586
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 1.5,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.0000063439134239238584,
+        "gripError": 5.721958498152797e-17,
+        "mouthDistance": 0.012498670703421838,
+        "surfaceGap": 0.0000032199431247372943,
+        "taste": 1
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.38
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 1.6,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 4.510401309158155e-7,
+        "gripError": 1.734723475976807e-17,
+        "mouthDistance": 0.012604623146149359,
+        "surfaceGap": 0.0013013465267904584,
+        "taste": 0.9890738003669028
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.378912139538586
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 1.7,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000002228862368522178,
+        "gripError": 2.8609792490763984e-17,
+        "mouthDistance": 0.013742475728181993,
+        "surfaceGap": 0.005035056112444389,
+        "taste": 0.9567727288213006
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.36404240961181467
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 1.8,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 6.074111506957528e-7,
+        "gripError": 1.1464934308770758e-16,
+        "mouthDistance": 0.01777500424094063,
+        "surfaceGap": 0.011059254933017688,
+        "taste": 0.9045084971874737
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.3105758332853994
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 1.9,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.0000014606242048363006,
+        "gripError": 2.8609792490763984e-17,
+        "mouthDistance": 0.02493654870893014,
+        "surfaceGap": 0.01945251401820174,
+        "taste": 0.8345653031794292
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.20556226611049755
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 2,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000006322944810779423,
+        "gripError": 1.3877787807814457e-17,
+        "mouthDistance": 0.03494249145923633,
+        "surfaceGap": 0.030423831275884577,
+        "taste": 0.7500000000000002
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.07533527696793031
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 2.1,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000007544247332102814,
+        "gripError": 1.1527756336890508e-16,
+        "mouthDistance": 0.04773878146745601,
+        "surfaceGap": 0.04374128609681116,
+        "taste": 0.6545084971874737
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.00018753688985393373
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 2.2,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000009975170626227948,
+        "gripError": 1.415262216750919e-16,
+        "mouthDistance": 0.06010489274957318,
+        "surfaceGap": 0.05645682889225717,
+        "taste": 0.5522642316338267
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 2.3,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000010629819586577243,
+        "gripError": 1.1443916996305594e-16,
+        "mouthDistance": 0.07278880690421739,
+        "surfaceGap": 0.0693751109048827,
+        "taste": 0.4477357683661735
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 2.4,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.00000984659769587244,
+        "gripError": 1.249000902703301e-16,
+        "mouthDistance": 0.0855076497352272,
+        "surfaceGap": 0.08225347935985042,
+        "taste": 0.3454915028125264
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 2.5,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000007771583498330796,
+        "gripError": 1.3877787807814457e-17,
+        "mouthDistance": 0.09552743199287218,
+        "surfaceGap": 0.09243192743032545,
+        "taste": 0.24999999999999994
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 2.6,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000006791367031972029,
+        "gripError": 7.97218214573518e-17,
+        "mouthDistance": 0.1032451451799105,
+        "surfaceGap": 0.10029022401240269,
+        "taste": 0.16543469682057077
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 2.7,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000007449896023636554,
+        "gripError": 6.938893903907228e-17,
+        "mouthDistance": 0.11121336248499807,
+        "surfaceGap": 0.10831400765879819,
+        "taste": 0.09549150281252633
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 2.8,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000008705533793293862,
+        "gripError": 8.326672684688674e-17,
+        "mouthDistance": 0.11946039150538436,
+        "surfaceGap": 0.11655364236158769,
+        "taste": 0.04322727117869973
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 2.9,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000011038886233274424,
+        "gripError": 3.925231146709438e-17,
+        "mouthDistance": 0.12592505107606677,
+        "surfaceGap": 0.12313398332287513,
+        "taste": 0.010926199633097211
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 3,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000023437447792713143,
+        "gripError": 2.7755575615628914e-17,
+        "mouthDistance": 0.135824598604761,
+        "surfaceGap": 0.13318050113875696,
+        "taste": 0
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 3.1,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.00001402852796145672,
+        "gripError": 2.7755575615628914e-17,
+        "mouthDistance": 0.14476834482906753,
+        "surfaceGap": 0.14218769260108147,
+        "taste": 0.010926199633097211
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 3.2,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000013520682519123283,
+        "gripError": 7.97218214573518e-17,
+        "mouthDistance": 0.14607118377300016,
+        "surfaceGap": 0.14356098640301884,
+        "taste": 0.043227271178699456
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 3.3,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.00001169910268807063,
+        "gripError": 8.326672684688674e-17,
+        "mouthDistance": 0.13885897302842598,
+        "surfaceGap": 0.13641364819815713,
+        "taste": 0.09549150281252594
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 3.4,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.00001052533846048325,
+        "gripError": 1.249000902703301e-16,
+        "mouthDistance": 0.12762508876660464,
+        "surfaceGap": 0.1251719787909858,
+        "taste": 0.16543469682057055
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 3.5,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.0000042170359665998965,
+        "gripError": 0,
+        "mouthDistance": 0.11502045407060843,
+        "surfaceGap": 0.11250963695078625,
+        "taste": 0.2500000000000001
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 3.6,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 2.7899885955344205e-7,
+        "gripError": 1.2719202621569003e-16,
+        "mouthDistance": 0.09961318377997141,
+        "surfaceGap": 0.09706189137897744,
+        "taste": 0.34549150281252616
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 3.7,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.0000017086679933314235,
+        "gripError": 2.7755575615628914e-17,
+        "mouthDistance": 0.08474502324769737,
+        "surfaceGap": 0.08204788713840706,
+        "taste": 0.44773576836617324
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 3.8,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.0000032515318027829092,
+        "gripError": 1.1464934308770758e-16,
+        "mouthDistance": 0.07063860958590246,
+        "surfaceGap": 0.06767194576966572,
+        "taste": 0.5522642316338264
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 3.9,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000006077881956140419,
+        "gripError": 1.1775693440128312e-16,
+        "mouthDistance": 0.056098180487228394,
+        "surfaceGap": 0.05278306768173137,
+        "taste": 0.6545084971874735
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.00018753688985391533
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 4,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.00001393157879698344,
+        "gripError": 2.8609792490763984e-17,
+        "mouthDistance": 0.041910900796748675,
+        "surfaceGap": 0.038096436478294506,
+        "taste": 0.7499999999999996
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.07533527696792942
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 4.1,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000007341499119999702,
+        "gripError": 1.2417518519112547e-16,
+        "mouthDistance": 0.029707453380728045,
+        "surfaceGap": 0.025056215742041324,
+        "taste": 0.8345653031794286
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.2055622661104964
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 4.2,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000005616804296663422,
+        "gripError": 5.551115123125783e-17,
+        "mouthDistance": 0.020135085092929023,
+        "surfaceGap": 0.014346501027211123,
+        "taste": 0.9045084971874736
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.3105758332853993
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 4.3,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.0000035050088269225734,
+        "gripError": 3.3682237275240583e-17,
+        "mouthDistance": 0.014310969417648207,
+        "surfaceGap": 0.006362375414347508,
+        "taste": 0.9567727288213003
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.36404240961181444
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 4.4,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.0000032653662622648353,
+        "gripError": 1.1631705747361534e-16,
+        "mouthDistance": 0.01263467954017593,
+        "surfaceGap": 0.0016006945628260928,
+        "taste": 0.9890738003669028
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.378912139538586
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 4.5,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.0000033384912569838245,
+        "gripError": 3.184528986116163e-17,
+        "mouthDistance": 0.012493569102688487,
+        "surfaceGap": 0.000007329554260410912,
+        "taste": 1
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.38
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 4.6,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.0000032886830245259556,
+        "gripError": 3.029564307160424e-17,
+        "mouthDistance": 0.01264120386785138,
+        "surfaceGap": 0.0016195249148435345,
+        "taste": 0.9890738003669028
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.378912139538586
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 4.7,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.0000035655881060804402,
+        "gripError": 5.682377955034956e-17,
+        "mouthDistance": 0.014330800199373007,
+        "surfaceGap": 0.006414786604575966,
+        "taste": 0.9567727288213004
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.36404240961181455
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 4.8,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000005767298293902474,
+        "gripError": 2.871805767347292e-17,
+        "mouthDistance": 0.020115972766156447,
+        "surfaceGap": 0.014381548048884142,
+        "taste": 0.9045084971874738
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.31057583328539945
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 4.9,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000007578598481696264,
+        "gripError": 1.2586013583571652e-16,
+        "mouthDistance": 0.030091992967655804,
+        "surfaceGap": 0.025474891065825813,
+        "taste": 0.8345653031794289
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.20556226611049697
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 5,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000013736169158045356,
+        "gripError": 1.2586013583571652e-16,
+        "mouthDistance": 0.042373777598878955,
+        "surfaceGap": 0.038606303426927044,
+        "taste": 0.7499999999999999
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.07533527696792987
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 5.1,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.00000644268308030598,
+        "gripError": 1.2432050435751766e-16,
+        "mouthDistance": 0.05644603044072997,
+        "surfaceGap": 0.05319759937119639,
+        "taste": 0.654508497187474
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.00018753688985395208
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 5.2,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.0000035920779400912114,
+        "gripError": 8.355534721610419e-17,
+        "mouthDistance": 0.07155060505468765,
+        "surfaceGap": 0.06861894264851581,
+        "taste": 0.5522642316338263
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 5.3,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.0000019825980591179097,
+        "gripError": 1.3877787807814457e-17,
+        "mouthDistance": 0.08626892952640391,
+        "surfaceGap": 0.08359213802922624,
+        "taste": 0.44773576836617407
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 5.4,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.0000026688673723386838,
+        "gripError": 6.359601310784502e-17,
+        "mouthDistance": 0.10062988059699095,
+        "surfaceGap": 0.09812612808539437,
+        "taste": 0.3454915028125265
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 5.5,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000004627310594882628,
+        "gripError": 3.1031676915590914e-17,
+        "mouthDistance": 0.11567208272247285,
+        "surfaceGap": 0.11323374736232197,
+        "taste": 0.25000000000000044
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 5.6,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000008234265151008162,
+        "gripError": 2.7755575615628914e-17,
+        "mouthDistance": 0.1305210079259083,
+        "surfaceGap": 0.12807112067084508,
+        "taste": 0.1654346968205715
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 5.7,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000012160055325180903,
+        "gripError": 2.7755575615628914e-17,
+        "mouthDistance": 0.1380473339061968,
+        "surfaceGap": 0.13561061586235718,
+        "taste": 0.09549150281252644
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 5.8,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000013902856721997606,
+        "gripError": 6.359601310784502e-17,
+        "mouthDistance": 0.13889450309160872,
+        "surfaceGap": 0.13636174186527983,
+        "taste": 0.04322727117869979
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 5.9,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000014253505269217266,
+        "gripError": 6.206335383118183e-17,
+        "mouthDistance": 0.13598231931239457,
+        "surfaceGap": 0.13321947415672128,
+        "taste": 0.010926199633097156
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 6,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000024956377289345327,
+        "gripError": 1.2719202621569003e-16,
+        "mouthDistance": 0.12825871292380628,
+        "surfaceGap": 0.12530491089244844,
+        "taste": 0
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 6.1,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.00001101967228900968,
+        "gripError": 1.2412670766236366e-16,
+        "mouthDistance": 0.12083888650896142,
+        "surfaceGap": 0.1178379980183428,
+        "taste": 0.010926199633097045
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 6.2,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000008594592617282305,
+        "gripError": 2.7755575615628914e-17,
+        "mouthDistance": 0.11565950198706719,
+        "surfaceGap": 0.11264787551164478,
+        "taste": 0.04322727117869957
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 6.3,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000007246969732191947,
+        "gripError": 1.3877787807814457e-17,
+        "mouthDistance": 0.10983364041986628,
+        "surfaceGap": 0.10676730825339162,
+        "taste": 0.09549150281252616
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 6.4,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000006519450454324725,
+        "gripError": 6.206335383118183e-17,
+        "mouthDistance": 0.10076248293047192,
+        "surfaceGap": 0.0976530343541465,
+        "taste": 0.1654346968205705
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 6.5,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000007395481241148686,
+        "gripError": 1.1188630228279524e-16,
+        "mouthDistance": 0.0923025479418941,
+        "surfaceGap": 0.08907187771430719,
+        "taste": 0.24999999999999928
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 6.6,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000009303244788955342,
+        "gripError": 1.1857187100668868e-16,
+        "mouthDistance": 0.08366984294369478,
+        "surfaceGap": 0.08025029658821538,
+        "taste": 0.34549150281252516
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 6.7,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000009995901733350978,
+        "gripError": 1.415262216750919e-16,
+        "mouthDistance": 0.07156829547734292,
+        "surfaceGap": 0.06797176690084332,
+        "taste": 0.44773576836617357
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 6.8,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.00000934686890420622,
+        "gripError": 8.326672684688674e-17,
+        "mouthDistance": 0.05832092602464868,
+        "surfaceGap": 0.05451726235186305,
+        "taste": 0.5522642316338259
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 6.9,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000007055267961382034,
+        "gripError": 0,
+        "mouthDistance": 0.0459228524340016,
+        "surfaceGap": 0.04177320099984203,
+        "taste": 0.6545084971874743
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.0001875368898539797
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 7,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000005399943770003661,
+        "gripError": 6.206335383118183e-17,
+        "mouthDistance": 0.0345250781666812,
+        "surfaceGap": 0.02980999998735725,
+        "taste": 0.7500000000000002
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.07533527696793031
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 7.1,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.0000015903983066404855,
+        "gripError": 1.2177709378935645e-16,
+        "mouthDistance": 0.024999650008426105,
+        "surfaceGap": 0.01949833873369925,
+        "taste": 0.8345653031794291
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.20556226611049738
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 7.2,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.0000024069940964612172,
+        "gripError": 8.391472671209643e-17,
+        "mouthDistance": 0.018221189150179874,
+        "surfaceGap": 0.011849441057970143,
+        "taste": 0.9045084971874735
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.3105758332853991
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 7.3,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.0000029044853999793102,
+        "gripError": 5.584220101197091e-17,
+        "mouthDistance": 0.014080708212538914,
+        "surfaceGap": 0.005923741085916271,
+        "taste": 0.9567727288213002
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.3640424096118144
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 7.4,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000003610616629645669,
+        "gripError": 1.2413882881933434e-16,
+        "mouthDistance": 0.012647969344889116,
+        "surfaceGap": 0.0016212216109506602,
+        "taste": 0.9890738003669028
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.378912139538586
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 7.5,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000005736457383185859,
+        "gripError": 2.2982303784612184e-16,
+        "mouthDistance": 0.012497004007500777,
+        "surfaceGap": 0.0000034582007097577177,
+        "taste": 1
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.38
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 7.6,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.00000709832199926554,
+        "gripError": 1.3878871967638603e-16,
+        "mouthDistance": 0.012679836940473978,
+        "surfaceGap": 0.0016887832270557936,
+        "taste": 0.989073800366903
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.378912139538586
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 7.7,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000007159281165195348,
+        "gripError": 1.214306433183765e-17,
+        "mouthDistance": 0.014560251354616742,
+        "surfaceGap": 0.00670630417352897,
+        "taste": 0.9567727288213002
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.3640424096118144
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 7.8,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000005718511770458607,
+        "gripError": 1.2434546398594486e-16,
+        "mouthDistance": 0.02025766222171,
+        "surfaceGap": 0.01456851199724177,
+        "taste": 0.904508497187474
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.31057583328539967
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 7.9,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.0000031076484550570708,
+        "gripError": 1.2533302082415627e-16,
+        "mouthDistance": 0.029698597805056487,
+        "surfaceGap": 0.0251742489457515,
+        "taste": 0.8345653031794289
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.20556226611049697
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 8,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000004401983188135342,
+        "gripError": 5.815852873680767e-17,
+        "mouthDistance": 0.04208799613762877,
+        "surfaceGap": 0.0384100078216338,
+        "taste": 0.7500000000000008
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.07533527696793103
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 8.1,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.0000016963689866251102,
+        "gripError": 5.721958498152797e-17,
+        "mouthDistance": 0.05611579210898125,
+        "surfaceGap": 0.05295887275922572,
+        "taste": 0.6545084971874741
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.00018753688985396127
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 8.2,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.0000013357032351192654,
+        "gripError": 5.721958498152797e-17,
+        "mouthDistance": 0.07136928522374385,
+        "surfaceGap": 0.0685201060898267,
+        "taste": 0.5522642316338282
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 8.3,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000004357473492802619,
+        "gripError": 1.1123893155135927e-16,
+        "mouthDistance": 0.08837817625641288,
+        "surfaceGap": 0.08567066990707607,
+        "taste": 0.4477357683661724
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 8.4,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000008811800361097327,
+        "gripError": 0,
+        "mouthDistance": 0.10600286000640126,
+        "surfaceGap": 0.10334730431723421,
+        "taste": 0.3454915028125266
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 8.5,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000011445739589320113,
+        "gripError": 5.721958498152797e-17,
+        "mouthDistance": 0.11899343283804262,
+        "surfaceGap": 0.11642001939161756,
+        "taste": 0.24999999999999978
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 8.6,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000012480681754352136,
+        "gripError": 8.441528768080324e-17,
+        "mouthDistance": 0.12709451121592208,
+        "surfaceGap": 0.12454319980001702,
+        "taste": 0.1654346968205716
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 8.7,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000012288692736478964,
+        "gripError": 8.326672684688674e-17,
+        "mouthDistance": 0.13129903234567608,
+        "surfaceGap": 0.12870206864922823,
+        "taste": 0.0954915028125265
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 8.8,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000010601806279971496,
+        "gripError": 9.309503074677274e-17,
+        "mouthDistance": 0.13042738075213958,
+        "surfaceGap": 0.12784112736607403,
+        "taste": 0.043227271178699456
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 8.9,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000009296624958366262,
+        "gripError": 1.3877787807814457e-16,
+        "mouthDistance": 0.12989467256791573,
+        "surfaceGap": 0.1273391199433902,
+        "taste": 0.010926199633096989
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 9,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.0000158102752607312,
+        "gripError": 1.0007415106216802e-16,
+        "mouthDistance": 0.1317083277321153,
+        "surfaceGap": 0.12915238735077111,
+        "taste": 0
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 9.1,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000009215614391942157,
+        "gripError": 3.925231146709438e-17,
+        "mouthDistance": 0.13202975404938908,
+        "surfaceGap": 0.12942814962747448,
+        "taste": 0.010926199633096878
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 9.2,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000010444627137441886,
+        "gripError": 6.206335383118183e-17,
+        "mouthDistance": 0.12794339537782892,
+        "surfaceGap": 0.12531343526007116,
+        "taste": 0.04322727117869918
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 9.3,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000012080832006444945,
+        "gripError": 6.206335383118183e-17,
+        "mouthDistance": 0.12321978358686055,
+        "surfaceGap": 0.12051015270396297,
+        "taste": 0.09549150281252605
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 9.4,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000012279062272898923,
+        "gripError": 1.0103182026100663e-16,
+        "mouthDistance": 0.11666606142450188,
+        "surfaceGap": 0.11382462653459714,
+        "taste": 0.16543469682057105
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 9.5,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.00001139412262649547,
+        "gripError": 0,
+        "mouthDistance": 0.1043442427392005,
+        "surfaceGap": 0.10145381745280167,
+        "taste": 0.24999999999999917
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 9.6,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000009048524643126405,
+        "gripError": 1.3877787807814457e-17,
+        "mouthDistance": 0.08986430168156319,
+        "surfaceGap": 0.08692106275443821,
+        "taste": 0.34549150281252594
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 9.7,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.0000048198096063890985,
+        "gripError": 2.7755575615628914e-17,
+        "mouthDistance": 0.07555665396237443,
+        "surfaceGap": 0.07248351904164278,
+        "taste": 0.4477357683661717
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 9.8,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.0000014766142302051486,
+        "gripError": 3.1031676915590914e-17,
+        "mouthDistance": 0.0615640916880922,
+        "surfaceGap": 0.05828215505585753,
+        "taste": 0.5522642316338275
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 9.9,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 9.881322016975265e-7,
+        "gripError": 0,
+        "mouthDistance": 0.04854446421148596,
+        "surfaceGap": 0.045004051798092436,
+        "taste": 0.6545084971874733
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.0001875368898538969
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 10,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.0000032791938274349675,
+        "gripError": 5.721958498152797e-17,
+        "mouthDistance": 0.03782460534460195,
+        "surfaceGap": 0.03384982479157142,
+        "taste": 0.7500000000000002
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.07533527696793031
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 10.1,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000002890587544590239,
+        "gripError": 5.551115123125783e-17,
+        "mouthDistance": 0.02840105020562998,
+        "surfaceGap": 0.023641371337343807,
+        "taste": 0.8345653031794283
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.2055622661104961
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 10.2,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000005621245829520188,
+        "gripError": 3.522172224755356e-17,
+        "mouthDistance": 0.01988946473633151,
+        "surfaceGap": 0.014063135169578701,
+        "taste": 0.9045084971874735
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.3105758332853991
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 10.3,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000007137045117782057,
+        "gripError": 1.158796580397495e-16,
+        "mouthDistance": 0.014402950817801751,
+        "surfaceGap": 0.006454753596850693,
+        "taste": 0.9567727288213006
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.36404240961181467
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 10.4,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000007089605372956549,
+        "gripError": 1.1464934308770758e-16,
+        "mouthDistance": 0.012670016888138097,
+        "surfaceGap": 0.0016422411731759885,
+        "taste": 0.989073800366903
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.378912139538586
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 10.5,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000005696773437280202,
+        "gripError": 1.1736016516649439e-16,
+        "mouthDistance": 0.012497110522446649,
+        "surfaceGap": 0.0000034888054744819737,
+        "taste": 1
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.38
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 10.6,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000003620170164728882,
+        "gripError": 2.7755575615628914e-17,
+        "mouthDistance": 0.012643201106466127,
+        "surfaceGap": 0.001607560536277344,
+        "taste": 0.9890738003669032
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.37891213953858605
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 10.7,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.0000031847884944032194,
+        "gripError": 2.797157557069881e-17,
+        "mouthDistance": 0.014246730675693669,
+        "surfaceGap": 0.006283866393534945,
+        "taste": 0.9567727288213008
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.36404240961181483
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 10.8,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000003281071546250713,
+        "gripError": 1.388754219929333e-16,
+        "mouthDistance": 0.019725317078180888,
+        "surfaceGap": 0.013957685518508836,
+        "taste": 0.904508497187474
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.31057583328539967
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 10.9,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.0000028264979338868566,
+        "gripError": 1.1508161292404774e-16,
+        "mouthDistance": 0.02887403464406931,
+        "surfaceGap": 0.024285747462064952,
+        "taste": 0.834565303179429
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.20556226611049722
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 11,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000005105023897770003,
+        "gripError": 1.1443916996305594e-16,
+        "mouthDistance": 0.040983053251962186,
+        "surfaceGap": 0.03724699096146461,
+        "taste": 0.7500000000000009
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.07533527696793119
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 11.1,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.0000064212546212727695,
+        "gripError": 1.1295700899707568e-16,
+        "mouthDistance": 0.055796264127390624,
+        "surfaceGap": 0.052495805886992236,
+        "taste": 0.6545084971874742
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.00018753688985397049
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 11.2,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.00000890384315110116,
+        "gripError": 6.938893903907228e-18,
+        "mouthDistance": 0.07167526041782019,
+        "surfaceGap": 0.06862087956603735,
+        "taste": 0.5522642316338283
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 11.3,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000009691108871031272,
+        "gripError": 2.7755575615628914e-17,
+        "mouthDistance": 0.08606213052416227,
+        "surfaceGap": 0.08324039398552029,
+        "taste": 0.44773576836617257
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 11.4,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000009075883886309847,
+        "gripError": 5.721958498152797e-17,
+        "mouthDistance": 0.0988484479241153,
+        "surfaceGap": 0.09617091203040558,
+        "taste": 0.3454915028125267
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 11.5,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000007185306688274564,
+        "gripError": 1.0385185452638061e-16,
+        "mouthDistance": 0.11009406045761397,
+        "surfaceGap": 0.1074880924284271,
+        "taste": 0.2499999999999999
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 11.6,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.0000064180442415694425,
+        "gripError": 8.326672684688674e-17,
+        "mouthDistance": 0.1177528050816595,
+        "surfaceGap": 0.115253510655013,
+        "taste": 0.16543469682057166
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 11.7,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.0000072782409113269495,
+        "gripError": 6.206335383118183e-17,
+        "mouthDistance": 0.12513532675713476,
+        "surfaceGap": 0.12270439774765546,
+        "taste": 0.09549150281252655
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 11.8,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000009468262407689714,
+        "gripError": 2.7755575615628914e-17,
+        "mouthDistance": 0.13364276709544992,
+        "surfaceGap": 0.13120476619641863,
+        "taste": 0.04322727117869951
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 11.9,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000016095666867956033,
+        "gripError": 3.925231146709438e-17,
+        "mouthDistance": 0.1390931863359658,
+        "surfaceGap": 0.13664235311767528,
+        "taste": 0.010926199633097045
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "hold",
+      "t": 12,
+      "contacts": {
+        "mode": "lollipop",
+        "reachError": 0.000034993780865919806,
+        "gripError": 6.798699777552591e-17,
+        "mouthDistance": 0.14038834105204803,
+        "surfaceGap": 0.137944982312847,
+        "taste": 0
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 0,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.18053390908052064,
+        "targetSeparation": 0.18053575823088347,
+        "contactHold": false,
+        "targetSurfaceGap": 0.1804
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 0.1,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.18053394849038779,
+        "targetSeparation": 0.18053575823088347,
+        "contactHold": false,
+        "targetSurfaceGap": 0.1804
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 0.2,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.11276999030206211,
+        "targetSeparation": 0.11277624544001885,
+        "contactHold": false,
+        "targetSurfaceGap": 0.1126916666666665
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 0.3,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.0004000027232255008,
+        "targetSeparation": 0.0004,
+        "contactHold": true,
+        "targetSurfaceGap": 0.0004
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 0.4,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.037428678779333216,
+        "targetSeparation": 0.03743288119580022,
+        "contactHold": false,
+        "targetSurfaceGap": 0.037405208333333335
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 0.5,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.14350257729831922,
+        "targetSeparation": 0.14350257830852026,
+        "contactHold": false,
+        "targetSurfaceGap": 0.14339479166666674
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 0.6,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.18053408609824204,
+        "targetSeparation": 0.18053575823088347,
+        "contactHold": false,
+        "targetSurfaceGap": 0.1804
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 0.7,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.18053575772444708,
+        "targetSeparation": 0.18053575823088347,
+        "contactHold": false,
+        "targetSurfaceGap": 0.1804
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 0.8,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.11277437642882224,
+        "targetSeparation": 0.11277624544001885,
+        "contactHold": false,
+        "targetSurfaceGap": 0.1126916666666665
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 0.9,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.00040000416875835026,
+        "targetSeparation": 0.0004,
+        "contactHold": true,
+        "targetSurfaceGap": 0.0004
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 1,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.03742363642091269,
+        "targetSeparation": 0.03743288119580022,
+        "contactHold": false,
+        "targetSurfaceGap": 0.037405208333333335
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 1.1,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.1435025772974551,
+        "targetSeparation": 0.14350257830852026,
+        "contactHold": false,
+        "targetSurfaceGap": 0.14339479166666674
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 1.2,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.18053684202230574,
+        "targetSeparation": 0.18053575823088347,
+        "contactHold": false,
+        "targetSurfaceGap": 0.1804
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 1.3,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.1805357576706944,
+        "targetSeparation": 0.18053575823088347,
+        "contactHold": false,
+        "targetSurfaceGap": 0.1804
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 1.4,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.11277320960545169,
+        "targetSeparation": 0.11277624544001909,
+        "contactHold": false,
+        "targetSurfaceGap": 0.11269166666666673
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 1.5,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.0004000025249877788,
+        "targetSeparation": 0.0004,
+        "contactHold": true,
+        "targetSurfaceGap": 0.0004
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 1.6,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.03744376876470647,
+        "targetSeparation": 0.03743288119580022,
+        "contactHold": false,
+        "targetSurfaceGap": 0.037405208333333335
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 1.7,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.14350257732373708,
+        "targetSeparation": 0.14350257830852026,
+        "contactHold": false,
+        "targetSurfaceGap": 0.14339479166666674
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 1.8,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.1805376458884097,
+        "targetSeparation": 0.18053575823088347,
+        "contactHold": false,
+        "targetSurfaceGap": 0.1804
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 1.9,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.18053575772089844,
+        "targetSeparation": 0.18053575823088347,
+        "contactHold": false,
+        "targetSurfaceGap": 0.1804
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 2,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.11276886012883151,
+        "targetSeparation": 0.11277624544001885,
+        "contactHold": false,
+        "targetSurfaceGap": 0.1126916666666665
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 2.1,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.0004000023899712669,
+        "targetSeparation": 0.0004,
+        "contactHold": true,
+        "targetSurfaceGap": 0.0004
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 2.2,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.03743288001363697,
+        "targetSeparation": 0.037432881195800426,
+        "contactHold": false,
+        "targetSurfaceGap": 0.037405208333333544
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 2.3,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.14350257736263963,
+        "targetSeparation": 0.14350257830852006,
+        "contactHold": false,
+        "targetSurfaceGap": 0.14339479166666655
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 2.4,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.18053575812185685,
+        "targetSeparation": 0.18053575823088347,
+        "contactHold": false,
+        "targetSurfaceGap": 0.1804
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 2.5,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.18053575771965683,
+        "targetSeparation": 0.18053575823088347,
+        "contactHold": false,
+        "targetSurfaceGap": 0.1804
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 2.6,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.11277624447062357,
+        "targetSeparation": 0.11277624544001862,
+        "contactHold": false,
+        "targetSurfaceGap": 0.11269166666666626
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 2.7,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.0004000023542013125,
+        "targetSeparation": 0.0004,
+        "contactHold": true,
+        "targetSurfaceGap": 0.0004
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 2.8,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.037432879988246695,
+        "targetSeparation": 0.03743288119580011,
+        "contactHold": false,
+        "targetSurfaceGap": 0.03740520833333323
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 2.9,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.14350257734424435,
+        "targetSeparation": 0.14350257830852026,
+        "contactHold": false,
+        "targetSurfaceGap": 0.14339479166666674
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 3,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.18053364810740247,
+        "targetSeparation": 0.18053575823088347,
+        "contactHold": false,
+        "targetSurfaceGap": 0.1804
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 3.1,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.18053575751385312,
+        "targetSeparation": 0.18053575823088347,
+        "contactHold": false,
+        "targetSurfaceGap": 0.1804
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 3.2,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.11277624405976823,
+        "targetSeparation": 0.11277624544001837,
+        "contactHold": false,
+        "targetSurfaceGap": 0.11269166666666601
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 3.3,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.0004000030629488298,
+        "targetSeparation": 0.0004,
+        "contactHold": true,
+        "targetSurfaceGap": 0.0004
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 3.4,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.03742858251403139,
+        "targetSeparation": 0.03743288119580022,
+        "contactHold": false,
+        "targetSurfaceGap": 0.037405208333333335
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 3.5,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.14350257694929475,
+        "targetSeparation": 0.14350257830852026,
+        "contactHold": false,
+        "targetSurfaceGap": 0.14339479166666674
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 3.6,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.18053811011201606,
+        "targetSeparation": 0.18053575823088347,
+        "contactHold": false,
+        "targetSurfaceGap": 0.1804
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 3.7,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.18053575739500433,
+        "targetSeparation": 0.18053575823088347,
+        "contactHold": false,
+        "targetSurfaceGap": 0.1804
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 3.8,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.11277624398558679,
+        "targetSeparation": 0.11277624544001909,
+        "contactHold": false,
+        "targetSurfaceGap": 0.11269166666666673
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 3.9,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.00040000299109700063,
+        "targetSeparation": 0.0004,
+        "contactHold": true,
+        "targetSurfaceGap": 0.0004
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 4,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.037422295264553415,
+        "targetSeparation": 0.03743288119580022,
+        "contactHold": false,
+        "targetSurfaceGap": 0.037405208333333335
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 4.1,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.14350257697313665,
+        "targetSeparation": 0.1435025783085199,
+        "contactHold": false,
+        "targetSurfaceGap": 0.14339479166666638
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 4.2,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.18053575832247995,
+        "targetSeparation": 0.18053575823088347,
+        "contactHold": false,
+        "targetSurfaceGap": 0.1804
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 4.3,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.1805357574071211,
+        "targetSeparation": 0.18053575823088347,
+        "contactHold": false,
+        "targetSurfaceGap": 0.1804
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 4.4,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.11277624401524565,
+        "targetSeparation": 0.1127762454400179,
+        "contactHold": false,
+        "targetSurfaceGap": 0.11269166666666554
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 4.5,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.0004000030089444887,
+        "targetSeparation": 0.0004,
+        "contactHold": true,
+        "targetSurfaceGap": 0.0004
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 4.6,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.037432880096662006,
+        "targetSeparation": 0.037432881195800016,
+        "contactHold": false,
+        "targetSurfaceGap": 0.037405208333333134
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 4.7,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.14350257696255436,
+        "targetSeparation": 0.1435025783085205,
+        "contactHold": false,
+        "targetSurfaceGap": 0.143394791666667
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 4.8,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.18053575829127408,
+        "targetSeparation": 0.18053575823088347,
+        "contactHold": false,
+        "targetSurfaceGap": 0.1804
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 4.9,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.18053575737659228,
+        "targetSeparation": 0.18053575823088347,
+        "contactHold": false,
+        "targetSurfaceGap": 0.1804
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 5,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.11276975123588977,
+        "targetSeparation": 0.11277624544001862,
+        "contactHold": false,
+        "targetSurfaceGap": 0.11269166666666626
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 5.1,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.00040000308338813967,
+        "targetSeparation": 0.0004,
+        "contactHold": true,
+        "targetSurfaceGap": 0.0004
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 5.2,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.03743288015872488,
+        "targetSeparation": 0.03743288119580064,
+        "contactHold": false,
+        "targetSurfaceGap": 0.03740520833333376
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 5.3,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.14350257693441748,
+        "targetSeparation": 0.14350257830852026,
+        "contactHold": false,
+        "targetSurfaceGap": 0.14339479166666674
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 5.4,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.18053575829269067,
+        "targetSeparation": 0.18053575823088347,
+        "contactHold": false,
+        "targetSurfaceGap": 0.1804
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 5.5,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.18053575732920343,
+        "targetSeparation": 0.18053575823088347,
+        "contactHold": false,
+        "targetSurfaceGap": 0.1804
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 5.6,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.11277624404549683,
+        "targetSeparation": 0.11277624544001935,
+        "contactHold": false,
+        "targetSurfaceGap": 0.112691666666667
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 5.7,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.00040000306945448504,
+        "targetSeparation": 0.0004,
+        "contactHold": true,
+        "targetSurfaceGap": 0.0004
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 5.8,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.03743288010480916,
+        "targetSeparation": 0.03743288119580022,
+        "contactHold": false,
+        "targetSurfaceGap": 0.037405208333333335
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 5.9,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.14350257725757884,
+        "targetSeparation": 0.14350257830852067,
+        "contactHold": false,
+        "targetSurfaceGap": 0.14339479166666716
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 6,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.18053332218249799,
+        "targetSeparation": 0.18053575823088347,
+        "contactHold": false,
+        "targetSurfaceGap": 0.1804
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 6.1,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.1805357577960188,
+        "targetSeparation": 0.18053575823088347,
+        "contactHold": false,
+        "targetSurfaceGap": 0.1804
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 6.2,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.11277624450641795,
+        "targetSeparation": 0.11277624544001813,
+        "contactHold": false,
+        "targetSurfaceGap": 0.11269166666666577
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 6.3,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.0004000040152019441,
+        "targetSeparation": 0.0004,
+        "contactHold": true,
+        "targetSurfaceGap": 0.0004
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 6.4,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.0374328790511243,
+        "targetSeparation": 0.03743288119580064,
+        "contactHold": false,
+        "targetSurfaceGap": 0.03740520833333376
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 6.5,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.14350257535082578,
+        "targetSeparation": 0.14350257830852026,
+        "contactHold": false,
+        "targetSurfaceGap": 0.14339479166666674
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 6.6,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.1805357582591022,
+        "targetSeparation": 0.18053575823088347,
+        "contactHold": false,
+        "targetSurfaceGap": 0.1804
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 6.7,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.1805357563400331,
+        "targetSeparation": 0.18053575823088347,
+        "contactHold": false,
+        "targetSurfaceGap": 0.1804
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 6.8,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.11277624207818669,
+        "targetSeparation": 0.11277624544001885,
+        "contactHold": false,
+        "targetSurfaceGap": 0.1126916666666665
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 6.9,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.00040000396665747684,
+        "targetSeparation": 0.0004,
+        "contactHold": true,
+        "targetSurfaceGap": 0.0004
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 7,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.03742522964571238,
+        "targetSeparation": 0.037432881195800426,
+        "contactHold": false,
+        "targetSurfaceGap": 0.037405208333333544
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 7.1,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.14350257526775587,
+        "targetSeparation": 0.14350257830852006,
+        "contactHold": false,
+        "targetSurfaceGap": 0.14339479166666655
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 7.2,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.18053575821905588,
+        "targetSeparation": 0.18053575823088347,
+        "contactHold": false,
+        "targetSurfaceGap": 0.1804
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 7.3,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.18053575750362127,
+        "targetSeparation": 0.18053575823088347,
+        "contactHold": false,
+        "targetSurfaceGap": 0.1804
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 7.4,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.1127762439815228,
+        "targetSeparation": 0.11277624544001766,
+        "contactHold": false,
+        "targetSurfaceGap": 0.1126916666666653
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 7.5,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.00040000313526652813,
+        "targetSeparation": 0.0004,
+        "contactHold": true,
+        "targetSurfaceGap": 0.0004
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 7.6,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.03743288011957451,
+        "targetSeparation": 0.03743288119580011,
+        "contactHold": false,
+        "targetSurfaceGap": 0.03740520833333323
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 7.7,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.14350257689570264,
+        "targetSeparation": 0.14350257830852067,
+        "contactHold": false,
+        "targetSurfaceGap": 0.14339479166666716
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 7.8,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.18053575833297864,
+        "targetSeparation": 0.18053575823088347,
+        "contactHold": false,
+        "targetSurfaceGap": 0.1804
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 7.9,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.18053575732452531,
+        "targetSeparation": 0.18053575823088347,
+        "contactHold": false,
+        "targetSurfaceGap": 0.1804
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 8,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.11276886537655305,
+        "targetSeparation": 0.11277624544001837,
+        "contactHold": false,
+        "targetSurfaceGap": 0.11269166666666601
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 8.1,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.00040000313752988945,
+        "targetSeparation": 0.0004,
+        "contactHold": true,
+        "targetSurfaceGap": 0.0004
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 8.2,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.03743288015485398,
+        "targetSeparation": 0.03743288119579981,
+        "contactHold": false,
+        "targetSurfaceGap": 0.03740520833333293
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 8.3,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.14350257692621904,
+        "targetSeparation": 0.1435025783085211,
+        "contactHold": false,
+        "targetSurfaceGap": 0.14339479166666758
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 8.4,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.18053575829052856,
+        "targetSeparation": 0.18053575823088347,
+        "contactHold": false,
+        "targetSurfaceGap": 0.1804
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 8.5,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.1805357573526283,
+        "targetSeparation": 0.18053575823088347,
+        "contactHold": false,
+        "targetSurfaceGap": 0.1804
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 8.6,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.1127762441564024,
+        "targetSeparation": 0.11277624544001909,
+        "contactHold": false,
+        "targetSurfaceGap": 0.11269166666666673
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 8.7,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.00040000274915186164,
+        "targetSeparation": 0.0004,
+        "contactHold": true,
+        "targetSurfaceGap": 0.0004
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 8.8,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.037432880047433184,
+        "targetSeparation": 0.03743288119580104,
+        "contactHold": false,
+        "targetSurfaceGap": 0.03740520833333416
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 8.9,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.14350257726996998,
+        "targetSeparation": 0.14350257830852067,
+        "contactHold": false,
+        "targetSurfaceGap": 0.14339479166666716
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 9,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.18053358766029803,
+        "targetSeparation": 0.18053575823088347,
+        "contactHold": false,
+        "targetSurfaceGap": 0.1804
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 9.1,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.18053575763517676,
+        "targetSeparation": 0.18053575823088347,
+        "contactHold": false,
+        "targetSurfaceGap": 0.1804
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 9.2,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.11277624433001014,
+        "targetSeparation": 0.11277624544001985,
+        "contactHold": false,
+        "targetSurfaceGap": 0.1126916666666675
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 9.3,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.00040000260142160414,
+        "targetSeparation": 0.0004,
+        "contactHold": true,
+        "targetSurfaceGap": 0.0004
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 9.4,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.03743288002945515,
+        "targetSeparation": 0.037432881195800835,
+        "contactHold": false,
+        "targetSurfaceGap": 0.03740520833333395
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 9.5,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.1435025772457395,
+        "targetSeparation": 0.1435025783085205,
+        "contactHold": false,
+        "targetSurfaceGap": 0.143394791666667
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 9.6,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.18053575820587903,
+        "targetSeparation": 0.18053575823088347,
+        "contactHold": false,
+        "targetSurfaceGap": 0.1804
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 9.7,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.1805357576577481,
+        "targetSeparation": 0.18053575823088347,
+        "contactHold": false,
+        "targetSurfaceGap": 0.1804
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 9.8,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.11277624430076492,
+        "targetSeparation": 0.11277624544001666,
+        "contactHold": false,
+        "targetSurfaceGap": 0.1126916666666643
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 9.9,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.0004000025572667277,
+        "targetSeparation": 0.0004,
+        "contactHold": true,
+        "targetSurfaceGap": 0.0004
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 10,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.037422327821724055,
+        "targetSeparation": 0.03743288119580064,
+        "contactHold": false,
+        "targetSurfaceGap": 0.03740520833333376
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 10.1,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.1435025770793419,
+        "targetSeparation": 0.14350257830852026,
+        "contactHold": false,
+        "targetSurfaceGap": 0.14339479166666674
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 10.2,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.18053575831456142,
+        "targetSeparation": 0.18053575823088347,
+        "contactHold": false,
+        "targetSurfaceGap": 0.1804
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 10.3,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.1805357574217879,
+        "targetSeparation": 0.18053575823088347,
+        "contactHold": false,
+        "targetSurfaceGap": 0.1804
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 10.4,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.11277624401637579,
+        "targetSeparation": 0.11277624544001737,
+        "contactHold": false,
+        "targetSurfaceGap": 0.11269166666666501
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 10.5,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.0004000029513727045,
+        "targetSeparation": 0.0004,
+        "contactHold": true,
+        "targetSurfaceGap": 0.0004
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 10.6,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.037432880066851144,
+        "targetSeparation": 0.03743288119580022,
+        "contactHold": false,
+        "targetSurfaceGap": 0.037405208333333335
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 10.7,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.14350257698628754,
+        "targetSeparation": 0.1435025783085199,
+        "contactHold": false,
+        "targetSurfaceGap": 0.14339479166666638
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 10.8,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.18053575829519924,
+        "targetSeparation": 0.18053575823088347,
+        "contactHold": false,
+        "targetSurfaceGap": 0.1804
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 10.9,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.18053575741176192,
+        "targetSeparation": 0.18053575823088347,
+        "contactHold": false,
+        "targetSurfaceGap": 0.1804
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 11,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.11276972680903086,
+        "targetSeparation": 0.11277624544001813,
+        "contactHold": false,
+        "targetSurfaceGap": 0.11269166666666577
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 11.1,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.00040000302077991133,
+        "targetSeparation": 0.0004,
+        "contactHold": true,
+        "targetSurfaceGap": 0.0004
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 11.2,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.03743288013551864,
+        "targetSeparation": 0.037432881195799905,
+        "contactHold": false,
+        "targetSurfaceGap": 0.03740520833333303
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 11.3,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.14350257697277571,
+        "targetSeparation": 0.1435025783085211,
+        "contactHold": false,
+        "targetSurfaceGap": 0.14339479166666758
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 11.4,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.18053575826658963,
+        "targetSeparation": 0.18053575823088347,
+        "contactHold": false,
+        "targetSurfaceGap": 0.1804
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 11.5,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.18053575744662528,
+        "targetSeparation": 0.18053575823088347,
+        "contactHold": false,
+        "targetSurfaceGap": 0.1804
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 11.6,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.11277624420956298,
+        "targetSeparation": 0.11277624544001885,
+        "contactHold": false,
+        "targetSurfaceGap": 0.1126916666666665
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 11.7,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.0004000028532887492,
+        "targetSeparation": 0.0004,
+        "contactHold": true,
+        "targetSurfaceGap": 0.0004
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 11.8,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.037432880109816304,
+        "targetSeparation": 0.03743288119580126,
+        "contactHold": false,
+        "targetSurfaceGap": 0.037405208333334376
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 11.9,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.14350084621191875,
+        "targetSeparation": 0.1435025783085209,
+        "contactHold": false,
+        "targetSurfaceGap": 0.14339479166666738
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    },
+    {
+      "mode": "clap",
+      "t": 12,
+      "contacts": {
+        "mode": "clap",
+        "palmSeparation": 0.18053329300584653,
+        "targetSeparation": 0.18053575823088347,
+        "contactHold": false,
+        "targetSurfaceGap": 0.1804
+      },
+      "face": {
+        "type": "articulated facial surface",
+        "sourceVertices": 85391,
+        "mouthBoundary": 51,
+        "mouthOpen": 0.14
+      }
+    }
+  ]
+}

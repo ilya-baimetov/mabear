@@ -207,12 +207,12 @@ function cleanEyeTexture(source:THREE.CanvasTexture,target:THREE.CanvasTexture,o
 
 function irisGeometry(rx:number,ry:number,depth:number){
  const pos:number[]=[],colors:number[]=[],idx:number[]=[],radial=12,segments=64;
- const green=new THREE.Color('#2c7755'),light=new THREE.Color('#609570'),dark=new THREE.Color('#12372b'),pupil=new THREE.Color('#071312');
+ const green=new THREE.Color('#367e58'),light=new THREE.Color('#78a477'),dark=new THREE.Color('#294c37'),pupil=new THREE.Color('#0b1814');
  for(let r=0;r<=radial;r++)for(let s=0;s<=segments;s++){
-  const u=r/radial,a=s/segments*Math.PI*2,x=Math.cos(a)*.0185*u,y=Math.sin(a)*.0185*u;
+  const u=r/radial,a=s/segments*Math.PI*2,x=Math.cos(a)*.0203*u,y=Math.sin(a)*.0203*u;
   pos.push(x,y,depth*Math.sqrt(Math.max(0,1-(x/rx)**2-(y/ry)**2))+.0006);
   const streak=.5+.2*Math.sin(a*49)+.16*Math.sin(a*93+.9)+.14*Math.sin(a*21+u*7);
-  const c=u<.50?pupil.clone():green.clone().lerp(light,streak*.65).lerp(dark,smooth((u-.86)/.14));c.toArray(colors,colors.length);
+  const c=u<.47?pupil.clone():green.clone().lerp(light,streak*.68).lerp(dark,smooth((u-.84)/.16)*.78);c.toArray(colors,colors.length);
   if(r<radial&&s<segments){const k=r*(segments+1)+s;idx.push(k,k+segments+1,k+1,k+1,k+segments+1,k+segments+2);}
  }
  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));g.setIndex(idx);g.computeVertexNormals();return g;
@@ -240,14 +240,25 @@ function bakeFaceTexture(source:THREE.MeshStandardMaterial,sample:ReturnType<typ
  const material=source.clone();material.map=texture;material.normalMap=null;material.roughnessMap=null;material.metalnessMap=null;material.aoMap=null;material.side=THREE.DoubleSide;return material;
 }
 
+/** The shared cartoon presets are deliberately broad. Masha's sculpt needs
+ * smaller rest apertures so a listening smile does not become a permanent gape.
+ * Speech still reaches its full authored shape, through a C1-continuous weight. */
+function mashaMouth(emotion:ActorFrame['face']['emotion'],viseme:ActorFrame['face']['viseme'],weight:number):MouthShape{
+ const w=viseme==='rest'?0:smooth(weight),shape=mouthShapeFor(emotion,viseme,w);
+ const emotionalOpen={neutral:0,happy:.14,excited:.42,mischievous:0,curious:.11,surprised:.50,sad:0,angry:.09,scared:.30,sleepy:0,proud:0,annoyed:0}[emotion];
+ shape.open+=(emotionalOpen-EMOTION_PRESETS[emotion].mouth.open)*(1-w);
+ return shape;
+}
 function expression(frame:ActorFrame){
  const target=EMOTION_PRESETS[frame.face.emotion],transition=frame.face.emotionTransition;if(!transition)return target;
- const from=EMOTION_PRESETS[transition.from],w=smooth(transition.progress);
- return {...target,browL:mix(from.browL,target.browL,w),browR:mix(from.browR,target.browR,w),tilt:mix(from.tilt,target.tilt,w),lid:mix(from.lid,target.lid,w)};
+ const from=EMOTION_PRESETS[transition.from],w=smooth(transition.progress),b=smooth((transition.progress-.06)/.94);
+ // Lids lead the reaction; brows settle a few frames later. The offsets use
+ // absolute transition progress, so reverse seeking produces the same surface.
+ return {...target,browL:mix(from.browL,target.browL,b),browR:mix(from.browR,target.browR,b),tilt:mix(from.tilt,target.tilt,w),lid:mix(from.lid,target.lid,smooth(transition.progress/.88)),mouth:{...target.mouth,smile:mix(from.mouth.smile,target.mouth.smile,w),asym:mix(from.mouth.asym,target.mouth.asym,w)}};
 }
 function mouthExpression(frame:ActorFrame):MouthShape{
- const f=frame.face,target=mouthShapeFor(f.emotion,f.viseme,f.visemeWeight),transition=f.emotionTransition;if(!transition)return target;
- const from=mouthShapeFor(transition.from,f.viseme,f.visemeWeight),w=smooth(transition.progress);for(const key of Object.keys(target) as (keyof MouthShape)[])target[key]=mix(from[key],target[key],w);return target;
+ const f=frame.face,target=mashaMouth(f.emotion,f.viseme,f.visemeWeight),transition=f.emotionTransition;if(!transition)return target;
+ const from=mashaMouth(transition.from,f.viseme,f.visemeWeight),w=smooth(transition.progress);for(const key of Object.keys(target) as (keyof MouthShape)[])target[key]=mix(from[key],target[key],w);return target;
 }
 export interface MashaPerformance { update(frame:ActorFrame):void; mouthTarget(frame:ActorFrame):THREE.Vector3; dispose():void; }
 export function createMashaPerformance(meshes:THREE.SkinnedMesh[],bones:Record<string,THREE.Bone>,root:THREE.Object3D):MashaPerformance{
@@ -267,7 +278,7 @@ export function createMashaPerformance(meshes:THREE.SkinnedMesh[],bones:Record<s
  const baseMouth=(a:number)=>{const x=mr.cx+.056*Math.cos(a),y=mr.cy+.010*Math.cos(a)**2+.0014*Math.sin(a);return sample(x,y).p;};
  const lips=mouthSkin(mouthOuter,mr,sample,skin,baseMouth,outerAt);lips.mesh.name='masha:mouth-skin';add(lips.mesh);
  const count=lips.angles.length,cavityGeom=new THREE.BufferGeometry(),cavityPos=new Float32Array((count*2+1)*3),cavityCol=new Float32Array((count*2+1)*3),ci:number[]=[];
- for(let i=0;i<count;i++){const j=(i+1)%count;ci.push(i,j,count+i,j,count+j,count+i,count+i,count+j,count*2);new THREE.Color('#6e2830').toArray(cavityCol,i*3);new THREE.Color('#240f18').toArray(cavityCol,(count+i)*3);}new THREE.Color('#180b12').toArray(cavityCol,count*6);
+ for(let i=0;i<count;i++){const j=(i+1)%count;ci.push(i,j,count+i,j,count+j,count+i,count+i,count+j,count*2);new THREE.Color('#7b3e3b').toArray(cavityCol,i*3);new THREE.Color('#462226').toArray(cavityCol,(count+i)*3);}new THREE.Color('#301a20').toArray(cavityCol,count*6);
  cavityGeom.setAttribute('position',new THREE.BufferAttribute(cavityPos,3));cavityGeom.setAttribute('color',new THREE.BufferAttribute(cavityCol,3));cavityGeom.setIndex(ci);
  const cavity=new THREE.Mesh(cavityGeom,new THREE.MeshBasicMaterial({vertexColors:true,side:THREE.DoubleSide}));cavity.name='masha:mouth-cavity';cavity.frustumCulled=false;add(cavity);
  const teeth=new THREE.Group(),toothMat=new THREE.MeshStandardMaterial({color:'#e5d9c4',roughness:.78});
@@ -278,11 +289,13 @@ export function createMashaPerformance(meshes:THREE.SkinnedMesh[],bones:Record<s
  const tongue=new THREE.Mesh(new THREE.SphereGeometry(1,24,14),new THREE.MeshStandardMaterial({color:'#b86b75',roughness:.58}));tongue.scale.set(.021,.004,.009);add(tongue);
  const mouthState=(frame:ActorFrame)=>{
   const state=mouthExpression(frame);
-  // Subtle emotional rest shapes; pronunciation has the wider articulation range.
-  const speaking=frame.face.viseme!=='rest'&&frame.face.visemeWeight>.05,open=clamp(state.open*(speaking?1:.68),0,1),w=clamp(state.w*(1-state.round*.20),.43,1.12),smile=state.smile;
-  const half=.0014+open*(.020+state.round*.008),mid=mr.cy-open*.011;
+  // The source cheek already contains smile dimples. Keep closed corners wide
+  // and restrained rather than pulling a deep frown through those fixed folds.
+  // Pronunciation and surprise retain the wider articulation range.
+  const open=clamp(state.open,0,1),w=clamp(state.w*(1-state.round*.20),mix(.88,.43,smooth(open/.25)),1.08),smile=Math.max(.06,state.smile);
+  const half=.00065+open*(.016+state.round*.009),mid=mr.cy-open*.0065;
   const inner=(a:number)=>{
-   const nx=Math.cos(a),x=mr.cx+.056*w*nx,y=mid+.011*(.35+smile*.8)*nx*nx+half*Math.sin(a)+state.asym*.003*nx;
+   const nx=Math.cos(a),cornerCurve=.0035+smile*.008,x=mr.cx+.056*w*nx,y=mid+cornerCurve*nx*nx+half*Math.sin(a)+state.asym*.004*nx;
    const original=sample(mr.cx+.056*nx,mr.cy+.010*nx*nx+.0014*Math.sin(a));
    return new THREE.Vector3(x,y,original.p.z+state.round*.004-open*.002*(Math.sin(a)<0?1:0));
   };
@@ -293,8 +306,8 @@ export function createMashaPerformance(meshes:THREE.SkinnedMesh[],bones:Record<s
   const {state,open,w,half,mid,inner,centre,tonguePosition,taste}=mouthState(frame);lips.update(inner);
   for(let i=0;i<count;i++){const v=inner(lips.angles[i]);v.toArray(cavityPos,i*3);new THREE.Vector3(mix(v.x,mr.cx,.12),mix(v.y,mid,.12),v.z-.018).toArray(cavityPos,(count+i)*3);}
   new THREE.Vector3(mr.cx,mid,centre.z-.033).toArray(cavityPos,count*6);cavityGeom.attributes.position.needsUpdate=true;
-  teeth.visible=open>.12&&state.teeth>.08;teeth.position.set(mr.cx,mid+half+.0007,centre.z-.007);teeth.scale.setScalar(.9+.1*state.teeth);
-  tongue.visible=open>.22;tongue.position.copy(tonguePosition);tongue.scale.x=.021*w;tongue.scale.z=.009+taste*.009;
+  teeth.visible=open>.17&&state.teeth>.12;teeth.position.set(mr.cx,mid+half+.0018,centre.z-.008);teeth.scale.setScalar(.86+.09*state.teeth);
+  tongue.visible=open>.27;tongue.position.copy(tonguePosition);tongue.scale.x=.021*w;tongue.scale.z=.009+taste*.009;
   diagnostics.mouthOpen=open;
  });
 
@@ -309,8 +322,9 @@ export function createMashaPerformance(meshes:THREE.SkinnedMesh[],bones:Record<s
   const eye=new THREE.Group();eye.name=side>0?'masha:left-eye':'masha:right-eye';eye.position.set(cx,cy,front-eyeDepth);add(eye);
   const eyeball=new THREE.Mesh(new THREE.SphereGeometry(1,48,32),new THREE.MeshPhysicalMaterial({color:'#fff9eb',roughness:.24,clearcoat:.8,clearcoatRoughness:.12}));eyeball.scale.set(eyeRx,eyeRy,eyeDepth);eye.add(eyeball);
   const iris=new THREE.Mesh(irisGeometry(eyeRx,eyeRy,eyeDepth),new THREE.MeshPhysicalMaterial({vertexColors:true,roughness:.22,clearcoat:1,clearcoatRoughness:.1}));eye.add(iris);
-  const lidPoint=(a:number,close=0,tilt=0)=>{
-   const x=.0345*Math.cos(a),y=.0295*Math.sin(a)*(1-close)-close*.004+tilt*Math.cos(a);
+  const lidPoint=(a:number,close=0,tilt=0,upperDrop=.003,lowerLift=.003)=>{
+   const sn=Math.sin(a),x=.035*Math.cos(a),aperture=sn>=0?.0295*sn-upperDrop*Math.pow(sn,.65):.027*sn+lowerLift*Math.pow(-sn,.65);
+   const y=aperture*(1-close)-close*.003+tilt*Math.cos(a);
    const z=front-eyeDepth+eyeDepth*Math.sqrt(Math.max(.02,1-(x/eyeRx)**2-(y/eyeRy)**2))+.0011;
    return new THREE.Vector3(cx+x,cy+y,z);
   };
@@ -319,15 +333,19 @@ export function createMashaPerformance(meshes:THREE.SkinnedMesh[],bones:Record<s
   const boundaryNormals=outer.map(point=>new THREE.Vector3().fromBufferAttribute(faceMesh.geometry.attributes.normal,point.index!).transformDirection(faceMesh.matrixWorld));
   const lid=skinRing(outer,er,sample,lidSkin,a=>lidPoint(a),outerAt,p=>{const d=((p.x-cx)/eyeRx)**2+((p.y-cy)/eyeRy)**2;if(d<1){const cover=front-eyeDepth+eyeDepth*Math.sqrt(1-d)+.0012,delta=p.z-cover;p.z=(p.z+cover+Math.sqrt(delta*delta+.00000225))*.5;}},boundaryNormals);lid.mesh.name='masha:eyelid-skin';add(lid.mesh);
   const irisRest=iris.geometry.attributes.position.array.slice();
-  const lashMat=new THREE.MeshStandardMaterial({color:'#63432f',roughness:.7,side:THREE.DoubleSide});
-  const lash=dynamicLine(48,lashMat,.001);add(lash.mesh);
-  const flicks=Array.from({length:5},()=>dynamicLine(10,lashMat,.00065));for(const f of flicks)add(f.mesh);
-  const brow=dynamicLine(32,new THREE.MeshStandardMaterial({color:'#a57c50',roughness:1,side:THREE.DoubleSide}),.0015);add(brow.mesh);
+  const lashMat=new THREE.MeshStandardMaterial({color:'#70503a',roughness:.85,side:THREE.DoubleSide});
+  const lash=dynamicLine(48,lashMat,.00065);add(lash.mesh);
+  const flicks=Array.from({length:7},()=>dynamicLine(10,lashMat,.00045));for(const f of flicks)add(f.mesh);
+  const brow=dynamicLine(32,new THREE.MeshStandardMaterial({color:'#a08057',roughness:1,side:THREE.DoubleSide}),.0013);add(brow.mesh);
   updates.push(frame=>{
-   const pre=expression(frame),base=clamp(.04+pre.lid*.6,0,.5),close=clamp(base+(1-base)*frame.face.lidClose,0,.995),tilt=pre.tilt*.003*side;
-   lid.update(a=>lidPoint(a,close,tilt));lash.write(k=>lidPoint(k*Math.PI,close,tilt));
-   flicks.forEach((f,i)=>{const angle=side>0?.18+i*.16:Math.PI-.18-i*.16;f.write(k=>{const p=lidPoint(angle,close,tilt);return p.add(new THREE.Vector3(side*.004*k,.0045*k*(1-close*.7),.0015*Math.sin(k*Math.PI)));});});
-   brow.write(k=>{const nx=k*2-1,x=cx+.030*nx,y=cy+.042+.004*(1-nx*nx)+(side>0?pre.browL:pre.browR)*.006+frame.face.browRaise*.003-pre.tilt*side*nx*.007;const p=sample(x,y).p;p.z+=.001;return p;});
+   const pre=expression(frame),close=clamp(frame.face.lidClose,0,1),tilt=pre.tilt*.004*side;
+   const smile=Math.max(0,pre.mouth.smile),asym=pre.mouth.asym*side;
+   // The lower lid rises with the smiling cheek; the upper lid drapes instead
+   // of squeezing both edges symmetrically into a circular inset disc.
+   const upperDrop=clamp(.003+Math.max(0,pre.lid)*.023+Math.min(0,pre.lid)*.007+asym*.0015,.0003,.021),lowerLift=clamp(.0008+smile*.006+Math.min(0,pre.lid)*.005+Math.max(0,asym)*.001,-.001,.009);
+   lid.update(a=>lidPoint(a,close,tilt,upperDrop,lowerLift));lash.write(k=>lidPoint(k*Math.PI,close,tilt,upperDrop,lowerLift));
+   flicks.forEach((f,i)=>{const angle=side>0?.16+i*.12:Math.PI-.16-i*.12,length=.0048-i*.00035;f.write(k=>{const p=lidPoint(angle,close,tilt,upperDrop,lowerLift);return p.add(new THREE.Vector3(side*length*k,length*k*(1-close*.65),.001*Math.sin(k*Math.PI)));});});
+   brow.write(k=>{const nx=k*2-1,x=cx+.029*nx,y=cy+.0365+.0035*(1-nx*nx)+(side>0?pre.browL:pre.browR)*.005+frame.face.browRaise*.0025-pre.tilt*side*nx*.007;const p=sample(x,y).p;p.z+=.0007;return p;});
    eye.updateWorldMatrix(true,false);
    // Keep the sclera stationary: rotating an ellipsoid moves its silhouette
    // through the eyelid. The iris follows the gaze over the fixed eye surface.

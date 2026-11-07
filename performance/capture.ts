@@ -29,15 +29,15 @@ export async function captureComparison(api:{
    const tick=()=>{
     animationFrame=undefined;if(settled)return;
     try{
-     const elapsed=(performance.now()-start)/1000,index=elapsed<12?0:elapsed<18?1:2;
-     if(stage!==index){stage=index;api.setScene(index===0?'face':index===1?'hold':'clap',index===1?'three':'front');}
+     const elapsed=(performance.now()-start)/1000,index=elapsed<12?0:elapsed<18?1:elapsed<21?2:3;
+     if(stage!==index){stage=index;api.setScene(index===0?'face':index===1?'hold':'clap',index===1||index===3?'three':'front');}
      api.renderAt(index===0?elapsed:index===1?elapsed-12:elapsed-18);
-     ctx.fillStyle='#f5f3ed';ctx.fillRect(0,0,1920,850);
-     ctx.fillStyle='#283c36';ctx.font='600 30px sans-serif';ctx.fillText('MaBear  /  Masha performance study',30,48);
-     ctx.font='600 21px sans-serif';ctx.fillText('BEFORE · Shipped rig',30,95);ctx.fillStyle='#8c4565';ctx.fillText('AFTER · Facial controls & hand contacts',990,95);
+     ctx.fillStyle='#fff5da';ctx.fillRect(0,0,1920,850);
+     ctx.fillStyle='#54295e';ctx.font='30px "Rubik One", sans-serif';ctx.fillText('MASHA / EXPRESSION & CONTACT',30,48);
+     ctx.font='800 22px Nunito, sans-serif';ctx.fillText('BEFORE · Current game',30,95);ctx.fillStyle='#b32262';ctx.fillText('AFTER · New Masha candidate',990,95);
      api.renderers.forEach((r,i)=>ctx.drawImage(r.domElement,i===0?30:990,120,900,600));
-     ctx.fillStyle='#283c36';ctx.font='26px sans-serif';ctx.fillText(['Expressions, gaze and complete blinks','A curled grasp and hand-to-mouth contact','Palms meet, hold, and separate'][index],30,773);
-     ctx.fillStyle='#768176';ctx.font='19px sans-serif';ctx.fillText('Actual real-time 3D · Same camera, lighting and input timeline · Silent animation study',30,815);
+     ctx.fillStyle='#54295e';ctx.font='800 26px Nunito, sans-serif';ctx.fillText(['Curiosity, delight, surprise and a playful smile','A secure grasp and hand-to-mouth contact','Palms meet, hold and separate','The same clap, from an oblique angle'][index],30,773);
+     ctx.fillStyle='#796181';ctx.font='600 19px Nunito, sans-serif';ctx.fillText('Actual real-time 3D · Identical acting inputs, camera and lighting · Silent study · Masha only',30,815);
      if(elapsed<24)animationFrame=requestAnimationFrame(tick);else encoder.stop();
     }catch(error){fail(error);}
    };

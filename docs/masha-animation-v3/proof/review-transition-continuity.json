@@ -1,0 +1,54 @@
+[
+  {
+    "time": 1,
+    "maxCoordinateDelta": 5.364418029785156e-7
+  },
+  {
+    "time": 2.8,
+    "maxCoordinateDelta": 0.0005382299423217773
+  },
+  {
+    "time": 3.25,
+    "maxCoordinateDelta": 0.00007571093738079071
+  },
+  {
+    "time": 3.5,
+    "maxCoordinateDelta": 0.000008365139365196228
+  },
+  {
+    "time": 3.75,
+    "maxCoordinateDelta": 4.76837158203125e-7
+  },
+  {
+    "time": 4,
+    "maxCoordinateDelta": 0.0000016260892152786255
+  },
+  {
+    "time": 4.25,
+    "maxCoordinateDelta": 0.000005494803190231323
+  },
+  {
+    "time": 4.5,
+    "maxCoordinateDelta": 0.00000651925802230835
+  },
+  {
+    "time": 5,
+    "maxCoordinateDelta": 0.0000020386651158332825
+  },
+  {
+    "time": 6.6,
+    "maxCoordinateDelta": 0.0000039711594581604
+  },
+  {
+    "time": 8.9,
+    "maxCoordinateDelta": 0.000003725290298461914
+  },
+  {
+    "time": 10.5,
+    "maxCoordinateDelta": 0.00000197533518075943
+  },
+  {
+    "time": 11.55,
+    "maxCoordinateDelta": 0.00005151703953742981
+  }
+]

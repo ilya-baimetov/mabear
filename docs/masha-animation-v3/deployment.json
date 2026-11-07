@@ -1,0 +1,52 @@
+{
+  "deployed_at_utc": "2026-11-07T00:50:06.599359+00:00",
+  "url": "https://mabear-masha-performance.ilya-baimetov.workers.dev/",
+  "worker": "mabear-masha-performance",
+  "version": "00e52862-ecdf-4c93-89c2-ee9a3a083399",
+  "main_game_unchanged": true,
+  "http_checks": [
+    {
+      "path": "/api/health",
+      "status": 200,
+      "location": null,
+      "cache_control": "private, no-store",
+      "health": {
+        "ok": true,
+        "service": "mabear-masha-performance"
+      }
+    },
+    {
+      "path": "/",
+      "status": 302,
+      "location": "/login",
+      "cache_control": "private, no-store",
+      "health": null
+    },
+    {
+      "path": "/assets/index-HSfBuE5N.js",
+      "status": 302,
+      "location": "/login",
+      "cache_control": "private, no-store",
+      "health": null
+    },
+    {
+      "path": "/login",
+      "status": 200,
+      "location": null,
+      "cache_control": "private, no-store",
+      "health": null
+    }
+  ],
+  "browser_check": "Chrome reached the expected existing password gate. Authenticated live rendering not reverified; local renderer, encoded video and controls reviewed.",
+  "video_sha256": "dd4ba8b1ac6e19cca592bca0b0786ee12db48af0cbd9af6806054ea8b2e0f736",
+  "static_asset_sha256": {
+    "index.html": "9f7749c0c246a6bd6ab90405ea94ebcb153a029cc8f705d4def3cec1de8834dd",
+    "assets/Nunito-OFL.txt": "580df76c95a1ec5ab878ceb25bb3d85c6a076804e9c970c8c6972aea775fdf65",
+    "assets/index-HSfBuE5N.js": "ecf246d1a680e4e89716e72b3a50df627910840d2d5368c580a17fcb3e625ec3",
+    "assets/masha-1Y6NQ2cv.glb": "1f27df47faf934f8c60f7bff641cb8bd538de2198d9e074bf410d892fda7e9c9",
+    "assets/Nunito-Variable-B5r0BiBj.woff2": "e951c345e395174e3348dae912c22d008225a5051bd556985b4ec0432ee6810b",
+    "assets/RubikOne-Regular-DOKjInya.woff2": "3849d55df131c7956fc47248ec42d9ceb290c928090e1c194435b6c67ede7f48",
+    "assets/RubikOne-OFL.txt": "9788e3b3e67f22ab5846a0bb867a230e7df2468c3cd20f730a5d9c34e673d090",
+    "assets/index-Dt9k0bi5.css": "3e0221a465e9f44c5b477543437aca756e9ad0513ca10c6afc3a3804346f6dcb"
+  }
+}

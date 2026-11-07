@@ -1,0 +1,14 @@
+{
+  "file": "docs/masha-animation-v3/proof/masha-before-after-v3.mp4",
+  "type": "video/mp4;codecs=avc1.42e01e",
+  "bytes": 27253181,
+  "elapsed": 24.083600000023843,
+  "width": 1920,
+  "height": 850,
+  "frameIntervals": {
+    "count": 1443,
+    "maxMs": 33.30000000000018,
+    "over67ms": 0
+  },
+  "errors": []
+}

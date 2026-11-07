@@ -1,1 +1,28 @@
-<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Masha · Performance study</title></head><body><main><header><a class="brand" href="https://mabear-storybook.ilya-baimetov.workers.dev">Ma<span>Bear</span></a><div class="eyebrow">CHARACTER LAB / 01</div><h1>Masha, in motion.</h1><p>Facial expression and hand contact. Rotate, slow down, or scrub both views together.</p></header><nav aria-label="Performance"><button data-scene="face" aria-pressed="true">01 · Face & expression</button><button data-scene="hold">02 · Hold & taste</button><button data-scene="clap">03 · Palm contact</button></nav><section class="views"><article><div class="label"><span class="dot"></span><b>Before</b><small>Shipped game</small></div><div id="before" class="viewport"></div></article><article><div class="label"><span class="dot accent"></span><b>After</b><small>Masha performance trial</small></div><div id="after" class="viewport"></div></article></section><div class="controls"><button id="play">Pause</button><button id="restart" aria-label="Restart">↺</button><input id="scrub" type="range" min="0" max="12" step="0.01" value="0" aria-label="Animation time"><output id="time">0.00 / 12 s</output><select id="speed" aria-label="Playback speed"><option value="1">1× speed</option><option value="0.5">½× speed</option><option value="0.25">¼× speed</option></select></div><div class="footer"><p id="caption" role="status" aria-live="polite">Loading the 3D model…</p><div><button data-camera="front">Front</button><button data-camera="three">Three-quarter</button><button data-camera="full">Full body</button><button id="record">Save comparison</button></div></div><details><summary>What this comparison shows</summary><p>Both views use the same model, body-motion inputs, timing, camera and lighting. The candidate adds facial controls and contact solving. This is an animation study without audio; it does not demonstrate a new voice or audio-aligned lip sync.</p></details></main><script type="module" src="/viewer.ts"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#fab31a"><title>Masha · Animation comparison</title></head>
+<body><main>
+  <header>
+    <a class="brand" href="https://mabear-storybook.ilya-baimetov.workers.dev">Ma<span>Bear</span><small>STORY STUDIO</small></a>
+    <div class="heading"><div class="eyebrow">MASHA / ANIMATION STUDY</div><h1>Masha, in motion.</h1><p>Same scene, timing, camera and lighting. Compare the actual 3D animation.</p></div>
+    <span class="study-status">Masha only<span>Candidate preview</span></span>
+  </header>
+  <nav aria-label="Performance">
+    <button data-scene="face" aria-pressed="true">01 · Expressions</button>
+    <button data-scene="hold" aria-pressed="false">02 · Grasp & taste</button>
+    <button data-scene="clap" aria-pressed="false">03 · Palm contact</button>
+  </nav>
+  <section class="views" aria-label="Synchronized animation comparison">
+    <article><div class="label"><span class="dot"></span><b>Before</b><small>Current game</small></div><div id="before" class="viewport"></div></article>
+    <article class="candidate"><div class="label"><span class="dot accent"></span><b>After</b><small>New Masha candidate</small></div><div id="after" class="viewport"></div></article>
+  </section>
+  <div class="controls">
+    <button id="play">Pause</button><button id="restart" aria-label="Restart">↺</button>
+    <input id="scrub" type="range" min="0" max="12" step="0.01" value="0" aria-label="Animation time">
+    <output id="time">0.00 / 12 s</output>
+    <select id="speed" aria-label="Playback speed"><option value="1">1× speed</option><option value="0.5">½× speed</option><option value="0.25">¼× speed</option></select>
+  </div>
+  <div class="beat-row"><span id="beat">A quiet look</span><span>Drag either view to rotate both</span></div>
+  <div class="footer"><p id="caption" role="status">Loading the 3D model…</p><div class="view-controls"><button data-camera="front">Front</button><button data-camera="three">Three-quarter</button><button data-camera="side">Side</button><button data-camera="full">Full body</button><button id="record">Save video</button></div></div>
+  <details><summary>About this comparison</summary><p>The left uses Masha’s current game rig. The right adds the revised facial and hand rig. Both receive identical body-motion and facial inputs. This is a silent animation study; it does not demonstrate audio-aligned lip sync. The candidate is separate from the main game, and other characters have not been changed.</p></details>
+</main><script type="module" src="/viewer.ts"></script></body></html>

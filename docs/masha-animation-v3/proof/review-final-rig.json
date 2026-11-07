@@ -1,0 +1,10 @@
+{
+  "frames": 363,
+  "finite": true,
+  "deterministic": true,
+  "maxPalmAnchorError": 0.00001088756890624959,
+  "maxGripAnchorError": 2.2982303784612184e-16,
+  "maxReachError": 0.000034993780865919806,
+  "peakTasteGap": 0.000007329554260410912,
+  "errors": []
+}

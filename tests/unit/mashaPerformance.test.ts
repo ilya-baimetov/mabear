@@ -92,6 +92,53 @@ describe('Masha performance on the shipped GLB',()=>{
    }
   }
  });
+
+ it('keeps the rendered palm, finger and cuff surfaces separated through the clap',()=>{
+  const meshes=(side:string)=>{
+   const result:THREE.Mesh[]=[];
+   rig.root.getObjectByName(`masha:${side}-hand-articulated`)!.traverse(object=>{if((object as THREE.Mesh).isMesh)result.push(object as THREE.Mesh);});
+   return result;
+  };
+  const left=meshes('left'),right=meshes('right');
+  const centre=(mesh:THREE.Mesh)=>{mesh.geometry.computeBoundingBox();return mesh.geometry.boundingBox!.getCenter(new THREE.Vector3()).applyMatrix4(mesh.matrixWorld);};
+  const extreme=(meshes:THREE.Mesh[],axis:THREE.Vector3,max:boolean)=>{
+   let value=max?-Infinity:Infinity;
+   for(const mesh of meshes){const pos=mesh.geometry.getAttribute('position');for(let i=0;i<pos.count;i++){
+    const p=new THREE.Vector3().fromBufferAttribute(pos,i).applyMatrix4(mesh.matrixWorld).dot(axis);
+    value=max?Math.max(value,p):Math.min(value,p);
+   }}
+   return value;
+  };
+  for(let index=0;index<=60;index++){
+   const time=index*.01,ctx:VerbCtx={actor:'masha',style:STYLES.masha,t:time,dur:12,emotion:'happy',posture:'stand',fromPosture:'stand',speed:0,dist:0,turned:0,targetLocal:null,seat:0};
+   const pose=evaluatePose('clap',time,{},ctx);
+   rig.apply(restFrame({bones:pose.layer.bones,hipsOffset:pose.layer.hipsOffset,verb:'clap',action:{time,duration:12}}));
+   const axis=centre(right.find(m=>m.name.endsWith('-palm'))!).sub(centre(left.find(m=>m.name.endsWith('-palm'))!)).normalize();
+   const clearance=extreme(right,axis,false)-extreme(left,axis,true);
+   expect(clearance,`whole hand surface clearance at ${time}s`).toBeGreaterThanOrEqual(-.0001);
+   if(time>=.27&&time<=.33)expect(clearance,`contact must be visible at ${time}s`).toBeLessThan(.001);
+  }
+ });
+
+ it('wraps opposing fingers around the actual lollipop cylinder without penetrating its surface',()=>{
+  for(const time of [0,.6,1.5,2.4]){
+   const ctx:VerbCtx={actor:'masha',style:STYLES.masha,t:time,dur:12,emotion:'neutral',posture:'stand',fromPosture:'stand',speed:0,dist:0,turned:0,targetLocal:null,seat:0};
+   const pose=evaluatePose('eat',time,{},ctx);
+   rig.apply(restFrame({bones:pose.layer.bones,hipsOffset:pose.layer.hipsOffset,verb:'eat',holding:'lollipop',action:{time,duration:12}}));
+   for(const suffix of ['finger-0','finger-1','finger-2','finger-3','thumb']){
+    const mesh=rig.root.getObjectByName(`masha:right-${suffix}`) as THREE.Mesh,position=mesh.geometry.getAttribute('position'),indices=mesh.geometry.index!;
+    const origin=rig.handSocket.getWorldPosition(new THREE.Vector3()),inverse=rig.handSocket.getWorldQuaternion(new THREE.Quaternion()).invert();
+    const local=(i:number)=>new THREE.Vector3().fromBufferAttribute(position,i).applyMatrix4(mesh.matrixWorld).sub(origin).applyQuaternion(inverse);
+    let nearest=Infinity;
+    const sample=(p:THREE.Vector3)=>{if(p.y>=0&&p.y<=.16)nearest=Math.min(nearest,Math.hypot(p.x,p.z)-.006);};
+    for(let i=0;i<position.count;i++)sample(local(i));
+    // Triangle centers catch cylinder intersections hidden by vertex-only tests.
+    for(let i=0;i<indices.count;i+=3)sample(local(indices.getX(i)).add(local(indices.getX(i+1))).add(local(indices.getX(i+2))).multiplyScalar(1/3));
+    expect(nearest,`${suffix} must not penetrate the stem at ${time}s`).toBeGreaterThanOrEqual(-.0001);
+    expect(nearest,`${suffix} must actually touch the stem at ${time}s`).toBeLessThan(.001);
+   }
+  }
+ });
 });
 
 describe('main Masha clothing on the shipped GLB',()=>{

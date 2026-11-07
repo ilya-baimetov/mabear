@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import type {ActorFrame} from '../api';
-import {createMashaHands} from './mashaHands';
+import {createMashaHands,MASHA_HAND} from './mashaHands';
 
 type Hand={side:'Left'|'Right';arm:THREE.Bone;elbow:THREE.Bone;wrist:THREE.Bone;long:THREE.Vector3;normal:THREE.Vector3;width:THREE.Vector3;restQ:THREE.Quaternion;basis:THREE.Quaternion;scale:THREE.Vector3;palm:THREE.Vector3;grip:THREE.Vector3};
 const clamp=THREE.MathUtils.clamp;
@@ -32,7 +32,7 @@ function handFrame(side:'Left'|'Right',bones:Record<string,THREE.Bone>,meshes:TH
  let xx=0,xy=0,yy=0;
  for(const mesh of meshes){const si=mesh.geometry.attributes.skinIndex,sw=mesh.geometry.attributes.skinWeight,joint=mesh.skeleton.bones.indexOf(wrist);for(let i=0;i<si.count;i++){let weight=0;for(let k=0;k<4;k++)if(si.getComponent(i,k)===joint)weight+=sw.getComponent(i,k);if(weight<.8)continue;const v=mesh.getVertexPosition(i,new THREE.Vector3()).applyMatrix4(mesh.matrixWorld).sub(origin),u=v.dot(long);if(u<.025||u>.09)continue;const x=v.dot(width),y=v.dot(normal);xx+=x*x;xy+=x*y;yy+=y*y;}}
  const angle=.5*Math.atan2(2*xy,xx-yy),broad=width.clone().multiplyScalar(Math.cos(angle)).addScaledVector(normal,Math.sin(angle));width.copy(broad);normal.crossVectors(long,width).normalize();if(normal.z<0){normal.negate();width.negate();}
- return {side,arm,elbow,wrist,long,normal,width,restQ:wrist.getWorldQuaternion(new THREE.Quaternion()),basis:new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(long,width,normal)),scale:wrist.getWorldScale(new THREE.Vector3()),palm:wrist.worldToLocal(origin.clone().addScaledVector(long,.045).addScaledVector(normal,.010)),grip:wrist.worldToLocal(origin.clone().addScaledVector(long,.067).addScaledVector(normal,.028))};
+ return {side,arm,elbow,wrist,long,normal,width,restQ:wrist.getWorldQuaternion(new THREE.Quaternion()),basis:new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(long,width,normal)),scale:wrist.getWorldScale(new THREE.Vector3()),palm:wrist.worldToLocal(origin.clone().addScaledVector(long,MASHA_HAND.palmCenter).addScaledVector(normal,MASHA_HAND.palmDepth)),grip:wrist.worldToLocal(origin.clone().addScaledVector(long,MASHA_HAND.gripLong).addScaledVector(normal,MASHA_HAND.gripNormal))};
 }
 
 export function createMashaContacts(meshes:THREE.SkinnedMesh[],bones:Record<string,THREE.Bone>,root:THREE.Object3D,socket:THREE.Object3D,mouthTarget?:(frame:ActorFrame)=>THREE.Vector3){
@@ -54,10 +54,21 @@ export function createMashaContacts(meshes:THREE.SkinnedMesh[],bones:Record<stri
   socket.userData.preciseGrip=false;socket.position.set(0,0,0);socket.quaternion.identity();for(const key of Object.keys(metrics))delete metrics[key];
   const time=frame.action?.time??0,rootQ=torsoDelta(),vec=(x:number,y:number,z:number)=>new THREE.Vector3(x,y,z).applyQuaternion(rootQ);
   if(frame.verb==='clap'){
-   const cycle=(time%.6)/.6,open=smooth((Math.abs(cycle-.5)-.07)/.38),gap=.002+open*.20;
+   const cycle=((time%.6)+.6)%.6;
+   // A quick approach, a 60ms contact hold, and a slower release. All targets
+   // derive from clip time, so a scrub never inherits another frame's inertia.
+   const open=cycle<.15?1:cycle<.27?1-smooth((cycle-.15)/.12):cycle<.33?0:smooth((cycle-.33)/.24),gap=.0004+open*.18;
    const center=point(hands[0].arm).lerp(point(hands[1].arm),.5).add(vec(0,0,.15));
-   for(const h of hands){const side=h.side==='Left'?1:-1,target=center.clone().addScaledVector(vec(1,0,0),side*gap/2),q=orient(h,vec(0,1,0),vec(-side,0,0));place(h,target,q,h.palm);}
-   const left=hands[0].wrist.localToWorld(hands[0].palm.clone()),right=hands[1].wrist.localToWorld(hands[1].palm.clone());Object.assign(metrics,{mode:'clap',palmSeparation:left.distanceTo(right),targetSeparation:gap});
+   const supports:THREE.Vector3[]=[];
+   for(const h of hands){
+    const side=h.side==='Left'?1:-1,angle=.20+open*.14,sa=Math.sin(angle),ca=Math.cos(angle),long=vec(-side*sa,ca,0),normal=vec(-side*ca,-sa,0),target=center.clone().addScaledVector(vec(1,0,0),side*gap/2).addScaledVector(vec(0,1,0),open*(side>0?.004:-.003)),q=orient(h,long,normal);
+    // The wrists open out below the contact. Solve against the ellipsoid's
+    // actual support in the shared contact plane, not its rotated normal tip.
+    const a=MASHA_HAND.palmLength,c=MASHA_HAND.palmDepth,support=Math.hypot(a*sa,c*ca),inverse=h.restQ.clone().invert();
+    const anchor=h.palm.clone().addScaledVector(h.long.clone().applyQuaternion(inverse).divide(h.scale),a*a*sa/support).addScaledVector(h.normal.clone().applyQuaternion(inverse).divide(h.scale),c*c*ca/support-c);
+    place(h,target,q,anchor);supports.push(h.wrist.localToWorld(anchor));
+   }
+   Object.assign(metrics,{mode:'clap',palmSeparation:supports[0].distanceTo(supports[1]),targetSeparation:Math.hypot(gap,open*.007),contactHold:open<.001,targetSurfaceGap:gap});
   }else if(frame.holding==='lollipop'){
    const h=hands[1],k=frame.verb==='eat'?(1-Math.cos(time/3*Math.PI*2))*.5:0;
    const hold=point(h.arm).add(vec(-.03,-.08,.16)),mouth=mouthTarget?.(frame)??bones.Head.localToWorld(mouthLocal.clone()),taste=mouth.clone().add(vec(0,-.13,.0125)),grip=hold.lerp(taste,k);
@@ -66,6 +77,6 @@ export function createMashaContacts(meshes:THREE.SkinnedMesh[],bones:Record<stri
    const actualGrip=h.wrist.localToWorld(h.grip.clone()),origin=actualGrip.clone().sub(vec(0,.07,0));socket.position.copy(h.wrist.worldToLocal(origin));socket.quaternion.copy(h.wrist.getWorldQuaternion(new THREE.Quaternion()).invert().multiply(rootQ));socket.userData.preciseGrip=true;socket.updateWorldMatrix(false,true);
    Object.assign(metrics,{mode:'lollipop',reachError,gripError:socket.getWorldPosition(new THREE.Vector3()).add(vec(0,.07,0)).distanceTo(actualGrip),mouthDistance:actualGrip.clone().add(vec(0,.13,0)).distanceTo(mouth),surfaceGap:actualGrip.clone().add(vec(0,.13,-.0125)).distanceTo(mouth),taste:k});
   }else{socket.position.set(0,0,0);socket.quaternion.identity();metrics.mode='free';}
-  rebuiltHands.update(frame.holding==='lollipop'?1:0,frame.opacity,frame.verb==='clap'?0:.12);
+  rebuiltHands.update(frame.holding==='lollipop'?1:0,frame.opacity,frame.verb==='clap'?0:1);
  },dispose(){rebuiltHands.dispose();}};
 }

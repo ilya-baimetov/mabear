@@ -1,0 +1,187 @@
+{
+  "finite": true,
+  "states": [
+    {
+      "emotion": "neutral",
+      "lidClose": 0,
+      "reversedMouthTriangles": 5
+    },
+    {
+      "emotion": "neutral",
+      "lidClose": 0.5,
+      "reversedMouthTriangles": 5
+    },
+    {
+      "emotion": "neutral",
+      "lidClose": 1,
+      "reversedMouthTriangles": 5
+    },
+    {
+      "emotion": "happy",
+      "lidClose": 0,
+      "reversedMouthTriangles": 12
+    },
+    {
+      "emotion": "happy",
+      "lidClose": 0.5,
+      "reversedMouthTriangles": 12
+    },
+    {
+      "emotion": "happy",
+      "lidClose": 1,
+      "reversedMouthTriangles": 12
+    },
+    {
+      "emotion": "excited",
+      "lidClose": 0,
+      "reversedMouthTriangles": 1
+    },
+    {
+      "emotion": "excited",
+      "lidClose": 0.5,
+      "reversedMouthTriangles": 1
+    },
+    {
+      "emotion": "excited",
+      "lidClose": 1,
+      "reversedMouthTriangles": 1
+    },
+    {
+      "emotion": "mischievous",
+      "lidClose": 0,
+      "reversedMouthTriangles": 9
+    },
+    {
+      "emotion": "mischievous",
+      "lidClose": 0.5,
+      "reversedMouthTriangles": 9
+    },
+    {
+      "emotion": "mischievous",
+      "lidClose": 1,
+      "reversedMouthTriangles": 9
+    },
+    {
+      "emotion": "curious",
+      "lidClose": 0,
+      "reversedMouthTriangles": 0
+    },
+    {
+      "emotion": "curious",
+      "lidClose": 0.5,
+      "reversedMouthTriangles": 0
+    },
+    {
+      "emotion": "curious",
+      "lidClose": 1,
+      "reversedMouthTriangles": 0
+    },
+    {
+      "emotion": "surprised",
+      "lidClose": 0,
+      "reversedMouthTriangles": 0
+    },
+    {
+      "emotion": "surprised",
+      "lidClose": 0.5,
+      "reversedMouthTriangles": 0
+    },
+    {
+      "emotion": "surprised",
+      "lidClose": 1,
+      "reversedMouthTriangles": 0
+    },
+    {
+      "emotion": "sad",
+      "lidClose": 0,
+      "reversedMouthTriangles": 1
+    },
+    {
+      "emotion": "sad",
+      "lidClose": 0.5,
+      "reversedMouthTriangles": 1
+    },
+    {
+      "emotion": "sad",
+      "lidClose": 1,
+      "reversedMouthTriangles": 1
+    },
+    {
+      "emotion": "angry",
+      "lidClose": 0,
+      "reversedMouthTriangles": 1
+    },
+    {
+      "emotion": "angry",
+      "lidClose": 0.5,
+      "reversedMouthTriangles": 1
+    },
+    {
+      "emotion": "angry",
+      "lidClose": 1,
+      "reversedMouthTriangles": 1
+    },
+    {
+      "emotion": "scared",
+      "lidClose": 0,
+      "reversedMouthTriangles": 0
+    },
+    {
+      "emotion": "scared",
+      "lidClose": 0.5,
+      "reversedMouthTriangles": 0
+    },
+    {
+      "emotion": "scared",
+      "lidClose": 1,
+      "reversedMouthTriangles": 0
+    },
+    {
+      "emotion": "sleepy",
+      "lidClose": 0,
+      "reversedMouthTriangles": 1
+    },
+    {
+      "emotion": "sleepy",
+      "lidClose": 0.5,
+      "reversedMouthTriangles": 1
+    },
+    {
+      "emotion": "sleepy",
+      "lidClose": 1,
+      "reversedMouthTriangles": 1
+    },
+    {
+      "emotion": "proud",
+      "lidClose": 0,
+      "reversedMouthTriangles": 12
+    },
+    {
+      "emotion": "proud",
+      "lidClose": 0.5,
+      "reversedMouthTriangles": 12
+    },
+    {
+      "emotion": "proud",
+      "lidClose": 1,
+      "reversedMouthTriangles": 12
+    },
+    {
+      "emotion": "annoyed",
+      "lidClose": 0,
+      "reversedMouthTriangles": 1
+    },
+    {
+      "emotion": "annoyed",
+      "lidClose": 0.5,
+      "reversedMouthTriangles": 1
+    },
+    {
+      "emotion": "annoyed",
+      "lidClose": 1,
+      "reversedMouthTriangles": 1
+    }
+  ],
+  "oldSpeechThresholdMaxVertexStepMetres": 0.0000010728836059570312,
+  "deterministicSeek": true
+}
