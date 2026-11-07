@@ -1,0 +1,13 @@
+{
+  "url": "http://127.0.0.1:8795",
+  "fixture": "cozy_evening",
+  "entryTime": 9.4847,
+  "pausedAt": 12.490700000095366,
+  "time": 33.638000000000005,
+  "duration": 33.638000000000005,
+  "segments": 3,
+  "windowAssetResponses": [
+    200
+  ],
+  "pageErrors": []
+}

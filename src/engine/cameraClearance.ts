@@ -1,6 +1,11 @@
 import type { FrameState } from './api';
 import type { CamKey } from '../shared/schema';
 import { STYLES } from './motion/verbs/common';
+import {sceneLocationAt} from '../shared/bible/set';
+
+// The room's lowest ceiling beams are at 3.43 m. Clearance must leave room for
+// the near plane instead of using the outdoor three-metre lift through the roof.
+export const INTERIOR_CAMERA_MAX_Y=3.05;
 
 /** Lift a low story camera above an intervening actor. The focal actor is excluded.
  * Uses a smooth clearance band, so body sway doesn't toggle a camera cut or hide a story actor.
@@ -23,5 +28,7 @@ export function clearForeground(camera:CamKey,actors:FrameState['actors']):CamKe
     const needed=(top+.12-Math.max(0,t)*ly)/(1-Math.max(0,t))-cy;
     lift=Math.max(lift,Math.max(0,needed)*edge*edge*(3-2*edge));
   }
-  return lift>.01?{...camera,pos:[cx,cy+Math.min(3,lift),cz]}:camera;
+  const indoors=(camera.location??sceneLocationAt(lx,lz))==='house';
+  const maxLift=indoors?Math.max(0,INTERIOR_CAMERA_MAX_Y-cy):3;
+  return lift>.01&&maxLift>.01?{...camera,pos:[cx,cy+Math.min(maxLift,lift),cz]}:camera;
 }

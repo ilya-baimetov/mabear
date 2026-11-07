@@ -11,7 +11,7 @@ import type { MarkId, Vec2 } from "../../shared/schema";
 import { GeoBag, lumpy, paint, rng, xf, type LookMaterials, type MatKey } from "../look";
 import { DETAIL_MEAN_SRGB, type EnvTextures } from "./textures";
 import { buildForestLocation } from "./forestLocations";
-import { buildHouseInterior } from "./houseInterior";
+import { buildHouseInterior, updateHouseInterior } from "./houseInterior";
 import { NatureAssets, type NatureId, type NatureSpot } from "./nature";
 import {pondRadius,POND_PIER_START} from '../../shared/pond';
 export {pondRadius} from '../../shared/pond';
@@ -1866,7 +1866,7 @@ export function buildBearsYard(mats: LookMaterials, opts: BuildSetOptions = {}):
   const beesMat = extra.bees?.material as THREE.ShaderMaterial | undefined;
   const handle: SetHandle = {
     root,
-    assetsReady: Promise.all(extra.nature.jobs).then(() => undefined),
+    assetsReady: Promise.all([...extra.nature.jobs,interior.userData.assetsReady]).then(() => undefined),
     updateView(x,z,location=sceneLocationAt(x,z)) {
       for(const child of root.children) child.visible=false;
       if(location==='house')interior.visible=true;
@@ -1885,6 +1885,7 @@ export function buildBearsYard(mats: LookMaterials, opts: BuildSetOptions = {}):
     swingPivot: extra.swingPivot ?? null,
     swingSeat: extra.swingSeat ?? null,
     update(t, windowGlow, pointScale) {
+      updateHouseInterior(interior,windowGlow);
       if (extra.grassUniforms) extra.grassUniforms.uTime.value = t;
       if (extra.waterUniforms) extra.waterUniforms.uSetWaterTime.value = t;
       if (smokeMat) {

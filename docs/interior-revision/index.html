@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bear's house — before / after</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#251b2c;color:#fff5e5;font:16px/1.6 system-ui,sans-serif}main{max-width:1600px;margin:auto;padding:28px}h1{margin:0;font-size:28px}p{color:#d1bed5;margin:6px 0 24px}.films{display:grid;grid-template-columns:1fr 1fr;gap:18px}figure{margin:0;background:#382641;border-radius:14px;overflow:hidden}figcaption{padding:10px 16px;font-weight:700}video{display:block;width:100%;aspect-ratio:16/9;background:#151019}.controls{display:flex;gap:14px;align-items:center;margin:22px 0}button{border:0;background:#ffd36a;color:#40244c;border-radius:9px;padding:10px 22px;font:inherit;font-weight:700;cursor:pointer}input{flex:1;accent-color:#ffd36a;min-width:40px}output{font-variant-numeric:tabular-nums;min-width:90px}a{color:#ffdda0}small{display:block;color:#c7b4cb}details{margin-top:25px}details img{max-width:100%}@media(max-width:850px){.films{grid-template-columns:1fr}main{padding:18px}h1{font-size:23px}}
+</style>
+<main>
+<h1>Bear’s house · before / after</h1>
+<p>The same “Cozy evening” animation, from 9–24 seconds. Local review; not deployed.</p>
+<div class="films">
+<figure><figcaption>Before</figcaption><video id="before" src="before/cozy-evening.webm" poster="before/story.png" preload="auto" muted playsinline></video></figure>
+<figure><figcaption>After</figcaption><video id="after" src="after/cozy-evening.webm" poster="after/story.png" preload="auto" muted playsinline></video></figure>
+</div>
+<div class="controls"><button id="play">Play both</button><button id="restart">Restart</button><input id="seek" type="range" min="0" max="15" step=".01" value="0" aria-label="Comparison progress"><output id="time">0:00 / 0:15</output></div>
+<small>Actual local WebGL playback through the game’s compiler and animation engine. Silent captures. The videos use the story camera; room detail views below use a fixed inspection camera.</small>
+<details><summary>Inspect the entry transition, room and kitchen</summary><div class="films"><figure><figcaption>House entry · before</figcaption><img src="before/entry.png" alt="Previous camera crossing the ceiling at house entry"></figure><figure><figcaption>House entry · after</figcaption><img src="after/entry.png" alt="Room remaining visible during house entry"></figure><figure><figcaption>Room · before</figcaption><img src="before/room.png" alt="Previous room"></figure><figure><figcaption>Room · after</figcaption><img src="after/room.png" alt="Revised room"></figure><figure><figcaption>Kitchen · before</figcaption><img src="before/kitchen.png" alt="Previous kitchen"></figure><figure><figcaption>Kitchen · after</figcaption><img src="after/kitchen.png" alt="Revised kitchen"></figure></div></details>
+<p><a href="README.md">Review notes and verification</a></p>
+</main>
+<script>
+const before=document.querySelector('#before'),after=document.querySelector('#after'),play=document.querySelector('#play'),seek=document.querySelector('#seek'),time=document.querySelector('#time');
+function pause(){before.pause();after.pause();play.textContent='Play both';}
+async function start(){if(before.ended||before.currentTime>=14.95){before.currentTime=after.currentTime=0;}try{await Promise.all([before.play(),after.play()]);play.textContent='Pause both';}catch{pause();before.controls=after.controls=true;}}
+play.onclick=()=>before.paused?start():pause();
+document.querySelector('#restart').onclick=()=>{pause();before.currentTime=after.currentTime=0;};
+seek.oninput=()=>{pause();before.currentTime=after.currentTime=Number(seek.value);};
+before.onended=pause;
+function frame(){if(!before.paused&&Math.abs(after.currentTime-before.currentTime)>.1)after.currentTime=before.currentTime;seek.value=String(before.currentTime);time.textContent=`0:${String(Math.floor(before.currentTime)).padStart(2,'0')} / 0:15`;requestAnimationFrame(frame);}frame();
+</script>
+</html>

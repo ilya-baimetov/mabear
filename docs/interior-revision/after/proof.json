@@ -1,0 +1,97 @@
+{
+  "shots": [
+    {
+      "name": "story",
+      "camera": {
+        "pos": [
+          -5.825,
+          2.3,
+          -0.5
+        ],
+        "look": [
+          -6.025,
+          1.05,
+          -6.1
+        ],
+        "fov": 46,
+        "location": "house"
+      },
+      "t": 12.484,
+      "stats": {
+        "fps": 13.623978206060231,
+        "drawCalls": 235,
+        "triangles": 1713498
+      }
+    },
+    {
+      "name": "seated",
+      "camera": {
+        "pos": [
+          -7.6,
+          1.25,
+          -4.1
+        ],
+        "look": [
+          -7.8,
+          0.9,
+          -5.8
+        ],
+        "fov": 35,
+        "location": "house"
+      },
+      "t": 20.822,
+      "stats": {
+        "fps": 13.422818791946309,
+        "drawCalls": 224,
+        "triangles": 1709766
+      }
+    },
+    {
+      "name": "room",
+      "camera": {
+        "pos": [
+          -5.4,
+          1.65,
+          -3.8
+        ],
+        "look": [
+          -8.15,
+          1.25,
+          -7
+        ],
+        "fov": 56,
+        "location": "house"
+      },
+      "t": 12.484,
+      "stats": {
+        "fps": 14.196479276023314,
+        "drawCalls": 79,
+        "triangles": 500789
+      }
+    },
+    {
+      "name": "kitchen",
+      "camera": {
+        "pos": [
+          -6.2,
+          1.85,
+          -4.4
+        ],
+        "look": [
+          -3.95,
+          1.5,
+          -7.65
+        ],
+        "fov": 54,
+        "location": "house"
+      },
+      "t": 12.484,
+      "stats": {
+        "fps": 15.290519879268476,
+        "drawCalls": 72,
+        "triangles": 490459
+      }
+    }
+  ],
+  "errors": []
+}
