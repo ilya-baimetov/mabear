@@ -75,7 +75,10 @@ export function MomentWorkbench({ onExamples }: { onExamples: () => void }) {
   return <aside className="moment-workbench" data-testid="moment-workbench" aria-label={s.lang === "en" ? "Direct this scene" : "Создай эту сцену"}>
     <header className="moment-header">
       <div className="moment-position"><span className="eyebrow">{s.lang === "en" ? "EDITING SCENE" : "РЕДАКТОР СЦЕНЫ"}</span><div><button className="btn icon" aria-label={s.lang === "en" ? "Previous scene" : "Предыдущая сцена"} disabled={!previous} onClick={() => selectMoment(previous.id)}><ArrowLeft size={15}/></button><span>{String(index + 1).padStart(2, "0")} <i>/ {String(s.paragraphs.length).padStart(2, "0")}</i></span><button className="btn icon" aria-label={s.lang === "en" ? "Next scene" : "Следующая сцена"} disabled={!next} onClick={() => selectMoment(next.id)}><ArrowRight size={15}/></button></div></div>
-      <h1>{index === 0 && blank ? (s.lang === "en" ? "Create your first scene." : "Начни с одной сцены.") : s.lang === "en" ? `Scene ${index + 1}` : `Сцена ${index + 1}`}</h1>
+      <div className="scene-title-row">
+        <h1>{index === 0 && blank ? (s.lang === "en" ? "Create your first scene." : "Начни с одной сцены.") : s.lang === "en" ? `Scene ${index + 1}` : `Сцена ${index + 1}`}</h1>
+        <button className="scene-delete" data-testid="request-remove-moment" onClick={() => setRemoveOpen(true)}><Trash2 size={15}/>{s.lang === "en" ? "Delete scene" : "Удалить сцену"}</button>
+      </div>
       <p>{s.lang === "en" ? "One action. A few words. See it come to life." : "Одно действие. Несколько слов. И история оживает."}</p>
     </header>
     <div className="moment-editor-scroll">
@@ -111,7 +114,6 @@ export function MomentWorkbench({ onExamples }: { onExamples: () => void }) {
         <button data-testid="move-moment-earlier" disabled={index === 0 || working} onClick={() => { moveMoment(p.id, -1); setOrderNote(true); }}><ArrowLeft size={13}/>{s.lang === "en" ? "Move earlier" : "Переместить раньше"}</button>
         <button data-testid="move-moment-later" disabled={!next || working} onClick={() => { moveMoment(p.id, 1); setOrderNote(true); }}><ArrowRight size={13}/>{s.lang === "en" ? "Move later" : "Переместить дальше"}</button>
         <button disabled={p.current <= 0 || working} onClick={() => store.revert(p.id)}><RotateCcw size={13}/>{s.lang === "en" ? "Restore previous version" : "Вернуть прошлую версию"}</button>
-        <button data-testid="request-remove-moment" onClick={() => setRemoveOpen(true)}><Trash2 size={13}/>{s.lang === "en" ? "Remove this scene" : "Удалить эту сцену"}</button>
       </div>}</div>}
     </div>
     <footer className="moment-actions">
@@ -125,9 +127,9 @@ export function MomentWorkbench({ onExamples }: { onExamples: () => void }) {
       {next && <p className="insert-explanation" data-testid="insert-position">{s.lang === "en" ? `Adds after scene ${index + 1}, before ${index + 2}. Later writing stays.` : `Добавим после сцены ${index + 1}, перед ${index + 2}. Дальнейший текст сохранится.`}</p>}
     </footer>
     <dialog ref={removeDialog} className="replace-story-dialog" data-testid="remove-moment-dialog" aria-labelledby="remove-moment-title" onCancel={() => setRemoveOpen(false)} onClick={e => { if (e.target === e.currentTarget) setRemoveOpen(false); }}>
-      <h2 id="remove-moment-title">{s.lang === "en" ? `Remove scene ${index + 1}?` : `Удалить сцену ${index + 1}?`}</h2>
-      <p>{s.lang === "en" ? "This removes its writing and preview. All other scenes stay in the story." : "Её текст и предпросмотр будут удалены. Все остальные сцены останутся в истории."}</p>
-      <footer><button className="btn" data-testid="keep-moment" onClick={() => setRemoveOpen(false)}>{s.lang === "en" ? "Keep scene" : "Оставить сцену"}</button><button className="btn start-writing" data-testid="remove-moment" onClick={() => { playback.pause(); const adjacent = previous ?? next; setRemoveOpen(false); store.deleteParagraph(p.id); if (adjacent) selectMoment(adjacent.id); else { const id = store.addParagraph(); playback.setScope({ kind: "moment", id }); } }}>{s.lang === "en" ? "Remove scene" : "Удалить сцену"}</button></footer>
+      <h2 id="remove-moment-title">{s.lang === "en" ? `Delete scene ${index + 1}?` : `Удалить сцену ${index + 1}?`}</h2>
+      <p>{s.paragraphs.length === 1 ? (s.lang === "en" ? "This deletes its writing and preview. You’ll start with an empty scene." : "Её текст и предпросмотр будут удалены. Останется пустая сцена для новой истории.") : (s.lang === "en" ? "This deletes its writing and preview. All other scenes stay in the story." : "Её текст и предпросмотр будут удалены. Все остальные сцены останутся в истории.")}</p>
+      <footer><button className="btn" data-testid="keep-moment" onClick={() => setRemoveOpen(false)}>{s.lang === "en" ? "Keep scene" : "Оставить сцену"}</button><button className="btn start-writing" data-testid="remove-moment" onClick={() => { playback.pause(); const adjacent = previous ?? next; setRemoveOpen(false); store.deleteParagraph(p.id); if (adjacent) selectMoment(adjacent.id); else { const id = store.addParagraph(); playback.setScope({ kind: "moment", id }); } }}>{s.lang === "en" ? "Delete scene" : "Удалить сцену"}</button></footer>
     </dialog>
   </aside>;
 }
