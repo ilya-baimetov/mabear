@@ -33,6 +33,8 @@ The browser suite uses installed Google Chrome with SwiftShader and its own loca
 
 ## Deploy
 
+Deployment is a separate, explicitly requested step. Implement and validate locally; publish only when the user says to deploy.
+
 ```sh
 npm run build
 npm run deploy

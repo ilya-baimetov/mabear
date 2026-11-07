@@ -81,6 +81,7 @@ test("middle insertion preserves future writing; cast authoring never plays; ups
   await open(page);
   await page.getByTestId("examples").click();
   await page.getByTestId("example-garden_party").click();
+  await page.getByTestId("context-tools").click();
   await expect(page.locator(".context-actors")).toContainText("Lady Bear");
   const beforeIds = await page.getByTestId("moment-card").evaluateAll(els => els.map(el => el.getAttribute("data-moment-id")));
   await page.getByTestId("moment-card").nth(1).click();
@@ -98,7 +99,7 @@ test("middle insertion preserves future writing; cast authoring never plays; ups
   await page.getByTestId("moment-card").first().click();
   await page.getByTestId("moment-text").fill("Masha walks to the garden.");
   await page.getByTestId("moment-card").nth(1).click();
-  await expect(page.getByTestId("continuity-warning")).toContainText("Scene 1 changed");
+  await expect(page.getByTestId("continuity-warning")).toHaveAttribute("title", /Scene 1 changed/);
   await page.setViewportSize({ width: 390, height: 844 });
   await page.screenshot({ path: `${SHOTS}/03-mobile-continuity.png`, fullPage: true });
   expect(await page.evaluate(() => document.body.scrollWidth)).toBe(390);
@@ -123,7 +124,7 @@ test("full-story import stays secondary, failure retains writing, and fullscreen
   await page.route("**/api/direct", route => route.fulfill({ status: 503, contentType: "application/json", body: '{"error":"test unavailable"}' }));
   await page.getByTestId("preview-moment").click();
   await expect(page.getByTestId("moment-card").first()).toHaveAttribute("data-status", "error", { timeout: 40_000 });
-  await expect(page.getByTestId("moment-feedback")).toContainText("simpler version");
+  await expect(page.getByTestId("moment-feedback")).toContainText("Simpler preview");
   await expect(page.getByTestId("moment-text")).toHaveValue("Masha waves to Bear.");
   await expect.poll(() => page.evaluate(() => window.__mabear!.playing()), { timeout: 40_000 }).toBe(false);
   await page.getByRole("button", { name: "Fullscreen", exact: true }).click();

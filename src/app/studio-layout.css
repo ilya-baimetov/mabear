@@ -1,0 +1,75 @@
+/* Scene studio: compact, stationary controls above one scrolling writing surface. */
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+.moment-workbench .moment-header { flex: none; padding: 11px 14px 13px; }
+.moment-workbench .moment-header h1 { margin: 0; font-size: 23px; white-space: nowrap; }
+.scene-title-row { gap: 8px; }
+.scene-header-actions { display: flex; align-items: center; flex-wrap: wrap; justify-content: flex-end; gap: 5px 8px; }
+.scene-header-actions .scene-delete { min-height: 32px; padding: 5px 8px; font-size: 10px; }
+.scene-header-actions .moment-position > div { gap: 3px; }
+.scene-toolbar { flex: none; position: relative; z-index: 2; padding: 11px 14px 10px; border-bottom: 1px solid #eee4f0; background: white; }
+.scene-action-buttons { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.scene-action-buttons > .btn { min-width: 0; min-height: 36px; padding: 7px 8px; gap: 6px; font-size: 11px; line-height: 1.3; }
+.scene-action-buttons .next-moment > svg { margin: 0; flex: none; }
+.scene-status-row { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; min-height: 28px; padding: 5px 0; font-size: 10px; line-height: 1.4; color: #796181; }
+.scene-status-row > span, .scene-status-row > small { display: inline-flex; align-items: center; gap: 4px; }
+.scene-status-row > small { margin-left: auto; white-space: nowrap; }
+.scene-status-row .scene-status-warning { color: #86561b; }
+.scene-picker-row { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; }
+.scene-picker-row > button { display: inline-flex; align-items: center; gap: 4px; min-height: 29px; padding: 5px 7px; border: 1px solid #eaddeb; border-radius: 7px; color: var(--purple-deep); background: #fbf8fc; font: inherit; font-weight: 700; font-size: 10px; cursor: pointer; }
+.scene-picker-row > button > span { font-size: 9px; font-weight: 500; color: #896493; }
+.scene-picker-row > button:hover, .scene-picker-row > button.on { background: #f1e3f5; border-color: #c49bce; }
+.scene-toolbar-panel { position: absolute; top: calc(100% - 1px); left: 10px; right: 10px; max-height: 310px; overflow-y: auto; overscroll-behavior: contain; padding: 10px 12px 12px; border: 1px solid #d6b9dd; border-radius: 12px; background: #fff; box-shadow: 0 10px 25px #49254e26; scrollbar-color: #d7badd transparent; }
+.scene-panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; color: var(--purple-deep); font-size: 12px; }
+.scene-panel-heading .btn { min-height: 28px; width: 28px; padding: 4px; }
+.scene-toolbar-panel .author-cast { margin: 0; }
+.scene-toolbar-panel .author-cast button { min-height: 36px; font-size: 10px; }
+.scene-toolbar-panel .author-places button { min-height: 30px; font-size: 11px; }
+.scene-toolbar-panel .moment-continuity { margin: 0; padding: 10px; }
+.scene-toolbar-panel .previous-moment { -webkit-line-clamp: 4; }
+.scene-toolbar-panel .context-actors { gap: 10px; flex-wrap: wrap; }
+.scene-context-note { font-size: 11px; line-height: 1.6; }
+.scene-option-list { display: grid; gap: 5px; }
+.scene-option-list button { display: flex; align-items: center; gap: 7px; border: 0; border-radius: 7px; padding: 8px; background: #f7f0fa; color: var(--purple-deep); font: inherit; font-size: 12px; text-align: left; cursor: pointer; }
+.scene-option-list button:disabled { opacity: .45; cursor: default; }
+.scene-writing-area { display: flex; flex: 1 1 0; min-height: 0; padding: 12px 14px 14px; overflow: hidden; }
+.scene-writing-area textarea { display: block; width: 100%; height: 100%; min-height: 0; resize: none; overflow-y: auto; overscroll-behavior: contain; border: 1.5px solid #d4bfd9; border-radius: 12px; background: #fffefd; padding: 14px; color: var(--ink); font: inherit; font-size: 16px; line-height: 1.75; scrollbar-color: #d7badd transparent; }
+.scene-writing-area textarea:focus-visible { outline: none; border-color: var(--magenta); box-shadow: 0 0 0 3px #c4296c17; }
+.scene-writing-area textarea::placeholder { color: #92819b; }
+
+/* Viewer and short storyboard share the wider column; the writer spans their height. */
+@media (min-width: 901px) {
+  .moment-studio.app { min-height: 620px; height: max(100dvh, 620px); }
+  .moment-studio .main,
+  .app.moment-studio.with-bts .main {
+    grid-template-columns: minmax(0, 2fr) minmax(340px, 1fr);
+    grid-template-rows: minmax(240px, 1fr) auto;
+    gap: 16px 20px;
+    padding: 0 20px 20px;
+  }
+  .moment-studio .stage-col { grid-column: 1; grid-row: 1; }
+  .moment-studio .moment-sequence { grid-column: 1; grid-row: 2; }
+  .moment-studio .moment-workbench { grid-column: 2; grid-row: 1 / 3; }
+  .stage-col:not(:fullscreen) .stage-wrap { min-height: 0; }
+  .moment-studio .moment-sequence { padding: 11px 13px 12px; }
+  .moment-sequence .sequence-heading { gap: 10px; margin-bottom: 8px; }
+  .sequence-heading > div:first-child { flex-direction: column; align-items: flex-start; gap: 3px; min-width: 0; }
+  .sequence-heading strong { font-size: 10px; line-height: 1.4; }
+  .sequence-actions { flex: none; gap: 4px; }
+  .sequence-actions .btn { font-size: 10px; padding: 6px 8px; min-height: 31px; gap: 5px; }
+  .moment-strip { gap: 9px; }
+  .moment-tile { display: flex; flex-direction: column; flex-basis: 240px; height: 98px; min-height: 98px; }
+  .moment-tile:has(.storyboard-frame) { display: grid; grid-template-columns: 110px minmax(0, 1fr); grid-template-rows: auto 1fr auto; }
+  .moment-tile .storyboard-frame { grid-column: 1; grid-row: 1 / 4; width: 110px; height: 100%; object-fit: contain; background: #f0e3f2; border-bottom: 0; border-right: 1px solid #eadbeb; }
+  .moment-tile:has(.storyboard-frame) > :not(.storyboard-frame) { grid-column: 2; }
+  .moment-tile-top { padding: 7px 9px 0; margin-bottom: 3px; }
+  .moment-tile-text { min-height: 0; padding: 0 9px; line-height: 1.4; }
+  .moment-tile-foot { margin-top: auto; padding: 5px 9px 7px; gap: 4px; font-size: 9px; }
+  .storyboard-add { flex-basis: 88px; min-height: 98px; font-size: 10px; }
+}
+
+/* On narrow screens the writer keeps a generous field and scrolls with the page. */
+@media (max-width: 900px) {
+  .moment-studio .moment-workbench { height: max(560px, 80dvh); }
+  .scene-title-row { flex-wrap: wrap; }
+  .scene-toolbar-panel { max-height: 260px; }
+}
