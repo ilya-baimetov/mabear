@@ -1,0 +1,98 @@
+[
+  {
+    "candidate": "leda",
+    "language": "ru",
+    "duration": 16.68,
+    "sample_rate": 24000,
+    "channels": 1,
+    "source_bytes": 806754,
+    "active_rms_dbfs": -13.505904713679664,
+    "gain_db": -6.494095286320336,
+    "peak_after_dbfs": -7.540769267417976,
+    "output": "public/assets/voices/masha-audition/leda-ru-level.wav"
+  },
+  {
+    "candidate": "leda",
+    "language": "en",
+    "duration": 15.84,
+    "sample_rate": 24000,
+    "channels": 1,
+    "source_bytes": 766434,
+    "active_rms_dbfs": -12.408813377430219,
+    "gain_db": -7.591186622569781,
+    "peak_after_dbfs": -8.80389767909712,
+    "output": "public/assets/voices/masha-audition/leda-en-level.wav"
+  },
+  {
+    "candidate": "lively",
+    "language": "ru",
+    "duration": 13.740408163265306,
+    "sample_rate": 44100,
+    "channels": 1,
+    "source_bytes": 441667,
+    "active_rms_dbfs": -19.993980592207066,
+    "gain_db": -0.006019407792932268,
+    "peak_after_dbfs": -3.8722868250652303,
+    "output": "public/assets/voices/masha-audition/lively-ru-level.wav"
+  },
+  {
+    "candidate": "lively",
+    "language": "en",
+    "duration": 13.609795918367347,
+    "sample_rate": 44100,
+    "channels": 1,
+    "source_bytes": 437488,
+    "active_rms_dbfs": -19.454308414260147,
+    "gain_db": -0.5456915857398529,
+    "peak_after_dbfs": -6.016293221930259,
+    "output": "public/assets/voices/masha-audition/lively-en-level.wav"
+  },
+  {
+    "candidate": "designed",
+    "language": "ru",
+    "duration": 15.72,
+    "sample_rate": 24000,
+    "channels": 1,
+    "source_bytes": 76818,
+    "active_rms_dbfs": -18.13124046311764,
+    "gain_db": -1.868759536882361,
+    "peak_after_dbfs": -6.164979143368754,
+    "output": "public/assets/voices/masha-audition/designed-ru-level.wav"
+  },
+  {
+    "candidate": "designed",
+    "language": "en",
+    "duration": 17.088,
+    "sample_rate": 24000,
+    "channels": 1,
+    "source_bytes": 82290,
+    "active_rms_dbfs": -20.15914417489581,
+    "gain_db": 0.15914417489581223,
+    "peak_after_dbfs": -4.338478544608875,
+    "output": "public/assets/voices/masha-audition/designed-en-level.wav"
+  },
+  {
+    "candidate": "jessica",
+    "language": "ru",
+    "duration": 13.949387755102041,
+    "sample_rate": 44100,
+    "channels": 1,
+    "source_bytes": 334829,
+    "active_rms_dbfs": -22.300795954617087,
+    "gain_db": 2.3007959546170875,
+    "peak_after_dbfs": -2.0062975981029347,
+    "output": "public/assets/voices/masha-audition/jessica-ru-level.wav"
+  },
+  {
+    "candidate": "jessica",
+    "language": "en",
+    "duration": 13.08734693877551,
+    "sample_rate": 44100,
+    "channels": 1,
+    "source_bytes": 314140,
+    "active_rms_dbfs": -21.55745439479145,
+    "gain_db": 1.5574543947914514,
+    "peak_after_dbfs": -2.1733562069791343,
+    "output": "public/assets/voices/masha-audition/jessica-en-level.wav"
+  }
+]

@@ -1,0 +1,1405 @@
+{
+  "status": "resolved",
+  "all_terminal": true,
+  "needs_attention": false,
+  "waited_ms": 1570,
+  "jobs": [
+    {
+      "index": 32,
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "request_id": "01a1b328-cc5f-7482-a266-8991b8c6987d",
+      "status_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-cc5f-7482-a266-8991b8c6987d/status",
+      "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-cc5f-7482-a266-8991b8c6987d",
+      "cancel_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-cc5f-7482-a266-8991b8c6987d/cancel",
+      "queue_status": "COMPLETED",
+      "account": {
+        "id": "github|rfop8ikq0ortgxfzf375bafj",
+        "name": "Ilya Baimetov"
+      },
+      "status": "completed",
+      "terminal": true,
+      "result": {
+        "audio": {
+          "url": "https://v3b.fal.media/files/b/0ab1700f/WCa3-5l5PYIhA6qXMclb9_speech.mp3",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "file_size": 64668
+        },
+        "duration_ms": 1959
+      },
+      "media": [
+        {
+          "url": "https://v3b.fal.media/files/b/0ab1700f/WCa3-5l5PYIhA6qXMclb9_speech.mp3",
+          "json_path": "result.audio.url",
+          "output_path": "/audio/url",
+          "media_type": "audio",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "reference": {
+            "$fal_ref": {
+              "kind": "job",
+              "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+              "request_id": "01a1b328-cc5f-7482-a266-8991b8c6987d",
+              "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-cc5f-7482-a266-8991b8c6987d",
+              "output_path": "/audio/url"
+            }
+          }
+        }
+      ],
+      "display_hint": "Present completed media to the user. Forward attached image content blocks to the host's image display helper (for example, image(block)); do not stringify image blocks as text. For Markdown previews use previews[].preview_url, and separately link original_url as the full-resolution file. If no preview is available, show a clearly labeled original-file link. Do not claim a preview rendered unless it is visible. Video, audio and 3D URLs are original result files, not queue URLs.",
+      "has_result": true
+    },
+    {
+      "index": 33,
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "request_id": "01a1b328-cc5f-7ae3-8599-bcde624807d0",
+      "status_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-cc5f-7ae3-8599-bcde624807d0/status",
+      "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-cc5f-7ae3-8599-bcde624807d0",
+      "cancel_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-cc5f-7ae3-8599-bcde624807d0/cancel",
+      "queue_status": "COMPLETED",
+      "account": {
+        "id": "github|rfop8ikq0ortgxfzf375bafj",
+        "name": "Ilya Baimetov"
+      },
+      "status": "completed",
+      "terminal": true,
+      "result": {
+        "audio": {
+          "url": "https://v3b.fal.media/files/b/0ab1700f/KucmQm57cXP1sgu3uqVJI_speech.mp3",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "file_size": 43770
+        },
+        "duration_ms": 1306
+      },
+      "media": [
+        {
+          "url": "https://v3b.fal.media/files/b/0ab1700f/KucmQm57cXP1sgu3uqVJI_speech.mp3",
+          "json_path": "result.audio.url",
+          "output_path": "/audio/url",
+          "media_type": "audio",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "reference": {
+            "$fal_ref": {
+              "kind": "job",
+              "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+              "request_id": "01a1b328-cc5f-7ae3-8599-bcde624807d0",
+              "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-cc5f-7ae3-8599-bcde624807d0",
+              "output_path": "/audio/url"
+            }
+          }
+        }
+      ],
+      "display_hint": "Present completed media to the user. Forward attached image content blocks to the host's image display helper (for example, image(block)); do not stringify image blocks as text. For Markdown previews use previews[].preview_url, and separately link original_url as the full-resolution file. If no preview is available, show a clearly labeled original-file link. Do not claim a preview rendered unless it is visible. Video, audio and 3D URLs are original result files, not queue URLs.",
+      "has_result": true
+    },
+    {
+      "index": 34,
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "request_id": "01a1b328-cc5f-7ae3-8599-bce23bef2cab",
+      "status_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-cc5f-7ae3-8599-bce23bef2cab/status",
+      "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-cc5f-7ae3-8599-bce23bef2cab",
+      "cancel_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-cc5f-7ae3-8599-bce23bef2cab/cancel",
+      "queue_status": "COMPLETED",
+      "account": {
+        "id": "github|rfop8ikq0ortgxfzf375bafj",
+        "name": "Ilya Baimetov"
+      },
+      "status": "completed",
+      "terminal": true,
+      "result": {
+        "audio": {
+          "url": "https://v3b.fal.media/files/b/0ab1700f/bPrl11iAmgms-VmZ83ZvY_speech.mp3",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "file_size": 41263
+        },
+        "duration_ms": 1227
+      },
+      "media": [
+        {
+          "url": "https://v3b.fal.media/files/b/0ab1700f/bPrl11iAmgms-VmZ83ZvY_speech.mp3",
+          "json_path": "result.audio.url",
+          "output_path": "/audio/url",
+          "media_type": "audio",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "reference": {
+            "$fal_ref": {
+              "kind": "job",
+              "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+              "request_id": "01a1b328-cc5f-7ae3-8599-bce23bef2cab",
+              "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-cc5f-7ae3-8599-bce23bef2cab",
+              "output_path": "/audio/url"
+            }
+          }
+        }
+      ],
+      "display_hint": "Present completed media to the user. Forward attached image content blocks to the host's image display helper (for example, image(block)); do not stringify image blocks as text. For Markdown previews use previews[].preview_url, and separately link original_url as the full-resolution file. If no preview is available, show a clearly labeled original-file link. Do not claim a preview rendered unless it is visible. Video, audio and 3D URLs are original result files, not queue URLs.",
+      "has_result": true
+    },
+    {
+      "index": 35,
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "request_id": "01a1b328-cc60-7f30-b696-33ac317faec7",
+      "status_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-cc60-7f30-b696-33ac317faec7/status",
+      "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-cc60-7f30-b696-33ac317faec7",
+      "cancel_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-cc60-7f30-b696-33ac317faec7/cancel",
+      "queue_status": "COMPLETED",
+      "account": {
+        "id": "github|rfop8ikq0ortgxfzf375bafj",
+        "name": "Ilya Baimetov"
+      },
+      "status": "completed",
+      "terminal": true,
+      "result": {
+        "audio": {
+          "url": "https://v3b.fal.media/files/b/0ab1700f/3rk3MQ-ltgdNUDz9esZd5_speech.mp3",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "file_size": 57981
+        },
+        "duration_ms": 1750
+      },
+      "media": [
+        {
+          "url": "https://v3b.fal.media/files/b/0ab1700f/3rk3MQ-ltgdNUDz9esZd5_speech.mp3",
+          "json_path": "result.audio.url",
+          "output_path": "/audio/url",
+          "media_type": "audio",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "reference": {
+            "$fal_ref": {
+              "kind": "job",
+              "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+              "request_id": "01a1b328-cc60-7f30-b696-33ac317faec7",
+              "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-cc60-7f30-b696-33ac317faec7",
+              "output_path": "/audio/url"
+            }
+          }
+        }
+      ],
+      "display_hint": "Present completed media to the user. Forward attached image content blocks to the host's image display helper (for example, image(block)); do not stringify image blocks as text. For Markdown previews use previews[].preview_url, and separately link original_url as the full-resolution file. If no preview is available, show a clearly labeled original-file link. Do not claim a preview rendered unless it is visible. Video, audio and 3D URLs are original result files, not queue URLs.",
+      "has_result": true
+    },
+    {
+      "index": 36,
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "request_id": "01a1b328-ccac-7611-97d9-43f47e5bd67e",
+      "status_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-ccac-7611-97d9-43f47e5bd67e/status",
+      "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-ccac-7611-97d9-43f47e5bd67e",
+      "cancel_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-ccac-7611-97d9-43f47e5bd67e/cancel",
+      "queue_status": "COMPLETED",
+      "account": {
+        "id": "github|rfop8ikq0ortgxfzf375bafj",
+        "name": "Ilya Baimetov"
+      },
+      "status": "completed",
+      "terminal": true,
+      "result": {
+        "audio": {
+          "url": "https://v3b.fal.media/files/b/0ab17010/phHhLsEXCi2ERUH91f3fU_speech.mp3",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "file_size": 46278
+        },
+        "duration_ms": 1384
+      },
+      "media": [
+        {
+          "url": "https://v3b.fal.media/files/b/0ab17010/phHhLsEXCi2ERUH91f3fU_speech.mp3",
+          "json_path": "result.audio.url",
+          "output_path": "/audio/url",
+          "media_type": "audio",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "reference": {
+            "$fal_ref": {
+              "kind": "job",
+              "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+              "request_id": "01a1b328-ccac-7611-97d9-43f47e5bd67e",
+              "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-ccac-7611-97d9-43f47e5bd67e",
+              "output_path": "/audio/url"
+            }
+          }
+        }
+      ],
+      "display_hint": "Present completed media to the user. Forward attached image content blocks to the host's image display helper (for example, image(block)); do not stringify image blocks as text. For Markdown previews use previews[].preview_url, and separately link original_url as the full-resolution file. If no preview is available, show a clearly labeled original-file link. Do not claim a preview rendered unless it is visible. Video, audio and 3D URLs are original result files, not queue URLs.",
+      "has_result": true
+    },
+    {
+      "index": 37,
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "request_id": "01a1b328-ccaa-7a70-9b6a-7f4642ade175",
+      "status_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-ccaa-7a70-9b6a-7f4642ade175/status",
+      "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-ccaa-7a70-9b6a-7f4642ade175",
+      "cancel_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-ccaa-7a70-9b6a-7f4642ade175/cancel",
+      "queue_status": "COMPLETED",
+      "account": {
+        "id": "github|rfop8ikq0ortgxfzf375bafj",
+        "name": "Ilya Baimetov"
+      },
+      "status": "completed",
+      "terminal": true,
+      "result": {
+        "audio": {
+          "url": "https://v3b.fal.media/files/b/0ab1700f/ABWbypoErbIf4bCPb4RbK_speech.mp3",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "file_size": 38755
+        },
+        "duration_ms": 1149
+      },
+      "media": [
+        {
+          "url": "https://v3b.fal.media/files/b/0ab1700f/ABWbypoErbIf4bCPb4RbK_speech.mp3",
+          "json_path": "result.audio.url",
+          "output_path": "/audio/url",
+          "media_type": "audio",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "reference": {
+            "$fal_ref": {
+              "kind": "job",
+              "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+              "request_id": "01a1b328-ccaa-7a70-9b6a-7f4642ade175",
+              "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-ccaa-7a70-9b6a-7f4642ade175",
+              "output_path": "/audio/url"
+            }
+          }
+        }
+      ],
+      "display_hint": "Present completed media to the user. Forward attached image content blocks to the host's image display helper (for example, image(block)); do not stringify image blocks as text. For Markdown previews use previews[].preview_url, and separately link original_url as the full-resolution file. If no preview is available, show a clearly labeled original-file link. Do not claim a preview rendered unless it is visible. Video, audio and 3D URLs are original result files, not queue URLs.",
+      "has_result": true
+    },
+    {
+      "index": 38,
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "request_id": "01a1b328-ccae-7bd2-8805-b25b10353b21",
+      "status_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-ccae-7bd2-8805-b25b10353b21/status",
+      "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-ccae-7bd2-8805-b25b10353b21",
+      "cancel_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-ccae-7bd2-8805-b25b10353b21/cancel",
+      "queue_status": "COMPLETED",
+      "account": {
+        "id": "github|rfop8ikq0ortgxfzf375bafj",
+        "name": "Ilya Baimetov"
+      },
+      "status": "completed",
+      "terminal": true,
+      "result": {
+        "audio": {
+          "url": "https://v3b.fal.media/files/b/0ab17010/5qd0CskaXa7xORmRHJwlA_speech.mp3",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "file_size": 88910
+        },
+        "duration_ms": 2716
+      },
+      "media": [
+        {
+          "url": "https://v3b.fal.media/files/b/0ab17010/5qd0CskaXa7xORmRHJwlA_speech.mp3",
+          "json_path": "result.audio.url",
+          "output_path": "/audio/url",
+          "media_type": "audio",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "reference": {
+            "$fal_ref": {
+              "kind": "job",
+              "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+              "request_id": "01a1b328-ccae-7bd2-8805-b25b10353b21",
+              "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-ccae-7bd2-8805-b25b10353b21",
+              "output_path": "/audio/url"
+            }
+          }
+        }
+      ],
+      "display_hint": "Present completed media to the user. Forward attached image content blocks to the host's image display helper (for example, image(block)); do not stringify image blocks as text. For Markdown previews use previews[].preview_url, and separately link original_url as the full-resolution file. If no preview is available, show a clearly labeled original-file link. Do not claim a preview rendered unless it is visible. Video, audio and 3D URLs are original result files, not queue URLs.",
+      "has_result": true
+    },
+    {
+      "index": 39,
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "request_id": "01a1b328-ccad-7ac3-a15b-15953c7ad958",
+      "status_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-ccad-7ac3-a15b-15953c7ad958/status",
+      "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-ccad-7ac3-a15b-15953c7ad958",
+      "cancel_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-ccad-7ac3-a15b-15953c7ad958/cancel",
+      "queue_status": "COMPLETED",
+      "account": {
+        "id": "github|rfop8ikq0ortgxfzf375bafj",
+        "name": "Ilya Baimetov"
+      },
+      "status": "completed",
+      "terminal": true,
+      "result": {
+        "audio": {
+          "url": "https://v3b.fal.media/files/b/0ab1700f/kUuNa2EU80ItkmQGxIsjf_speech.mp3",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "file_size": 41263
+        },
+        "duration_ms": 1227
+      },
+      "media": [
+        {
+          "url": "https://v3b.fal.media/files/b/0ab1700f/kUuNa2EU80ItkmQGxIsjf_speech.mp3",
+          "json_path": "result.audio.url",
+          "output_path": "/audio/url",
+          "media_type": "audio",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "reference": {
+            "$fal_ref": {
+              "kind": "job",
+              "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+              "request_id": "01a1b328-ccad-7ac3-a15b-15953c7ad958",
+              "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-ccad-7ac3-a15b-15953c7ad958",
+              "output_path": "/audio/url"
+            }
+          }
+        }
+      ],
+      "display_hint": "Present completed media to the user. Forward attached image content blocks to the host's image display helper (for example, image(block)); do not stringify image blocks as text. For Markdown previews use previews[].preview_url, and separately link original_url as the full-resolution file. If no preview is available, show a clearly labeled original-file link. Do not claim a preview rendered unless it is visible. Video, audio and 3D URLs are original result files, not queue URLs.",
+      "has_result": true
+    },
+    {
+      "index": 40,
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "request_id": "01a1b328-d29a-7111-9ee2-054be17d656e",
+      "status_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d29a-7111-9ee2-054be17d656e/status",
+      "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d29a-7111-9ee2-054be17d656e",
+      "cancel_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d29a-7111-9ee2-054be17d656e/cancel",
+      "queue_status": "COMPLETED",
+      "account": {
+        "id": "github|rfop8ikq0ortgxfzf375bafj",
+        "name": "Ilya Baimetov"
+      },
+      "status": "completed",
+      "terminal": true,
+      "result": {
+        "audio": {
+          "url": "https://v3b.fal.media/files/b/0ab17010/bomEtV-aTwjYA_STEzZ2B_speech.mp3",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "file_size": 26216
+        },
+        "duration_ms": 757
+      },
+      "media": [
+        {
+          "url": "https://v3b.fal.media/files/b/0ab17010/bomEtV-aTwjYA_STEzZ2B_speech.mp3",
+          "json_path": "result.audio.url",
+          "output_path": "/audio/url",
+          "media_type": "audio",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "reference": {
+            "$fal_ref": {
+              "kind": "job",
+              "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+              "request_id": "01a1b328-d29a-7111-9ee2-054be17d656e",
+              "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d29a-7111-9ee2-054be17d656e",
+              "output_path": "/audio/url"
+            }
+          }
+        }
+      ],
+      "display_hint": "Present completed media to the user. Forward attached image content blocks to the host's image display helper (for example, image(block)); do not stringify image blocks as text. For Markdown previews use previews[].preview_url, and separately link original_url as the full-resolution file. If no preview is available, show a clearly labeled original-file link. Do not claim a preview rendered unless it is visible. Video, audio and 3D URLs are original result files, not queue URLs.",
+      "has_result": true
+    },
+    {
+      "index": 41,
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "request_id": "01a1b328-d29a-7ee2-81d1-6467ae6009f4",
+      "status_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d29a-7ee2-81d1-6467ae6009f4/status",
+      "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d29a-7ee2-81d1-6467ae6009f4",
+      "cancel_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d29a-7ee2-81d1-6467ae6009f4/cancel",
+      "queue_status": "COMPLETED",
+      "account": {
+        "id": "github|rfop8ikq0ortgxfzf375bafj",
+        "name": "Ilya Baimetov"
+      },
+      "status": "completed",
+      "terminal": true,
+      "result": {
+        "audio": {
+          "url": "https://v3b.fal.media/files/b/0ab1700f/IZ5n0AYwhoEnahRiEvQau_speech.mp3",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "file_size": 20365
+        },
+        "duration_ms": 574
+      },
+      "media": [
+        {
+          "url": "https://v3b.fal.media/files/b/0ab1700f/IZ5n0AYwhoEnahRiEvQau_speech.mp3",
+          "json_path": "result.audio.url",
+          "output_path": "/audio/url",
+          "media_type": "audio",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "reference": {
+            "$fal_ref": {
+              "kind": "job",
+              "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+              "request_id": "01a1b328-d29a-7ee2-81d1-6467ae6009f4",
+              "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d29a-7ee2-81d1-6467ae6009f4",
+              "output_path": "/audio/url"
+            }
+          }
+        }
+      ],
+      "display_hint": "Present completed media to the user. Forward attached image content blocks to the host's image display helper (for example, image(block)); do not stringify image blocks as text. For Markdown previews use previews[].preview_url, and separately link original_url as the full-resolution file. If no preview is available, show a clearly labeled original-file link. Do not claim a preview rendered unless it is visible. Video, audio and 3D URLs are original result files, not queue URLs.",
+      "has_result": true
+    },
+    {
+      "index": 42,
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "request_id": "01a1b328-d2d7-7dc0-887f-40f0f51e2ac0",
+      "status_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d2d7-7dc0-887f-40f0f51e2ac0/status",
+      "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d2d7-7dc0-887f-40f0f51e2ac0",
+      "cancel_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d2d7-7dc0-887f-40f0f51e2ac0/cancel",
+      "queue_status": "COMPLETED",
+      "account": {
+        "id": "github|rfop8ikq0ortgxfzf375bafj",
+        "name": "Ilya Baimetov"
+      },
+      "status": "completed",
+      "terminal": true,
+      "result": {
+        "audio": {
+          "url": "https://v3b.fal.media/files/b/0ab17010/Pbtus0mK0T1y3fFzYIOtr_speech.mp3",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "file_size": 37083
+        },
+        "duration_ms": 1097
+      },
+      "media": [
+        {
+          "url": "https://v3b.fal.media/files/b/0ab17010/Pbtus0mK0T1y3fFzYIOtr_speech.mp3",
+          "json_path": "result.audio.url",
+          "output_path": "/audio/url",
+          "media_type": "audio",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "reference": {
+            "$fal_ref": {
+              "kind": "job",
+              "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+              "request_id": "01a1b328-d2d7-7dc0-887f-40f0f51e2ac0",
+              "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d2d7-7dc0-887f-40f0f51e2ac0",
+              "output_path": "/audio/url"
+            }
+          }
+        }
+      ],
+      "display_hint": "Present completed media to the user. Forward attached image content blocks to the host's image display helper (for example, image(block)); do not stringify image blocks as text. For Markdown previews use previews[].preview_url, and separately link original_url as the full-resolution file. If no preview is available, show a clearly labeled original-file link. Do not claim a preview rendered unless it is visible. Video, audio and 3D URLs are original result files, not queue URLs.",
+      "has_result": true
+    },
+    {
+      "index": 43,
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "request_id": "01a1b328-d2d6-7062-a87d-feeb420f3b6a",
+      "status_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d2d6-7062-a87d-feeb420f3b6a/status",
+      "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d2d6-7062-a87d-feeb420f3b6a",
+      "cancel_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d2d6-7062-a87d-feeb420f3b6a/cancel",
+      "queue_status": "COMPLETED",
+      "account": {
+        "id": "github|rfop8ikq0ortgxfzf375bafj",
+        "name": "Ilya Baimetov"
+      },
+      "status": "completed",
+      "terminal": true,
+      "result": {
+        "audio": {
+          "url": "https://v3b.fal.media/files/b/0ab17010/5w7S0WkuZgPdlI9KSyzat_speech.mp3",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "file_size": 26216
+        },
+        "duration_ms": 757
+      },
+      "media": [
+        {
+          "url": "https://v3b.fal.media/files/b/0ab17010/5w7S0WkuZgPdlI9KSyzat_speech.mp3",
+          "json_path": "result.audio.url",
+          "output_path": "/audio/url",
+          "media_type": "audio",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "reference": {
+            "$fal_ref": {
+              "kind": "job",
+              "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+              "request_id": "01a1b328-d2d6-7062-a87d-feeb420f3b6a",
+              "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d2d6-7062-a87d-feeb420f3b6a",
+              "output_path": "/audio/url"
+            }
+          }
+        }
+      ],
+      "display_hint": "Present completed media to the user. Forward attached image content blocks to the host's image display helper (for example, image(block)); do not stringify image blocks as text. For Markdown previews use previews[].preview_url, and separately link original_url as the full-resolution file. If no preview is available, show a clearly labeled original-file link. Do not claim a preview rendered unless it is visible. Video, audio and 3D URLs are original result files, not queue URLs.",
+      "has_result": true
+    },
+    {
+      "index": 44,
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "request_id": "01a1b328-d2d3-7601-8c00-096b6572c588",
+      "status_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d2d3-7601-8c00-096b6572c588/status",
+      "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d2d3-7601-8c00-096b6572c588",
+      "cancel_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d2d3-7601-8c00-096b6572c588/cancel",
+      "queue_status": "COMPLETED",
+      "account": {
+        "id": "github|rfop8ikq0ortgxfzf375bafj",
+        "name": "Ilya Baimetov"
+      },
+      "status": "completed",
+      "terminal": true,
+      "result": {
+        "audio": {
+          "url": "https://v3b.fal.media/files/b/0ab17010/OC0DfAK7ZWR4v2famd8nN_speech.mp3",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "file_size": 26216
+        },
+        "duration_ms": 757
+      },
+      "media": [
+        {
+          "url": "https://v3b.fal.media/files/b/0ab17010/OC0DfAK7ZWR4v2famd8nN_speech.mp3",
+          "json_path": "result.audio.url",
+          "output_path": "/audio/url",
+          "media_type": "audio",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "reference": {
+            "$fal_ref": {
+              "kind": "job",
+              "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+              "request_id": "01a1b328-d2d3-7601-8c00-096b6572c588",
+              "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d2d3-7601-8c00-096b6572c588",
+              "output_path": "/audio/url"
+            }
+          }
+        }
+      ],
+      "display_hint": "Present completed media to the user. Forward attached image content blocks to the host's image display helper (for example, image(block)); do not stringify image blocks as text. For Markdown previews use previews[].preview_url, and separately link original_url as the full-resolution file. If no preview is available, show a clearly labeled original-file link. Do not claim a preview rendered unless it is visible. Video, audio and 3D URLs are original result files, not queue URLs.",
+      "has_result": true
+    },
+    {
+      "index": 45,
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "request_id": "01a1b328-d2d9-7b60-8e30-3685d015154b",
+      "status_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d2d9-7b60-8e30-3685d015154b/status",
+      "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d2d9-7b60-8e30-3685d015154b",
+      "cancel_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d2d9-7b60-8e30-3685d015154b/cancel",
+      "queue_status": "COMPLETED",
+      "account": {
+        "id": "github|rfop8ikq0ortgxfzf375bafj",
+        "name": "Ilya Baimetov"
+      },
+      "status": "completed",
+      "terminal": true,
+      "result": {
+        "audio": {
+          "url": "https://v3b.fal.media/files/b/0ab17010/lAAHDCYM5RQ9PSBjQWc8s_speech.mp3",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "file_size": 26216
+        },
+        "duration_ms": 757
+      },
+      "media": [
+        {
+          "url": "https://v3b.fal.media/files/b/0ab17010/lAAHDCYM5RQ9PSBjQWc8s_speech.mp3",
+          "json_path": "result.audio.url",
+          "output_path": "/audio/url",
+          "media_type": "audio",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "reference": {
+            "$fal_ref": {
+              "kind": "job",
+              "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+              "request_id": "01a1b328-d2d9-7b60-8e30-3685d015154b",
+              "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d2d9-7b60-8e30-3685d015154b",
+              "output_path": "/audio/url"
+            }
+          }
+        }
+      ],
+      "display_hint": "Present completed media to the user. Forward attached image content blocks to the host's image display helper (for example, image(block)); do not stringify image blocks as text. For Markdown previews use previews[].preview_url, and separately link original_url as the full-resolution file. If no preview is available, show a clearly labeled original-file link. Do not claim a preview rendered unless it is visible. Video, audio and 3D URLs are original result files, not queue URLs.",
+      "has_result": true
+    },
+    {
+      "index": 46,
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "request_id": "01a1b328-d2db-75f3-a270-4ec3a5f2c23f",
+      "status_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d2db-75f3-a270-4ec3a5f2c23f/status",
+      "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d2db-75f3-a270-4ec3a5f2c23f",
+      "cancel_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d2db-75f3-a270-4ec3a5f2c23f/cancel",
+      "queue_status": "COMPLETED",
+      "account": {
+        "id": "github|rfop8ikq0ortgxfzf375bafj",
+        "name": "Ilya Baimetov"
+      },
+      "status": "completed",
+      "terminal": true,
+      "result": {
+        "audio": {
+          "url": "https://v3b.fal.media/files/b/0ab17010/zsWBFcxhhga1dzFuGR-Cp_speech.mp3",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "file_size": 32904
+        },
+        "duration_ms": 966
+      },
+      "media": [
+        {
+          "url": "https://v3b.fal.media/files/b/0ab17010/zsWBFcxhhga1dzFuGR-Cp_speech.mp3",
+          "json_path": "result.audio.url",
+          "output_path": "/audio/url",
+          "media_type": "audio",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "reference": {
+            "$fal_ref": {
+              "kind": "job",
+              "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+              "request_id": "01a1b328-d2db-75f3-a270-4ec3a5f2c23f",
+              "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d2db-75f3-a270-4ec3a5f2c23f",
+              "output_path": "/audio/url"
+            }
+          }
+        }
+      ],
+      "display_hint": "Present completed media to the user. Forward attached image content blocks to the host's image display helper (for example, image(block)); do not stringify image blocks as text. For Markdown previews use previews[].preview_url, and separately link original_url as the full-resolution file. If no preview is available, show a clearly labeled original-file link. Do not claim a preview rendered unless it is visible. Video, audio and 3D URLs are original result files, not queue URLs.",
+      "has_result": true
+    },
+    {
+      "index": 47,
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "request_id": "01a1b328-d2dd-7092-bd77-64786c5e41c5",
+      "status_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d2dd-7092-bd77-64786c5e41c5/status",
+      "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d2dd-7092-bd77-64786c5e41c5",
+      "cancel_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d2dd-7092-bd77-64786c5e41c5/cancel",
+      "queue_status": "COMPLETED",
+      "account": {
+        "id": "github|rfop8ikq0ortgxfzf375bafj",
+        "name": "Ilya Baimetov"
+      },
+      "status": "completed",
+      "terminal": true,
+      "result": {
+        "audio": {
+          "url": "https://v3b.fal.media/files/b/0ab17010/xeL4IzDT8I1WDmzock1Bp_speech.mp3",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "file_size": 28724
+        },
+        "duration_ms": 835
+      },
+      "media": [
+        {
+          "url": "https://v3b.fal.media/files/b/0ab17010/xeL4IzDT8I1WDmzock1Bp_speech.mp3",
+          "json_path": "result.audio.url",
+          "output_path": "/audio/url",
+          "media_type": "audio",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "reference": {
+            "$fal_ref": {
+              "kind": "job",
+              "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+              "request_id": "01a1b328-d2dd-7092-bd77-64786c5e41c5",
+              "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d2dd-7092-bd77-64786c5e41c5",
+              "output_path": "/audio/url"
+            }
+          }
+        }
+      ],
+      "display_hint": "Present completed media to the user. Forward attached image content blocks to the host's image display helper (for example, image(block)); do not stringify image blocks as text. For Markdown previews use previews[].preview_url, and separately link original_url as the full-resolution file. If no preview is available, show a clearly labeled original-file link. Do not claim a preview rendered unless it is visible. Video, audio and 3D URLs are original result files, not queue URLs.",
+      "has_result": true
+    },
+    {
+      "index": 48,
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "request_id": "01a1b328-d93c-79e0-abe6-0862e3648c7e",
+      "status_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d93c-79e0-abe6-0862e3648c7e/status",
+      "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d93c-79e0-abe6-0862e3648c7e",
+      "cancel_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d93c-79e0-abe6-0862e3648c7e/cancel",
+      "queue_status": "COMPLETED",
+      "account": {
+        "id": "github|rfop8ikq0ortgxfzf375bafj",
+        "name": "Ilya Baimetov"
+      },
+      "status": "completed",
+      "terminal": true,
+      "result": {
+        "audio": {
+          "url": "https://v3b.fal.media/files/b/0ab17010/wTUxYx-KklhC4epQ4Rgny_speech.mp3",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "file_size": 52966
+        },
+        "duration_ms": 1593
+      },
+      "media": [
+        {
+          "url": "https://v3b.fal.media/files/b/0ab17010/wTUxYx-KklhC4epQ4Rgny_speech.mp3",
+          "json_path": "result.audio.url",
+          "output_path": "/audio/url",
+          "media_type": "audio",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "reference": {
+            "$fal_ref": {
+              "kind": "job",
+              "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+              "request_id": "01a1b328-d93c-79e0-abe6-0862e3648c7e",
+              "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d93c-79e0-abe6-0862e3648c7e",
+              "output_path": "/audio/url"
+            }
+          }
+        }
+      ],
+      "display_hint": "Present completed media to the user. Forward attached image content blocks to the host's image display helper (for example, image(block)); do not stringify image blocks as text. For Markdown previews use previews[].preview_url, and separately link original_url as the full-resolution file. If no preview is available, show a clearly labeled original-file link. Do not claim a preview rendered unless it is visible. Video, audio and 3D URLs are original result files, not queue URLs.",
+      "has_result": true
+    },
+    {
+      "index": 49,
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "request_id": "01a1b328-d93a-7bb2-9c56-3221538ecc94",
+      "status_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d93a-7bb2-9c56-3221538ecc94/status",
+      "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d93a-7bb2-9c56-3221538ecc94",
+      "cancel_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d93a-7bb2-9c56-3221538ecc94/cancel",
+      "queue_status": "COMPLETED",
+      "account": {
+        "id": "github|rfop8ikq0ortgxfzf375bafj",
+        "name": "Ilya Baimetov"
+      },
+      "status": "completed",
+      "terminal": true,
+      "result": {
+        "audio": {
+          "url": "https://v3b.fal.media/files/b/0ab17010/Wo2o9LNkDJHrSzpElqig6_speech.mp3",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "file_size": 27888
+        },
+        "duration_ms": 809
+      },
+      "media": [
+        {
+          "url": "https://v3b.fal.media/files/b/0ab17010/Wo2o9LNkDJHrSzpElqig6_speech.mp3",
+          "json_path": "result.audio.url",
+          "output_path": "/audio/url",
+          "media_type": "audio",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "reference": {
+            "$fal_ref": {
+              "kind": "job",
+              "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+              "request_id": "01a1b328-d93a-7bb2-9c56-3221538ecc94",
+              "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d93a-7bb2-9c56-3221538ecc94",
+              "output_path": "/audio/url"
+            }
+          }
+        }
+      ],
+      "display_hint": "Present completed media to the user. Forward attached image content blocks to the host's image display helper (for example, image(block)); do not stringify image blocks as text. For Markdown previews use previews[].preview_url, and separately link original_url as the full-resolution file. If no preview is available, show a clearly labeled original-file link. Do not claim a preview rendered unless it is visible. Video, audio and 3D URLs are original result files, not queue URLs.",
+      "has_result": true
+    },
+    {
+      "index": 50,
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "request_id": "01a1b328-d93b-7932-a7c5-d3f0ec1a1175",
+      "status_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d93b-7932-a7c5-d3f0ec1a1175/status",
+      "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d93b-7932-a7c5-d3f0ec1a1175",
+      "cancel_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d93b-7932-a7c5-d3f0ec1a1175/cancel",
+      "queue_status": "COMPLETED",
+      "account": {
+        "id": "github|rfop8ikq0ortgxfzf375bafj",
+        "name": "Ilya Baimetov"
+      },
+      "status": "completed",
+      "terminal": true,
+      "result": {
+        "audio": {
+          "url": "https://v3b.fal.media/files/b/0ab17010/VIDIXPEUQISVn4ibgGp4G_speech.mp3",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "file_size": 24544
+        },
+        "duration_ms": 705
+      },
+      "media": [
+        {
+          "url": "https://v3b.fal.media/files/b/0ab17010/VIDIXPEUQISVn4ibgGp4G_speech.mp3",
+          "json_path": "result.audio.url",
+          "output_path": "/audio/url",
+          "media_type": "audio",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "reference": {
+            "$fal_ref": {
+              "kind": "job",
+              "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+              "request_id": "01a1b328-d93b-7932-a7c5-d3f0ec1a1175",
+              "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d93b-7932-a7c5-d3f0ec1a1175",
+              "output_path": "/audio/url"
+            }
+          }
+        }
+      ],
+      "display_hint": "Present completed media to the user. Forward attached image content blocks to the host's image display helper (for example, image(block)); do not stringify image blocks as text. For Markdown previews use previews[].preview_url, and separately link original_url as the full-resolution file. If no preview is available, show a clearly labeled original-file link. Do not claim a preview rendered unless it is visible. Video, audio and 3D URLs are original result files, not queue URLs.",
+      "has_result": true
+    },
+    {
+      "index": 51,
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "request_id": "01a1b328-d982-7063-8e06-7638f6b044a4",
+      "status_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d982-7063-8e06-7638f6b044a4/status",
+      "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d982-7063-8e06-7638f6b044a4",
+      "cancel_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d982-7063-8e06-7638f6b044a4/cancel",
+      "queue_status": "COMPLETED",
+      "account": {
+        "id": "github|rfop8ikq0ortgxfzf375bafj",
+        "name": "Ilya Baimetov"
+      },
+      "status": "completed",
+      "terminal": true,
+      "result": {
+        "audio": {
+          "url": "https://v3b.fal.media/files/b/0ab17010/-PesmMJuP79E1DyL2VJV-_speech.mp3",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "file_size": 28724
+        },
+        "duration_ms": 835
+      },
+      "media": [
+        {
+          "url": "https://v3b.fal.media/files/b/0ab17010/-PesmMJuP79E1DyL2VJV-_speech.mp3",
+          "json_path": "result.audio.url",
+          "output_path": "/audio/url",
+          "media_type": "audio",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "reference": {
+            "$fal_ref": {
+              "kind": "job",
+              "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+              "request_id": "01a1b328-d982-7063-8e06-7638f6b044a4",
+              "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d982-7063-8e06-7638f6b044a4",
+              "output_path": "/audio/url"
+            }
+          }
+        }
+      ],
+      "display_hint": "Present completed media to the user. Forward attached image content blocks to the host's image display helper (for example, image(block)); do not stringify image blocks as text. For Markdown previews use previews[].preview_url, and separately link original_url as the full-resolution file. If no preview is available, show a clearly labeled original-file link. Do not claim a preview rendered unless it is visible. Video, audio and 3D URLs are original result files, not queue URLs.",
+      "has_result": true
+    },
+    {
+      "index": 52,
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "request_id": "01a1b328-d989-7cc0-834c-56098ef28700",
+      "status_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d989-7cc0-834c-56098ef28700/status",
+      "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d989-7cc0-834c-56098ef28700",
+      "cancel_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d989-7cc0-834c-56098ef28700/cancel",
+      "queue_status": "COMPLETED",
+      "account": {
+        "id": "github|rfop8ikq0ortgxfzf375bafj",
+        "name": "Ilya Baimetov"
+      },
+      "status": "completed",
+      "terminal": true,
+      "result": {
+        "audio": {
+          "url": "https://v3b.fal.media/files/b/0ab17010/txzEOaqWSmMhSFgfrr2Xn_speech.mp3",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "file_size": 24544
+        },
+        "duration_ms": 705
+      },
+      "media": [
+        {
+          "url": "https://v3b.fal.media/files/b/0ab17010/txzEOaqWSmMhSFgfrr2Xn_speech.mp3",
+          "json_path": "result.audio.url",
+          "output_path": "/audio/url",
+          "media_type": "audio",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "reference": {
+            "$fal_ref": {
+              "kind": "job",
+              "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+              "request_id": "01a1b328-d989-7cc0-834c-56098ef28700",
+              "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d989-7cc0-834c-56098ef28700",
+              "output_path": "/audio/url"
+            }
+          }
+        }
+      ],
+      "display_hint": "Present completed media to the user. Forward attached image content blocks to the host's image display helper (for example, image(block)); do not stringify image blocks as text. For Markdown previews use previews[].preview_url, and separately link original_url as the full-resolution file. If no preview is available, show a clearly labeled original-file link. Do not claim a preview rendered unless it is visible. Video, audio and 3D URLs are original result files, not queue URLs.",
+      "has_result": true
+    },
+    {
+      "index": 53,
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "request_id": "01a1b328-d986-75c3-974d-bd0e301e1ef7",
+      "status_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d986-75c3-974d-bd0e301e1ef7/status",
+      "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d986-75c3-974d-bd0e301e1ef7",
+      "cancel_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d986-75c3-974d-bd0e301e1ef7/cancel",
+      "queue_status": "COMPLETED",
+      "account": {
+        "id": "github|rfop8ikq0ortgxfzf375bafj",
+        "name": "Ilya Baimetov"
+      },
+      "status": "completed",
+      "terminal": true,
+      "result": {
+        "audio": {
+          "url": "https://v3b.fal.media/files/b/0ab17010/kBoSSBcRbkpaCpLglX1xR_speech.mp3",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "file_size": 28724
+        },
+        "duration_ms": 835
+      },
+      "media": [
+        {
+          "url": "https://v3b.fal.media/files/b/0ab17010/kBoSSBcRbkpaCpLglX1xR_speech.mp3",
+          "json_path": "result.audio.url",
+          "output_path": "/audio/url",
+          "media_type": "audio",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "reference": {
+            "$fal_ref": {
+              "kind": "job",
+              "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+              "request_id": "01a1b328-d986-75c3-974d-bd0e301e1ef7",
+              "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d986-75c3-974d-bd0e301e1ef7",
+              "output_path": "/audio/url"
+            }
+          }
+        }
+      ],
+      "display_hint": "Present completed media to the user. Forward attached image content blocks to the host's image display helper (for example, image(block)); do not stringify image blocks as text. For Markdown previews use previews[].preview_url, and separately link original_url as the full-resolution file. If no preview is available, show a clearly labeled original-file link. Do not claim a preview rendered unless it is visible. Video, audio and 3D URLs are original result files, not queue URLs.",
+      "has_result": true
+    },
+    {
+      "index": 54,
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "request_id": "01a1b328-d984-7270-b098-2a2e62a3bbfa",
+      "status_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d984-7270-b098-2a2e62a3bbfa/status",
+      "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d984-7270-b098-2a2e62a3bbfa",
+      "cancel_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d984-7270-b098-2a2e62a3bbfa/cancel",
+      "queue_status": "COMPLETED",
+      "account": {
+        "id": "github|rfop8ikq0ortgxfzf375bafj",
+        "name": "Ilya Baimetov"
+      },
+      "status": "completed",
+      "terminal": true,
+      "result": {
+        "audio": {
+          "url": "https://v3b.fal.media/files/b/0ab17010/mIYH3hyRuEmiYHQA6BYgQ_speech.mp3",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "file_size": 32904
+        },
+        "duration_ms": 966
+      },
+      "media": [
+        {
+          "url": "https://v3b.fal.media/files/b/0ab17010/mIYH3hyRuEmiYHQA6BYgQ_speech.mp3",
+          "json_path": "result.audio.url",
+          "output_path": "/audio/url",
+          "media_type": "audio",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "reference": {
+            "$fal_ref": {
+              "kind": "job",
+              "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+              "request_id": "01a1b328-d984-7270-b098-2a2e62a3bbfa",
+              "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d984-7270-b098-2a2e62a3bbfa",
+              "output_path": "/audio/url"
+            }
+          }
+        }
+      ],
+      "display_hint": "Present completed media to the user. Forward attached image content blocks to the host's image display helper (for example, image(block)); do not stringify image blocks as text. For Markdown previews use previews[].preview_url, and separately link original_url as the full-resolution file. If no preview is available, show a clearly labeled original-file link. Do not claim a preview rendered unless it is visible. Video, audio and 3D URLs are original result files, not queue URLs.",
+      "has_result": true
+    },
+    {
+      "index": 55,
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "request_id": "01a1b328-d989-7323-ba27-cbeb70d95ed8",
+      "status_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d989-7323-ba27-cbeb70d95ed8/status",
+      "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d989-7323-ba27-cbeb70d95ed8",
+      "cancel_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d989-7323-ba27-cbeb70d95ed8/cancel",
+      "queue_status": "COMPLETED",
+      "account": {
+        "id": "github|rfop8ikq0ortgxfzf375bafj",
+        "name": "Ilya Baimetov"
+      },
+      "status": "completed",
+      "terminal": true,
+      "result": {
+        "audio": {
+          "url": "https://v3b.fal.media/files/b/0ab17010/ZUPZIPhWIKeRuYJTwKJ13_speech.mp3",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "file_size": 24544
+        },
+        "duration_ms": 705
+      },
+      "media": [
+        {
+          "url": "https://v3b.fal.media/files/b/0ab17010/ZUPZIPhWIKeRuYJTwKJ13_speech.mp3",
+          "json_path": "result.audio.url",
+          "output_path": "/audio/url",
+          "media_type": "audio",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "reference": {
+            "$fal_ref": {
+              "kind": "job",
+              "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+              "request_id": "01a1b328-d989-7323-ba27-cbeb70d95ed8",
+              "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-d989-7323-ba27-cbeb70d95ed8",
+              "output_path": "/audio/url"
+            }
+          }
+        }
+      ],
+      "display_hint": "Present completed media to the user. Forward attached image content blocks to the host's image display helper (for example, image(block)); do not stringify image blocks as text. For Markdown previews use previews[].preview_url, and separately link original_url as the full-resolution file. If no preview is available, show a clearly labeled original-file link. Do not claim a preview rendered unless it is visible. Video, audio and 3D URLs are original result files, not queue URLs.",
+      "has_result": true
+    },
+    {
+      "index": 56,
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "request_id": "01a1b328-df31-74e3-a3f7-a81d39fb8124",
+      "status_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-df31-74e3-a3f7-a81d39fb8124/status",
+      "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-df31-74e3-a3f7-a81d39fb8124",
+      "cancel_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-df31-74e3-a3f7-a81d39fb8124/cancel",
+      "queue_status": "COMPLETED",
+      "account": {
+        "id": "github|rfop8ikq0ortgxfzf375bafj",
+        "name": "Ilya Baimetov"
+      },
+      "status": "completed",
+      "terminal": true,
+      "result": {
+        "audio": {
+          "url": "https://v3b.fal.media/files/b/0ab17010/gS613grxzNRzzFNRpNicd_speech.mp3",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "file_size": 36247
+        },
+        "duration_ms": 1071
+      },
+      "media": [
+        {
+          "url": "https://v3b.fal.media/files/b/0ab17010/gS613grxzNRzzFNRpNicd_speech.mp3",
+          "json_path": "result.audio.url",
+          "output_path": "/audio/url",
+          "media_type": "audio",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "reference": {
+            "$fal_ref": {
+              "kind": "job",
+              "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+              "request_id": "01a1b328-df31-74e3-a3f7-a81d39fb8124",
+              "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-df31-74e3-a3f7-a81d39fb8124",
+              "output_path": "/audio/url"
+            }
+          }
+        }
+      ],
+      "display_hint": "Present completed media to the user. Forward attached image content blocks to the host's image display helper (for example, image(block)); do not stringify image blocks as text. For Markdown previews use previews[].preview_url, and separately link original_url as the full-resolution file. If no preview is available, show a clearly labeled original-file link. Do not claim a preview rendered unless it is visible. Video, audio and 3D URLs are original result files, not queue URLs.",
+      "has_result": true
+    },
+    {
+      "index": 57,
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "request_id": "01a1b328-df31-7ac1-bdde-78f276641eef",
+      "status_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-df31-7ac1-bdde-78f276641eef/status",
+      "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-df31-7ac1-bdde-78f276641eef",
+      "cancel_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-df31-7ac1-bdde-78f276641eef/cancel",
+      "queue_status": "COMPLETED",
+      "account": {
+        "id": "github|rfop8ikq0ortgxfzf375bafj",
+        "name": "Ilya Baimetov"
+      },
+      "status": "completed",
+      "terminal": true,
+      "result": {
+        "audio": {
+          "url": "https://v3b.fal.media/files/b/0ab17010/0zmm2_Kp7FNS6yPP9Wzq0_speech.mp3",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "file_size": 34575
+        },
+        "duration_ms": 1018
+      },
+      "media": [
+        {
+          "url": "https://v3b.fal.media/files/b/0ab17010/0zmm2_Kp7FNS6yPP9Wzq0_speech.mp3",
+          "json_path": "result.audio.url",
+          "output_path": "/audio/url",
+          "media_type": "audio",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "reference": {
+            "$fal_ref": {
+              "kind": "job",
+              "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+              "request_id": "01a1b328-df31-7ac1-bdde-78f276641eef",
+              "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-df31-7ac1-bdde-78f276641eef",
+              "output_path": "/audio/url"
+            }
+          }
+        }
+      ],
+      "display_hint": "Present completed media to the user. Forward attached image content blocks to the host's image display helper (for example, image(block)); do not stringify image blocks as text. For Markdown previews use previews[].preview_url, and separately link original_url as the full-resolution file. If no preview is available, show a clearly labeled original-file link. Do not claim a preview rendered unless it is visible. Video, audio and 3D URLs are original result files, not queue URLs.",
+      "has_result": true
+    },
+    {
+      "index": 58,
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "request_id": "01a1b328-df7a-7d30-9869-30efd6f6597c",
+      "status_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-df7a-7d30-9869-30efd6f6597c/status",
+      "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-df7a-7d30-9869-30efd6f6597c",
+      "cancel_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-df7a-7d30-9869-30efd6f6597c/cancel",
+      "queue_status": "COMPLETED",
+      "account": {
+        "id": "github|rfop8ikq0ortgxfzf375bafj",
+        "name": "Ilya Baimetov"
+      },
+      "status": "completed",
+      "terminal": true,
+      "result": {
+        "audio": {
+          "url": "https://v3b.fal.media/files/b/0ab17010/ZV2xhxTc8iXst3ZHiY3pd_speech.mp3",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "file_size": 62997
+        },
+        "duration_ms": 1906
+      },
+      "media": [
+        {
+          "url": "https://v3b.fal.media/files/b/0ab17010/ZV2xhxTc8iXst3ZHiY3pd_speech.mp3",
+          "json_path": "result.audio.url",
+          "output_path": "/audio/url",
+          "media_type": "audio",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "reference": {
+            "$fal_ref": {
+              "kind": "job",
+              "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+              "request_id": "01a1b328-df7a-7d30-9869-30efd6f6597c",
+              "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-df7a-7d30-9869-30efd6f6597c",
+              "output_path": "/audio/url"
+            }
+          }
+        }
+      ],
+      "display_hint": "Present completed media to the user. Forward attached image content blocks to the host's image display helper (for example, image(block)); do not stringify image blocks as text. For Markdown previews use previews[].preview_url, and separately link original_url as the full-resolution file. If no preview is available, show a clearly labeled original-file link. Do not claim a preview rendered unless it is visible. Video, audio and 3D URLs are original result files, not queue URLs.",
+      "has_result": true
+    },
+    {
+      "index": 59,
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "request_id": "01a1b328-df80-7052-acb9-ab65e9c328c9",
+      "status_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-df80-7052-acb9-ab65e9c328c9/status",
+      "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-df80-7052-acb9-ab65e9c328c9",
+      "cancel_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-df80-7052-acb9-ab65e9c328c9/cancel",
+      "queue_status": "COMPLETED",
+      "account": {
+        "id": "github|rfop8ikq0ortgxfzf375bafj",
+        "name": "Ilya Baimetov"
+      },
+      "status": "completed",
+      "terminal": true,
+      "result": {
+        "audio": {
+          "url": "https://v3b.fal.media/files/b/0ab17010/ETfOZIxy_5vitVL6A4eOV_speech.mp3",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "file_size": 32904
+        },
+        "duration_ms": 966
+      },
+      "media": [
+        {
+          "url": "https://v3b.fal.media/files/b/0ab17010/ETfOZIxy_5vitVL6A4eOV_speech.mp3",
+          "json_path": "result.audio.url",
+          "output_path": "/audio/url",
+          "media_type": "audio",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "reference": {
+            "$fal_ref": {
+              "kind": "job",
+              "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+              "request_id": "01a1b328-df80-7052-acb9-ab65e9c328c9",
+              "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-df80-7052-acb9-ab65e9c328c9",
+              "output_path": "/audio/url"
+            }
+          }
+        }
+      ],
+      "display_hint": "Present completed media to the user. Forward attached image content blocks to the host's image display helper (for example, image(block)); do not stringify image blocks as text. For Markdown previews use previews[].preview_url, and separately link original_url as the full-resolution file. If no preview is available, show a clearly labeled original-file link. Do not claim a preview rendered unless it is visible. Video, audio and 3D URLs are original result files, not queue URLs.",
+      "has_result": true
+    },
+    {
+      "index": 60,
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "request_id": "01a1b328-df7d-7fa1-8bed-54f7ffc01d3d",
+      "status_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-df7d-7fa1-8bed-54f7ffc01d3d/status",
+      "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-df7d-7fa1-8bed-54f7ffc01d3d",
+      "cancel_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-df7d-7fa1-8bed-54f7ffc01d3d/cancel",
+      "queue_status": "COMPLETED",
+      "account": {
+        "id": "github|rfop8ikq0ortgxfzf375bafj",
+        "name": "Ilya Baimetov"
+      },
+      "status": "completed",
+      "terminal": true,
+      "result": {
+        "audio": {
+          "url": "https://v3b.fal.media/files/b/0ab17010/xLOGu_H4GkMgG109klmbJ_speech.mp3",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "file_size": 24544
+        },
+        "duration_ms": 705
+      },
+      "media": [
+        {
+          "url": "https://v3b.fal.media/files/b/0ab17010/xLOGu_H4GkMgG109klmbJ_speech.mp3",
+          "json_path": "result.audio.url",
+          "output_path": "/audio/url",
+          "media_type": "audio",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "reference": {
+            "$fal_ref": {
+              "kind": "job",
+              "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+              "request_id": "01a1b328-df7d-7fa1-8bed-54f7ffc01d3d",
+              "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-df7d-7fa1-8bed-54f7ffc01d3d",
+              "output_path": "/audio/url"
+            }
+          }
+        }
+      ],
+      "display_hint": "Present completed media to the user. Forward attached image content blocks to the host's image display helper (for example, image(block)); do not stringify image blocks as text. For Markdown previews use previews[].preview_url, and separately link original_url as the full-resolution file. If no preview is available, show a clearly labeled original-file link. Do not claim a preview rendered unless it is visible. Video, audio and 3D URLs are original result files, not queue URLs.",
+      "has_result": true
+    },
+    {
+      "index": 61,
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "request_id": "01a1b328-df7d-7d60-8375-7f9b82aa8dee",
+      "status_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-df7d-7d60-8375-7f9b82aa8dee/status",
+      "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-df7d-7d60-8375-7f9b82aa8dee",
+      "cancel_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-df7d-7d60-8375-7f9b82aa8dee/cancel",
+      "queue_status": "COMPLETED",
+      "account": {
+        "id": "github|rfop8ikq0ortgxfzf375bafj",
+        "name": "Ilya Baimetov"
+      },
+      "status": "completed",
+      "terminal": true,
+      "result": {
+        "audio": {
+          "url": "https://v3b.fal.media/files/b/0ab17010/FDYu_mnMWKl0R04fcGrCs_speech.mp3",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "file_size": 24544
+        },
+        "duration_ms": 705
+      },
+      "media": [
+        {
+          "url": "https://v3b.fal.media/files/b/0ab17010/FDYu_mnMWKl0R04fcGrCs_speech.mp3",
+          "json_path": "result.audio.url",
+          "output_path": "/audio/url",
+          "media_type": "audio",
+          "content_type": "audio/mpeg",
+          "file_name": "speech.mp3",
+          "reference": {
+            "$fal_ref": {
+              "kind": "job",
+              "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+              "request_id": "01a1b328-df7d-7d60-8375-7f9b82aa8dee",
+              "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-df7d-7d60-8375-7f9b82aa8dee",
+              "output_path": "/audio/url"
+            }
+          }
+        }
+      ],
+      "display_hint": "Present completed media to the user. Forward attached image content blocks to the host's image display helper (for example, image(block)); do not stringify image blocks as text. For Markdown previews use previews[].preview_url, and separately link original_url as the full-resolution file. If no preview is available, show a clearly labeled original-file link. Do not claim a preview rendered unless it is visible. Video, audio and 3D URLs are original result files, not queue URLs.",
+      "has_result": true
+    }
+  ],
+  "next_action": {
+    "tool": "show_media_batch",
+    "jobs": [
+      {
+        "index": 32,
+        "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+        "request_id": "01a1b328-cc5f-7482-a266-8991b8c6987d"
+      },
+      {
+        "index": 33,
+        "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+        "request_id": "01a1b328-cc5f-7ae3-8599-bcde624807d0"
+      },
+      {
+        "index": 34,
+        "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+        "request_id": "01a1b328-cc5f-7ae3-8599-bce23bef2cab"
+      },
+      {
+        "index": 35,
+        "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+        "request_id": "01a1b328-cc60-7f30-b696-33ac317faec7"
+      },
+      {
+        "index": 36,
+        "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+        "request_id": "01a1b328-ccac-7611-97d9-43f47e5bd67e"
+      },
+      {
+        "index": 37,
+        "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+        "request_id": "01a1b328-ccaa-7a70-9b6a-7f4642ade175"
+      },
+      {
+        "index": 38,
+        "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+        "request_id": "01a1b328-ccae-7bd2-8805-b25b10353b21"
+      },
+      {
+        "index": 39,
+        "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+        "request_id": "01a1b328-ccad-7ac3-a15b-15953c7ad958"
+      }
+    ],
+    "reason": "These results are in this reply. Show them in one gallery: pass each job's result and recipe from jobs[] unchanged; don't read them again. show_media_batch takes 8 jobs, so show the other 22 in a second call. If this host doesn't render MCP app UI, share the media URLs instead."
+  },
+  "hint": "Keep caller indexes and original handles across groups. A read failure cannot restart generation; do not submit a new job to check or recover an existing one."
+}

@@ -1,0 +1,406 @@
+{
+  "batch_status": "submitted",
+  "batch_items": [
+    {
+      "index": 32,
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "status": "submitted",
+      "field_error_codes": []
+    },
+    {
+      "index": 33,
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "status": "submitted",
+      "field_error_codes": []
+    },
+    {
+      "index": 34,
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "status": "submitted",
+      "field_error_codes": []
+    },
+    {
+      "index": 35,
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "status": "submitted",
+      "field_error_codes": []
+    },
+    {
+      "index": 36,
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "status": "submitted",
+      "field_error_codes": []
+    },
+    {
+      "index": 37,
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "status": "submitted",
+      "field_error_codes": []
+    },
+    {
+      "index": 38,
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "status": "submitted",
+      "field_error_codes": []
+    },
+    {
+      "index": 39,
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "status": "submitted",
+      "field_error_codes": []
+    }
+  ],
+  "not_started_count": 0,
+  "status": "submitted",
+  "all_submitted": true,
+  "submitted_count": 8,
+  "rejected_count": 0,
+  "submission_unknown_count": 0,
+  "jobs": [
+    {
+      "index": 32,
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "status": "submitted",
+      "request_id": "01a1b328-cc5f-7482-a266-8991b8c6987d",
+      "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-cc5f-7482-a266-8991b8c6987d",
+      "status_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-cc5f-7482-a266-8991b8c6987d/status",
+      "cancel_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-cc5f-7482-a266-8991b8c6987d/cancel",
+      "logs": null,
+      "metrics": {},
+      "queue_position": 0,
+      "user_queue_position": 0,
+      "user_queued_count": 1,
+      "recipe": {
+        "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+        "input": {
+          "prompt": "Thank you for the pancakes!",
+          "language_boost": "English",
+          "voice_setting": {
+            "voice_id": "Lively_Girl",
+            "speed": 1,
+            "vol": 1,
+            "pitch": 0,
+            "emotion": "happy",
+            "english_normalization": false
+          },
+          "audio_setting": {
+            "sample_rate": 44100,
+            "bitrate": 256000,
+            "format": "mp3",
+            "channel": 1
+          },
+          "normalization_setting": {
+            "enabled": true,
+            "target_loudness": -18,
+            "target_range": 8,
+            "target_peak": -0.5
+          },
+          "output_format": "url"
+        },
+        "note": "Submitted inputs, not resolved server defaults. Source URLs may expire."
+      }
+    },
+    {
+      "index": 33,
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "status": "submitted",
+      "request_id": "01a1b328-cc5f-7ae3-8599-bcde624807d0",
+      "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-cc5f-7ae3-8599-bcde624807d0",
+      "status_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-cc5f-7ae3-8599-bcde624807d0/status",
+      "cancel_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-cc5f-7ae3-8599-bcde624807d0/cancel",
+      "logs": null,
+      "metrics": {},
+      "queue_position": 1,
+      "user_queue_position": 1,
+      "user_queued_count": 2,
+      "recipe": {
+        "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+        "input": {
+          "prompt": "Как уютно!",
+          "language_boost": "Russian",
+          "voice_setting": {
+            "voice_id": "Lively_Girl",
+            "speed": 1,
+            "vol": 1,
+            "pitch": 0,
+            "emotion": "happy",
+            "english_normalization": false
+          },
+          "audio_setting": {
+            "sample_rate": 44100,
+            "bitrate": 256000,
+            "format": "mp3",
+            "channel": 1
+          },
+          "normalization_setting": {
+            "enabled": true,
+            "target_loudness": -18,
+            "target_range": 8,
+            "target_peak": -0.5
+          },
+          "output_format": "url"
+        },
+        "note": "Submitted inputs, not resolved server defaults. Source URLs may expire."
+      }
+    },
+    {
+      "index": 34,
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "status": "submitted",
+      "request_id": "01a1b328-cc5f-7ae3-8599-bce23bef2cab",
+      "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-cc5f-7ae3-8599-bce23bef2cab",
+      "status_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-cc5f-7ae3-8599-bce23bef2cab/status",
+      "cancel_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-cc5f-7ae3-8599-bce23bef2cab/cancel",
+      "logs": null,
+      "metrics": {},
+      "queue_position": 2,
+      "user_queue_position": 2,
+      "user_queued_count": 3,
+      "recipe": {
+        "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+        "input": {
+          "prompt": "Как вкусно!",
+          "language_boost": "Russian",
+          "voice_setting": {
+            "voice_id": "Lively_Girl",
+            "speed": 1,
+            "vol": 1,
+            "pitch": 0,
+            "emotion": "happy",
+            "english_normalization": false
+          },
+          "audio_setting": {
+            "sample_rate": 44100,
+            "bitrate": 256000,
+            "format": "mp3",
+            "channel": 1
+          },
+          "normalization_setting": {
+            "enabled": true,
+            "target_loudness": -18,
+            "target_range": 8,
+            "target_peak": -0.5
+          },
+          "output_format": "url"
+        },
+        "note": "Submitted inputs, not resolved server defaults. Source URLs may expire."
+      }
+    },
+    {
+      "index": 35,
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "status": "submitted",
+      "request_id": "01a1b328-cc60-7f30-b696-33ac317faec7",
+      "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-cc60-7f30-b696-33ac317faec7",
+      "status_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-cc60-7f30-b696-33ac317faec7/status",
+      "cancel_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-cc60-7f30-b696-33ac317faec7/cancel",
+      "logs": null,
+      "metrics": {},
+      "queue_position": 3,
+      "user_queue_position": 3,
+      "user_queued_count": 4,
+      "recipe": {
+        "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+        "input": {
+          "prompt": "Спасибо за блины!",
+          "language_boost": "Russian",
+          "voice_setting": {
+            "voice_id": "Lively_Girl",
+            "speed": 1,
+            "vol": 1,
+            "pitch": 0,
+            "emotion": "happy",
+            "english_normalization": false
+          },
+          "audio_setting": {
+            "sample_rate": 44100,
+            "bitrate": 256000,
+            "format": "mp3",
+            "channel": 1
+          },
+          "normalization_setting": {
+            "enabled": true,
+            "target_loudness": -18,
+            "target_range": 8,
+            "target_peak": -0.5
+          },
+          "output_format": "url"
+        },
+        "note": "Submitted inputs, not resolved server defaults. Source URLs may expire."
+      }
+    },
+    {
+      "index": 36,
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "status": "submitted",
+      "request_id": "01a1b328-ccac-7611-97d9-43f47e5bd67e",
+      "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-ccac-7611-97d9-43f47e5bd67e",
+      "status_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-ccac-7611-97d9-43f47e5bd67e/status",
+      "cancel_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-ccac-7611-97d9-43f47e5bd67e/cancel",
+      "logs": null,
+      "metrics": {},
+      "queue_position": 1,
+      "user_queue_position": 1,
+      "user_queued_count": 2,
+      "recipe": {
+        "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+        "input": {
+          "prompt": "Хи-хи!",
+          "language_boost": "Russian",
+          "voice_setting": {
+            "voice_id": "Lively_Girl",
+            "speed": 1,
+            "vol": 1,
+            "pitch": 0,
+            "emotion": "happy",
+            "english_normalization": false
+          },
+          "audio_setting": {
+            "sample_rate": 44100,
+            "bitrate": 256000,
+            "format": "mp3",
+            "channel": 1
+          },
+          "normalization_setting": {
+            "enabled": true,
+            "target_loudness": -18,
+            "target_range": 8,
+            "target_peak": -0.5
+          },
+          "output_format": "url"
+        },
+        "note": "Submitted inputs, not resolved server defaults. Source URLs may expire."
+      }
+    },
+    {
+      "index": 37,
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "status": "submitted",
+      "request_id": "01a1b328-ccaa-7a70-9b6a-7f4642ade175",
+      "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-ccaa-7a70-9b6a-7f4642ade175",
+      "status_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-ccaa-7a70-9b6a-7f4642ade175/status",
+      "cancel_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-ccaa-7a70-9b6a-7f4642ade175/cancel",
+      "logs": null,
+      "metrics": {},
+      "queue_position": 0,
+      "user_queue_position": 0,
+      "user_queued_count": 1,
+      "recipe": {
+        "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+        "input": {
+          "prompt": "Hee-hee!",
+          "language_boost": "English",
+          "voice_setting": {
+            "voice_id": "Lively_Girl",
+            "speed": 1,
+            "vol": 1,
+            "pitch": 0,
+            "emotion": "happy",
+            "english_normalization": false
+          },
+          "audio_setting": {
+            "sample_rate": 44100,
+            "bitrate": 256000,
+            "format": "mp3",
+            "channel": 1
+          },
+          "normalization_setting": {
+            "enabled": true,
+            "target_loudness": -18,
+            "target_range": 8,
+            "target_peak": -0.5
+          },
+          "output_format": "url"
+        },
+        "note": "Submitted inputs, not resolved server defaults. Source URLs may expire."
+      }
+    },
+    {
+      "index": 38,
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "status": "submitted",
+      "request_id": "01a1b328-ccae-7bd2-8805-b25b10353b21",
+      "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-ccae-7bd2-8805-b25b10353b21",
+      "status_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-ccae-7bd2-8805-b25b10353b21/status",
+      "cancel_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-ccae-7bd2-8805-b25b10353b21/cancel",
+      "logs": null,
+      "metrics": {},
+      "queue_position": 3,
+      "user_queue_position": 3,
+      "user_queued_count": 4,
+      "recipe": {
+        "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+        "input": {
+          "prompt": "Ха-ха-ха!",
+          "language_boost": "Russian",
+          "voice_setting": {
+            "voice_id": "Lively_Girl",
+            "speed": 1,
+            "vol": 1,
+            "pitch": 0,
+            "emotion": "happy",
+            "english_normalization": false
+          },
+          "audio_setting": {
+            "sample_rate": 44100,
+            "bitrate": 256000,
+            "format": "mp3",
+            "channel": 1
+          },
+          "normalization_setting": {
+            "enabled": true,
+            "target_loudness": -18,
+            "target_range": 8,
+            "target_peak": -0.5
+          },
+          "output_format": "url"
+        },
+        "note": "Submitted inputs, not resolved server defaults. Source URLs may expire."
+      }
+    },
+    {
+      "index": 39,
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "status": "submitted",
+      "request_id": "01a1b328-ccad-7ac3-a15b-15953c7ad958",
+      "response_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-ccad-7ac3-a15b-15953c7ad958",
+      "status_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-ccad-7ac3-a15b-15953c7ad958/status",
+      "cancel_url": "https://queue.fal.run/fal-ai/minimax/requests/01a1b328-ccad-7ac3-a15b-15953c7ad958/cancel",
+      "logs": null,
+      "metrics": {},
+      "queue_position": 2,
+      "user_queue_position": 2,
+      "user_queued_count": 3,
+      "recipe": {
+        "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+        "input": {
+          "prompt": "Ha-ha-ha!",
+          "language_boost": "English",
+          "voice_setting": {
+            "voice_id": "Lively_Girl",
+            "speed": 1,
+            "vol": 1,
+            "pitch": 0,
+            "emotion": "happy",
+            "english_normalization": false
+          },
+          "audio_setting": {
+            "sample_rate": 44100,
+            "bitrate": 256000,
+            "format": "mp3",
+            "channel": 1
+          },
+          "normalization_setting": {
+            "enabled": true,
+            "target_loudness": -18,
+            "target_range": 8,
+            "target_peak": -0.5
+          },
+          "output_format": "url"
+        },
+        "note": "Submitted inputs, not resolved server defaults. Source URLs may expire."
+      }
+    }
+  ],
+  "hint": "Use wait_for_jobs with each accepted item's index and canonical URLs; it waits up to 40 seconds per call and returns every result once its group has finished (check_job and get_job_result also work per item). Retain indexes across waiting and final display. Never replay this whole batch to retry an individual item."
+}

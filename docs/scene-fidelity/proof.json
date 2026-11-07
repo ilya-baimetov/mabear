@@ -1,0 +1,202 @@
+{
+  "shots": [
+    {
+      "name": "pond-story",
+      "t": 19.285,
+      "camera": {
+        "pos": [
+          -1.77454,
+          1.41275,
+          5.53383
+        ],
+        "look": [
+          -5.5,
+          0.533,
+          9.5
+        ],
+        "fov": 40,
+        "location": "pond"
+      },
+      "stats": {
+        "fps": 212.76595528819757,
+        "drawCalls": 86,
+        "triangles": 2827697
+      }
+    },
+    {
+      "name": "pond-reference",
+      "t": 19.285,
+      "camera": {
+        "pos": [
+          -8.2,
+          1.05,
+          12.35
+        ],
+        "look": [
+          -3.8,
+          0.8,
+          5.7
+        ],
+        "fov": 54,
+        "location": "pond"
+      },
+      "stats": {
+        "fps": 19.096117119953615,
+        "drawCalls": 61,
+        "triangles": 2205125
+      }
+    },
+    {
+      "name": "pond-overview",
+      "t": 19.285,
+      "camera": {
+        "pos": [
+          -0.5,
+          4.6,
+          15
+        ],
+        "look": [
+          -8.5,
+          0.3,
+          8.5
+        ],
+        "fov": 48,
+        "location": "pond"
+      },
+      "stats": {
+        "fps": 20.29220778435383,
+        "drawCalls": 61,
+        "triangles": 2205125
+      }
+    },
+    {
+      "name": "wolves-story",
+      "t": 2.12,
+      "camera": {
+        "pos": [
+          5.902326666666667,
+          3.242611111111111,
+          3.692718888888889
+        ],
+        "look": [
+          12,
+          1,
+          -1.45
+        ],
+        "fov": 44,
+        "location": "wolves"
+      },
+      "stats": {
+        "fps": 24.13515686463169,
+        "drawCalls": 57,
+        "triangles": 781427
+      }
+    },
+    {
+      "name": "ambulance-reference",
+      "t": 2.12,
+      "camera": {
+        "pos": [
+          10.8,
+          1.75,
+          -6.3
+        ],
+        "look": [
+          14.1,
+          1.25,
+          -1
+        ],
+        "fov": 48,
+        "location": "wolves"
+      },
+      "stats": {
+        "fps": 22.185246802069813,
+        "drawCalls": 47,
+        "triangles": 666291
+      }
+    },
+    {
+      "name": "interior-story",
+      "t": 12.484,
+      "camera": {
+        "pos": [
+          -5.825,
+          2.3,
+          -0.5
+        ],
+        "look": [
+          -6.025,
+          1.05,
+          -6.1
+        ],
+        "fov": 46,
+        "location": "house"
+      },
+      "stats": {
+        "fps": 23.790642342845256,
+        "drawCalls": 86,
+        "triangles": 1338115
+      }
+    },
+    {
+      "name": "interior-reference",
+      "t": 21.272,
+      "camera": {
+        "pos": [
+          -5.4,
+          1.65,
+          -3.8
+        ],
+        "look": [
+          -8.15,
+          1.25,
+          -7
+        ],
+        "fov": 56,
+        "location": "house"
+      },
+      "stats": {
+        "fps": 24.47163514367687,
+        "drawCalls": 67,
+        "triangles": 223907
+      }
+    },
+    {
+      "name": "yard-story",
+      "t": 6.692,
+      "camera": {
+        "pos": [
+          0.5591200000000001,
+          3.846,
+          12.27312
+        ],
+        "look": [
+          1.2,
+          1,
+          -1.583
+        ],
+        "fov": 44,
+        "location": "yard"
+      },
+      "stats": {
+        "fps": 26.17801045895028,
+        "drawCalls": 107,
+        "triangles": 2668681
+      }
+    }
+  ],
+  "errors": [],
+  "performance": {
+    "ms": 121.5,
+    "n": 8,
+    "fps": 65.84362139917695,
+    "averageDrawCalls": 86,
+    "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+    "reflection": true,
+    "buffer": [
+      640,
+      360
+    ],
+    "shadow": 2048
+  }
+}

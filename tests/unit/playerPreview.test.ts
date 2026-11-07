@@ -8,7 +8,7 @@ import { DEFAULT_REMIX } from '../../src/shared/schema';
 const fixture = FIXTURES.find(f => f.id === 'garden_party' && f.lang === 'en')!;
 const { timeline } = compileEpisode(fixture.paragraphs.map((p, i) => ({paragraphId: `p${i}`, version: 1, beatScript: p.beatScript, remix: {...DEFAULT_REMIX}})), 'en');
 let player: Player, clock = 0, raf: FrameRequestCallback;
-const audio = { play: vi.fn(), stop: vi.fn(), updateListener: vi.fn() };
+const audio = { play: vi.fn(), pause: vi.fn(), resume: vi.fn(), stop: vi.fn(), updateListener: vi.fn() };
 const render = vi.fn();
 function step(ms: number) { clock = ms; raf(ms); }
 
@@ -22,6 +22,52 @@ describe('real Player moment boundaries', () => {
     player.setTimeline(timeline, 'en');
   });
   afterEach(() => { player.dispose(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
+
+  it('freezes the real clock and resumes the same audio session and moment boundary', () => {
+    const end = timeline.segments[2].offset;
+    const start = timeline.segments[1].offset;
+    player.play(start, end);
+    step(1250);
+    const pausedAt = player.time;
+    player.pause();
+    step(4250);
+    expect(player.time).toBe(pausedAt);
+    expect(player.isPlaying).toBe(false);
+    expect(audio.pause).toHaveBeenCalledOnce();
+    player.setTimeline(timeline, 'en');
+    player.play(pausedAt, end);
+    expect(audio.play).toHaveBeenCalledOnce(); // current utterance, music and effects are retained
+    expect(audio.resume).toHaveBeenCalledOnce();
+    step(4750);
+    expect(player.time).toBeCloseTo(pausedAt + .5, 6);
+    step(4750 + timeline.duration * 1000);
+    expect(player.time).toBe(end);
+    expect(player.frame!.segmentIndex).toBe(1);
+    expect(player.isPlaying).toBe(false);
+  });
+
+  it('scrubbing discards paused audio instead of resuming the wrong utterance', () => {
+    player.play(0); step(1000); player.pause();
+    player.seek(2);
+    player.play(2);
+    expect(audio.resume).not.toHaveBeenCalled();
+    expect(audio.play).toHaveBeenCalledTimes(2);
+    expect(audio.play.mock.calls.at(-1)![1]).toBe(2);
+  });
+
+  it('temporarily exposes an inspected actor, then restores story cast on Play', () => {
+    player.seek(0); step(16);
+    const storyCast = player.frame!.cast;
+    player.castOverride = ['wolf_b'];
+    player.cameraOverride = () => ({ pos: [14, 2, 1], look: [14, 1, -1], fov: 35, location: 'wolves' });
+    step(32);
+    expect(player.frame!.cast).toEqual(['wolf_b']);
+    expect(player.frame!.camera.location).toBe('wolves');
+    player.cameraOverride = null;
+    player.play(0); step(48);
+    expect(player.castOverride).toBeNull();
+    expect(player.frame!.cast).toEqual(storyCast);
+  });
 
   it('stops on the selected moment final frame, without rendering or scheduling the next moment', () => {
     const firstEnd = timeline.segments[1].offset;

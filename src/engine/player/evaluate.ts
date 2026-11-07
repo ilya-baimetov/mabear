@@ -21,7 +21,7 @@ export const DEFAULT_CAMERA: CamKey = { pos: [1.4, 2.4, 7.8], look: [-0.8, 1.1, 
 
 /** Heights (m) props rest at on a mark (table top, bench seat, porch boards…); others sit on the ground. */
 export const PROP_REST_HEIGHT: Partial<Record<MarkId, number>> = {
-  table: 0.78, bench: 0.47, porch: 0.32, pier: 0.28, hammock: 0.66, beehive: 0.62, woodpile: 0.55, swing: 0.47,
+  table: 0.78, bench: 0.47, porch: 0.32, pier: 0.28, hammock: 0.66, beehive: 0.62, woodpile: 0.55, swing: 0.47, house_kitchen: .78, house_living: .47,
 };
 
 /** Seconds for enter/exit/door fades. */
@@ -217,6 +217,10 @@ interface Kin {
 
 function kinematics(r: Resolved, lt: number): Kin {
   const { clip } = r;
+  if(clip.params.sceneCut){
+    const arrived=lt>=clip.dur*.5;
+    return {pos:arrived?r.endPos:r.startPos,yaw:arrived?r.endYaw:r.startYaw,dist:0,turned:0,speed:0};
+  }
   if (r.path && r.slide) {
     const k = smooth(clamp01(lt / Math.max(clip.dur, 1e-3)));
     return { pos: pointAt(r.path, k * r.length), yaw: lerpAngle(r.startYaw, r.endYaw, smooth(clamp01(lt / 0.4))), dist: 0, turned: 0 };
@@ -274,18 +278,30 @@ function propLocationsAt(seg: Segment, localT: number): { at: Record<PropId, Pro
         events.push({ t: c.start + c.dur * 0.4, prop: item, at: "hidden", flight: { t0: c.start + c.dur * 0.4, t1: end, from: a, to } });
         events.push({ t: end, prop: item, at: land });
       } else if (c.verb === "cook") {
+        if(item)events.push({t:c.start,prop:item,at:a});
         const pc = seg.endState.props.pancakes?.at;
         if (pc && pc !== at.pancakes) events.push({ t: c.start + c.dur * 0.85, prop: "pancakes", at: pc });
       } else if (c.verb === "fish") {
+        if(item)events.push({t:c.start,prop:item,at:a});
         const f = seg.endState.props.fish?.at;
         if (f && f !== "hidden") events.push({ t: c.start + c.dur * 0.7, prop: "fish", at: f });
-      }
+      } else if(c.verb==='water_plants'&&item)events.push({t:c.start,prop:item,at:a});
     }
   }
   events.sort((x, y) => x.t - y.t);
   // reconcile with the compiled end state: anything still different switches when its last clip ends
   const sim = { ...at };
-  for (const e of events) sim[e.prop] = e.at;
+  const setDown:PropEvent[]=[];
+  for (const e of events) {
+    if(isActor(e.at)){
+      const actor=e.at,clip=clipsOf(seg,actor).find(c=>e.t>=c.start&&e.t<c.start+c.dur);
+      const position=clip?.params.from??stOf(seg.startState,actor).pos;
+      const mark=MARK_IDS.reduce((best,m)=>Math.hypot(MARKS[m].pos[0]-position[0],MARKS[m].pos[1]-position[1])<Math.hypot(MARKS[best].pos[0]-position[0],MARKS[best].pos[1]-position[1])?m:best,MARK_IDS[0]);
+      for(const old of PROP_IDS)if(old!==e.prop&&sim[old]===actor){sim[old]=mark;setDown.push({t:e.t,prop:old,at:mark});}
+    }
+    sim[e.prop] = e.at;
+  }
+  events.push(...setDown);
   for (const id of PROP_IDS) {
     const target = seg.endState.props[id]?.at;
     if (target !== undefined && sim[id] !== target) events.push({ t: Math.min(touched.get(id) ?? seg.duration, seg.duration), prop: id, at: target });
@@ -398,6 +414,7 @@ function makeCtx(actor: ActorId, r: Resolved | null, kin: Kin, lt: number, t: nu
     actor, style, dur: clip ? clip.dur : 1, emotion: clip ? clip.emotion : "neutral", t,
     dist: kin.dist, turned: kin.turned, speed: kin.speed ?? 0, turnRate: kin.turnRate ?? 0, fromPosture, posture, targetLocal,
     seat: seatMark ? SEAT_HEIGHT[seatMark] ?? 0 : 0,
+    ...(seatMark==='house_living'&&actor==='masha'?{seatClearance:.11,seatForward:.40}:{}),
   };
 }
 
@@ -460,6 +477,13 @@ function evalActor(actor: ActorId, inp: ActorCtxIn, bear: ActorFrame | null, car
     verb = "idle";
     clipLt = lt - r.end;
   }
+  // The living-room chair fixes the seated body's orientation. Turning the
+  // floor-level root toward a speaker also rotates its forward seat offset,
+  // sliding the child sideways through the cushion. Gaze remains independent.
+  if(mark==='house_living'&&posture==='sit'){
+    yaw=MARKS.house_living.facing;
+    kin={...kin,yaw,turned:0,turnRate:0};
+  }
   // Bear's carry lifts Masha onto his shoulders
   const carried = actor === "masha" && carry !== null && bear !== null;
   if (carried) {
@@ -517,6 +541,10 @@ function evalActor(actor: ActorId, inp: ActorCtxIn, bear: ActorFrame | null, car
   }
   // opacity: enter/exit fades, door exits, offstage holds
   let opacity = 1;
+  if(r?.clip.params.sceneCut){
+    const progress=clamp01((lt-r.clip.start)/r.clip.dur);
+    opacity=smooth(Math.abs(progress-.5)*2);
+  }
   if (inClip && r) {
     const u = lt - r.clip.start;
     if (r.clip.verb === "enter" || (r.fromPosture === "offstage" && r.posture !== "offstage")) opacity = smooth(u / FADE_S);
@@ -624,11 +652,14 @@ function cameraAt(seg: Segment, lt: number): CamKey {
   let cue = cues[0];
   for (const c of cues) if (c.start <= lt) cue = c;
   if (lt < cue.start) return cue.from;
+  if(cue.from.location&&cue.to.location&&cue.from.location!==cue.to.location)
+    return lt<(cue.cutAt??cue.start+cue.dur*.5)?cue.from:cue.to;
   const k = easeInOut(cue.dur > 0 ? (lt - cue.start) / cue.dur : 1);
   return {
     pos: [lerp(cue.from.pos[0], cue.to.pos[0], k), lerp(cue.from.pos[1], cue.to.pos[1], k), lerp(cue.from.pos[2], cue.to.pos[2], k)],
     look: [lerp(cue.from.look[0], cue.to.look[0], k), lerp(cue.from.look[1], cue.to.look[1], k), lerp(cue.from.look[2], cue.to.look[2], k)],
     fov: lerp(cue.from.fov, cue.to.fov, k),
+    location:cue.from.location??cue.to.location,
   };
 }
 
@@ -796,10 +827,7 @@ export function evaluate(timeline: Timeline, t: number): FrameState {
 
   // props and holding
   const { at, flights } = segs.length === 0 ? { at: Object.fromEntries(PROP_IDS.map((id) => [id, seg.startState.props[id]?.at ?? "hidden"])) as Record<PropId, PropLocation>, flights: new Map() } : propLocationsAt(seg, Math.min(lt, seg.duration + 1e-6));
-  for (const id of PROP_IDS) {
-    const loc = at[id];
-    if (isActor(loc) && actors[loc].holding === null) actors[loc].holding = id;
-  }
+  for(const actor of ACTOR_IDS)actors[actor].holding=PROP_IDS.find(id=>at[id]===actor)??actors[actor].holding;
   const props = propsFrame(at, flights, actors, ltc);
 
   return {
@@ -807,6 +835,7 @@ export function evaluate(timeline: Timeline, t: number): FrameState {
     segmentIndex,
     localT: segs.length === 0 ? t : ltc,
     actors,
+    ...(segs.length?{cast:seg.cast??ACTOR_IDS.filter(a=>segs.slice(0,segmentIndex+1).some(s=>clipsOf(s.segment,a).some(c=>!c.params.ambient)))}:{}),
     camera: cameraAt(seg, ltc),
     lighting: segs.length === 0 ? { from: "day", to: "day", k: 1 } : lightingAt(seg, ltc),
     props,

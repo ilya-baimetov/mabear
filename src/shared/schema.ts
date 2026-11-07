@@ -9,7 +9,7 @@ export const ACTOR_IDS = ["masha", "bear", "wolf_a", "wolf_b", "lady_bear", "har
 export const WOLF_IDS = ["wolf_a", "wolf_b"] as const;
 export const MARK_IDS = [
   "clearing", "porch", "door", "garden", "beehive", "swing", "pond_shore", "pier", "table",
-  "bench", "woodpile", "path_entry", "big_tree", "bush", "hammock", "creek", "van",
+  "bench", "woodpile", "path_entry", "big_tree", "bush", "hammock", "creek", "van", "house_kitchen", "house_living",
 ] as const;
 export const PROP_IDS = [
   "jam_jar", "honey_pot", "pancakes", "frying_pan", "ball", "fishing_rod", "fish", "lollipop",
@@ -215,11 +215,12 @@ export const ActorClipSchema = z.object({
     facing: z.number().optional(), // yaw at clip start (for in-place verbs)
     posture: PostureSchema.optional(), // posture during/after the clip
     ambient: z.boolean().optional(), // true = filled in by the compiler (ambient life), not from a beat
+    sceneCut: z.boolean().optional(), // short offscreen travel between separate outdoor locations
   }),
 });
 export type ActorClip = z.infer<typeof ActorClipSchema>;
 
-export const CamKeySchema = z.object({ pos: Vec3Schema, look: Vec3Schema, fov: z.number() });
+export const CamKeySchema = z.object({ pos: Vec3Schema, look: Vec3Schema, fov: z.number(), location:z.enum(['yard','house','pond','wolves']).optional() });
 export type CamKey = z.infer<typeof CamKeySchema>;
 
 export const DialogueCueSchema = z.object({
@@ -252,6 +253,7 @@ export const CameraCueSchema = z.object({
   from: CamKeySchema,
   to: CamKeySchema,
   overridden: z.boolean(),
+  cutAt:z.number().optional(), // exact segment-local time for a location cut
 });
 export type CameraCue = z.infer<typeof CameraCueSchema>;
 
@@ -275,6 +277,7 @@ export const SegmentSchema = z.object({
   paragraphId: z.string(),
   version: z.number(),
   duration: z.number(),
+  cast:z.array(ActorIdSchema).optional(), // named story participants; absent in old saved segments
   startState: WorldStateSchema,
   endState: WorldStateSchema,
   actorClips: z.object({
@@ -377,7 +380,7 @@ export interface FixtureParagraph {
   beatScript: BeatScript;
 }
 export interface FixtureEpisode {
-  id: "garden_party" | "pancake_morning" | "bears_nap" | "fishing_trip";
+  id: "garden_party" | "pancake_morning" | "bears_nap" | "fishing_trip" | "cozy_evening";
   lang: Lang;
   title: string;
   paragraphs: FixtureParagraph[];

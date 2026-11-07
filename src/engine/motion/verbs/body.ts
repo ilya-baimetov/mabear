@@ -27,7 +27,19 @@ export function sitPose(ctx: VerbCtx): PoseLayer {
       leg("Left", 1.5, 1.3 + swing, 0.08), leg("Right", 1.5, 1.3 - swing, 0.08),
       arm("Left", 1.0, 0.55, 0.7), arm("Right", 1.0, 0.55, 0.7),
       { Spine: rx(0.05 + breathe), Head: ry(noise1(t * 0.4, 7) * 0.3) },
-    ), [0, ctx.seat + 0.04 * h - h, -0.12 * h]);
+    ), [0, ctx.seat + (ctx.seatClearance ?? ((ctx.actor === "wolf_a" || ctx.actor === "wolf_b") ? (ctx.actor === "wolf_a" ? .215 : .19) * style.height / 2 : .04 * h)) - h, ctx.seatForward??-0.12*h]);
+  }
+  // Wolves rest on their rounded haunches, with hocks and paws in front. The generic
+  // low-hips pose pushed their shins under the lawn; counter-rotate each paw to its sole.
+  if (ctx.actor === "wolf_a" || ctx.actor === "wolf_b") {
+    const scale = style.height / 2;
+    const knee = ctx.actor === "wolf_a" ? .217 : .137;
+    const hipY = ctx.actor === "wolf_a" ? .212 : .186;
+    return layer(pose(
+      leg("Left", 1.55, knee, .12, 1.55 - knee), leg("Right", 1.55, knee, .12, 1.55 - knee),
+      arm("Left", 1.1, .2, .3), arm("Right", 1.1, .2, .3),
+      { Spine: rx(.07 + breathe), Head: ry(noise1(t * .4, 7) * .3) },
+    ), [0, hipY * scale - h, -.25 * h]);
   }
   // on the ground: legs out in front
   return layer(pose(
@@ -125,7 +137,10 @@ export const sit: VerbImpl = (lt, _p, ctx) => {
   const seated = ctx.fromPosture === "sit";
   const from = seated ? sitPose(ctx) : standPose(ctx);
   const k = lt / Math.min(0.9, ctx.dur);
-  return { ...transition(from, sitPose(ctx), k), groundW: seated ? 0 : 1 - easeInOut(k) };
+  const wolfOnGround = (ctx.actor === "wolf_a" || ctx.actor === "wolf_b") && ctx.seat <= .15;
+  return { ...transition(from, sitPose(ctx), k), ...(wolfOnGround
+    ? { ground: "floor" as const, groundW: 1 }
+    : { groundW: seated ? 0 : 1 - easeInOut(k) }) };
 };
 
 export const stand_up: VerbImpl = (lt, _p, ctx) => {
@@ -133,7 +148,10 @@ export const stand_up: VerbImpl = (lt, _p, ctx) => {
   const from = ctx.fromPosture === "sleep" ? liePose(ctx) : ctx.fromPosture === "sit" ? sitPose(ctx) : sitPose({ ...ctx, seat: 0 });
   const L = transition(from, standPose(ctx), lt / ctx.dur);
   // a push-up effort lean forward halfway
-  return { ...addLayer(L, { Spine: rx(0.35 * window01(lt / ctx.dur, 0, 1, 0.4)) }), groundW: easeInOut(lt / ctx.dur) };
+  const wolfOnGround = (ctx.actor === "wolf_a" || ctx.actor === "wolf_b") && ctx.seat <= .15 && ctx.fromPosture === "sit";
+  return { ...addLayer(L, { Spine: rx(0.35 * window01(lt / ctx.dur, 0, 1, 0.4)) }), ...(wolfOnGround
+    ? { ground: "floor" as const, groundW: 1 }
+    : { groundW: easeInOut(lt / ctx.dur) }) };
 };
 
 export const fall_down: VerbImpl = (lt, _p, ctx) => {

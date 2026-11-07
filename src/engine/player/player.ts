@@ -28,8 +28,11 @@ export class Player {
   /** play() was asked to run to the end of the timeline (extend endT when the timeline grows) */
   private toEnd = false;
   private lastNow = 0;
+  private resumableAudio = false;
   /** debug/screenshot hook: replaces the compiled camera (e.g. a character close-up) */
   cameraOverride: ((frame: FrameState) => CamKey) | null = null;
+  /** Cast inspection may show an actor who is absent from the current story. */
+  castOverride: ActorId[] | null = null;
   /** debug/screenshot hook: skip rendering (the last frame stays on screen) so headless screenshots aren't starved */
   frozen = false;
 
@@ -40,7 +43,8 @@ export class Player {
 
   setTimeline(tl: Timeline, lang: Lang): void {
     const wasPlaying = this.playing;
-    const changed = tl !== this.timeline;
+    const changed = tl !== this.timeline || lang !== this.lang;
+    if (changed && this.resumableAudio) { this.opts.audio?.stop(); this.resumableAudio = false; }
     this.timeline = tl;
     this.lang = lang;
     this.setPreviewEnd(this.previewEnd ?? undefined);
@@ -50,6 +54,8 @@ export class Player {
       this.opts.audio?.play(this.previewTimeline, this.t, lang);
     }
     if (this.endT > tl.duration || !wasPlaying || this.toEnd) this.endT = this.previewTimeline.duration;
+    // Stop at an unvoiced new paragraph; the app prepares it before resuming.
+    if(wasPlaying&&this.opts.audio?.readyUntil)this.endT=Math.min(this.endT,Math.max(this.t,this.opts.audio.readyUntil(this.previewTimeline,lang,this.t)));
   }
 
   private setPreviewEnd(end?: number): void {
@@ -71,6 +77,9 @@ export class Player {
   }
 
   play(from: number, to?: number): void {
+    this.castOverride = null;
+    const resume = this.resumableAudio && !this.playing && Math.abs(from - this.t) < 1e-6 && (to ?? null) === this.previewEnd;
+    this.resumableAudio = false;
     this.setPreviewEnd(to);
     this.t = Math.max(0, Math.min(from, this.previewTimeline.duration));
     this.toEnd = to === undefined;
@@ -78,20 +87,23 @@ export class Player {
     this.playing = true;
     this.tStart = this.t;
     this.wallStart = performance.now();
-    this.opts.audio?.stop();
-    this.opts.audio?.play(this.previewTimeline, this.t, this.lang);
+    if (resume && this.opts.audio?.resume) this.opts.audio.resume();
+    else { this.opts.audio?.stop(); this.opts.audio?.play(this.previewTimeline, this.t, this.lang); }
     this.opts.onTime?.(this.t, true);
   }
 
   pause(): void {
     if (!this.playing) return;
     this.playing = false;
-    this.opts.audio?.stop();
+    this.resumableAudio = !!this.opts.audio?.pause;
+    if (this.opts.audio?.pause) this.opts.audio.pause(); else this.opts.audio?.stop();
     this.opts.onTime?.(this.t, false);
   }
 
   seek(t: number, boundEnd?: number): void {
     if (this.playing) this.pause();
+    if (this.resumableAudio) this.opts.audio?.stop();
+    this.resumableAudio = false;
     this.setPreviewEnd(boundEnd);
     this.t = Math.max(0, Math.min(t, this.previewTimeline.duration));
     this.idleT = 0;
@@ -127,6 +139,7 @@ export class Player {
     try {
       let frame = evaluate(view, evalT);
       if (this.cameraOverride) frame = { ...frame, camera: this.cameraOverride(frame) };
+      if (this.castOverride) frame = { ...frame, cast: this.castOverride };
       this.lastFrame = frame;
       this.opts.stage.render(frame);
       if (this.playing && this.opts.audio) {

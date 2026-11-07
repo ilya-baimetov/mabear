@@ -1,0 +1,37 @@
+[
+  {
+    "path": "/api/health",
+    "status": 200,
+    "location": null,
+    "cache-control": "private, no-store",
+    "x-robots-tag": "noindex, nofollow"
+  },
+  {
+    "path": "/",
+    "status": 302,
+    "location": "/login",
+    "cache-control": "private, no-store",
+    "x-robots-tag": "noindex, nofollow"
+  },
+  {
+    "path": "/api/speech",
+    "status": 401,
+    "location": null,
+    "cache-control": "private, no-store",
+    "x-robots-tag": "noindex, nofollow"
+  },
+  {
+    "path": "/api/speech/audio/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "status": 401,
+    "location": null,
+    "cache-control": "private, no-store",
+    "x-robots-tag": "noindex, nofollow"
+  },
+  {
+    "path": "/assets/voices/masha/416bfd15a31be9e4d3ed6f3a.mp3",
+    "status": 302,
+    "location": "/login",
+    "cache-control": "private, no-store",
+    "x-robots-tag": "noindex, nofollow"
+  }
+]

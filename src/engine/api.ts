@@ -63,6 +63,8 @@ export interface FrameState {
   /** segment-local time */
   localT: number;
   actors: Record<ActorId, ActorFrame>;
+  /** Story participants; omitted in the empty cast-exploration scene. */
+  cast?:ActorId[];
   camera: CamKey;
   /** lighting blend: from → to by k (0..1) */
   lighting: { from: TimeOfDay; to: TimeOfDay; k: number };
@@ -103,11 +105,18 @@ export interface StageHandle {
 
 /** Audio engine (spec §7.6). Never throws; TTS failures are silent. */
 export interface AudioEngine {
+  /** Fetch/decode selected recorded speech before the movie starts; never plays audio. */
+  prepare?(timeline: Timeline, lang: Lang, from?: number, to?: number): Promise<Readonly<Record<string, number>>>;
+  readyUntil?(timeline: Timeline, lang: Lang, from: number): number;
   /** call on first user gesture */
   unlock(): Promise<void>;
   /** schedule the timeline from episode time `fromT` (real-time playback only) */
   play(timeline: Timeline, fromT: number, lang: Lang): void;
-  /** stop everything immediately (pause / scrub) */
+  /** Freeze the existing scheduled session and current speech utterance. */
+  pause(): void;
+  /** Continue the frozen session without restarting its cues. */
+  resume(): void;
+  /** Stop everything immediately (scrub / replay / replacement). */
   stop(): void;
   setVolume(v: number): void;
   setMuted(m: boolean): void;
@@ -121,4 +130,5 @@ export interface AudioDebug {
   scheduled: { dialogue: number; emotes: number; foley: number; sfx: number; music: number; ambience: number };
   ttsAvailable: boolean;
   unlocked: boolean;
+  recordedSpeech?: {voice:string;scheduled:{text:string;lang:Lang;offset:number;duration:number}[]};
 }

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { ArrowUpRight, BookOpen, ChefHat, Fish, Moon, Sprout, X } from "lucide-react";
+import { ArrowUpRight, BookOpen, ChefHat, Fish, House, Moon, Sprout, X } from "lucide-react";
 import type { FixtureEpisode } from "../../shared/schema";
 import { useStore, useStrings } from "../useStore";
 
@@ -7,6 +7,7 @@ export const STORY_STARTERS = [
   { id: "garden_party", Icon: Sprout, mood: { en: "A little garden mischief", ru: "Приключения в огороде" }, description: { en: "Unexpected guests, a missing carrot, and a dance for everyone.", ru: "Нежданные гости, пропавшая морковка и танцы для всех." } },
   { id: "pancake_morning", Icon: ChefHat, mood: { en: "A delicious mess", ru: "Вкусный переполох" }, description: { en: "A quiet breakfast never stays quiet when Masha is around.", ru: "Завтрак не бывает спокойным, когда рядом Маша." } },
   { id: "bears_nap", Icon: Moon, mood: { en: "Sweet dreams… almost", ru: "Сладких снов… почти" }, description: { en: "Bear wants a little peace. Masha has a different idea.", ru: "Мишке хочется тишины. Но у Маши другие планы." } },
+  { id: "cozy_evening", Icon: House, mood: { en: "At home with Bear", ru: "В гостях у Мишки" }, description: { en: "From the kitchen to the living room: a little story inside Bear’s house.", ru: "С кухни в гостиную: маленькая история в доме Медведя." } },
   { id: "fishing_trip", Icon: Fish, mood: { en: "Trouble by the water", ru: "Переполох у воды" }, description: { en: "One fishing trip. Plenty of patience. A very curious Masha.", ru: "Одна рыбалка, много терпения и очень любопытная Маша." } },
 ] as const;
 

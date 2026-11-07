@@ -1,0 +1,12 @@
+{
+  "worker": "mabear-storybook",
+  "url": "https://mabear-storybook.ilya-baimetov.workers.dev",
+  "version_id": "ab0c90e5-8928-47c0-96ac-e2c3d7055e8a",
+  "local_release_date": "2026-11-06",
+  "studio_bundle": "studio-BvtvAOIN.js",
+  "speech_runtime": "native workerd manual redirects; exact selected Lively_Girl recipe",
+  "tests": {"unit": 652, "unit_files": 46, "browser_scenarios": 21},
+  "adversarial_review": "completed, findings updated and verified",
+  "voice_live_proof": "../voice-integration/live-verification.json",
+  "thumbnail_proof": "../player-storyboard/thumbnail-proof.json"
+}

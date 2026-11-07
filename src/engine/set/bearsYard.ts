@@ -4,12 +4,17 @@
 // (BufferGeometryUtils.mergeGeometries) to stay far below the ~150 draw-call budget; the anchors stay in the graph.
 import * as THREE from "three";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
-import { mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
-import { MARKS } from "../../shared/bible/set";
+import { Reflector } from "three/examples/jsm/objects/Reflector.js";
+import { mergeVertices, mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
+import { MARKS, sceneLocationAt, type SceneLocation } from "../../shared/bible/set";
 import type { MarkId, Vec2 } from "../../shared/schema";
 import { GeoBag, lumpy, paint, rng, xf, type LookMaterials, type MatKey } from "../look";
 import { DETAIL_MEAN_SRGB, type EnvTextures } from "./textures";
+import { buildForestLocation } from "./forestLocations";
+import { buildHouseInterior } from "./houseInterior";
 import { NatureAssets, type NatureId, type NatureSpot } from "./nature";
+import {pondRadius,POND_PIER_START} from '../../shared/pond';
+export {pondRadius} from '../../shared/pond';
 
 // ---------------------------------------------------------------------------------------------------------------
 // Element registry (ids + placement). Placement mirrors src/shared/bible/set.ts marks.
@@ -32,7 +37,7 @@ export interface SetElementDef {
   description: string;
 }
 
-const PIER_START: Vec2 = [-4.6, 7.2];
+const PIER_START: Vec2 = [...POND_PIER_START];
 const PIER_DIR = new THREE.Vector2(-1, 2.6).normalize();
 const PIER_YAW = Math.atan2(PIER_DIR.x, PIER_DIR.y);
 const BRIDGE_YAW = 0.149;
@@ -57,7 +62,7 @@ export const SET_ELEMENTS: Record<SetElementId, SetElementDef> = {
   oak_swing: { id: "oak_swing", pos: [8.6, 0, -0.6], rotY: 0, mark: "swing", description: "Big oak with a rope swing (seat is a separate moving object)" },
   // rotated 46° so neither pine trunk stands on the hammock→clearing lane or the w_hammock waypoint paths
   hammock: { id: "hammock", pos: [-11, 0, 2.2], rotY: 0.8, mark: "hammock", description: "Striped hammock between two pines" },
-  pond: { id: "pond", pos: [-8, 0, 10], rotY: 0, mark: "pond_shore", description: "Small round pond with stones, reeds and lily pads" },
+  pond: { id: "pond", pos: [-8, 0, 10], rotY: 0, mark: "pond_shore", description: "Woodland pond with an irregular leafy bank and reflected trees" },
   pier: { id: "pier", pos: [PIER_START[0], 0, PIER_START[1]], rotY: PIER_YAW, mark: "pier", description: "Small wooden fishing pier" },
   table: { id: "table", pos: [2, 0, 1.5], rotY: 0, mark: "table", description: "Round outdoor wooden table" },
   samovar: { id: "samovar", pos: [SAMOVAR_XZ[0], TABLE_TOP, SAMOVAR_XZ[1]], rotY: 0.4, mark: "table", description: "Brass samovar on the table" },
@@ -68,7 +73,7 @@ export const SET_ELEMENTS: Record<SetElementId, SetElementDef> = {
   creek: { id: "creek", pos: [0, 0, 0], rotY: 0, mark: "creek", description: "Creek winding from the north-east, down the east edge, into the pond" },
   footbridge: { id: "footbridge", pos: [12, 0, 9], rotY: BRIDGE_YAW, mark: "creek", description: "Plank footbridge over the creek" },
   path_bridge: { id: "path_bridge", pos: [0, 0, 17.9], rotY: Math.PI / 2, mark: "path_entry", description: "Little plank bridge where the forest path crosses the creek" },
-  van: { id: "van", pos: [14.1, 0, -1], rotY: 0, mark: "van", description: "The Wolves' old boxy ambulance van (faded cream, red stripe)" },
+  van: { id: "van", pos: [14.1, 0, -1], rotY: 0, mark: "van", description: "The Wolves' old rounded ambulance van (faded cream, red stripe)" },
   picket_fence: { id: "picket_fence", pos: [0, 0, 0], rotY: 0, mark: null, description: "Fragments of an old picket fence by the path" },
   flowers_patch: { id: "flowers_patch", pos: [0, 0, 0], rotY: 0, mark: null, description: "Wildflower clusters" },
   rocks: { id: "rocks", pos: [0, 0, 0], rotY: 0, mark: null, description: "Rocks and boulders" },
@@ -121,14 +126,6 @@ export function restHeightAt(x: number, z: number): number {
   return walkHeightAt(x, z);
 }
 
-/** Pond outline radius at angle θ (a slightly kidney-shaped pond so pond_shore stays dry). */
-export function pondRadius(theta: number): number {
-  const centre = -Math.PI / 4; // toward (+x, -z): the pond_shore mark side
-  let d = theta - centre;
-  d = Math.atan2(Math.sin(d), Math.cos(d));
-  const deg = (d * 180) / Math.PI;
-  return 3.5 - 1.0 * Math.exp(-(deg * deg) / 200) + 0.12 * Math.sin(theta * 3 + 1);
-}
 const POND_C: Vec2 = [-8, 10];
 
 function creekCurve(): THREE.CatmullRomCurve3 {
@@ -605,35 +602,45 @@ function makeSmoke(at: THREE.Vector3): THREE.Points {
 
 function buildGarden(c: BuildCtx): void {
   const b = c.bag;
-  const L = 4.0, Wd = 0.8;
+  const L = 4.45, Wd = 0.88;
   const beds = [1.2, 0, -1.2];
   beds.forEach((z, bi) => {
     // frame
     for (const s of [-1, 1]) {
-      b.add("wood", box(L, 0.26, 0.07), 0x9d6b3f, xf([0, 0.13, z + s * (Wd / 2)]), { jitter: 0.08, seed: bi * 2 + s });
-      b.add("wood", box(0.07, 0.26, Wd), 0x9d6b3f, xf([s * L / 2, 0.13, z]));
+      b.add("wood", box(L, 0.12, 0.07), 0x947049, xf([0, 0.06, z + s * (Wd / 2)]), { jitter: 0.08, seed: bi * 2 + s });
+      b.add("wood", box(0.07, 0.12, Wd), 0x947049, xf([s * L / 2, 0.06, z]));
     }
-    b.add("soil", box(L - 0.07, 0.2, Wd - 0.07), 0x5e3c25, xf([0, 0.11, z]), { jitter: 0.25, seed: bi });
+    b.add("soil", box(L - 0.07, 0.12, Wd - 0.07), 0x493b2a, xf([0, 0.07, z]), { jitter: 0.25, seed: bi });
     if (bi === 1) {
-      for (let k = 0; k < 6; k++) addCabbage(b, -1.6 + k * 0.64, 0.22, z, 100 + k);
+      for (let k = 0; k < 6; k++) addCabbage(b, -1.75 + k * 0.7, 0.13, z, 100 + k);
     } else {
-      for (let k = 0; k < 9; k++) addCarrotTop(b, -1.7 + k * 0.42, 0.21, z + (k % 2 ? 0.1 : -0.1), bi * 20 + k);
+      for (let k = 0; k < 9; k++) addCarrotTop(b, -1.7 + k * 0.42, 0.13, z + (k % 2 ? 0.1 : -0.1), bi * 20 + k);
     }
   });
   // small picket fence on W, N, E sides (south side open: the garden mark)
-  const fenceCol = 0xeee3cf;
   const runs: [number, number, number, number][] = [
-    [-2.5, 1.75, -2.5, -1.85], [-2.5, -1.85, 2.5, -1.85], [2.5, -1.85, 2.5, 1.75],
+    [-2.6, -1.95, 2.6, -1.95],
   ];
-  for (const [x0, z0, x1, z1] of runs) addPickets(b, x0, z0, x1, z1, 0.55, 0.17, fenceCol, 0.05);
+  for (const [x0, z0, x1, z1] of runs) addPickets(b, x0, z0, x1, z1, 0.68, 0.32, 0x9f8c65, 0.065);
+  // Row markers, a low tool rest and border flowers make a tended kitchen garden.
+  for (const z of beds) {
+    b.add("wood", box(.025,.43,.025),0xb39769,xf([-2.08,.22,z]));
+    b.add("wood", box(.19,.12,.025),0xd3b784,xf([-2.08,.43,z]));
+  }
+  for(const side of [-1,1]) for(let k=0;k<8;k++) {
+    const x=side*2.55,z=-1.55+k*.42,h=.30+(k%3)*.08;
+    b.add("foliage",cyl(.01,.014,h,5),0x567d37,xf([x,h/2,z]));
+    for(const a of [0,2.1,4.2])b.add("foliage",leaf(.21,.055,.4),0x659044,xf([x,h*.4,z],[-.3,a+k,0]));
+    blossom(b,x,h,z,.09,k%3===0?0xe4ad37:0xf0cd57,k);
+  }
 }
 
 function addCabbage(b: GeoBag, x: number, y: number, z: number, seed: number): void {
   const r = rng(seed);
-  b.add("foliage", blob(0.16, seed, 0.08, 1), 0xb5dc7a, xf([x, y + 0.13, z]), { jitter: 0.08, seed });
+  b.add("foliage", blob(0.21, seed, 0.08, 1), 0x91b761, xf([x, y + 0.13, z]), { jitter: 0.08, seed });
   for (let i = 0; i < 5; i++) {
     const a = (i / 5) * Math.PI * 2 + r();
-    b.add("foliage", sph(0.16, 7, 4), 0x7fbf55, xf([x + Math.cos(a) * 0.12, y + 0.08, z + Math.sin(a) * 0.12], [Math.sin(a) * 0.9, 0, -Math.cos(a) * 0.9], [1, 0.25, 0.8]), { jitter: 0.1, seed: seed + i });
+    b.add("foliage", sph(0.23, 10, 6), 0x67954d, xf([x + Math.cos(a) * 0.12, y + 0.08, z + Math.sin(a) * 0.12], [Math.sin(a) * 0.9, 0, -Math.cos(a) * 0.9], [1, 0.25, 0.8]), { jitter: 0.1, seed: seed + i });
   }
 }
 
@@ -835,10 +842,22 @@ function installWaterRipples(mat: THREE.MeshStandardMaterial): { uSetWaterTime: 
 
 function buildPond(c: BuildCtx): void {
   const b = c.bag;
+  const bankLeaf=(length:number,width:number)=>{
+    const points:number[]=[],indices:number[]=[];
+    for(let row=0;row<=8;row++){
+      const t=row/8,w=Math.pow(Math.sin(Math.PI*t),.75)*width;
+      points.push(-w,Math.sin(t*Math.PI)*length*.07,t*length,0,Math.sin(t*Math.PI)*length*.12,t*length,w,Math.sin(t*Math.PI)*length*.07,t*length);
+      if(row)for(let col=0;col<2;col++){const a=(row-1)*3+col,c=row*3+col;indices.push(a,c,a+1,a+1,c,c+1);}
+    }
+    const front=new THREE.BufferGeometry();front.setAttribute('position',new THREE.Float32BufferAttribute(points,3));front.setIndex(indices);front.computeVertexNormals();
+    const back=front.clone();back.setIndex(indices.flatMap((_,i)=>i%3?[]:[indices[i],indices[i+2],indices[i+1]]));back.computeVertexNormals();
+    const a=front.toNonIndexed(),bb=back.toNonIndexed();front.dispose();back.dispose();
+    const merged=mergeGeometries([a,bb],false)!;a.dispose();bb.dispose();return merged;
+  };
   // radial water mesh with a depth gradient
-  const segs = 64, rings = [0, 0.4, 0.7, 0.88, 1.0];
+  const segs = 128, rings = [0, 0.4, 0.7, 0.88, 1.0];
   const pos: number[] = [], col: number[] = [], idx: number[] = [];
-  const deep = new THREE.Color(0x306660), shallow = new THREE.Color(0x7aa99a), cc = new THREE.Color();
+  const deep = new THREE.Color(0x263f31), shallow = new THREE.Color(0x67734b), cc = new THREE.Color();
   pos.push(0, 0.03, 0);
   col.push(deep.r, deep.g, deep.b);
   for (let ri = 1; ri < rings.length; ri++) {
@@ -866,11 +885,63 @@ function buildPond(c: BuildCtx): void {
   // ensure upward normals (winding)
   const nrm = g.attributes.normal;
   for (let i = 0; i < nrm.count; i++) nrm.setXYZ(i, 0, 1, 0);
-  b.addPainted("water", g);
+  // Real planar reflection is confined to this scene and rendered at half resolution.
+  // It reflects the actual trees/actors instead of painting fake tree shadows into the water.
+  const mirrorGeometry=g.clone().translate(0,-.03,0).rotateX(Math.PI/2);
+  const mirror=new Reflector(mirrorGeometry,{textureWidth:512,textureHeight:512,multisample:0,clipBias:.003,color:0x55735b});
+  mirror.name='set:pond:reflection';mirror.rotation.x=-Math.PI/2;mirror.position.y=.032;
+  const renderReflection=mirror.onBeforeRender;let software:boolean|undefined,lastReflection=-Infinity;
+  const reflectedPosition=new THREE.Vector3(1e6,1e6,1e6),reflectedRotation=new THREE.Quaternion();
+  mirror.onBeforeRender=function(renderer,scene,camera,geometry,material,group){
+    if(software===undefined){
+      const gl=renderer.getContext(),ext=gl.getExtension('WEBGL_debug_renderer_info');
+      software=/swiftshader|llvmpipe|software/i.test(String(gl.getParameter(ext?ext.UNMASKED_RENDERER_WEBGL:gl.RENDERER)));
+      if(software){mirror.getRenderTarget().setSize(256,256);(mirror.material as THREE.ShaderMaterial).uniforms.uReflectionTexel.value=1/256;}
+    }
+    const t=c.extra.waterUniforms!.uSetWaterTime.value;
+    // Software WebGL uses a small reflection cache; genuine camera cuts and seeks refresh immediately.
+    // Ripple animation still runs every frame, and hardware keeps full-rate actor reflections.
+    const cameraCut=camera.position.distanceToSquared(reflectedPosition)>.04||camera.quaternion.angleTo(reflectedRotation)>.045;
+    if(software&&!cameraCut&&t>=lastReflection&&t-lastReflection<.125)return;
+    renderReflection.call(this,renderer,scene,camera,geometry,material,group);
+    lastReflection=t;reflectedPosition.copy(camera.position);reflectedRotation.copy(camera.quaternion);
+  };
+  const water=mirror.material as THREE.ShaderMaterial;
+  water.uniforms.uSetWaterTime=c.extra.waterUniforms!.uSetWaterTime;
+  water.uniforms.uReflectionTexel={value:1/512};
+  water.vertexShader=water.vertexShader.replace('varying vec4 vUv;',
+    'varying vec4 vUv; varying vec2 vPond; varying vec3 vBankColor; attribute vec3 color;')
+    .replace('vUv = textureMatrix * vec4( position, 1.0 );','vUv = textureMatrix * vec4( position, 1.0 ); vPond = position.xy; vBankColor = color;');
+  water.fragmentShader=water.fragmentShader.replace('varying vec4 vUv;',
+    'varying vec4 vUv; varying vec2 vPond; varying vec3 vBankColor; uniform float uSetWaterTime; uniform float uReflectionTexel;')
+    .replace('vec4 base = texture2DProj( tDiffuse, vUv );',`vec4 rippleUv=vUv;
+      rippleUv.xy += vec2(sin(vPond.x*7.1+vPond.y*3.2+uSetWaterTime*.7),cos(vPond.y*9.0-vPond.x*2.5-uSetWaterTime*.6))*.00045*vUv.w;
+      vec2 stepUv=vec2(uReflectionTexel*1.5)*vUv.w;
+      vec4 base = texture2DProj(tDiffuse,rippleUv)*.4;
+      base+=texture2DProj(tDiffuse,rippleUv+vec4(stepUv.x,stepUv.y,0.,0.))*.15;
+      base+=texture2DProj(tDiffuse,rippleUv+vec4(-stepUv.x,stepUv.y,0.,0.))*.15;
+      base+=texture2DProj(tDiffuse,rippleUv+vec4(stepUv.x,-stepUv.y,0.,0.))*.15;
+      base+=texture2DProj(tDiffuse,rippleUv+vec4(-stepUv.x,-stepUv.y,0.,0.))*.15;`)
+    .replace('vec4( blendOverlay( base.rgb, color ), 1.0 )','vec4(mix(vBankColor*.65,base.rgb,.36),1.0)');
+  c.dyn.push(mirror);c.extra.disposables.push(mirror);g.dispose();
+  // Damp shoreline blends into meadow. Only the access beach is bare sand: no decorative stone ring.
+  const shorePos:number[]=[],shoreIdx:number[]=[],shoreColors:number[]=[];
+  for(let i=0;i<=96;i++){
+    const a=i/96*Math.PI*2,rr=pondRadius(a);
+    const access=Math.exp(-Math.pow(Math.atan2(Math.sin(a+Math.PI/4),Math.cos(a+Math.PI/4))/.58,2));
+    for(const [j,radius] of [rr-.04,rr+.25+access*.45+.16*Math.sin(a*5)].entries()){
+      shorePos.push(Math.cos(a)*radius,.013,Math.sin(a)*radius);
+      const color=new THREE.Color(j?0x779047:0x51593a).lerp(new THREE.Color(0xc6b27e),access*.9);
+      shoreColors.push(color.r,color.g,color.b);
+    }
+    if(i)shoreIdx.push(i*2-2,i*2,i*2-1,i*2-1,i*2,i*2+1);
+  }
+  const shore=new THREE.BufferGeometry();shore.setAttribute("position",new THREE.Float32BufferAttribute(shorePos,3));shore.setAttribute('color',new THREE.Float32BufferAttribute(shoreColors,3));shore.setIndex(shoreIdx);shore.computeVertexNormals();
+  b.addPainted("foliage",shore);
   // shore stones (skip the pier/shore-mark sector)
   const r = rng(5);
-  for (let i = 0; i < 26; i++) {
-    const th = (i / 26) * Math.PI * 2 + r() * 0.15;
+  for (let i = 0; i < 6; i++) {
+    const th = (i / 6) * Math.PI * 2 + r() * 0.8;
     const deg = ((Math.atan2(Math.sin(th + Math.PI / 4), Math.cos(th + Math.PI / 4)) * 180) / Math.PI);
     if (Math.abs(deg) < 32) continue;
     const rr = pondRadius(th) + 0.05 + r() * 0.2;
@@ -878,14 +949,22 @@ function buildPond(c: BuildCtx): void {
     b.add("stone", blob(s, 200 + i, 0.18, 1), 0x9d9a90, xf([Math.cos(th) * rr, s * 0.25, Math.sin(th) * rr], [r(), r() * 6, r()], [1, 0.6, 1]), { jitter: 0.15, seed: i });
   }
   // reeds and cattails on the far (north-west) edge
-  for (let i = 0; i < 22; i++) {
-    const th = Math.PI * (0.95 + r() * 0.75);
+  for (let i = 0; i < 65; i++) {
+    const th = Math.PI * (0.65 + r() * 1.15);
     const rr = pondRadius(th) - 0.2 + r() * 0.5;
     const h = 0.7 + r() * 0.7;
     const x = Math.cos(th) * rr, z = Math.sin(th) * rr;
     const lean: [number, number, number] = [(r() - 0.5) * 0.25, 0, (r() - 0.5) * 0.25];
+    for(let k=0;k<4;k++)b.add("foliage",leaf(.55+r()*.55,.045,.5),0x456634,xf([x,.015,z],[-.7,r()*6.28,0]));
     b.add("foliage", cyl(0.012, 0.02, h, 4), 0x5f8f3a, xf([x, h / 2, z], lean));
     if (i % 2 === 0) b.add("foliage", cyl(0.035, 0.035, 0.16, 6), 0x6b3e22, xf([x + lean[2] * -h * 0.5, h - 0.05, z + lean[0] * h * 0.5], lean));
+  }
+  // Wide waxy bank leaves, low grasses and water plants interrupt the shoreline at different scales.
+  for(let i=0;i<175;i++){
+    const th=r()*Math.PI*2;
+    if(Math.abs(Math.atan2(Math.sin(th+Math.PI/4),Math.cos(th+Math.PI/4)))<.44)continue;
+    const rr=pondRadius(th)-.12+r()*.62,x=Math.cos(th)*rr,z=Math.sin(th)*rr;
+    for(let k=0;k<3;k++)b.add('foliage',bankLeaf(.18+r()*.23,.065+r()*.045),[0x537341,0x64834c,0x476139][i%3],xf([x,.035,z],[-.2-r()*.35,r()*Math.PI*2,0]));
   }
   // lily pads with two pink flowers
   for (let i = 0; i < 7; i++) {
@@ -894,7 +973,7 @@ function buildPond(c: BuildCtx): void {
     const x = Math.cos(th) * rr, z = Math.sin(th) * rr;
     const s = 0.22 + r() * 0.12;
     const pad = new THREE.CylinderGeometry(s, s, 0.02, 14, 1, false, 0.3, Math.PI * 2 - 0.6);
-    b.add("foliage", pad, 0x4f9a3c, xf([x, 0.045, z], [0, r() * 6, 0]));
+    b.add("foliage", pad, 0x547d40, xf([x, 0.05, z], [0, r() * 6, 0]));
     if (i < 2) blossom(b, x, .08, z, .11, 0xe5a6b9, i + 92);
   }
 }
@@ -975,7 +1054,7 @@ function buildWoodpile(c: BuildCtx): void {
 
 function buildBigPine(c: BuildCtx): void {
   const tree = new THREE.Group(); tree.name = "set:big_pine:authored"; c.dyn.push(tree);
-  queueNature(c, tree, "Pine_2", [{ x: 0, z: 0, height: 12.2, yaw: 2.6 }], true);
+  queueNature(c, tree, "Pine_2", [{ x: 0, z: 0, height: 10.5, yaw: 2.6 }], true);
 }
 
 function buildBush(c: BuildCtx): void {
@@ -1058,39 +1137,120 @@ function buildBridge(c: BuildCtx, long: number): void {
 }
 
 function buildVan(c: BuildCtx): void {
-  const b = c.bag;
-  const W = 2.0, L = 4.3, H = 1.95, clear = 0.5;
-  const cream = 0xe9dfc0, red = 0xc23e2e, dark = 0x2a2a2a, glassC = 0x4d6680;
-  b.add("paint", new RoundedBoxGeometry(W, H, L, 4, 0.34), cream, xf([0, clear + H / 2, 0]), { aoBottom: 0.25, jitter: 0.04 });
-  b.add("paint", new RoundedBoxGeometry(W + 0.03, 0.22, L + 0.03, 2, 0.1), red, xf([0, clear + 0.82, 0]));
-  // windows
-  for (const s of [-1, 1]) {
-    b.add("paint", new RoundedBoxGeometry(0.82, 0.62, 0.04, 2, 0.06), glassC, xf([s * 0.46, clear + H - 0.5, L / 2 + 0.005]));
-    for (const zz of [1.35, 0.25, -0.75, -1.65]) {
-      b.add("paint", new RoundedBoxGeometry(0.04, 0.52, zz === 1.35 ? 0.62 : 0.72, 2, 0.05), glassC, xf([s * (W / 2 + 0.005), clear + H - 0.5, zz]));
+  const b=c.bag;
+  const cream=0xc9cec3,trim=0xb0b7ac,rubber=0x333a35,red=0xb25f47,glass=0x697871;
+  // Chipped enamel is a surface treatment, not brown geometry stuck to the body.
+  // The episode has fine grey cracks, peeled edges and dirt runs, with very little orange rust.
+  const shell=new RoundedBoxGeometry(2.06,1.72,4.22,5,.19);
+  let bodyMaterial:THREE.MeshStandardMaterial|undefined;
+  if(typeof document!=='undefined'){
+    const canvas=document.createElement('canvas');canvas.width=1024;canvas.height=512;
+    const ctx=canvas.getContext('2d');
+    if(ctx){
+      const random=rng(452);ctx.fillStyle='#cdd1c7';ctx.fillRect(0,0,1024,512);
+      for(let i=0;i<750;i++){
+        const x=random()*1024,y=random()*512,w=4+random()*50,h=2+random()*15;
+        ctx.fillStyle=`rgba(82,94,82,${.008+random()*.045})`;ctx.fillRect(x,y,w,h);
+      }
+      for(let i=0;i<2400;i++){
+        const x=random()*1024,y=random()*512,edge=Math.min(y,512-y);
+        if(edge>35&&random()>.3)continue;
+        const w=.4+random()*(edge<35?8:3),h=.5+random()*(edge<35?12:7);
+        ctx.fillStyle=i%5===0?'#8d8e77':i%3?'#68756c':'#a3a99e';
+        ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+w,y+h*.2);ctx.lineTo(x+w*.6,y+h);ctx.lineTo(x-w*.3,y+h*.55);ctx.closePath();ctx.fill();
+        if(i%11===0){ctx.strokeStyle='rgba(75,85,76,.16)';ctx.lineWidth=.6;ctx.beginPath();ctx.moveTo(x,y+h);ctx.lineTo(x+1,y+h+random()*24);ctx.stroke();}
+      }
+      const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;texture.anisotropy=4;
+      bodyMaterial=new THREE.MeshStandardMaterial({map:texture,roughness:.86,color:0xffffff});
+      bodyMaterial.userData.setOwned=true;
+      c.extra.disposables.push(texture,bodyMaterial);
     }
-    // headlights + bumpers
-    b.add("paint", cyl(0.13, 0.13, 0.05, 14), 0xfff4cc, xf([s * 0.66, clear + 0.45, L / 2 + 0.01], [Math.PI / 2, 0, 0]));
-    b.add("metal", new THREE.TorusGeometry(0.13, 0.025, 6, 14), 0xcfcfcf, xf([s * 0.66, clear + 0.45, L / 2 + 0.03]));
-    // wheels
-    for (const zz of [1.4, -1.4]) {
-      b.add("paint", cyl(0.42, 0.42, 0.3, 18), dark, xf([s * (W / 2 - 0.08), 0.42, zz], [0, 0, Math.PI / 2]), { capColor: 0x3a3a3a, capAxis: "y" });
-      b.add("paint", cyl(0.2, 0.2, 0.32, 12), cream, xf([s * (W / 2 - 0.08), 0.42, zz], [0, 0, Math.PI / 2]));
-    }
-    b.add("paint", box(0.08, 0.14, 0.05), dark, xf([s * (W / 2 + 0.08), clear + H - 0.55, L / 2 - 0.4]));
   }
-  // grille slats
-  for (let i = 0; i < 6; i++) b.add("paint", box(0.04, 0.32, 0.03), 0x8a8a84, xf([-0.2 + i * 0.08, clear + 0.45, L / 2 + 0.01]));
-  b.add("paint", box(W + 0.1, 0.14, 0.14), 0x4a4a48, xf([0, clear + 0.08, L / 2 + 0.05]));
-  b.add("paint", box(W + 0.1, 0.14, 0.14), 0x4a4a48, xf([0, clear + 0.08, -L / 2 - 0.05]));
-  // roof beacon (no emblem, no brand)
-  b.add("paint", new THREE.SphereGeometry(0.13, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), 0x3f7fdc, xf([0, clear + H, L / 2 - 0.55]));
-  b.add("paint", cyl(0.14, 0.14, 0.06, 12), 0x4a4a48, xf([0, clear + H - 0.02, L / 2 - 0.55]));
-  // faded rust/dirt patches
-  const r = rng(8);
-  for (let i = 0; i < 5; i++) {
-    const s = r() < 0.5 ? -1 : 1;
-    b.add("paint", sph(0.12 + r() * 0.1, 8, 6), 0xb08a5a, xf([s * (W / 2 - 0.03), clear + 0.15 + r() * 0.3, (r() - 0.5) * 3.2], [0, 0, 0], [0.25, 0.6, 1.2]));
+  // The old loaf-shaped ambulance has a rounded cab/nose and a shallower roof, not a modern bus box.
+  if(bodyMaterial){const body=new THREE.Mesh(shell,bodyMaterial);body.name='set:van:weathered-enamel';body.position.y=1.35;body.castShadow=true;body.receiveShadow=true;c.dyn.push(body);}
+  else b.add("paint",shell,cream,xf([0,1.35,0]),{aoBottom:.25,jitter:.025});
+  b.add("paint",new RoundedBoxGeometry(2.075,.075,4.23,4,.035),0xb8bfb2,xf([0,2.225,-.015]));
+  b.add("paint",new RoundedBoxGeometry(1.94,.73,.39,4,.15),0xd0ceba,xf([0,1.0,2.03]),{aoBottom:.15});
+  // Flush painted belt. A thick rounded box reads as a red bumper tube, unlike the reference.
+  for(const side of [-1,1])b.add('paint',box(.006,.19,3.99),red,xf([side*1.035,1.34,-.02]),{jitter:.08});
+  for(const z of [-2.116,2.181])b.add('paint',box(1.89,.19,.008),red,xf([0,1.34,z]),{jitter:.09});
+  // Rubber seals, painted frames and slightly raked twin windscreens.
+  for(const side of [-1,1]){
+    const x=side*.457;
+    b.add("paint",new RoundedBoxGeometry(.87,.64,.035,3,.075),rubber,xf([x,1.79,2.16],[-.15,0,0]));
+    b.add("paint",new RoundedBoxGeometry(.78,.55,.028,3,.065),glass,xf([x,1.79,2.185],[-.15,0,0]));
+    // A subdued reflection and a real wiper, both below the rounded glass edge.
+    b.add("paint",box(.57,.025,.008),0xa1b1aa,xf([x,1.97,2.160],[-.15,0,0]));
+    const wiper=beam(V(x-.23,1.55,2.24),V(x+.16,1.69,2.22),.011,.011,5);b.add("metal",wiper.g,rubber,wiper.m);
+    for(const [zz,len]of [[1.29,.68],[-.2,.89],[-1.35,.62]]){
+      b.add("paint",new RoundedBoxGeometry(.024,.63,len+.08,3,.035),rubber,xf([side*1.035,1.79,zz]));
+      b.add("paint",new RoundedBoxGeometry(.015,.575,len+.025,3,.025),glass,xf([side*1.052,1.79,zz]));
+      b.add("paint",box(.004,.22,len*.32),0x8a948d,xf([side*1.063,1.88,zz-len*.2]));
+    }
+    // Individual cab door and rear compartment seams, recessed lower panels and handles.
+    for(const zz of [.72,-.84,-1.94])b.add("paint",box(.013,1.37,.015),0x7d897b,xf([side*1.044,1.24,zz]));
+    // Thin panel creases leave the weathered enamel visible instead of covering it with clean slabs.
+    for(const y of [.61,1.11])b.add('paint',box(.008,.009,.86),0xa0aa9d,xf([side*1.042,y,1.22]));
+    for(const zz of [.85,-.76])b.add("metal",new RoundedBoxGeometry(.035,.045,.19,2,.02),rubber,xf([side*1.07,1.36,zz]));
+    // Thin metal side mirror on a visible stalk.
+    const arm=beam(V(side*1.02,1.55,1.65),V(side*1.23,1.72,1.82),.018,.018,6);b.add("metal",arm.g,0x686f65,arm.m);
+    b.add("metal",new RoundedBoxGeometry(.12,.22,.035,2,.025),rubber,xf([side*1.23,1.77,1.84],[0,side*.2,0]));
+    // Pneumatic tyres, pressed steel hubs, bolt circles and painted wheel-arch lips.
+    for(const zz of [1.36,-1.39]){
+      b.add("paint",cyl(.375,.375,.19,24),0x262e27,xf([side*1.0,.28,zz],[0,0,Math.PI/2]));
+      b.add("metal",cyl(.20,.20,.205,20),0x737b6e,xf([side*1.0,.28,zz],[0,0,Math.PI/2]));
+      b.add("metal",cyl(.08,.08,.22,14),0x929a8b,xf([side*1.0,.28,zz],[0,0,Math.PI/2]));
+      for(let k=0;k<5;k++){const a=k/5*Math.PI*2;b.add("metal",sph(.018,6,4),0x48524a,xf([side*1.112,.28+Math.sin(a)*.14,zz+Math.cos(a)*.14]));}
+      b.add("paint",new THREE.TorusGeometry(.385,.024,7,24,Math.PI),trim,xf([side*1.06,.28,zz],[0,Math.PI/2,0]));
+    }
+    // Circular headlights in deep, slightly tarnished bezels and amber indicators.
+    b.add("paint",cyl(.17,.17,.045,20),rubber,xf([side*.65,.96,2.223],[Math.PI/2,0,0]));
+    b.add("metal",new THREE.TorusGeometry(.14,.025,8,24),0xbac0ad,xf([side*.65,.96,2.251]));
+    b.add("paint",cyl(.12,.12,.028,20),0xe3ddae,xf([side*.65,.96,2.265],[Math.PI/2,0,0]));
+    b.add("paint",new RoundedBoxGeometry(.19,.075,.035,2,.025),0xd9a14e,xf([side*.67,1.14,2.22]));
+  }
+  // Recessed grille, proud bumper and plate create depth on the compact rounded face.
+  b.add("paint",new RoundedBoxGeometry(.64,.27,.035,2,.045),rubber,xf([0,.96,2.228]));
+  for(let i=0;i<4;i++)b.add("metal",box(.53,.018,.02),0x9b9e8e,xf([0,.87+i*.055,2.255]));
+  b.add("metal",new RoundedBoxGeometry(2.1,.14,.19,3,.045),0x687165,xf([0,.55,2.24]));
+  b.add("metal",new RoundedBoxGeometry(2.07,.13,.16,3,.04),0x687165,xf([0,.55,-2.16]));
+  b.add("paint",new RoundedBoxGeometry(.46,.13,.025,2,.015),0xc9c9ac,xf([0,.65,2.35]));
+  // Rear split doors and two short windows, matching the compact utility body.
+  b.add("paint",box(.025,1.59,.018),0x59675b,xf([0,1.31,-2.126]));
+  for(const side of [-1,1]){
+    for(const x of [side*.07,side*.91])b.add('paint',box(.025,1.58,.022),0x677266,xf([x,1.31,-2.13]));
+    for(const y of [.535,2.085])b.add('paint',box(.85,.025,.022),0x677266,xf([side*.49,y,-2.13]));
+    b.add("paint",new RoundedBoxGeometry(.70,.56,.025,3,.035),rubber,xf([side*.47,1.78,-2.132]));
+    b.add("paint",new RoundedBoxGeometry(.64,.50,.02,3,.028),glass,xf([side*.47,1.79,-2.151]));
+    b.add('paint',box(.20,.20,.008),0x939e91,xf([side*.63,1.88,-2.166]));
+    b.add("paint",box(.08,.15,.035),red,xf([side*.88,.79,-2.12]));
+    b.add("metal",box(.06,.14,.035),rubber,xf([side*.08,1.19,-2.14]));
+    for(const y of [.8,1.7])b.add('metal',box(.11,.075,.04),0x7b8476,xf([side*.92,y,-2.15]));
+  }
+  // No invented blue roof beacon: none is visible on the abandoned vehicle in the matched episode frame.
+  // Restrained weathering around wheel arches and the lower sill, not raised decorative spots.
+  const r=rng(188);
+  for(let i=0;i<140;i++){
+    const side=i%2?1:-1,zz=-1.8+r()*3.6,y=.56+r()*.31;
+    b.add("paint",box(.002,.008+r()*.048,.005+r()*.025),i%3?0x69766a:0x8c8c72,xf([side*1.043,y,zz],[r()*.5,0,0]));
+  }
+  // Emergency number seen on the source vehicle. Unbranded, with a faded red ink treatment.
+  if(typeof document!=="undefined"){
+    const canvas=document.createElement("canvas");canvas.width=1024;canvas.height=128;
+    const ctx=canvas.getContext("2d");
+    if(ctx){
+      ctx.fillStyle="#d4c6ad";ctx.font="bold condensed 64px sans-serif";ctx.textAlign="center";ctx.fillText("МЕДИЦИНСКАЯ ПОМОЩЬ",512,84);
+      const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;
+      const material=new THREE.MeshStandardMaterial({map:texture,transparent:true,depthWrite:false,roughness:1,side:THREE.DoubleSide});
+      for(const side of [-1,1]){const mesh=new THREE.Mesh(new THREE.PlaneGeometry(2.7,.15),material);mesh.position.set(side*1.047,1.34,-.4);mesh.rotation.y=side*Math.PI/2;c.dyn.push(mesh);c.extra.disposables.push(mesh.geometry);}
+      c.extra.disposables.push(texture,material);
+      const back=document.createElement('canvas');back.width=128;back.height=64;const backCtx=back.getContext('2d')!;
+      backCtx.fillStyle='#a35b43';backCtx.font='bold 50px sans-serif';backCtx.textAlign='center';backCtx.fillText('03',64,54);
+      const backTexture=new THREE.CanvasTexture(back);backTexture.colorSpace=THREE.SRGBColorSpace;
+      const backMat=new THREE.MeshStandardMaterial({map:backTexture,transparent:true,depthWrite:false,roughness:1});
+      const number=new THREE.Mesh(new THREE.PlaneGeometry(.49,.25),backMat);number.position.set(.48,1.28,-2.164);number.rotation.y=Math.PI;c.dyn.push(number);
+      c.extra.disposables.push(number.geometry,backTexture,backMat);
+    }
   }
 }
 
@@ -1104,14 +1264,14 @@ function buildFence(c: BuildCtx): void {
 function buildFlowers(c: BuildCtx): void {
   const b = c.bag;
   const r = rng(21);
-  const heads = [0xffffff, 0xffd84a, 0xe8433a, 0x6b8cff, 0xff8fc0, 0xa070e0, 0xffffff];
+  const heads = [0xfff8df, 0xe8c455, 0xd78362, 0xffffff, 0xf3d064, 0xfff8df, 0xffffff];
   const clusters: [number, number, number, number][] = [
-    [-9.9, -3.4, 0.8, 9], [-2.3, -3.2, 0.7, 8], [2.6, -4.6, 0.6, 7], [3.4, 3.9, 0.7, 8], [7.4, 6.6, 0.7, 8],
-    [-3.9, 12.2, 0.8, 9], [1.8, 11.2, 0.6, 7], [-1.9, 11.6, 0.6, 7], [-12.6, 3.6, 0.8, 8], [9.6, 0.6, 0.7, 7],
+    [-9.9, -3.4, 1.0, 34], [-2.3, -3.2, 0.9, 28], [2.6, -4.6, 0.6, 18], [3.4, 3.9, 0.7, 8], [7.4, 6.6, 0.7, 8],
+    [-3.9, 12.2, 1.2, 32], [2.1, 11.2, 0.8, 24], [-2.1, 11.6, 0.8, 25], [-12.6, 3.6, 0.8, 8], [9.6, 0.6, 0.7, 7],
     [-13.6, -2.8, 0.7, 7], [12.4, -6.2, 0.7, 7], [6.4, 10.4, 0.8, 8], [-9.2, -0.9, 0.5, 6], [8.8, -3.4, 0.6, 7],
   ];
   const plant = (x: number, z: number, k: number) => {
-    const h = 0.18 + r() * 0.22;
+    const h = 0.22 + r() * 0.29;
     const lean: [number, number, number] = [(r() - 0.5) * 0.3, 0, (r() - 0.5) * 0.3];
     b.add("foliage", new THREE.CylinderGeometry(0.008, 0.01, h, 3, 1, true), 0x4f8f3a, xf([x, h / 2, z], lean));
     const hc = heads[k % heads.length];
@@ -1126,7 +1286,7 @@ function buildFlowers(c: BuildCtx): void {
       plant(cx + Math.cos(a) * d, cz + Math.sin(a) * d, Math.floor(r() * 7));
     }
   }
-  for (let i = 0; i < 70; i++) {
+  for (let i = 0; i < 24; i++) {
     const x = (r() - 0.5) * 34, z = (r() - 0.5) * 30 + 1;
     if (!openGround(x, z, 0.8) || (x > -8 && x < 1 && z > -2.4 && z < 3)) continue;
     plant(x, z, Math.floor(r() * 7));
@@ -1205,13 +1365,16 @@ function buildForest(c: BuildCtx): void {
   for (const id of kinds) queueNature(c, group, id, spots[id] ?? []);
   // A lower, irregular edge roots the trees in the meadow instead of revealing a wall of naked trunks.
   const shrubs: NatureSpot[] = [], ferns: NatureSpot[] = [];
-  for (let i = 0; i < 75; i++) {
+  for (let i = 0; i < 105; i++) {
     const a = Math.PI + r() * Math.PI, rad = 15.5 + r() * 9;
     const x = Math.cos(a) * rad, z = Math.sin(a) * rad;
     if (!openGround(x, z, .4)) continue;
     shrubs.push({ x, z, height: .65 + r() * 1.25, yaw: r() * 6, tint: .8 + r() * .25 });
     if (i % 3 === 0) ferns.push({ x: x + 1, z: z + 1.2, height: .5 + r() * .45, yaw: r() * 6 });
   }
+  // Dense shrub islands screen the rear tree trunks, while preserving every named acting mark.
+  for(const [x,z,h] of [[-13,-9,1.8],[-11.8,-10.7,1.4],[-10.6,-11.8,1.7],[-.5,-13.2,1.6],[2.5,-11.5,1.7],[4,-11.8,1.4],[6.2,-11.4,1.5],[8.1,-12.2,1.8],[11,-12.3,1.5],[13.3,-10.6,1.7],[14.8,-7.8,1.5]] as const)
+    shrubs.push({x,z,height:h,yaw:r()*6,tint:1});
   queueNature(c, group, "Bush_Common", shrubs);
   queueNature(c, group, "Fern_1", ferns);
   addForestSilhouettes(c.bag);
@@ -1397,9 +1560,9 @@ function groundTexture(T: number): THREE.Texture | null {
   const X = (x: number) => (x + T / 2) * px;
   const Z = (z: number) => (z + T / 2) * px;
   const r = rng(9);
-  ctx.fillStyle = "#7c9b5e";
+  ctx.fillStyle = "#7d9f50";
   ctx.fillRect(0, 0, L, L);
-  const greens = ["#718e56", "#91aa6a", "#688450", "#839d61", "#a1b575", "#7e985c"];
+  const greens = ["#68934c", "#91ae61", "#618447", "#86a853", "#a3b96a", "#7b9f4e"];
   for (let i = 0; i < 520; i++) {
     ctx.fillStyle = greens[i % greens.length];
     ctx.globalAlpha = 0.28;
@@ -1415,13 +1578,13 @@ function groundTexture(T: number): THREE.Texture | null {
   ctx.fillStyle = grd;
   ctx.fillRect(0, 0, L, L);
   // sun-dried worn clearing
-  ctx.fillStyle = "rgba(168,172,84,0.35)";
+  ctx.fillStyle = "rgba(169,177,91,0.19)";
   ctx.beginPath();
   ctx.ellipse(X(-1.5), Z(-0.5), 5.5 * px, 3.8 * px, 0, 0, Math.PI * 2);
   ctx.fill();
   // under the house and porch, the woodpile, the garden
   ctx.fillStyle = "rgba(82,100,50,0.85)";
-  ctx.fillRect(X(-9.8), Z(-9.2), 7.6 * px, 7.8 * px);
+  ctx.beginPath(); ctx.ellipse(X(-6.5),Z(-6.0),4.2*px,3.3*px,0,0,Math.PI*2); ctx.fill();
   ctx.fillStyle = "rgba(170,146,100,0.7)";
   ctx.beginPath();
   ctx.ellipse(X(-12.6), Z(-5.6), 1.9 * px, 1.6 * px, 0, 0, Math.PI * 2);
@@ -1440,24 +1603,12 @@ function groundTexture(T: number): THREE.Texture | null {
   };
   const path: Vec2[] = [];
   for (let z = 33; z >= 9; z -= 1) path.push([pathX(z), z]);
-  path.push([0.2, 6], [-0.6, 3], [-2.6, 0.2], [-4.6, -1.2], [-6, -1.6]);
-  strokePath(path, 2.5, "rgba(164,126,78,0.9)");
-  strokePath(path.slice(0, 26), 1.6, "rgba(196,156,102,0.9)");
-  strokePath([[2, 0.2], [4.2, -2.4], [5, -4.6]], 1.0, "rgba(168,150,92,0.45)");
+  path.push([0.2, 6], [-0.6, 3], [-2.6, 0.2], [-4.6, -1.2], [-6, -3.95]);
+  strokePath(path, 2.15, "rgba(181,158,101,0.95)");
+  strokePath(path, 1.55, "rgba(218,195,139,0.95)");
+  strokePath(path.slice(0, 26), 1.28, "rgba(230,208,157,0.8)");
+  strokePath([[-2.6,.2],[0,-1.5],[3,-3.8],[5,-4.8],[8,-5.4],[10,-7.9]], 1.0, "rgba(207,182,126,0.72)");
   strokePath([[-12.2, -5.0], [-10.5, -2.4], [-7.4, -1.6]], 0.9, "rgba(168,150,92,0.4)");
-  // pond shore (wet grass, then a sandy rim)
-  const ring: Vec2[] = [];
-  for (let i = 0; i <= 64; i++) {
-    const th = (i / 64) * Math.PI * 2;
-    const rr = pondRadius(th);
-    ring.push([POND_C[0] + Math.cos(th) * rr, POND_C[1] + Math.sin(th) * rr]);
-  }
-  strokePath(ring, 1.8, "rgba(84,120,52,0.8)");
-  strokePath(ring, 0.8, "rgba(176,156,104,0.95)");
-  // creek banks
-  const cs = creekSamples();
-  strokePath(cs, 2.8, "rgba(80,118,50,0.7)");
-  strokePath(cs, 1.7, "rgba(140,118,78,0.9)");
   // soften (separable box blur, radius 2) and upsample bilinearly with fine grain into a DataTexture
   const src = ctx.getImageData(0, 0, L, L).data;
   const tmp = new Float32Array(L * L * 3);
@@ -1633,6 +1784,8 @@ export interface SetHandle {
   /** Authored vegetation models and their textures have settled. */
   assetsReady: Promise<void>;
   natureStatus(): { loaded: string[]; failed: string[] };
+  /** Select the opaque exterior or a usable cutaway room from the story camera focus. */
+  updateView(x:number,z:number,location?:SceneLocation):void;
   /** named anchor group per element ("set:<id>") — glTF replacements are loaded into these */
   elements: Record<SetElementId, THREE.Group>;
   /** pivot of the rope swing (rotate about local x to swing) */
@@ -1683,7 +1836,7 @@ export function buildBearsYard(mats: LookMaterials, opts: BuildSetOptions = {}):
     for (const o of ctx.dyn) anchor.add(o);
     if (ctx.bag.parts.size) {
       const cast = SHADOW_CASTERS.has(id);
-      if (merge && !skip.has(id)) {
+      if (merge && !skip.has(id) && !["pond","pier","van","creek","footbridge","path_bridge"].includes(id)) {
         anchor.updateMatrix();
         (cast ? global : globalNoCast).absorb(ctx.bag, anchor.matrix);
         anchor.userData.merged = true;
@@ -1704,11 +1857,29 @@ export function buildBearsYard(mats: LookMaterials, opts: BuildSetOptions = {}):
   if (opts.timings) opts.timings.merge = Math.round(performance.now() - tm);
   root.updateMatrixWorld(true);
 
+  const interior = buildHouseInterior(mats);
+  root.add(interior);
+  const pondLocation=buildForestLocation("pond",mats,extra.nature,pondRadius);
+  const wolvesLocation=buildForestLocation("wolves",mats,extra.nature);
+  root.add(pondLocation,wolvesLocation);
   const smokeMat = extra.smoke?.material as THREE.ShaderMaterial | undefined;
   const beesMat = extra.bees?.material as THREE.ShaderMaterial | undefined;
   const handle: SetHandle = {
     root,
     assetsReady: Promise.all(extra.nature.jobs).then(() => undefined),
+    updateView(x,z,location=sceneLocationAt(x,z)) {
+      for(const child of root.children) child.visible=false;
+      if(location==='house')interior.visible=true;
+      else if(location==='pond') {
+        pondLocation.visible=true;elements.pond.visible=true;elements.pier.visible=true;
+      } else if(location==='wolves') {
+        wolvesLocation.visible=true;elements.van.visible=true;
+      } else {
+        for(const child of root.children)child.visible=child!==interior&&child!==pondLocation&&child!==wolvesLocation;
+        for(const id of ['pond','pier','van'] as const)elements[id].visible=false;
+      }
+      root.userData.location=location;
+    },
     natureStatus: () => ({ loaded: [...extra.nature.loaded], failed: [...extra.nature.failed] }),
     elements,
     swingPivot: extra.swingPivot ?? null,
@@ -1732,14 +1903,19 @@ export function buildBearsYard(mats: LookMaterials, opts: BuildSetOptions = {}):
       if (extra.swingPivot) extra.swingPivot.rotation.x = angle;
     },
     applyTextures(t) {
+      for(const location of [pondLocation,wolvesLocation]){
+        const ground=location.userData.groundMaterial as THREE.MeshStandardMaterial;
+        if(t.grass){ground.map?.dispose();ground.map=t.grass;}
+        if(t.grassN){ground.normalMap?.dispose();ground.normalMap=t.grassN;}
+      }
       const u = extra.groundUniforms;
       if (!u) return;
       if (t.grass) u.uGrass.value = t.grass;
       if (t.dirt) u.uDirt.value = t.dirt;
       if (t.grassN) u.uGrassN.value = t.grassN;
       if (t.dirtN) u.uDirtN.value = t.dirtN;
-      u.uDetailAmt.value = t.grass || t.dirt ? 0.85 : 0;
-      u.uNormalAmt.value = t.grassN || t.dirtN ? 0.55 : 0;
+      u.uDetailAmt.value = t.grass || t.dirt ? 0.58 : 0;
+      u.uNormalAmt.value = t.grassN || t.dirtN ? 0.35 : 0;
     },
     dispose() {
       extra.nature.dispose();
@@ -1749,6 +1925,7 @@ export function buildBearsYard(mats: LookMaterials, opts: BuildSetOptions = {}):
         const mat = m.material as THREE.Material | THREE.Material[] | undefined;
         // shared look materials are disposed by the look; only dispose set-owned shader materials
         if (mat && !Array.isArray(mat) && (mat as THREE.ShaderMaterial).isShaderMaterial) mat.dispose();
+        if(mat&&!Array.isArray(mat)&&mat.userData.setOwned){(mat as THREE.MeshStandardMaterial).map?.dispose();(mat as THREE.MeshStandardMaterial).normalMap?.dispose();mat.dispose();}
       });
       for (const d of extra.disposables) d.dispose();
       const gu = extra.groundUniforms;

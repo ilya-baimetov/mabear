@@ -2,8 +2,9 @@
 // Straight line when clear; otherwise the shortest path via the WAYPOINTS graph around OBSTACLES.
 // An obstacle that contains an endpoint of a segment is ignored for that segment, so marks that sit
 // inside an obstacle footprint (pier over the pond, table, hiding spots) stay reachable.
-import { OBSTACLES, SET_BOUNDS, WAYPOINTS } from "../shared/bible/set";
+import { isInsideHouse, MARKS, OBSTACLES, SET_BOUNDS, WAYPOINTS, sceneLocationAt } from "../shared/bible/set";
 import type { Vec2 } from "../shared/schema";
+import {pondBlocksWalk,pondRadius,POND_CENTER,POND_PIER_START} from '../shared/pond';
 
 const MARGIN = 0.25;
 
@@ -36,7 +37,13 @@ function segIntersectsBox(a: Vec2, b: Vec2, min: Vec2, max: Vec2): boolean {
 
 /** True when the straight segment a→b avoids every obstacle (except those containing a or b). */
 export function segmentClear(a: Vec2, b: Vec2): boolean {
+  const waterSteps=Math.max(1,Math.ceil(Math.hypot(b[0]-a[0],b[1]-a[1])/.1));
+  for(let i=0;i<=waterSteps;i++){
+    const t=i/waterSteps;
+    if(pondBlocksWalk(a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t))return false;
+  }
   for (const c of OBSTACLES.circles) {
+    if(c.id==='pond')continue; // the exact irregular shoreline and legal pier above replace the old circle
     if (insideCircle(a, c.c, c.r + MARGIN) || insideCircle(b, c.c, c.r + MARGIN)) continue;
     if (distPointSeg(c.c, a, b) < c.r + MARGIN) return false;
   }
@@ -55,21 +62,44 @@ function d(a: Vec2, b: Vec2): number {
 export function planPath(from: Vec2, to: Vec2): Vec2[] {
   const a: Vec2 = [from[0], from[1]];
   const b: Vec2 = [to[0], to[1]];
+  // House endpoints used to disable the whole house obstacle, sending actors
+  // through side walls. Crossing the interior boundary always uses the door.
+  const fromInside=isInsideHouse(a[0],a[1]),toInside=isInsideHouse(b[0],b[1]);
+  if(fromInside!==toInside){
+    const apron:Vec2=[-6,-3.1],door:Vec2=[...MARKS.door.pos],hall:Vec2=[-6,-4.35];
+    return toInside?[...planPath(a,apron),door,hall,b]:[a,hall,door,...planPath(apron,b)];
+  }
+  // Separate sets share saved world coordinates. A local yard shortcut must
+  // not cross a different set, or scene filtering hides the walking actor.
+  // Deliberate travel between locations keeps its existing handoff route.
+  const localYard = sceneLocationAt(...a) === 'yard' && sceneLocationAt(...b) === 'yard';
+  const routeClear = (p: Vec2, q: Vec2): boolean => {
+    if (!segmentClear(p, q)) return false;
+    if (!localYard) return true;
+    const steps = Math.max(1, Math.ceil(d(p, q) / .1));
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      if (sceneLocationAt(p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t) !== 'yard') return false;
+    }
+    return true;
+  };
   if (d(a, b) < 1e-6) return [a, b];
-  if (segmentClear(a, b)) return [a, b];
+  if (routeClear(a, b)) return [a, b];
 
   // Graph: 0 = from, 1 = to, 2.. = waypoints
-  const nodes: Vec2[] = [a, b, ...WAYPOINTS.map((w) => w.pos)];
+  const nodes: Vec2[] = [a, b, ...WAYPOINTS.map((w) => w.pos),[...POND_PIER_START]];
   const idx = new Map(WAYPOINTS.map((w, i) => [w.id, i + 2]));
   const adj: number[][] = nodes.map(() => []);
   const link = (i: number, j: number) => {
     if (!adj[i].includes(j)) adj[i].push(j);
     if (!adj[j].includes(i)) adj[j].push(i);
   };
-  WAYPOINTS.forEach((w, i) => w.links.forEach((l) => { const j = idx.get(l); if (j !== undefined && segmentClear(nodes[i + 2], nodes[j])) link(i + 2, j); }));
+  WAYPOINTS.forEach((w, i) => w.links.forEach((l) => { const j = idx.get(l); if (j !== undefined && routeClear(nodes[i + 2], nodes[j])) link(i + 2, j); }));
+  const pierNode=nodes.length-1;
+  for(let i=2;i<pierNode;i++)if(routeClear(nodes[i],nodes[pierNode]))link(i,pierNode);
   for (let i = 2; i < nodes.length; i++) {
-    if (segmentClear(a, nodes[i])) link(0, i);
-    if (segmentClear(nodes[i], b)) link(1, i);
+    if (routeClear(a, nodes[i])) link(0, i);
+    if (routeClear(nodes[i], b)) link(1, i);
   }
 
   // Dijkstra (tiny graph)
@@ -92,16 +122,16 @@ export function planPath(from: Vec2, to: Vec2): Vec2[] {
   const chain: number[] = [];
   for (let v = 1; v >= 0; v = prev[v]) chain.unshift(v);
   const path = chain.map((i) => [nodes[i][0], nodes[i][1]] as Vec2);
-  return smooth(path);
+  return smooth(path, routeClear);
 }
 
 /** Drop intermediate waypoints that can be skipped with a clear straight segment (string pulling). */
-function smooth(path: Vec2[]): Vec2[] {
+function smooth(path: Vec2[], clear: (a: Vec2, b: Vec2) => boolean): Vec2[] {
   const out: Vec2[] = [path[0]];
   let i = 0;
   while (i < path.length - 1) {
     let j = path.length - 1;
-    while (j > i + 1 && !segmentClear(path[i], path[j])) j--;
+    while (j > i + 1 && !clear(path[i], path[j])) j--;
     out.push(path[j]);
     i = j;
   }
@@ -151,7 +181,12 @@ export function pathEndYaw(path: Vec2[], fallback = 0): number {
 export function clampWalkable(p: Vec2, margin = 1.5): Vec2 {
   let x = Math.max(SET_BOUNDS.minX + margin, Math.min(SET_BOUNDS.maxX - margin, p[0]));
   let z = Math.max(SET_BOUNDS.minZ + margin, Math.min(SET_BOUNDS.maxZ - margin, p[1]));
+  if(pondBlocksWalk(x,z)){
+    const a=Math.atan2(z-POND_CENTER[1],x-POND_CENTER[0]),r=pondRadius(a)+.3;
+    x=POND_CENTER[0]+Math.cos(a)*r;z=POND_CENTER[1]+Math.sin(a)*r;
+  }
   for (const c of OBSTACLES.circles) {
+    if(c.id==='pond')continue;
     const dd = Math.hypot(x - c.c[0], z - c.c[1]);
     if (dd < c.r + 0.3) {
       const k = dd < 1e-6 ? 1 : (c.r + 0.3) / dd;
@@ -160,6 +195,7 @@ export function clampWalkable(p: Vec2, margin = 1.5): Vec2 {
     }
   }
   for (const bx of OBSTACLES.boxes) {
+    if(bx.id==='house'&&isInsideHouse(p[0],p[1]))continue;
     if (insideBox([x, z], bx.min, bx.max, 0.3)) {
       const opts: [number, number, number][] = [
         [Math.abs(x - (bx.min[0] - 0.3)), bx.min[0] - 0.3, z],

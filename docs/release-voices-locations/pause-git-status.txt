@@ -1,0 +1,85 @@
+ M docs/ux-moments/01-empty-desktop.png
+ M docs/ux-moments/02-ready-desktop.png
+ M docs/ux-moments/03-mobile-continuity.png
+ M docs/ux-moments/04-mobile-russian.png
+ M docs/ux-moments/05-failure-desktop.png
+ M src/app/App.tsx
+ M src/app/components/MomentSequence.tsx
+ M src/app/components/MomentWorkbench.tsx
+ M src/app/components/Stage.tsx
+ M src/app/components/StoryLibrary.tsx
+ M src/app/components/Timeline.tsx
+ M src/app/components/VoicePicker.tsx
+ M src/app/i18n/en.ts
+ M src/app/i18n/ru.ts
+ M src/app/playback.ts
+ M src/app/storyFlow.ts
+ M src/app/styles.css
+ M src/compiler/camera.ts
+ M src/compiler/compile.ts
+ M src/compiler/episode.ts
+ M src/compiler/path.ts
+ M src/compiler/types.ts
+ M src/compiler/validate.ts
+ M src/director/fixtures/index.ts
+ M src/director/offline/lexicon.en.ts
+ M src/director/offline/lexicon.ru.ts
+ M src/director/offline/parser.ts
+ M src/director/prompt.ts
+ M src/engine/api.ts
+ M src/engine/audio/index.ts
+ M src/engine/audio/tts.ts
+ M src/engine/characters/generated.ts
+ M src/engine/characters/wolf.ts
+ M src/engine/motion/verbs/body.ts
+ M src/engine/motion/verbs/common.ts
+ M src/engine/pick.ts
+ M src/engine/player/evaluate.ts
+ M src/engine/player/player.ts
+ M src/engine/props/props.ts
+ M src/engine/set/bearsYard.ts
+ M src/engine/set/nature.ts
+ M src/engine/stage.ts
+ M src/shared/bible/set.ts
+ M src/shared/grammar.ts
+ M src/shared/schema.ts
+ M tests/e2e/app.spec.ts
+ M tests/e2e/momentStudio.spec.ts
+ M tests/unit/assets.test.ts
+ M tests/unit/audio.test.ts
+ M tests/unit/bridge.test.ts
+ M tests/unit/fixtures.test.ts
+ M tests/unit/mashaPerformance.test.ts
+ M tests/unit/playback.test.ts
+ M tests/unit/playerPreview.test.ts
+ M tests/unit/storyFlow.test.ts
+ M tsconfig.json
+ M vite.config.ts
+ M worker/bridge.ts
+?? PAUSE_HANDOFF.md
+?? docs/player-storyboard/
+?? docs/release-voices-locations/
+?? docs/visual-fixes/
+?? docs/voice-audition/
+?? docs/wolf-fidelity/
+?? docs/yard-reference/
+?? public/assets/voices/
+?? scripts/captureFinalClothing.ts
+?? scripts/captureVisualFixes.ts
+?? scripts/inspectMashaCloth.ts
+?? src/app/storyboardFrames.ts
+?? src/director/fixtures/cozy_evening.ts
+?? src/engine/set/forestLocations.ts
+?? src/engine/set/houseInterior.ts
+?? tests/e2e/voiceAudition.spec.ts
+?? tests/unit/cameraLocationCast.test.ts
+?? tests/unit/fishingContact.test.ts
+?? tests/unit/interiorStories.test.ts
+?? tests/unit/localSceneRoutes.test.ts
+?? tests/unit/locationCuts.test.ts
+?? tests/unit/pick.test.ts
+?? tests/unit/scenicLocations.test.ts
+?? tools/visual-fixes.html
+?? tools/visual-fixes.ts
+?? tools/wolf-fidelity-baseline.ts
+?? voice/

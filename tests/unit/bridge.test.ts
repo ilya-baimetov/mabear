@@ -2,6 +2,22 @@ import { describe, expect, it, vi } from 'vitest';
 import worker from '../../worker/bridge';
 const request = (path = '/', cookie = '') => new Request('https://mabear-storybook.ilya-baimetov.workers.dev' + path, {headers:{cookie}});
 describe('private visual edition bridge', () => {
+  it('returns to the voice audition after shared login without losing the auth cookie', async () => {
+    const service = vi.fn(async (req: Request) => req.method === 'POST'
+      ? new Response(null, {status:303,headers:{location:'/', 'set-cookie':'mb_session=valid; HttpOnly; Secure; SameSite=Lax'}})
+      : req.method === 'HEAD' ? new Response(null,{status:302,headers:{location:'/login'}}) : new Response('login'));
+    const env={ASSETS:{fetch:vi.fn()},STORY_SERVICE:{fetch:service}};
+    const denied=await worker.fetch(request('/voice/'),env);
+    expect(denied.headers.get('location')).toBe('/login?next=voice');
+    const page=await worker.fetch(request('/login?next=voice'),env);
+    expect(page.headers.get('set-cookie')).toContain('mb_audition_return=1');
+    const signed=await worker.fetch(new Request('https://storybook.example/login',{method:'POST',headers:{cookie:'mb_audition_return=1'}}),env);
+    expect(signed.headers.get('location')).toBe('/voice/');
+    expect(signed.headers.get('set-cookie')).toContain('mb_session=valid');
+    expect(signed.headers.get('set-cookie')).toContain('Max-Age=0');
+    const arbitrary=await worker.fetch(request('/login?next=https://elsewhere.example'),env);
+    expect(arbitrary.headers.get('set-cookie')).toBeNull();
+  });
   it('does not serve confidential assets without a session', async () => {
     const assets = vi.fn();
     const res = await worker.fetch(request('/assets/character.glb'), {ASSETS:{fetch:assets},STORY_SERVICE:{fetch:async()=>new Response(null,{status:302,headers:{location:'/login'}})}});

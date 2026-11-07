@@ -4,6 +4,7 @@
 // validateBeatScript with 0 errors.
 import { CHARACTERS } from "../../shared/bible/characters";
 import { PROPS } from "../../shared/bible/props";
+import {isInteriorMark} from '../../shared/bible/set';
 import { canonAbsentMessage, detectLang, findCanonAbsent, isCanonAbsentCompound, preFilter } from "../../shared/rules";
 import { isWolf } from "../../shared/grammar";
 import {
@@ -320,7 +321,12 @@ export function parseParagraph(text: string, lang: Lang, startState: WorldState,
         case "chase": case "hug": mkBeat(a, verb, { target: object ?? o }); break;
         case "exit":
           if (isWolf(a)) mkBeat(a, "run_to", { target: "van", emotion: emotion ?? "scared" }); // the Wolves flee to their van
+          else if(isInteriorMark(mark))mkBeat(a,'walk_to',{target:'clearing'});
           else mkBeat(a, verb);
+          break;
+        case "enter":
+          if(isInteriorMark(mark))mkBeat(a,'walk_to',{target:mark});
+          else mkBeat(a,verb);
           break;
         case "carry":
           if (isWolf(a)) { // Wolves don't carry Masha: they grab the thing, or just eye it
@@ -373,7 +379,7 @@ export function parseParagraph(text: string, lang: Lang, startState: WorldState,
           holding[a] = null;
           break;
         }
-        case "sit": case "sleep": case "hide": mkBeat(a, verb, { target: mark }); break;
+        case "sit": case "sleep": case "hide": case "cook": mkBeat(a, verb, { target: mark }); break;
         case "look_at": case "point_at": case "wave": case "peek":
           mkBeat(a, verb, { target: mark ?? object ?? prop ?? null });
           break;

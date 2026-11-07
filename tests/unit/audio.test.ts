@@ -1,5 +1,5 @@
 // Audio engine (spec §7.6) — node, no AudioContext: dry-run scheduling, pure helpers.
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { AudioDebug } from "../../src/engine/api";
 import { createAudioEngine, getAudioDebug, spatialize } from "../../src/engine/audio";
 import { mergeDuckWindows } from "../../src/engine/audio/bus";
@@ -66,6 +66,8 @@ let engines: AudioEngine[] = [];
 afterEach(() => {
   engines.forEach((e) => e.dispose());
   engines = [];
+  vi.useRealTimers();
+  vi.unstubAllGlobals();
 });
 const make = (o: Parameters<typeof createAudioEngine>[0] = {}): AudioEngine => {
   const e = createAudioEngine(o);
@@ -74,6 +76,34 @@ const make = (o: Parameters<typeof createAudioEngine>[0] = {}): AudioEngine => {
 };
 
 describe("createAudioEngine (node, no AudioContext)", () => {
+  it("pauses the lookahead clock without duplicating cues or invoking the rejected browser voice", () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "setInterval", "clearInterval", "performance"] });
+    const speech = { getVoices: () => [{ name: "Samantha", lang: "en-US", localService: true }], addEventListener: vi.fn(), speak: vi.fn(), cancel: vi.fn(), pause: vi.fn(), resume: vi.fn() };
+    vi.stubGlobal("speechSynthesis", speech);
+    vi.stubGlobal("SpeechSynthesisUtterance", class { constructor(public text: string) {} });
+    const e = make({ noContext: true, lookahead: .5 });
+    e.play(TL, 0, "en");
+    vi.advanceTimersByTime(100);
+    e.pause();
+    const counts = { ...getAudioDebug()!.scheduled };
+    vi.advanceTimersByTime(5000);
+    expect(getAudioDebug()!.scheduled).toEqual(counts);
+    expect(speech.speak).not.toHaveBeenCalled();
+    expect(speech.pause).not.toHaveBeenCalled();
+    const cancellations = speech.cancel.mock.calls.length;
+    e.resume();
+    vi.advanceTimersByTime(110);
+    expect(speech.speak).not.toHaveBeenCalled();
+    expect(speech.cancel).toHaveBeenCalledTimes(cancellations);
+    e.pause();
+    vi.advanceTimersByTime(5000);
+    e.resume();
+    expect(speech.speak).not.toHaveBeenCalled(); // recorded audio owns speech; no system-voice fallback
+    vi.advanceTimersByTime(3000);
+    expect(getAudioDebug()!.scheduled.dialogue).toBe(1);
+    expect(getAudioDebug()!.scheduled.foley).toBe(3);
+  });
+
   it("constructs and every method is a safe no-op", async () => {
     const e = make();
     await e.unlock();

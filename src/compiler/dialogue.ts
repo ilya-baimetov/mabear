@@ -1,9 +1,12 @@
 // Dialogue cues and visemes from text (spec §7.6). Pure.
 // The child's words are kept verbatim: this module never rewrites `text`.
 import type { ActorId, DialogueCue, Lang, Viseme } from "../shared/schema";
+import { speechKey, type SpeechDurations } from '../shared/speech';
 
 /** Dialogue duration = max(1.2 s, chars / 13) + 0.3 s. */
-export function dialogueDuration(text: string): number {
+export function dialogueDuration(text: string, lang?: Lang, recordings?: SpeechDurations): number {
+  const recorded = lang && recordings?.[speechKey(text, lang)];
+  if (recorded && Number.isFinite(recorded) && recorded > 0) return recorded + .15;
   return Math.max(1.2, text.length / 13) + 0.3;
 }
 
@@ -65,9 +68,10 @@ function round3(n: number): number {
   return Math.round(n * 1000) / 1000;
 }
 
-export function makeDialogueCue(start: number, actor: ActorId, text: string, lang: Lang): DialogueCue {
-  const dur = dialogueDuration(text);
-  return { start, dur, actor, text, lang, visemes: visemesFor(text, lang, dur) };
+export function makeDialogueCue(start: number, actor: ActorId, text: string, lang: Lang, recordings?: SpeechDurations): DialogueCue {
+  const dur = dialogueDuration(text, lang, recordings);
+  const recorded=recordings?.[speechKey(text,lang)];
+  return { start, dur, actor, text, lang, visemes: visemesFor(text, lang, recorded ? recorded+.3 : dur) };
 }
 
 /** A "shouted" line (for ambient reactions and camera emphasis). */

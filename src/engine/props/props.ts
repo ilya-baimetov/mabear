@@ -2,9 +2,9 @@
 // placed every frame from FrameState.props — resting on the set, or attached to an actor's hand socket.
 // Each prop is ONE vertex-coloured mesh (one draw call), origin at its base so it sits on surfaces.
 import * as THREE from "three";
-import { MARKS } from "../../shared/bible/set";
+import { FISHING_WATER_TARGET, MARKS } from "../../shared/bible/set";
 import { PROP_IDS, type ActorId, type MarkId, type PropId, type Vec3 } from "../../shared/schema";
-import type { PropFrame } from "../api";
+import type { ActorFrame, PropFrame } from "../api";
 import { GeoBag, bagToSingle, rng, xf, type LookMaterials } from "../look";
 import { PIER_HEIGHT, PORCH_HEIGHT, SAMOVAR_TOP, TABLE_TOP, restHeightAt } from "../set/bearsYard";
 
@@ -77,8 +77,6 @@ export const PROP_VISUALS: Record<PropId, PropVisual> = {
       b.add("wood", cyl(0.008, 0.016, 1.5, 6), 0xd9bb72, xf([0, 0.75, 0]), {
         colorFn: (p, _n, o) => { if (Math.abs(((p.y + 2) % 0.25) - 0.125) < 0.008) o.setHex(0x8a6a30); },
       });
-      b.add("paint", cyl(0.0025, 0.0025, 0.9, 3), 0xeeeeee, xf([0, 1.05, 0.0], [0.35, 0, 0]));
-      b.add("paint", sph(0.025, 8, 6), 0xd8283a, xf([0, 0.62, 0.3]), { colorFn: (p, _n, o) => { if (p.y > 0) o.setHex(0xffffff); } });
       b.add("metal", cyl(0.03, 0.03, 0.03, 10), 0x777777, xf([0.03, 0.2, 0], [0, 0, Math.PI / 2]));
     },
     grip: { pos: [0, -0.02, 0.02], rot: [0.9, 0, 0] },
@@ -244,7 +242,7 @@ export const PROP_SLOTS: Partial<Record<PropId, { mark: MarkId; pos: Vec3; rot?:
 
 /** Rest heights the player assigns per mark (player/evaluate PROP_REST_HEIGHT); used to recognise a resting prop. */
 const PLAYER_REST_Y: Partial<Record<MarkId, number>> = {
-  table: 0.78, bench: 0.47, porch: 0.32, pier: 0.28, hammock: 0.66, beehive: 0.62, woodpile: 0.55, swing: 0.47,
+  table: 0.78, bench: 0.47, porch: 0.32, pier: 0.28, hammock: 0.66, beehive: 0.62, woodpile: 0.55, swing: 0.47, house_kitchen: .78, house_living: .47,
 };
 
 /** If (pos) is a prop resting at a mark (as placed by the player), return that mark. Pure. */
@@ -268,6 +266,8 @@ export function restPlacement(id: PropId, pos: Vec3): { pos: Vec3; rot: R3 } {
   const slot = PROP_SLOTS[id];
   const vis = PROP_VISUALS[id];
   if (mark && slot && slot.mark === mark) return { pos: [...slot.pos] as Vec3, rot: slot.rot ?? vis.restRot ?? [0, 0, 0] };
+  if(mark==='house_kitchen')return {pos:[-4.25,.78,-5.85],rot:vis.restRot??[0,0,0]};
+  if(mark==='house_living')return {pos:[pos[0],.47,pos[2]],rot:vis.restRot??[0,0,0]};
   if (mark) {
     // resting at a non-home mark: keep the player's spread, sit on the set's real surface there
     return { pos: [pos[0], restHeightAt(pos[0], pos[2]), pos[2]], rot: vis.restRot ?? [0, 0, 0] };
@@ -282,7 +282,7 @@ export interface PropsHandle {
    * Place every prop from the frame. `sockets` are the actors' hand sockets; `yaws` their facing (props are held
    * upright in the actor's yaw frame, which reads well with any hand orientation).
    */
-  apply(props: Record<PropId, PropFrame>, sockets: Partial<Record<ActorId, THREE.Object3D>>, yaws: Partial<Record<ActorId, number>>): void;
+  apply(props: Record<PropId, PropFrame>, sockets: Partial<Record<ActorId, THREE.Object3D>>, yaws: Partial<Record<ActorId, number>>, actors?: Partial<Record<ActorId, ActorFrame>>): void;
   dispose(): void;
 }
 
@@ -323,10 +323,28 @@ export function createProps(mats: LookMaterials): PropsHandle {
     root.add(holder);
     objects[id] = holder;
   }
+  // A rod is rigid; its line is not. Keep the line joined to the tip while its
+  // float rests on water during fishing, or hangs from the carried/resting rod.
+  const rod=objects.fishing_rod;
+  const line=new THREE.Mesh(cyl(.0025,.0025,1,4),new THREE.MeshBasicMaterial({color:0xe9dfc8}));
+  line.name='fishing-line';
+  const float=new THREE.Mesh(sph(.035,12,8),new THREE.MeshStandardMaterial({color:0xd8283a,roughness:.8}));
+  float.name='fishing-float';rod.add(line,float);
+  const tip=new THREE.Vector3(0,1.5,0),end=new THREE.Vector3(),direction=new THREE.Vector3();
+  function updateLine(actor?:ActorFrame){
+    const atPier=actor&&Math.hypot(actor.pos[0]-MARKS.pier.pos[0],actor.pos[2]-MARKS.pier.pos[1])<1.3;
+    if(atPier&&(actor.verb==='fish'||actor.posture==='sit')){
+      rod.updateWorldMatrix(true,false);
+      end.fromArray(FISHING_WATER_TARGET);rod.worldToLocal(end);
+    }else end.set(0,.62,.3);
+    float.position.copy(end);
+    direction.copy(end).sub(tip);line.position.copy(tip).add(end).multiplyScalar(.5);
+    line.scale.y=direction.length();line.quaternion.setFromUnitVectors(_up,direction.normalize());
+  }
   return {
     root,
     objects,
-    apply(props, sockets, yaws) {
+    apply(props, sockets, yaws, actors) {
       for (const id of PROP_IDS) {
         const o = objects[id];
         const f = props?.[id];
@@ -337,14 +355,16 @@ export function createProps(mats: LookMaterials): PropsHandle {
         o.visible = true;
         const socket = f.attachedTo ? sockets[f.attachedTo] : undefined;
         if (f.attachedTo && socket) {
-          if(socket.userData.preciseGrip){socket.getWorldPosition(o.position);socket.getWorldQuaternion(o.quaternion);continue;}
-          const yaw = yaws[f.attachedTo] ?? 0;
-          socket.getWorldPosition(_wp);
-          const g = PROP_VISUALS[id].grip;
-          _yq.setFromAxisAngle(_up, yaw);
-          _off.set(g.pos[0], g.pos[1], g.pos[2]).applyQuaternion(_yq);
-          o.position.copy(_wp).add(_off);
-          o.rotation.set(g.rot[0], yaw + g.rot[1], g.rot[2]);
+          if(socket.userData.preciseGrip){socket.getWorldPosition(o.position);socket.getWorldQuaternion(o.quaternion);}
+          else {
+            const yaw = yaws[f.attachedTo] ?? 0;
+            socket.getWorldPosition(_wp);
+            const g = PROP_VISUALS[id].grip;
+            _yq.setFromAxisAngle(_up, yaw);
+            _off.set(g.pos[0], g.pos[1], g.pos[2]).applyQuaternion(_yq);
+            o.position.copy(_wp).add(_off);
+            o.rotation.set(g.rot[0], yaw + g.rot[1], g.rot[2]);
+          }
         } else {
           // cache: resting placement only changes when the player's position does (no per-frame allocation)
           const c = cache[id];
@@ -359,9 +379,11 @@ export function createProps(mats: LookMaterials): PropsHandle {
           o.position.copy(c.p);
           o.rotation.copy(c.r);
         }
+        if(id==='fishing_rod')updateLine(f.attachedTo?actors?.[f.attachedTo]:undefined);
       }
     },
     dispose() {
+      line.material.dispose();float.material.dispose();
       root.traverse((x) => (x as THREE.Mesh).geometry?.dispose());
     },
   };

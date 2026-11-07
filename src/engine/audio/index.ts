@@ -17,7 +17,8 @@ import {
 } from "./scheduler";
 import { SFX_LENGTH, renderSfx } from "./sfx";
 import { clamp, gainNode, type Out } from "./synth";
-import { Tts, interjection, profileFor } from "./tts";
+import { interjection } from "./tts";
+import { RecordedSpeechBank } from './recordedSpeech';
 import { renderVocal, vocalFor, vocalLength } from "./vocals";
 
 export { MIX } from "./bus";
@@ -48,6 +49,7 @@ const ACTORS: ActorId[] = [...ACTOR_IDS];
 type Track = keyof AudioDebug["scheduled"];
 
 interface SessionOuts {
+  voice: GainNode;
   sfx: GainNode;
   music: GainNode;
   ambience: GainNode;
@@ -73,7 +75,10 @@ interface Session {
   duckDone: Set<string>;
   outs: SessionOuts | null;
   sources: Set<AudioScheduledSourceNode>;
-  timers: Set<ReturnType<typeof setTimeout>>;
+  timers: Map<ReturnType<typeof setTimeout>, { at: number; fn: () => void }>;
+  heldTimers: { at: number; fn: () => void }[];
+  pausedAt: number | null;
+  pausedWall: number;
 }
 
 interface ActorChannel {
@@ -147,17 +152,11 @@ export function createAudioEngine(opts: AudioEngineOptions = {}): AudioEngine {
     /* ignore */
   }
 
-  let tts: Tts | null = null;
-  try {
-    tts = new Tts();
-    debug.voices = tts.lastVoice; // which TTS voice each language actually used (diagnostics)
-    debug.ttsAvailable = tts.available;
-    tts.onChange(() => (debug.ttsAvailable = !!tts?.available));
-  } catch {
-    tts = null;
-  }
-
   let ctx: AudioContext | null = null;
+  const speech = new RecordedSpeechBank(() => ctx);
+  debug.voices = { 'en-US': 'MiniMax Lively_Girl', 'ru-RU': 'MiniMax Lively_Girl' };
+  debug.recordedSpeech={voice:'Lively_Girl',scheduled:[]};
+  debug.ttsAvailable = false;
   let buses: Buses | null = null;
   const channels: Partial<Record<ActorId, ActorChannel>> = {};
   let volume = 1;
@@ -189,19 +188,20 @@ export function createAudioEngine(opts: AudioEngineOptions = {}): AudioEngine {
       }
     }
     debug.unlocked = ctx?.state === "running";
+    debug.ttsAvailable = !!ctx;
   };
 
   function onStateChange(): void {
     try {
       debug.unlocked = ctx?.state === "running";
-      if (ctx?.state === "running" && session && !session.real) restartReal();
+      if (ctx?.state === "running" && session && session.pausedAt === null && !session.real) restartReal();
     } catch {
       /* never throw */
     }
   }
 
   const nowEp = (s: Session): number =>
-    s.real && ctx ? s.fromT + (ctx.currentTime - s.anchorCtx) : s.fromT + (wallNow() - s.anchorWall) / 1000;
+    s.pausedAt !== null ? s.pausedAt : s.real && ctx ? s.fromT + (ctx.currentTime - s.anchorCtx) : s.fromT + (wallNow() - s.anchorWall) / 1000;
 
   const count = (s: Session, track: Track, i: number): void => {
     const k = `${track}:${i}`;
@@ -238,6 +238,7 @@ export function createAudioEngine(opts: AudioEngineOptions = {}): AudioEngine {
         return g;
       };
       outs = {
+        voice: mk(1,buses.voice),
         sfx: mk(MIX.sfx, buses.fx),
         music: mk(1, buses.music),
         ambience: mk(1, buses.ambience),
@@ -256,7 +257,7 @@ export function createAudioEngine(opts: AudioEngineOptions = {}): AudioEngine {
       scheduledUntil: t0 - 0.03, firstTick: true, loop: null, counted,
       music: new MusicDirector(musicOut, planMusicSections(flat.music, flat.duration), toCtx),
       amb: new AmbienceDirector(ambOut, planAmbienceSpans(flat.ambience, flat.duration), toCtx),
-      duck: mergeDuckWindows(flat.ducking), duckDone: new Set(), outs, sources, timers: new Set(),
+      duck: mergeDuckWindows(flat.ducking), duckDone: new Set(), outs, sources, timers: new Map(), heldTimers: [], pausedAt: null, pausedWall: 0,
     };
     session = s;
     if (listener) s.amb.setListener(listener.cam.pos, listener.right);
@@ -273,11 +274,11 @@ export function createAudioEngine(opts: AudioEngineOptions = {}): AudioEngine {
         /* never throw */
       }
     }, Math.max(0, delayS * 1000));
-    s.timers.add(id);
+    s.timers.set(id, { at: nowEp(s) + Math.max(0, delayS), fn });
   }
 
   function tick(s: Session): void {
-    if (session !== s) return;
+    if (session !== s || s.pausedAt !== null) return;
     const now = nowEp(s);
     const from = s.scheduledUntil;
     const to = now + lookahead;
@@ -311,14 +312,20 @@ export function createAudioEngine(opts: AudioEngineOptions = {}): AudioEngine {
       });
     }
 
-    // dialogue (TTS fires at the cue start; can't be sample-scheduled)
-    for (const c of inWindow(s.flat.dialogue, first ? s.fromT - DIALOGUE_LATE_S : from, to)) {
+    // Recorded dialogue shares the movie's audio clock, including exact mid-line seeks.
+    for (const c of inWindow(s.flat.dialogue, first ? 0 : from, to)) {
+      if(c.t+c.dur<=s.fromT)continue;
       count(s, "dialogue", c.i);
-      if (!tts || muted || !CHARACTERS[c.actor]?.speaks) continue; // canon guard: a non-speaking character never gets TTS
-      const prof = profileFor(c.actor);
+      if (!o || !ctx || !CHARACTERS[c.actor]?.speaks) continue;
       const lang = c.lang ?? s.lang;
-      const bcp = prof.lang[lang] ?? prof.lang.en;
-      later(s, c.t - now, () => tts?.speak(c.text, bcp, prof.pitch, prof.rate, voiceVolume()));
+      const ready=speech.get(c.text,lang);
+      if(!ready){debug.errors++;debug.lastError='Selected voice recording was not prepared';continue;}
+      const offset=Math.max(0,now-c.t), remaining=Math.min(ready.buffer.duration-offset,s.flat.duration-Math.max(now,c.t));
+      if(remaining<=0)continue;
+      const source=ctx.createBufferSource();source.buffer=ready.buffer;source.connect(o.voice);trackFor(s)(source);
+      source.start(at(Math.max(now,c.t)),offset,remaining);
+      debug.recordedSpeech!.scheduled.push({text:c.text,lang,offset,duration:remaining});
+      if(debug.recordedSpeech!.scheduled.length>100)debug.recordedSpeech!.scheduled.shift();
     }
 
     // One-shots already in progress at play(): scheduled at their true (past) ctx time, so the envelope automation
@@ -335,14 +342,13 @@ export function createAudioEngine(opts: AudioEngineOptions = {}): AudioEngine {
       count(s, "emotes", c.i);
       const vo: Out | null = o && ctx ? { ctx, dest: o.vocals[c.actor] ?? o.vocals.masha, track: trackFor(s) } : null;
       const text = c.actor === "masha" ? interjection("masha", c.emote, s.lang) : null;
-      if (text && tts && tts.available && !late) {
-        const prof = profileFor("masha");
-        const bcp = prof.lang[s.lang] ?? prof.lang.en;
-        later(s, c.t - now, () => {
-          const spoke = !muted && !tts!.speaking && tts!.speak(text, bcp, Math.min(2, prof.pitch + 0.3), prof.rate + 0.05, voiceVolume());
-          if (!spoke && vo && ctx) safe(() => renderVocal(vo, c.actor, c.emote, ctx!.currentTime + 0.01));
-        });
-      } else if (vo) {
+      if (text) {
+        const ready=speech.get(text,s.lang);
+        if(ready&&ctx&&o&&!late&&!s.flat.dialogue.some(d=>d.actor==='masha'&&d.t<c.t+ready.buffer.duration&&d.t+d.dur>c.t)){
+          const source=ctx.createBufferSource();source.buffer=ready.buffer;source.connect(o.voice);trackFor(s)(source);
+          source.start(at(c.t),0,Math.min(ready.buffer.duration,Math.max(.01,s.flat.duration-c.t)));
+        }
+      } else if (vo && c.actor!=='masha') {
         if (!listener && channels[c.actor]) channels[c.actor]!.pan.pan.setValueAtTime(0, at(c.t));
         safe(() => renderVocal(vo, c.actor, c.emote, atLate(c.t)));
       }
@@ -395,12 +401,12 @@ export function createAudioEngine(opts: AudioEngineOptions = {}): AudioEngine {
     session = null;
     s.loop?.stop();
     s.loop = null;
-    s.timers.forEach((id) => clearTimeout(id));
+    s.timers.forEach((_, id) => clearTimeout(id));
     s.timers.clear();
     if (ctx && s.outs) {
       const now = ctx.currentTime;
       const o = s.outs;
-      const gains = [o.sfx, o.music, o.ambience, o.foley.masha, o.foley.bear, o.vocals.masha, o.vocals.bear];
+      const gains = [o.voice,o.sfx, o.music, o.ambience, ...Object.values(o.foley),...Object.values(o.vocals)];
       for (const g of gains) {
         try {
           g.gain.cancelScheduledValues(now);
@@ -460,15 +466,20 @@ export function createAudioEngine(opts: AudioEngineOptions = {}): AudioEngine {
   }
 
   const engine: AudioEngine = {
+    readyUntil(timeline,lang,from) {return opts.noContext?timeline.duration:speech.readyUntil(timeline,lang,from);},
+    async prepare(timeline,lang,from,to) {
+      if(opts.noContext)return {};
+      ensureAudio(true);
+      return speech.prepare(timeline,lang,from,to);
+    },
     async unlock(): Promise<void> {
       try {
         ensureAudio(true);
-        tts?.prime();
+        if (session?.pausedAt !== null && session?.pausedAt !== undefined) return;
         if (ctx && ctx.state !== "running") {
           await Promise.race([ctx.resume().catch(() => {}), new Promise((r) => setTimeout(r, 600))]);
         }
         debug.unlocked = ctx?.state === "running";
-        if (tts) debug.ttsAvailable = tts.available;
         if (debug.unlocked && session && !session.real) restartReal();
       } catch {
         /* never throw */
@@ -478,24 +489,47 @@ export function createAudioEngine(opts: AudioEngineOptions = {}): AudioEngine {
     play(timeline: Timeline, fromT: number, lang: Lang): void {
       try {
         const cur = session;
-        if (cur && timeline && Number.isFinite(fromT) && Math.abs(nowEp(cur) - fromT) < SOFT_REPLAY_S) {
+        if (cur && cur.pausedAt === null && timeline && Number.isFinite(fromT) && Math.abs(nowEp(cur) - fromT) < SOFT_REPLAY_S) {
           updateSession(cur, timeline, lang);
           return;
         }
         endSession();
-        tts?.cancel();
         Object.assign(debug.scheduled, emptyCounts());
-        if (tts) debug.ttsAvailable = tts.available;
         startSession(timeline, fromT, lang, new Set());
       } catch {
         /* never throw */
       }
     },
 
+    pause(): void {
+      try {
+        const s = session;
+        if (!s || s.pausedAt !== null) return;
+        s.pausedAt = nowEp(s);
+        s.pausedWall = wallNow();
+        s.loop?.stop(); s.loop = null;
+        s.timers.forEach((job, id) => { clearTimeout(id); s.heldTimers.push(job); });
+        s.timers.clear();
+        if (s.real && ctx) void ctx.suspend().catch(() => {});
+      } catch { /* never throw */ }
+    },
+
+    resume(): void {
+      try {
+        const s = session;
+        if (!s || s.pausedAt === null) return;
+        s.anchorWall += wallNow() - s.pausedWall;
+        const held = s.heldTimers.splice(0);
+        s.pausedAt = null;
+        if (s.real && ctx) void ctx.resume().catch(() => {});
+        held.forEach(job => later(s, job.at - nowEp(s), job.fn));
+        s.loop = startLoop(() => tick(s), tickMs);
+      } catch { /* never throw */ }
+    },
+
     stop(): void {
       try {
         endSession();
-        tts?.cancel();
       } catch {
         /* never throw */
       }
@@ -514,7 +548,6 @@ export function createAudioEngine(opts: AudioEngineOptions = {}): AudioEngine {
       try {
         muted = !!m;
         if (buses) setMaster(buses, volume, muted);
-        if (muted) tts?.cancel();
       } catch {
         /* never throw */
       }
@@ -552,7 +585,6 @@ export function createAudioEngine(opts: AudioEngineOptions = {}): AudioEngine {
     dispose(): void {
       try {
         endSession();
-        tts?.cancel();
         disposed = true;
         if (ctx) ctx.removeEventListener("statechange", onStateChange);
         if (buses) buses.master.disconnect();

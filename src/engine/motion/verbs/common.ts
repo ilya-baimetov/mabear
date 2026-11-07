@@ -3,6 +3,7 @@
 import type { Quat } from "../../api";
 import type { ActorClip, ActorId, Emotion, Posture, Vec3 } from "../../../shared/schema";
 import { GENERATED_PROPORTIONS } from "../generatedProportions";
+export {SEAT_HEIGHT} from '../../../shared/bible/set';
 import { CLIPS } from "../clips.generated";
 import {
   IDENTITY, addLayer, clamp01, overrideLayer, qaxis, qeuler, qmul, qnorm, qslerp, smooth,
@@ -77,10 +78,10 @@ function wolfStyle(height: number): ActorStyle {
   const k = height / 2.0;
   const r = (n: number) => Math.round(n * k * 1000) / 1000;
   return {
-    height, hipHeight: r(0.98), timeScale: 1.05, bounce: 0.7, stance: 0.04, armOut: 0.2, hipsDrop: 0.02, lieHeight: 0.2,
-    shoulderHeight: r(1.39), breathRate: 0.3, breathDepth: 1.0,
-    leg: { x: r(0.1), y: r(-0.05), thigh: r(0.44), shin: r(0.41), ankle: r(0.06), toe: r(0.13) },
-    cadence: { walk: 0.95, run: 1.5, tiptoe: 0.8 },
+    height, hipHeight: r(.8), timeScale: 1.05, bounce: .65, stance: .065, armOut: .24, hipsDrop: .015, lieHeight: r(.23),
+    shoulderHeight: r(1.375), breathRate: .3, breathDepth: 1,
+    leg: { x: r(.135), y: r(-.05), thigh: r(.35), shin: r(.33), ankle: r(.07), toe: r(.185) },
+    cadence: { walk: .95, run: 1.5, tiptoe: .8 },
   };
 }
 
@@ -155,7 +156,6 @@ export function lowestFoot(bones: Pose, hipsOffset: Vec3, style: ActorStyle): nu
 
 /** Surface heights (m) an actor sits or lies on at a mark; everything else is the ground. */
 /** (Porch and pier are 0: the stage already raises actors standing on them — walkHeightAt.) */
-export const SEAT_HEIGHT: Record<string, number> = { bench: 0.45, hammock: 0.62, swing: 0.45, woodpile: 0.4 };
 
 export interface VerbCtx {
   actor: ActorId;
@@ -180,6 +180,9 @@ export interface VerbCtx {
   targetLocal: Vec3 | null;
   /** height of the surface under the actor (bench, hammock…) for sit/sleep */
   seat: number;
+  /** Authored cushion contact for small characters on oversized furniture. */
+  seatClearance?: number;
+  seatForward?: number;
 }
 
 export type VerbImpl = (localT: number, params: ClipParams, ctx: VerbCtx) => PoseLayer;

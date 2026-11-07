@@ -1,0 +1,52 @@
+{
+  "text": {
+    "ru": "Мишка, смотри, что я придумала! Давай сварим кашу. Только совсем чуть-чуть. Ой! Она опять убегает! Мишка, помоги! Ну вот... А теперь можно попробовать? Вкусно! Хи-хи!",
+    "en": "Bear, look what I thought of! Let's make some porridge. Just a tiny little bit. Oh! It's bubbling over again! Bear, help! There we go... Can I taste it now? Yummy! Hee-hee!"
+  },
+  "candidates": [
+    {
+      "id": "leda",
+      "letter": "A",
+      "label": "Bright and playful",
+      "model": "Gemini 3.8 Flash TTS",
+      "voice": "Leda",
+      "clips": {
+        "ru": "/assets/voices/masha-audition/leda-ru-level.wav",
+        "en": "/assets/voices/masha-audition/leda-en-level.wav"
+      }
+    },
+    {
+      "id": "lively",
+      "letter": "B",
+      "label": "Light and mischievous",
+      "model": "MiniMax Speech 2.8 HD",
+      "voice": "Lively Girl",
+      "clips": {
+        "ru": "/assets/voices/masha-audition/lively-ru-level.wav",
+        "en": "/assets/voices/masha-audition/lively-en-level.wav"
+      }
+    },
+    {
+      "id": "designed",
+      "letter": "C",
+      "label": "Custom cartoon voice",
+      "model": "Qwen 3 Voice Design",
+      "voice": "Original designed voice",
+      "clips": {
+        "ru": "/assets/voices/masha-audition/designed-ru-level.wav",
+        "en": "/assets/voices/masha-audition/designed-en-level.wav"
+      }
+    },
+    {
+      "id": "jessica",
+      "letter": "D",
+      "label": "Expressive storyteller",
+      "model": "ElevenLabs Eleven v4",
+      "voice": "Jessica",
+      "clips": {
+        "ru": "/assets/voices/masha-audition/jessica-ru-level.wav",
+        "en": "/assets/voices/masha-audition/jessica-en-level.wav"
+      }
+    }
+  ]
+}

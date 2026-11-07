@@ -3,8 +3,9 @@
 // dialogue → medium-close on the speaker; 1–1.5 s reaction shot after slapstick/punchline; locomotion > 2 s →
 // tracking; low_angle for Bear looming / Masha mischief; shot length 1.2–6 s; 180° rule; camera clamped to the set
 // bounds and kept out of the house.
-import { MARKS, OBSTACLES, SET_BOUNDS, type MarkDef } from "../shared/bible/set";
+import { isInsideHouse, MARKS, OBSTACLES, SET_BOUNDS, sceneLocationAt, type MarkDef } from "../shared/bible/set";
 import type { ActorId, CamKey, CameraCue, Shot, Vec2, Vec3 } from "../shared/schema";
+import { ACTOR_IDS } from "../shared/schema";
 
 export const SHOT_MIN = 1.2;
 export const SHOT_MAX = 6;
@@ -278,7 +279,9 @@ export function planCamera(input: CameraPlanInput): CameraCue[] {
       // a long line stays on the speaker (close ↔ medium); other long shots alternate framing
       const alt: Kind = sh.kind === "tracking" ? "tracking" : sh.kind === "close" ? "medium" : sh.kind === "medium" ? "two" : sh.kind === "low_angle" ? "medium" : "medium";
       const kind: Kind = k % 2 === 0 ? sh.kind : alt;
-      const subject = kind === "two" ? null : sh.subject ?? (sh.kind === "two" || sh.kind === "wide" ? "masha" : sh.subject);
+      // A group shot has no fixed subject. Resolve its participant at each cut;
+      // inventing Masha here can select an entirely different, empty location.
+      const subject = kind === "two" ? null : sh.subject;
       split.push({ ...sh, kind, subject, start: edges[k], end: edges[k + 1] });
     }
   }
@@ -289,28 +292,37 @@ export function planCamera(input: CameraPlanInput): CameraCue[] {
     if (visibleAt("masha", s.start) && visibleAt("bear", s.start)) side = continueSide(posAt("masha", s.start), posAt("bear", s.start), side);
     const angle = (rnd() - 0.5) * (s.kind === "wide" ? 0.8 : 1.1);
     // occlusion: try yaw nudges around the subject (staying on the 180° side) until no trunk / wall blocks the view
-    const cast = s.cast ?? LEADS;
+    const requestedCast = s.cast ?? LEADS;
+    const action = beats.find(b => b.start <= s.start + .01 && b.start + b.dur > s.start && visibleAt(b.actor, s.start));
+    const primary = (s.subject && visibleAt(s.subject, s.start) ? s.subject : null)
+      ?? action?.actor
+      ?? requestedCast.find(a => visibleAt(a, s.start))
+      ?? ACTOR_IDS.find(a => visibleAt(a, s.start))
+      ?? s.subject ?? beats[0]?.actor ?? 'masha';
+    const place=sceneLocationAt(...posAt(primary,s.start));
+    const cast=requestedCast.filter(a=>visibleAt(a,s.start)&&sceneLocationAt(...posAt(a,s.start))===place);
+    if(!cast.includes(primary))cast.push(primary);
     const framedAt = (t: number): { head: Vec3; w: number }[] => {
       const out: { head: Vec3; w: number }[] = [];
-      const guestSingle = s.subject && !LEADS.includes(s.subject) && !isWolfId(s.subject) && !['wide','two','over_shoulder'].includes(s.kind);
-      const who = guestSingle ? [s.subject!] : s.subject && !cast.includes(s.subject) ? [...cast, s.subject] : cast;
+      const guestSingle = !LEADS.includes(primary) && !isWolfId(primary) && !['wide','two','over_shoulder'].includes(s.kind);
+      const who = guestSingle ? [primary] : cast;
       for (const a of who) {
         if (!visibleAt(a, t)) continue;
         const p = posAt(a, t);
-        const w = s.kind === "wide" || s.kind === "two" || a === s.subject || s.subject === null ? 1 : 0.5;
+        const w = s.kind === "wide" || s.kind === "two" || a === primary ? 1 : 0.5;
         out.push({ head: [p[0], input.headY ? input.headY(a, t) : HEAD_HEIGHT[a], p[1]], w });
       }
       return out;
     };
     const h0 = framedAt(s.start + 0.01);
     const h1 = framedAt(Math.max(s.start, s.end - 0.01));
-    let best = framing(s.kind, s.subject, cast, s.start, s.end, angle, side, posAt, visibleAt, rnd, input.headY, input.facingAt);
+    let best = framing(s.kind, primary, cast, s.start, s.end, angle, side, posAt, visibleAt, rnd, input.headY, input.facingAt);
     let bestCost = occlusionCost(best.from, h0) + occlusionCost(best.to, h1);
     for (const dlt of [0.35, -0.35, 0.7, -0.7, 1.05, -1.05]) {
       if (bestCost === 0) break;
       const a = angle + dlt;
       if (Math.abs(a) > 1.3) continue;
-      const fr = framing(s.kind, s.subject, cast, s.start, s.end, a, side, posAt, visibleAt, rnd, input.headY, input.facingAt);
+      const fr = framing(s.kind, primary, cast, s.start, s.end, a, side, posAt, visibleAt, rnd, input.headY, input.facingAt);
       const cost = occlusionCost(fr.from, h0) + occlusionCost(fr.to, h1);
       if (cost < bestCost - 1e-6) { best = fr; bestCost = cost; }
     }
@@ -318,7 +330,7 @@ export function planCamera(input: CameraPlanInput): CameraCue[] {
     for (const dlt of [1.45, -1.45, 1.6, -1.6]) {
       if (bestCost < 1) break;
       const a = Math.max(-1.6, Math.min(1.6, angle + dlt));
-      const fr = framing(s.kind, s.subject, cast, s.start, s.end, a, side, posAt, visibleAt, rnd, input.headY, input.facingAt);
+      const fr = framing(s.kind, primary, cast, s.start, s.end, a, side, posAt, visibleAt, rnd, input.headY, input.facingAt);
       const cost = occlusionCost(fr.from, h0) + occlusionCost(fr.to, h1);
       if (cost < bestCost - 1e-6) { best = fr; bestCost = cost; }
     }
@@ -328,7 +340,7 @@ export function planCamera(input: CameraPlanInput): CameraCue[] {
       for (const alt of ["medium", "wide"] as Kind[]) {
         if (alt === s.kind) continue;
         for (const dlt of [0, 0.35, -0.35, 0.7, -0.7, 1.05, -1.05]) {
-          const fr = framing(alt, s.subject, cast, s.start, s.end, Math.max(-1.3, Math.min(1.3, angle + dlt)), side, posAt, visibleAt, rnd, input.headY, input.facingAt);
+          const fr = framing(alt, primary, cast, s.start, s.end, Math.max(-1.3, Math.min(1.3, angle + dlt)), side, posAt, visibleAt, rnd, input.headY, input.facingAt);
           const cost = occlusionCost(fr.from, h0) + occlusionCost(fr.to, h1);
           if (cost < bestCost - 1e-6) { best = fr; bestCost = cost; kind = alt; }
           if (bestCost < 1) break;
@@ -337,7 +349,19 @@ export function planCamera(input: CameraPlanInput): CameraCue[] {
       }
     }
     const { from, to } = best;
-    return { start: r3(s.start), dur: r3(s.end) - r3(s.start), shot: shotName(kind), from, to, overridden: s.overridden };
+    from.location=sceneLocationAt(...posAt(primary,s.start+.001));
+    to.location=sceneLocationAt(...posAt(primary,Math.max(s.start,s.end-.001)));
+    let cutAt:number|undefined;
+    if(from.location!==to.location){
+      const endTime=Math.max(s.start,s.end-.001),destinationCast=requestedCast.filter(a=>sceneLocationAt(...posAt(a,endTime))===to.location);
+      if(!destinationCast.includes(primary))destinationCast.push(primary);
+      const destination=framing(s.kind,primary,destinationCast,endTime,endTime,angle,side,posAt,visibleAt,rnd,input.headY,input.facingAt).from;
+      Object.assign(to,destination,{location:to.location});
+      let lo=s.start,hi=s.end;
+      for(let i=0;i<20;i++){const mid=(lo+hi)*.5;if(sceneLocationAt(...posAt(primary,mid))===from.location)lo=mid;else hi=mid;}
+      cutAt=hi;
+    }
+    return { start: r3(s.start), dur: r3(s.end) - r3(s.start), shot: shotName(kind), from, to, overridden: s.overridden,...(cutAt===undefined?{}:{cutAt}) };
   });
 }
 
@@ -378,18 +402,23 @@ export const OCCLUDERS: { c: Vec2; r: number; h: number }[] = [
   { c: [-12.46, 3.71], r: 0.45, h: 12 },
   { c: [8.6, -0.6], r: 0.6, h: 12 }, // swing oak
 ];
-const OCC_BOXES = OBSTACLES.boxes.map((b) => ({ min: b.min, max: b.max, h: b.id === "house" ? 7.5 : 2.6 }));
+const OCC_BOXES = OBSTACLES.boxes.map((b) => ({ id:b.id,min: b.min, max: b.max, h: b.id === "house" ? 7.5 : 2.6 }));
 
 /** How badly static set pieces block a camera key: line of sight to each framed head (weighted), plus big trunks
  *  standing in frame in front of the subject. 0 = clear. */
 export function occlusionCost(key: CamKey, heads: { head: Vec3; w: number }[]): number {
   const cam = key.pos;
+  const location=key.location??sceneLocationAt(key.look[0],key.look[2]);
+  // Each scenic location hides the others. Their absent trunks and walls must
+  // not push this scene's camera away from an otherwise clear composition.
+  const circles=location==='yard'?OCCLUDERS:[];
+  const boxes=OCC_BOXES.filter(b=>b.id==='van'?location==='wolves':location==='yard');
   let cost = 0;
   for (const { head, w } of heads) {
     const dx = head[0] - cam[0];
     const dz = head[2] - cam[2];
     const L2 = dx * dx + dz * dz;
-    for (const o of OCCLUDERS) {
+    for (const o of circles) {
       const t = L2 === 0 ? 0 : Math.max(0, Math.min(1, ((o.c[0] - cam[0]) * dx + (o.c[1] - cam[2]) * dz) / L2));
       if (t <= 0.02 || t >= 0.97) continue;
       const px = cam[0] + dx * t;
@@ -398,7 +427,8 @@ export function occlusionCost(key: CamKey, heads: { head: Vec3; w: number }[]): 
       if (Math.hypot(px - o.c[0], pz - o.c[1]) < o.r + 0.25 && y < o.h) cost += w;
     }
     const n = Math.max(4, Math.ceil(Math.sqrt(L2) / 0.25));
-    for (const b of OCC_BOXES) {
+    for (const b of boxes) {
+      if(b.id==='house'&&isInsideHouse(head[0],head[2]))continue; // exterior is cut away for indoor scenes
       for (let i = 1; i < n - 1; i++) {
         const t = i / n;
         const x = cam[0] + dx * t;
@@ -412,7 +442,7 @@ export function occlusionCost(key: CamKey, heads: { head: Vec3; w: number }[]): 
   const f = norm([key.look[0] - cam[0], key.look[2] - cam[2]]);
   const subjDist = Math.hypot(key.look[0] - cam[0], key.look[2] - cam[2]);
   const hfov = 2 * Math.atan(Math.tan((key.fov * Math.PI) / 360) * (16 / 9));
-  for (const o of OCCLUDERS) {
+  for (const o of circles) {
     if (o.h < 3) continue;
     const v: Vec2 = [o.c[0] - cam[0], o.c[1] - cam[2]];
     const d = Math.hypot(v[0], v[1]);
@@ -460,10 +490,26 @@ function framing(
   sp = spA;
   const hy0 = headY ? headY(subj, t0) : HEAD_HEIGHT[subj];
   const hy1 = headY ? headY(subj, t1) : HEAD_HEIGHT[subj];
+  if(isInsideHouse(sp[0],sp[1])&&isInsideHouse(sp1[0],sp1[1])){
+    // The authored room is a south-facing cutaway. Keep all indoor story shots
+    // on that open side instead of orbiting behind the retained north wall.
+    const wide=kind==='wide'||kind==='two',portrait=kind==='close';
+    const indoorKey=(p:Vec2,h:number,t:number):CamKey=>{
+      const occupants=cast.filter(a=>visibleAt(a,t)&&isInsideHouse(...posAt(a,t))).map(a=>posAt(a,t));
+      const x=wide&&occupants.length?occupants.reduce((sum,p)=>sum+p[0],0)/occupants.length:p[0];
+      const z=wide?-6.1:p[1],lookY=portrait?h*.88:wide?1.05:h*.65;
+      const d=wide?5.6:portrait?Math.max(1.7,h*1.65):Math.max(3.1,h*2.1);
+      return {pos:[r3(x+.2),r3(lookY+(wide?1.25:.35)),r3(z+d)],look:[r3(x),r3(lookY),r3(z)],fov:wide?46:portrait?35:40};
+    };
+    return {from:indoorKey(sp,hy0,t0),to:indoorKey(sp1,hy1,t1)};
+  }
   const partner: ActorId = subj === "wolf_a" ? "wolf_b" : subj === "wolf_b" ? "wolf_a" : ['masha','lady_bear','rival_bear'].includes(subj) ? 'bear' : 'masha';
   const large=HEAD_HEIGHT[subj]>1.75,small=['hare','rosie','squirrel'].includes(subj);
   const op = posAt(partner, t0);
-  const dir = rot(side, angle);
+  // The wolves stand along the ambulance's west side. Frame group shots from
+  // that open side: the usual south view stacks the pair and hides one wolf.
+  const sceneSide:Vec2=sceneLocationAt(sp[0],sp[1])==='wolves'&&(kind==='wide'||kind==='two')?norm([-.9,.44]):side;
+  const dir = rot(sceneSide, angle);
   const guestHeading = facingAt && !LEADS.includes(subj) && !isWolfId(subj) ? facingAt(subj,t0+.01) : null;
   const portraitDir = guestHeading === null ? faceDir(sp,op,dir,side) : rot([Math.sin(guestHeading),Math.cos(guestHeading)],angle);
 
@@ -616,10 +662,11 @@ export function clampCam(p: Vec3): Vec3 {
 export function cameraAt(cues: CameraCue[], t: number): CamKey | null {
   const c = cues.find((q) => t >= q.start && t < q.start + q.dur) ?? cues[cues.length - 1];
   if (!c) return null;
+  if(c.from.location&&c.to.location&&c.from.location!==c.to.location)return t<(c.cutAt??c.start+c.dur*.5)?c.from:c.to;
   const k0 = Math.max(0, Math.min(1, (t - c.start) / Math.max(1e-6, c.dur)));
   const k = k0 * k0 * (3 - 2 * k0);
   const lerp = (a: Vec3, b: Vec3): Vec3 => [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k, a[2] + (b[2] - a[2]) * k];
-  return { pos: lerp(c.from.pos, c.to.pos), look: lerp(c.from.look, c.to.look), fov: c.from.fov + (c.to.fov - c.from.fov) * k };
+  return { pos: lerp(c.from.pos, c.to.pos), look: lerp(c.from.look, c.to.look), fov: c.from.fov + (c.to.fov - c.from.fov) * k,location:c.from.location??c.to.location };
 }
 
 /** Stereo pan estimate (-1..1) of a ground point relative to the planned camera at time t. */

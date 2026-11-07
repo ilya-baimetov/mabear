@@ -5,10 +5,13 @@ import { EMPTY_CARRY } from "../compiler/audioCues";
 import { initialWorldState } from "../compiler/worldState";
 import { DEFAULT_REMIX, type ActorId, type Beat, type BeatScript, type Lang, type Timeline } from "../shared/schema";
 import type { AppState } from "./store";
+import recordings from '../shared/recordedSpeech.json';
+import {speechKey,type SpeechRecording} from '../shared/speech';
+const speechDurations=Object.fromEntries((recordings as SpeechRecording[]).map(r=>[speechKey(r.text,r.lang),r.duration]));
 
 type Partial = Pick<Beat, "verb" | "emote" | "emotion"> & { line?: Record<Lang, string> };
 
-const REACTIONS: Record<ActorId, Partial[]> = {
+export const REACTIONS: Record<ActorId, Partial[]> = {
   lady_bear: [{ verb: "wave", emote: "hum", emotion: "happy" }, { verb: "dance", emote: "chuckle", emotion: "excited" }],
   hare: [{ verb: "wave", emote: "hum", emotion: "happy" }, { verb: "dance", emote: "chuckle", emotion: "excited" }],
   rosie: [{ verb: "wave", emote: "hum", emotion: "happy" }, { verb: "dance", emote: "chuckle", emotion: "excited" }],
@@ -64,7 +67,7 @@ export function reactionTimeline(s: AppState, actor: ActorId, n: number): { time
     beats: [beat(actor, main, s.lang, false, 0), beat(other, reply, s.lang, true, 0.6)],
     rule_hits: [],
   };
-  const r = compile(bs, start, { paragraphId: `react-${n}`, version: 1, lang: s.lang, remix: DEFAULT_REMIX, isFirst: false, carry });
+  const r = compile(bs, start, { paragraphId: `react-${n}`, version: 1, lang: s.lang, remix: DEFAULT_REMIX, isFirst: false, carry,speechDurations });
   const offset = s.timeline.duration;
   return {
     timeline: { segments: [...s.timeline.segments, { offset, segment: r.segment }], duration: offset + r.segment.duration },

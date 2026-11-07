@@ -3,6 +3,7 @@ import { defineConfig } from "@playwright/test";
 // E2E runs against the built app served by the real Worker (`wrangler dev`) with the mock director (MOCK_DIRECTOR=1)
 // and a test-only password, so the password gate is exercised too. No Anthropic key is needed.
 const PORT = Number(process.env.E2E_PORT ?? 8791);
+const hardware = process.env.E2E_GPU === "hardware";
 export const E2E_PASSWORD = "e2e-pass";
 
 export default defineConfig({
@@ -18,7 +19,7 @@ export default defineConfig({
     viewport: { width: 1440, height: 860 },
     channel: "chrome",
     launchOptions: {
-      args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--autoplay-policy=no-user-gesture-required", "--ignore-gpu-blocklist"],
+      args: [...(hardware ? [] : ["--use-angle=swiftshader", "--enable-unsafe-swiftshader"]), "--autoplay-policy=no-user-gesture-required", "--ignore-gpu-blocklist"],
     },
   },
   webServer: {

@@ -63,12 +63,12 @@ const NEW_CAST_ALIASES: Record<string, ActorId> = {
 };
 const TARGET_SYNONYMS: Record<string, string> = {
   ...NEW_CAST_ALIASES,
-  house: "door", home: "door", cabin: "door", hut: "door", inside: "door", steps: "porch", stairs: "porch",
+  house: "house_living", home: "house_living", cabin: "house_living", hut: "house_living", inside: "house_living", steps: "porch", stairs: "porch",
   yard: "clearing", lawn: "clearing", meadow: "clearing", grass: "clearing", middle: "clearing", center: "clearing",
   tree: "big_tree", pine: "big_tree", oak: "swing", lake: "pond_shore", pond: "pond_shore", water: "pond_shore", shore: "pond_shore",
   dock: "pier", jetty: "pier", river: "creek", stream: "creek", bridge: "creek", footbridge: "creek",
   forest: "path_entry", woods: "path_entry", path: "path_entry", road: "path_entry", gate: "path_entry",
-  kitchen: "table", stove: "table", samovar: "teapot", hive: "beehive", hives: "beehive", bees: "beehive", vegetables: "garden",
+  kitchen: "house_kitchen", stove: "house_kitchen", living_room: "house_living", lounge: "house_living", armchair: "house_living", sofa: "house_living", samovar: "teapot", hive: "beehive", hives: "beehive", bees: "beehive", vegetables: "garden",
   bed: "hammock", logs: "woodpile", firewood: "woodpile", car: "van", ambulance: "van", truck: "van", bushes: "bush", shrub: "bush",
   jam: "jam_jar", honey: "honey_pot", pancake: "pancakes", pan: "frying_pan", rod: "fishing_rod", candy: "lollipop",
   flower: "flowers", can: "watering_can", flour: "flour_bag", tea: "teapot",
@@ -267,6 +267,8 @@ export function validateBeatScript(bs: BeatScript, startState: WorldState, lang:
     }
     b.target = b.verb === "idle" && def.target === "none" ? null : target;
     if (GRAMMAR[b.verb].target === "none") b.target = null;
+    if (b.verb === "cook" && b.target === "house_living") b.target = "house_kitchen";
+    if (b.verb === "cook" && b.target !== "house_kitchen" && b.target !== "table") b.target = null;
 
     // ---- items ----
     const vdef = GRAMMAR[b.verb];

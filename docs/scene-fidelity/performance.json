@@ -1,0 +1,90 @@
+[
+  {
+    "backend": "software",
+    "without": {
+      "ms": 8971.799999952316,
+      "n": 8,
+      "fps": 0.8916828284226709,
+      "averageDrawCalls": 47,
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+      "reflection": false,
+      "buffer": [
+        640,
+        360
+      ],
+      "shadow": 2048
+    },
+    "withReflection": {
+      "ms": 5148.899999976158,
+      "n": 8,
+      "fps": 1.553729922903347,
+      "averageDrawCalls": 51.625,
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+      "reflection": true,
+      "buffer": [
+        640,
+        360
+      ],
+      "shadow": 2048
+    },
+    "errors": []
+  },
+  {
+    "backend": "default",
+    "without": {
+      "ms": 109.20000004768372,
+      "n": 8,
+      "fps": 73.26007322808321,
+      "averageDrawCalls": 56,
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+      "reflection": false,
+      "buffer": [
+        640,
+        360
+      ],
+      "shadow": 2048
+    },
+    "withReflection": {
+      "ms": 133.39999997615814,
+      "n": 8,
+      "fps": 59.97001500322186,
+      "averageDrawCalls": 86,
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+      "reflection": true,
+      "buffer": [
+        640,
+        360
+      ],
+      "shadow": 2048
+    },
+    "desktop": {
+      "without": {
+        "ms": 799.8999999761581,
+        "n": 48,
+        "fps": 60.00750093940579,
+        "averageDrawCalls": 55.75,
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+        "reflection": false,
+        "buffer": [
+          1280,
+          720
+        ],
+        "shadow": 4096
+      },
+      "withReflection": {
+        "ms": 799.1999999284744,
+        "n": 48,
+        "fps": 60.06006006543522,
+        "averageDrawCalls": 85.125,
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+        "reflection": true,
+        "buffer": [
+          1280,
+          720
+        ],
+        "shadow": 4096
+      }
+    },
+    "errors": []
+  }
+]

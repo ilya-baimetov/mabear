@@ -65,6 +65,99 @@ describe("▶ sessions (playback.ts)", () => {
     await flush();
   });
 
+  it('keeps Pause available while the selected voice prepares, and never autoplays after cancellation',async()=>{
+    store.loadFixture(FIXTURES.find(f=>f.id==='garden_party'&&f.lang==='en')!);
+    let finish!:(v:Record<string,number>)=>void;
+    const prepare=vi.fn(()=>new Promise<Record<string,number>>(resolve=>{finish=resolve;}));
+    playback.attach(fakePlayer as never,{prepare,unlock:async()=>{}} as never);
+    playback.playAll();
+    expect(store.getState().waiting).toBe(true);
+    expect(store.getState().preparingVoice).toBe(true);
+    expect(plays).toHaveLength(0);
+    playback.pause();finish({});await flush();
+    expect(store.getState().waiting).toBe(false);
+    expect(plays).toHaveLength(0);
+    playback.play();finish({});await flush();
+    expect(plays).toHaveLength(1);
+  });
+
+  it("Play resumes the paused entire story at the same time without preparing changed writing", async () => {
+    store.loadFixture(FIXTURES.find(f => f.id === "garden_party" && f.lang === "en")!);
+    playback.playAll();
+    store.setTime(7.25);
+    playback.pause();
+    const first = store.getState().paragraphs[0];
+    store.editText(first.id, "Masha jumps. This is a new direction.");
+    playback.play();
+    await flush();
+    expect(plays.at(-1)).toEqual({ from: 7.25, to: undefined });
+    expect(store.getState().previewScope).toEqual({ kind: "story" });
+    expect(pending).toHaveLength(0);
+    expect(store.getState().paragraphs[0].status).toBe("draft");
+  });
+
+  it("Play resumes a bounded selected moment, even if the inspector selection changes", () => {
+    store.loadFixture(FIXTURES.find(f => f.id === "garden_party" && f.lang === "en")!);
+    const [first, second] = store.getState().paragraphs;
+    playback.playParagraph(second.id);
+    const range = store.segmentRange(second.id)!;
+    store.setTime(range.start + 1.25);
+    playback.pause();
+    store.select(first.id); // editor state must not own the paused movie
+    playback.play();
+    expect(plays.at(-1)).toEqual({ from: range.start + 1.25, to: range.end });
+    expect(pending).toHaveLength(0);
+  });
+
+  it("scrubbing then Play resumes the scrubbed point, while Replay alone goes to the beginning", () => {
+    store.loadFixture(FIXTURES.find(f => f.id === "garden_party" && f.lang === "en")!);
+    playback.seek(4.25);
+    playback.play();
+    expect(plays.at(-1)).toEqual({ from: 4.25, to: undefined });
+    playback.pause();
+    playback.replay();
+    expect(plays.at(-1)).toEqual({ from: 0, to: undefined });
+    expect(pending).toHaveLength(0);
+  });
+
+  it("pausing preparation prevents late autoplay; Play resumes the existing preparation without another request", async () => {
+    const id = para("Masha waves.");
+    playback.playParagraph(id);
+    expect(pending).toHaveLength(1);
+    playback.pause();
+    answer();
+    await flush();
+    expect(plays).toHaveLength(0);
+    playback.play();
+    await flush();
+    const range = store.segmentRange(id)!;
+    expect(plays.at(-1)).toEqual({ from: range.start, to: range.end });
+    expect(pending).toHaveLength(0);
+  });
+
+  it("explicit scope changes pause, and moment seeks clamp at both boundaries", () => {
+    store.loadFixture(FIXTURES.find(f => f.id === "garden_party" && f.lang === "en")!);
+    playback.playAll();
+    const second = store.getState().paragraphs[1];
+    playback.setScope({ kind: "moment", id: second.id });
+    const range = store.segmentRange(second.id)!;
+    expect(fakePlayer.isPlaying).toBe(false);
+    playback.seek(-100);
+    expect(store.getState().t).toBe(range.start);
+    playback.seek(Infinity);
+    expect(store.getState().t).toBe(range.end);
+    expect(fakePlayer.seek).toHaveBeenLastCalledWith(range.end, range.end);
+    expect(pending).toHaveLength(0);
+  });
+
+  it("seeking an empty timeline does not strand the first Play without preparing the story", () => {
+    para("Masha waves.");
+    playback.seek(0);
+    playback.play();
+    expect(pending).toHaveLength(1);
+    expect(store.getState().waiting).toBe(true);
+  });
+
   it("clamps keyboard seeks before synchronizing the player and store", () => {
     store.loadFixture(FIXTURES.find(f => f.id === "pancake_morning" && f.lang === "en")!);
     const duration = store.getState().timeline.duration;

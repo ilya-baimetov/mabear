@@ -1,0 +1,58 @@
+{
+  "verified_at": "2026-11-06",
+  "url": "https://mabear-storybook.ilya-baimetov.workers.dev",
+  "worker_version": "50de41ec-db5e-4f5a-ac7a-f3550979ee06",
+  "voice": "MiniMax Speech 2.8 HD / Lively_Girl",
+  "actual_browser": "User signed-in Chrome session",
+  "directing": {
+    "source": "llm",
+    "model": "claude-opus-5-5",
+    "error": null
+  },
+  "fresh_generation": {
+    "post": 202,
+    "poll": [
+      202,
+      200
+    ],
+    "audio_get": 200,
+    "lines": [
+      {
+        "lang": "en",
+        "text": "Our forest adventure starts now!",
+        "id": "3448801be54c8a52398a2e3752ef11c592c379fc1b8fcd453751881cfe6b5118",
+        "duration": 2.455,
+        "request_id": "01a1b349-a722-7213-9f7d-ea0d6d62ce16",
+        "characters": 32,
+        "estimated_usd": 0.0032
+      },
+      {
+        "lang": "ru",
+        "text": "Мишка, наше приключение начинается!",
+        "id": "fc4170a587373597333946054bd4da6c5205011d5357c354a34431e2fbd33b8d",
+        "duration": 2.768,
+        "request_id": "01a1b34a-684d-7e20-a7ad-31304f2d11f6",
+        "characters": 35,
+        "estimated_usd": 0.0035
+      }
+    ]
+  },
+  "replay_after_page_reload": {
+    "posts": [
+      200,
+      200
+    ],
+    "audio_gets": [
+      200,
+      200
+    ],
+    "new_generation": false
+  },
+  "pre_fix_trials": {
+    "count": 2,
+    "requests_reached_fal": 0,
+    "cause": "workerd rejects redirect:error at Request construction before network I/O",
+    "reservations": "Retained conservatively; no automatic retry"
+  },
+  "billing": "Estimates at checked published rate; invoice debit unverified."
+}

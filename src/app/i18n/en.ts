@@ -28,7 +28,7 @@ export const en = {
   timeOfDay: { morning: "Morning", day: "Day", sunset: "Sunset", night: "Night" },
   musicMood: { none: "No music", playful: "Playful", calm: "Calm", sleepy: "Sleepy", tense: "Tense", spooky: "Spooky", chase: "Chase", triumphant: "Hooray", sad: "Sad", romantic_waltz: "Waltz" },
   ambience: { birds_day: "Birds", forest_wind: "Wind", creek: "Creek", rain: "Rain", thunderstorm: "Storm", night_crickets: "Crickets", bees: "Bees", strong_wind: "Strong wind" },
-  fixtures: { garden_party: "Garden visitors", pancake_morning: "Pancake morning", bears_nap: "Bear's nap", fishing_trip: "Fishing trip" },
+  fixtures: { garden_party: "Garden visitors", pancake_morning: "Pancake morning", bears_nap: "Bear's nap", fishing_trip: "Fishing trip", cozy_evening: "Cozy evening" },
   tapToReact: "Tap a friend and see what happens!",
   loading: "Setting up the yard…",
   stageError: "Oh no — this browser can't show the 3D yard. Try Chrome on a laptop!",

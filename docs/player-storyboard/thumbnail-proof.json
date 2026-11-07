@@ -1,0 +1,14 @@
+{
+  "before": {
+    "time": 0,
+    "playing": false,
+    "count": 3
+  },
+  "after": {
+    "time": 0,
+    "playing": false
+  },
+  "errors": [],
+  "renderer": "native Chrome GPU",
+  "fixture": "cozy_evening/en"
+}

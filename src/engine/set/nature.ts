@@ -49,7 +49,7 @@ export class NatureAssets {
           const foliage = /leav|leaf/i.test(material.name);
           material.alphaTest = foliage ? .35 : 0;
           material.side = foliage ? THREE.DoubleSide : THREE.FrontSide;
-          material.color.setHex(/birch/i.test(material.name) ? (foliage ? 0xc1ca9d : 0xf3f0e5) : /pine/i.test(material.name) ? 0x5b7f4e : /normalTree/i.test(material.name) && foliage ? 0x89a261 : /twisted/i.test(material.name) && foliage ? 0x65864e : foliage ? 0xd4d8ba : 0xd9c8b6);
+          material.color.setHex(/birch/i.test(material.name) ? (foliage ? 0x8abb72 : 0xf3f0e5) : /pine/i.test(material.name) ? 0x5b7f4e : /normalTree/i.test(material.name) && foliage ? 0x89a261 : /twisted/i.test(material.name) && foliage ? 0x65864e : foliage ? 0xd4d8ba : 0xd9c8b6);
           this.materials.set(original.name, material);
         }
         const geometry = o.geometry.clone().applyMatrix4(normalization.clone().multiply(o.matrixWorld));

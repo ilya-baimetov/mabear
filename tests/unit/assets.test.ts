@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { ACTOR_IDS, FX_IDS, PROP_IDS, TIMES_OF_DAY } from "../../src/shared/schema";
-import { MARKS } from "../../src/shared/bible/set";
+import { MARKS, OBSTACLES, sceneLocationAt } from "../../src/shared/bible/set";
 import { ASSET_MANIFEST, TEST_GLTF_ID, gltfSetElements, isGltf, manifestEntry } from "../../src/engine/assets";
 import { SET_ELEMENT_IDS, SET_ELEMENTS, creekDistance, pondRadius, restHeightAt, walkHeightAt } from "../../src/engine/set/bearsYard";
 import { PROP_SLOTS, PROP_VISUALS, restPlacement, restingMark } from "../../src/engine/props/props";
@@ -65,12 +65,25 @@ describe("asset manifest (spec §7.3)", () => {
 });
 
 describe("set data", () => {
-  it("covers the spec's elements including creek and van, placed at their marks", () => {
+  it("covers the spec's elements including creek and van", () => {
     for (const id of ["house", "pond", "pier", "creek", "footbridge", "van", "oak_swing", "hammock", "garden", "beehive", "table", "bench", "woodpile", "big_pine", "bush"] as const) {
       expect(SET_ELEMENT_IDS).toContain(id);
     }
-    expect(Math.hypot(SET_ELEMENTS.van.pos[0] - MARKS.van.pos[0], SET_ELEMENTS.van.pos[2] - MARKS.van.pos[1])).toBeLessThan(0.5);
     expect(Math.hypot(SET_ELEMENTS.footbridge.pos[0] - MARKS.creek.pos[0], SET_ELEMENTS.footbridge.pos[2] - MARKS.creek.pos[1])).toBeLessThan(0.5);
+  });
+
+  it("places the van approach beside the vehicle with room for an actor", () => {
+    const [x,z]=MARKS.van.pos;
+    const van=OBSTACLES.boxes.find(o=>o.id==='van')!;
+    // The mark is an interaction point, not the vehicle centre. Allow a broad
+    // wolf body and keep it on the camera-facing west side of the ambulance.
+    expect(van.min[0]-x).toBeGreaterThanOrEqual(.65);
+    expect(van.min[0]-x).toBeLessThanOrEqual(1.5);
+    expect(z).toBeGreaterThan(van.min[1]);
+    expect(z).toBeLessThan(van.max[1]);
+    expect(sceneLocationAt(x,z)).toBe('wolves');
+    const facingTowardVan=Math.atan2(SET_ELEMENTS.van.pos[0]-x,SET_ELEMENTS.van.pos[2]-z);
+    expect(Math.cos(MARKS.van.facing-facingTowardVan)).toBeGreaterThan(.95);
   });
 
   it("the creek passes under the footbridge and feeds the pond", () => {

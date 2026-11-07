@@ -21,18 +21,21 @@ import napEn from "../../src/director/fixtures/bears_nap.en.json";
 import napRu from "../../src/director/fixtures/bears_nap.ru.json";
 import fishingEn from "../../src/director/fixtures/fishing_trip.en.json";
 import fishingRu from "../../src/director/fixtures/fishing_trip.ru.json";
+import {cozyEvening} from '../../src/director/fixtures/cozy_evening';
 
 const RAW: Record<string, unknown> = {
   "garden_party.en": gardenEn, "garden_party.ru": gardenRu,
   "pancake_morning.en": pancakeEn, "pancake_morning.ru": pancakeRu,
   "bears_nap.en": napEn, "bears_nap.ru": napRu,
   "fishing_trip.en": fishingEn, "fishing_trip.ru": fishingRu,
+  "cozy_evening.en":cozyEvening('en'),"cozy_evening.ru":cozyEvening('ru'),
 };
 const TITLES: Record<string, string> = {
   "garden_party.en": "Garden visitors", "garden_party.ru": "Гости в саду",
   "pancake_morning.en": "Pancake morning", "pancake_morning.ru": "Блинное утро",
   "bears_nap.en": "Bear's nap", "bears_nap.ru": "Мишкин сон",
   "fishing_trip.en": "Fishing trip", "fishing_trip.ru": "На рыбалке",
+  "cozy_evening.en":"Cozy evening","cozy_evening.ru":"Уютный вечер",
 };
 const BEAT_KEYS = ["actor", "verb", "target", "item", "line", "emote", "sfx", "emotion", "with_previous", "delay_s", "shot"].sort();
 const SCRIPT_KEYS = ["summary", "time_of_day", "mood", "music", "ambience", "beats", "rule_hits"].sort();
@@ -115,7 +118,8 @@ function simulate(e: FixtureEpisode): { problems: string[]; startStates: WorldSt
         case "take": {
           const item = b.item as PropId;
           const loc = ws.props[item].at;
-          if (me.holding) fail(`already holding ${me.holding}`);
+          // Taking a replacement sets the previous prop down at the current mark.
+          if (me.holding) ws.props[me.holding]={at:me.mark??'clearing'};
           if (loc === "hidden") fail(`${item} is hidden`);
           if (isActor(loc) && loc !== b.actor) fail(`${item} is held by ${loc}`);
           if (isMark(loc)) moveTo(loc);
@@ -144,9 +148,9 @@ function simulate(e: FixtureEpisode): { problems: string[]; startStates: WorldSt
           if (!PROPS[b.item as PropId].edible) fail(`${b.item} is not edible`);
           break;
         case "cook":
-          if (me.mark !== "table") fail(`cooks away from the table (at ${me.mark})`);
+          if (me.mark !== "table" && me.mark !== "house_kitchen") fail(`cooks away from a cooking surface (at ${me.mark})`);
           if (me.holding !== "frying_pan") fail(`cooks without the frying pan (holds ${me.holding})`);
-          if (ws.props.pancakes.at === "hidden") ws.props.pancakes = { at: "table" };
+          if (ws.props.pancakes.at === "hidden") ws.props.pancakes = { at: me.mark! };
           break;
         case "fish":
           if (me.mark !== "pier") fail(`fishes away from the pier (at ${me.mark})`);

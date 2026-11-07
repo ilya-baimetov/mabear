@@ -1,10 +1,10 @@
 import { expect, test, type Page } from "@playwright/test";
 import { mkdirSync } from "node:fs";
-import { E2E_PASSWORD } from "../../playwright.config";
+import { login } from "./login";
 const SHOTS = "docs/ux-moments";
 mkdirSync(SHOTS, { recursive: true });
 async function open(page: Page) {
-  await page.request.post("/login", { form: { password: E2E_PASSWORD }, maxRedirects: 0 });
+  await login(page);
   await page.goto("/");
   await expect(page.getByTestId("moment-text")).toBeVisible();
   await expect(page.locator(".stage-loading")).toHaveCount(0, { timeout: 90_000 });
@@ -69,7 +69,7 @@ test("moment loop: add, bounded preview, revise, append, then watch the whole st
   await expect(page.getByTestId("moment-card").nth(1)).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByRole("slider", { name: "Story progress", exact: true })).toBeVisible();
   await expect.poll(() => page.evaluate(() => window.__mabear!.playing())).toBe(true);
-  await expect(page.locator(".stage-scope")).toContainText("Whole-story preview");
+  await expect(page.locator(".stage-scope")).toContainText("Entire story");
   await expect.poll(() => page.evaluate(() => window.__mabear!.playing()), { timeout: 40_000 }).toBe(false);
   const end = await page.evaluate(() => ({ t: window.__mabear!.t(), duration: (window.__mabear!.timeline() as { duration: number }).duration }));
   expect(Math.abs(end.t - end.duration)).toBeLessThan(.15);
@@ -126,8 +126,8 @@ test("full-story import stays secondary, failure retains writing, and fullscreen
   await expect.poll(() => page.evaluate(() => window.__mabear!.playing()), { timeout: 40_000 }).toBe(false);
   await page.getByRole("button", { name: "Fullscreen", exact: true }).click();
   await expect.poll(() => page.evaluate(() => !!document.fullscreenElement)).toBe(true);
-  await expect(page.getByTestId("preview-selected")).toBeVisible();
-  await expect(page.getByTestId("play-all")).toBeVisible();
+  await expect(page.getByTestId("play")).toBeVisible();
+  await expect(page.getByTestId("scope-story")).toBeVisible();
   await page.getByRole("button", { name: "Fullscreen", exact: true }).click();
   await page.screenshot({ path: `${SHOTS}/05-failure-desktop.png` });
 });
@@ -136,7 +136,7 @@ test("in-app replacement keeps authored writing on cancel and replaces only afte
   test.setTimeout(90_000);
   let nativeDialogs = 0;
   page.on("dialog", async dialog => { nativeDialogs++; await dialog.dismiss(); });
-  await page.request.post("/login", { form: { password: E2E_PASSWORD }, maxRedirects: 0 });
+  await login(page);
   await page.goto("/");
   const direction = page.getByTestId("moment-text");
   await direction.fill("Masha waves to Bear. This is my own story.");
@@ -174,4 +174,84 @@ test("in-app replacement keeps authored writing on cancel and replaces only afte
   await expect(page.getByTestId("moment-card")).toHaveCount(1);
   await expect(direction).toHaveValue("");
   expect(nativeDialogs).toBe(0);
+});
+
+/** Record the engine playhead synchronously after React's click handler, before another animation frame.
+ * Reading after Playwright's click finishes includes variable SwiftShader rendering time. */
+async function clickPlaybackAt(page: Page, testId: string): Promise<number> {
+  await page.getByTestId(testId).evaluate(el => {
+    const capture = (event: Event) => {
+      if (!event.composedPath().includes(el)) return;
+      document.documentElement.dataset.transportTime = String(window.__mabear!.t());
+      document.removeEventListener("click", capture);
+    };
+    document.addEventListener("click", capture);
+  });
+  await page.getByTestId(testId).click();
+  return Number(await page.locator("html").getAttribute("data-transport-time"));
+}
+
+test("movie transport resumes its scope and playhead, selection edits independently, and replay is explicit", async ({ page }) => {
+  test.setTimeout(120_000);
+  let calls = 0;
+  await page.route("**/api/direct", async route => { calls++; await route.continue(); });
+  await open(page);
+  await page.getByTestId("examples").click();
+  await page.getByTestId("example-garden_party").click();
+  await expect(page.getByTestId("scope-story")).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByTestId("scope-story")).toBeInViewport();
+  await expect(page.getByTestId("moment-card").nth(2)).toBeInViewport();
+  await expect(page.locator(".storyboard-frame")).toHaveCount(3);
+  await page.getByTestId("play").click();
+  await expect.poll(() => page.evaluate(() => window.__mabear!.t())).toBeGreaterThan(1);
+  await page.getByTestId("moment-card").nth(1).click();
+  expect(await page.evaluate(() => window.__mabear!.playing())).toBe(true);
+  await expect(page.getByTestId("scope-story")).toHaveAttribute("aria-pressed", "true");
+  await page.getByTestId("pause").click();
+  const pausedAt = await page.evaluate(() => window.__mabear!.t());
+  await page.getByTestId("moment-text").fill("Masha jumps. Bear claps. My new writing.");
+  await expect(page.getByTestId("update-story")).toBeVisible();
+  const resumedAt = await clickPlaybackAt(page, "play");
+  expect(resumedAt).toBeGreaterThanOrEqual(pausedAt);
+  expect(resumedAt).toBeCloseTo(pausedAt, 6);
+  expect(calls).toBe(0);
+  await expect(page.getByTestId("timeline")).toHaveAttribute("data-scope", "story");
+  await page.getByTestId("pause").click();
+  await page.getByTestId("timeline").press("Home");
+  await page.getByTestId("timeline").press("ArrowRight");
+  await page.getByTestId("timeline").press("ArrowRight");
+  await page.getByTestId("play").click();
+  expect(await page.evaluate(() => window.__mabear!.t())).toBeGreaterThanOrEqual(2);
+  expect(await clickPlaybackAt(page, "replay")).toBe(0);
+  await page.getByTestId("pause").click();
+  await page.screenshot({ path: "docs/player-storyboard/04-after-desktop.png" });
+  await page.getByTestId("scope-moment").click();
+  await expect(page.getByTestId("timeline")).toHaveAttribute("data-scope", "moment");
+  const moment = await page.evaluate(() => {
+    const segment = (window.__mabear!.timeline() as {segments: {offset: number; segment: {duration: number}}[]}).segments[1];
+    return { start: segment.offset, end: segment.offset + segment.segment.duration };
+  });
+  await page.getByTestId("timeline").press("ArrowRight");
+  await page.getByTestId("play").click();
+  await page.getByTestId("pause").click();
+  const pausedMomentAt = await page.evaluate(() => window.__mabear!.t());
+  expect(await clickPlaybackAt(page, "play")).toBeCloseTo(pausedMomentAt, 6);
+  expect(calls).toBe(0);
+  await expect.poll(() => page.evaluate(() => window.__mabear!.playing()), { timeout: 30_000 }).toBe(false);
+  expect(await page.evaluate(() => window.__mabear!.t())).toBeCloseTo(moment.end, 2);
+  await page.getByRole("button", { name: "Fullscreen", exact: true }).click();
+  await expect(page.getByTestId("scope-story")).toBeVisible();
+  await expect(page.getByTestId("play")).toBeVisible();
+  await page.getByRole("button", { name: "Fullscreen", exact: true }).click();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.screenshot({ path: "docs/player-storyboard/05-after-mobile.png", fullPage: true });
+  expect(await page.evaluate(() => document.body.scrollWidth)).toBe(390);
+  await expect(page.getByTestId("scope-story")).toBeInViewport();
+  await expect(page.getByTestId("play")).toBeInViewport();
+  await expect(page.getByTestId("mobile-scope-story")).toBeInViewport();
+  const movie = await page.getByTestId("stage").boundingBox();
+  const storyboard = await page.locator(".moment-sequence").boundingBox();
+  const inspector = await page.getByTestId("moment-workbench").boundingBox();
+  expect(storyboard!.y).toBeGreaterThan(movie!.y);
+  expect(storyboard!.y).toBeLessThan(inspector!.y);
 });

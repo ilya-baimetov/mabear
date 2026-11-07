@@ -29,7 +29,7 @@ export const ru: Strings = {
   timeOfDay: { morning: "Утро", day: "День", sunset: "Закат", night: "Ночь" },
   musicMood: { none: "Без музыки", playful: "Весёлая", calm: "Спокойная", sleepy: "Сонная", tense: "Тревожная", spooky: "Страшилка", chase: "Погоня", triumphant: "Ура", sad: "Грустная", romantic_waltz: "Вальс" },
   ambience: { birds_day: "Птицы", forest_wind: "Ветер", creek: "Ручей", rain: "Дождь", thunderstorm: "Гроза", night_crickets: "Сверчки", bees: "Пчёлы", strong_wind: "Сильный ветер" },
-  fixtures: { garden_party: "Гости в саду", pancake_morning: "Блинное утро", bears_nap: "Мишкин сон", fishing_trip: "На рыбалке" },
+  fixtures: { garden_party: "Гости в саду", pancake_morning: "Блинное утро", bears_nap: "Мишкин сон", fishing_trip: "На рыбалке", cozy_evening: "Уютный вечер" },
   tapToReact: "Нажми на героя — и увидишь, что будет!",
   loading: "Готовим двор…",
   stageError: "Ой — этот браузер не может показать 3D-двор. Попробуй Chrome на ноутбуке!",

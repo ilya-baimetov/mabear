@@ -25,6 +25,8 @@ import { initialWorldState, worldStateDigest } from "../compiler/worldState";
 import { parseParagraph } from "../director/offline/parser";
 import { directParagraph } from "../director/client";
 import { FIXTURES } from "../director/fixtures/index";
+import recordings from '../shared/recordedSpeech.json';
+import {speechKey, type SpeechDurations, type SpeechRecording} from '../shared/speech';
 
 export type ParagraphStatus = "draft" | "directing" | "ready" | "adjusted" | "error";
 
@@ -82,6 +84,8 @@ export interface AppState {
   fixtureId: FixtureEpisode["id"] | null;
   /** ▶ Play is holding for the director ("getting ready…") */
   waiting: boolean;
+  voiceError?: string | null;
+  preparingVoice?: boolean;
 }
 
 type Listener = () => void;
@@ -212,6 +216,7 @@ class Store {
   private redirectQueue = new Set<string>();
   /** recompile() calls so far (e2e: typing must not compile) */
   compileCount = 0;
+  private speechDurations: Record<string, number> = Object.fromEntries((recordings as SpeechRecording[]).map(r => [speechKey(r.text,r.lang),r.duration]));
 
   constructor() {
     const vol = Number(lsGet(LS.volume) ?? "0.8");
@@ -320,6 +325,14 @@ class Store {
   }
   setWaiting(waiting: boolean): void {
     if (this.state.waiting !== waiting) this.set({ waiting });
+  }
+  setVoiceStatus(preparingVoice: boolean, voiceError: string | null = null): void { this.set({preparingVoice,voiceError}); }
+  setSpeechDurations(durations: SpeechDurations): boolean {
+    const changed = Object.entries(durations).some(([key,dur]) => dur > 0 && this.speechDurations[key] !== dur);
+    if (!changed) return false;
+    Object.assign(this.speechDurations,durations);
+    this.recompile();
+    return true;
   }
   setTime(t: number): void {
     this.state = { ...this.state, t };
@@ -635,7 +648,7 @@ class Store {
           const v = p.versions[p.current];
           return { paragraphId: p.id, version: v.version, beatScript: v.beatScript, remix: v.remix };
         }),
-        this.state.lang,
+        this.state.lang, undefined, this.speechDurations,
       );
       results = out.results;
       timeline = out.timeline;

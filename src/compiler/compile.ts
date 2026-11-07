@@ -8,7 +8,7 @@
 // look at the action, small reactions to loud beats) so every track covers [0, duration] contiguously.
 import { CHARACTERS } from "../shared/bible/characters";
 import { PROPS } from "../shared/bible/props";
-import { MARKS, OBSTACLES } from "../shared/bible/set";
+import { FISHING_WATER_TARGET, isInsideHouse, isInteriorMark, MARKS, OBSTACLES, sceneLocationAt, SEAT_HEIGHT } from "../shared/bible/set";
 import { GRAMMAR, LOCOMOTION_VERBS, SPEEDS, VERB_HOME_MARK, VERB_IMPLIED_PROP, isWolf } from "../shared/grammar";
 import { ACTOR_IDS } from "../shared/schema";
 import type {
@@ -51,7 +51,7 @@ interface ActorTrack {
   clips: ActorClip[];
   free: number;
   /** snapshots after each clip: posture/holding/facing timeline for ambient fill */
-  states: { t: number; pos: Vec2; facing: number; posture: Posture; holding: PropId | null }[];
+  states: { t: number; pos: Vec2; facing: number; posture: Posture; holding: PropId | null; mark:MarkId|null }[];
 }
 
 interface BeatTiming {
@@ -77,7 +77,7 @@ interface BeatTiming {
  *  (behind the table facing the camera, behind the tree/bush when hiding, on the shore side of the pond). */
 export function standPos(mark: MarkId): Vec2 {
   const m = MARKS[mark];
-  if (mark === "pier") return v2(m.pos);
+  if (mark === "pier" || isInteriorMark(mark)) return v2(m.pos);
   if (mark === "pond_shore") {
     const c = OBSTACLES.circles.find((o) => o.id === "pond")!;
     const d = [m.pos[0] - c.c[0], m.pos[1] - c.c[1]];
@@ -106,6 +106,7 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
   const startState = withAllActors(cloneWorldState(startState0));
   const v = validateBeatScript(inputBs, startState, opts.lang);
   const bs0 = v.beatScript;
+  const cast=opts.cast??ACTORS.filter(a=>bs0.beats.some(b=>b.actor===a||b.target===a));
   const repairs: string[] = v.errors.map((e) => `validator: ${e}`);
   const errors: string[] = [];
   const ws = cloneWorldState(startState);
@@ -123,7 +124,7 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
   // ---------- helpers ----------
   function snap(w: WorldState, a: ActorId, t: number) {
     const s = w.actors[a];
-    return { t, pos: v2(s.pos), facing: s.facing, posture: s.posture, holding: s.holding };
+    return { t, pos: v2(s.pos), facing: s.facing, posture: s.posture, holding: s.holding,mark:s.mark };
   }
   function record(a: ActorId, t: number) {
     tracks[a].states.push(snap(ws, a, t));
@@ -137,7 +138,7 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
       if (c.start > t) break;
       if (t < c.start + c.dur && c.params.path && c.params.path.length > 1) {
         const k = (t - c.start) / Math.max(1e-6, c.dur);
-        return pointAlong(c.params.path, k * pathLength(c.params.path));
+        return c.params.sceneCut ? v2(k<.5?c.params.path[0]:c.params.path[c.params.path.length-1]) : pointAlong(c.params.path, k * pathLength(c.params.path));
       }
       p = c.params.to ?? c.params.from ?? p;
     }
@@ -160,7 +161,8 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
   }
   function headAt(a: ActorId, t: number): Vec3 {
     const p = posAt(a, t);
-    const h = postureAt(a, t) === "carried" ? HEAD_HEIGHT.bear + 0.4 : postureAt(a, t) === "sleep" ? 0.6 : postureAt(a, t) === "sit" ? HEAD_HEIGHT[a] * 0.65 : HEAD_HEIGHT[a];
+    const st=stateAt(a,t),seat=st.mark&&dist(p,MARKS[st.mark].pos)<1?(SEAT_HEIGHT[st.mark]??0):0;
+    const h = postureAt(a, t) === "carried" ? HEAD_HEIGHT.bear + 0.4 : postureAt(a, t) === "sleep" ? 0.6+seat : postureAt(a, t) === "sit" ? HEAD_HEIGHT[a] * 0.65+seat : HEAD_HEIGHT[a];
     return [r3(p[0]), r3(h), r3(p[1])];
   }
   /** World point for a target id (mark / actor / prop). */
@@ -223,11 +225,14 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
     const from = v2(st.pos);
     const path = path0 ?? planPath(from, dest);
     const len = pathLength(path);
-    const dur = len < 0.3 ? 0.6 : Math.min(MAX_LOCO_S, Math.max(len / speed(a, verb), 0.8));
+    const fromScene=sceneLocationAt(...from),toScene=sceneLocationAt(...dest);
+    const sceneCut=fromScene!==toScene&&(!['yard','house'].includes(fromScene)||!['yard','house'].includes(toScene));
+    const dur = sceneCut ? .9 : len < 0.3 ? 0.6 : Math.min(MAX_LOCO_S, Math.max(len / speed(a, verb), 0.8));
     const yaw = pathEndYaw(path, st.facing);
     addClip(a, t, dur, verb, emotion, {
       from, to: v2(path[path.length - 1]), path: path.map((p) => [r3(p[0]), r3(p[1])] as Vec2),
       facing: r3(yawTo(from, path[1] ?? dest, st.facing)), posture: "stand", item: st.holding ?? undefined, target: target ?? undefined,
+      ...(sceneCut?{sceneCut:true}:{}),
     });
     st.pos = v2(path[path.length - 1]);
     st.facing = r3(finalFacing ?? yaw);
@@ -344,7 +349,8 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
     // --- auto-walk to where the verb happens ---
     let walkDest: Vec2 | null = null;
     let walkTarget: string | null = null;
-    const home = VERB_HOME_MARK[b.verb] as MarkId | undefined;
+    const home = b.verb === "cook" && (isInteriorMark(b.target) || b.target !== "table" && isInsideHouse(st.pos[0],st.pos[1]))
+      ? "house_kitchen" : VERB_HOME_MARK[b.verb] as MarkId | undefined;
     if (home) { walkDest = spread(a, standPos(home), t); walkTarget = home; }
     else if (b.verb === "take" && b.item && ws.props[b.item]?.at !== "hidden" && ws.props[b.item]?.at !== a) { walkDest = approachPoint(a, b.item, t); walkTarget = b.item; }
     else if (interacts && b.target) { walkDest = approachPoint(a, b.target, t, b.verb === "give" ? 1.0 : 0.7); walkTarget = b.target; }
@@ -366,7 +372,8 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
     // --- main clip ---
     const mainStart = t;
     const lineText = b.line;
-    const lineDur = lineText ? dialogueDuration(lineText) : 0;
+    const lineLang = lineText && /[\u0400-\u04FF]/.test(lineText) ? 'ru' : lineText && /[A-Za-z]/.test(lineText) ? 'en' : opts.lang;
+    const lineDur = lineText ? dialogueDuration(lineText, lineLang, opts.speechDurations) : 0;
     let mainDur = def.baseDuration;
     let tail = 0;
     const isLoco = (LOCOMOTION_VERBS as Verb[]).includes(b.verb);
@@ -451,7 +458,7 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
           break;
         case "cook": case "fish": case "water_plants":
           item = (VERB_IMPLIED_PROP[b.verb] as PropId | undefined) ?? item;
-          facing = MARKS[VERB_HOME_MARK[b.verb] as MarkId].facing;
+          facing = MARKS[home!].facing;
           break;
         case "sit": posture = "sit"; if (isMark(b.target) && dist(st.pos, standPos(b.target)) < 1.2) facing = MARKS[b.target].facing; break;
         case "sleep": posture = "sleep"; if (isMark(b.target) && dist(st.pos, standPos(b.target)) < 1.2) facing = MARKS[b.target].facing; break;
@@ -467,6 +474,7 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
         else tail = lineDur - mainDur;
       }
       const lookAt = b.target ? targetPoint(b.target, t) : lineText && ws.actors[o].posture !== "offstage" ? headAt(o, t) : null;
+      if(VERB_IMPLIED_PROP[b.verb]&&item&&st.holding!==item)giveTo(a,item);
       addClip(a, mainStart, mainDur, b.verb, b.emotion, { ...baseParams(), facing: r3(facing), posture, item, lookAt: lookAt ?? undefined });
       st.facing = r3(facing);
       t = mainStart + mainDur;
@@ -522,12 +530,10 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
           }
           break;
         case "cook":
-          ws.props.pancakes = { at: "table" };
+          ws.props.pancakes = { at: home! };
           break;
         case "fish": {
-          const f: Vec2 = [Math.sin(st.facing), Math.cos(st.facing)];
-          const wp: Vec2 = [st.pos[0] + f[0] * 1.8, st.pos[1] + f[1] * 1.8];
-          addFx("splash", mainStart + 0.3 * mainDur, 1.2, [wp[0], 0, wp[1]]);
+          addFx("splash", mainStart + 0.3 * mainDur, 1.2, [...FISHING_WATER_TARGET]);
           if (ws.props.fish?.at === "hidden") { if (st.holding) dropHeld(a); ws.actors[a].holding = "fish"; ws.props.fish = { at: a }; }
           break;
         }
@@ -573,7 +579,7 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
     // dialogue
     const lineStart = mainStart;
     // TTS voice follows the script of the words (a child may quote Russian with an English UI), else the UI language
-    if (lineText) dialogue.push(makeDialogueCue(r3(lineStart), a, lineText, /[\u0400-\u04FF]/.test(lineText) ? "ru" : /[A-Za-z]/.test(lineText) ? "en" : opts.lang));
+    if (lineText) dialogue.push(makeDialogueCue(r3(lineStart), a, lineText, lineLang, opts.speechDurations));
 
     // fx tied to the beat
     const head = headAt(a, mainStart);
@@ -736,7 +742,7 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
   });
   const camera = planCamera({
     facingAt: (actor,t) => tracks[actor].clips.find(c=>c.start<=t&&t<c.start+c.dur)?.params.facing ?? stateAt(actor,t).facing,
-    duration, beats: camBeats, posAt, visibleAt: (x, tt) => postureAt(x, tt) !== "offstage", headY: (x, tt) => headAt(x, tt)[1],
+    duration, beats: camBeats, posAt, visibleAt: (x, tt) => cast.includes(x)&&postureAt(x, tt) !== "offstage", headY: (x, tt) => headAt(x, tt)[1],
     dialogue: dialogue.map((d) => ({ start: d.start, dur: d.dur, actor: d.actor })), isFirst: opts.isFirst, cameraSeed: opts.remix.cameraSeed,
   });
 
@@ -761,6 +767,7 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
       paragraphId: opts.paragraphId,
       version: opts.version,
       duration,
+      cast,
       startState: cloneWorldState(startState),
       endState: ws,
       actorClips,

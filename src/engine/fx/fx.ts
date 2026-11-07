@@ -24,7 +24,7 @@ export const FX_DEFS: Record<FxId, FxDef> = {
   sparkles: { kind: 2, count: 26, color: 0xfff3a0, color2: 0xffffff, size: 0.2, lift: 0.7, additive: true },
   zzz: { kind: 3, count: 3, color: 0xe8f0ff, color2: 0xa9c4ff, size: 0.3, lift: 1.0 },
   dust: { kind: 4, count: 22, color: 0xd9c49a, color2: 0xbfa77a, size: 0.4, lift: 0.0 },
-  splash: { kind: 5, count: 34, color: 0x9fdcff, color2: 0xffffff, size: 0.12, lift: 0.0 },
+  splash: { kind: 5, count: 19, color: 0x78aaa9, color2: 0xc9e1d8, size: 0.038, lift: 0.0 },
   tears: { kind: 6, count: 14, color: 0x6fb8ff, color2: 0xbfe4ff, size: 0.09, lift: 0.85 },
   anger_puff: { kind: 7, count: 7, color: 0x5d5864, color2: 0x8a8090, size: 0.38, lift: 1.05 },
 };
@@ -73,12 +73,13 @@ void main() {
     alpha = smoothstep(0.0, 0.05, k) * pow(1.0 - k, 1.5) * 0.75;
   } else if (uKind == 5) { // splash: ballistic droplets
     float a = aSeed.x * 2.0 * PI;
-    float tt = k * 1.1;
-    float v = 1.2 + aSeed.y * 2.2;
-    float r = (0.4 + aSeed.z * 1.0) * tt;
-    p = vec3(cos(a) * r, max(0.0, v * tt - 4.9 * tt * tt), sin(a) * r);
-    size *= 0.7 + aSeed.w * 0.8;
-    alpha = 1.0 - smoothstep(0.75, 1.0, k);
+    float tt = k * 0.75;
+    float v = 1.0 + aSeed.y * 1.3;
+    float r = (0.18 + aSeed.z * 0.48) * tt;
+    float height = v * tt - 4.9 * tt * tt;
+    p = vec3(cos(a) * r, max(0.0, height), sin(a) * r);
+    size *= 0.6 + aSeed.w * 0.65;
+    alpha = .65 * smoothstep(0.0,0.025,k) * (1.0-smoothstep(.45,.8,k)) * step(0.0,height);
   } else if (uKind == 6) { // tears: two arcs of drops from the eyes
     float side = aIndex < 0.5 ? -1.0 : 1.0;
     float ph = fract(k * 3.0 + aSeed.x);

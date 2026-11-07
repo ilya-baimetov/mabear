@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { writeFileSync } from "node:fs";
-import { E2E_PASSWORD } from "../../playwright.config";
+import { login } from "./login";
 import type { ActorId } from "../../src/shared/schema";
 
 const GENERATED_CAST: ActorId[] = ["masha", "bear", "lady_bear", "hare", "rosie", "squirrel", "rival_bear"];
@@ -9,8 +9,7 @@ test("generated cast and garden load; whole-story playback, seeking and characte
   test.setTimeout(180_000);
   const errors: string[] = [];
   page.on("pageerror", error => errors.push(error.message));
-  const login = await page.request.post("/login", { form: { password: E2E_PASSWORD }, maxRedirects: 0 });
-  expect([200, 302, 303]).toContain(login.status());
+  await login(page);
   await page.goto("/");
   await expect(page.getByTestId("moment-text")).toBeVisible();
   await expect(page.locator(".stage-loading")).toHaveCount(0, { timeout: 90_000 });
@@ -43,14 +42,17 @@ test("generated cast and garden load; whole-story playback, seeking and characte
   await page.getByTestId("play-all").click();
   await expect.poll(() => page.evaluate(() => window.__mabear!.t())).toBeGreaterThan(2);
   await page.getByTestId("pause").click();
+  // Actual decoded MP3 duration replaces the provider metadata on first play.
+  // Seek bounds belong to that current movie, not the pre-decode estimate.
+  const playbackDuration = await page.evaluate(() => (window.__mabear!.timeline() as {duration:number}).duration);
   const progress = page.getByRole("slider", { name: "Story progress", exact: true });
   await progress.press("End");
-  expect(await page.evaluate(() => window.__mabear!.t())).toBeCloseTo(timeline.duration, 2);
+  expect(await page.evaluate(() => window.__mabear!.t())).toBeCloseTo(playbackDuration, 2);
   await progress.press("Home");
   expect(await page.evaluate(() => window.__mabear!.t())).toBe(0);
   const box = (await progress.boundingBox())!;
   await progress.click({ position: { x: box.width * .63, y: box.height / 2 } });
-  expect(Math.abs(await page.evaluate(() => window.__mabear!.t()) - timeline.duration * .63)).toBeLessThan(.2);
+  expect(Math.abs(await page.evaluate(() => window.__mabear!.t()) - playbackDuration * .63)).toBeLessThan(.2);
 
   const renderContext = await page.getByTestId("stage-canvas").evaluate(el => {
     const canvas = el as HTMLCanvasElement, rect = canvas.getBoundingClientRect();

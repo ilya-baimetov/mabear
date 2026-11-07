@@ -15,6 +15,19 @@ describe("incremental moment direction", () => {
     playback.pause(); pending.length = 0; vi.clearAllMocks(); store.newStory(); playback.attach(player as never, null);
     store.loadFixture(FIXTURES.find(f => f.id === "garden_party" && f.lang === "en")!);
   });
+  it("storyboard editing selection never interrupts an entire-story movie or moves its playhead", () => {
+    playback.playAll();
+    store.setTime(2.25);
+    const second = store.getState().paragraphs[1].id;
+    player.pause.mockClear(); player.seek.mockClear();
+    selectMoment(second);
+    expect(store.getState().selectedId).toBe(second);
+    expect(store.getState().previewScope).toEqual({ kind: "story" });
+    expect(store.getState().t).toBe(2.25);
+    expect(store.getState().playing).toBe(true);
+    expect(player.pause).not.toHaveBeenCalled();
+    expect(player.seek).not.toHaveBeenCalled();
+  });
   it("inserts after the selected middle moment without replacing later writing", () => {
     const before = store.getState().paragraphs.map(p => ({ id: p.id, text: p.text }));
     const id = insertMoment(before[1].id);

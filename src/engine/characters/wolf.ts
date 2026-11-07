@@ -1,13 +1,11 @@
-// Wolves — procedural stand-in rigs (spec §7.3 approach): the two Wolves from the series walk upright, so they use
-// the same Mixamo-named humanoid skeleton as Masha and Bear. Lanky and thin, grey (variant a: taller, cooler grey;
-// variant b: shorter, warmer grey), long snout with a black nose, tall pointed ears, bushy tail on the Hips (three
-// extra tail bones, secondary sway), small sly half-lidded eyes, lighter throat/belly and muzzle.
-// Everything merges into skinned meshes: fur (1 mesh + shadow), eyes + nose (1), mouth (1) → 4 draw calls.
+// The Wolves: distinct rounded silhouettes and facial proportions, referenced against Animaccord's
+// Sly/Silly Wolf character portraits and episode 17 at 300s. The porridge-swollen bellies in that
+// episode are a story gag, not their rest anatomy. Keep the common Mixamo rig so all story verbs work.
 import * as THREE from "three";
 import type { ActorFrame, CharacterRig } from "../api";
-import { buildFace, type FaceConfig } from "./face";
+import { buildFace, mouthShapeFor, type FaceConfig } from "./face";
 import {
-  blob, bump, buildSkeleton, col, dir, extraBone, eyeMaterial, frontSurface, furMaterial, limb, makeRig, materialSet, mergeSame,
+  blob, bump, buildSkeleton, col, dir, extraBone, eyeMaterial, furMaterial, limb, makeRig, materialSet, mergeSame,
   noise3, paintVertices, plushSurface, profile, restWorld, roughen, sdEllipsoid, sdfBlob, skinBody, smin, smoothstep, toLocal,
   welded, type SkeletonProportions, type SkinPart, type Weights,
 } from "./rig";
@@ -18,55 +16,55 @@ const BASE_HEIGHT = 2.0;
 
 /** Proportions at BASE_HEIGHT (each variant scales them uniformly to its height). */
 const WOLF_SKELETON: SkeletonProportions = {
-  hipsHeight: 0.98,
-  spine: 0.12,
-  spine1: 0.14,
-  spine2: 0.15,
-  neck: 0.15,
-  head: 0.07,
-  shoulder: [0.07, 0.11],
-  clavicle: 0.12,
-  upperArm: 0.31,
-  foreArm: 0.3,
-  upLeg: [0.1, -0.05],
-  upperLeg: 0.44,
-  lowerLeg: 0.41,
-  toe: [0.06, 0.13],
+  hipsHeight: 0.8,
+  spine: 0.16,
+  spine1: 0.16,
+  spine2: 0.19,
+  neck: 0.09,
+  head: 0.06,
+  shoulder: [0.1, 0.065],
+  clavicle: 0.155,
+  upperArm: 0.29,
+  foreArm: 0.27,
+  upLeg: [0.135, -0.05],
+  upperLeg: 0.35,
+  lowerLeg: 0.33,
+  toe: [0.07, 0.185],
 };
 
 export const WOLF_LOOK = {
   variants: {
     a: {
       height: 2.05,
-      colors: { fur: "#7C8288", furDark: "#4C5157", light: "#C6CACB", earInner: "#9A8C8C", iris: "#7A5418" },
-      /** a little thinner than b */
-      girth: 0.95,
+      colors: { fur: "#737679", furDark: "#45474B", light: "#DDDCD7", earInner: "#9A9892", iris: "#8C8B4E" },
+      girth: 1.04,
     },
     b: {
       height: 1.93,
-      colors: { fur: "#76716C", furDark: "#47423E", light: "#C2BBB1", earInner: "#9C8580", iris: "#6E4A16" },
-      girth: 1.05,
+      colors: { fur: "#746F68", furDark: "#474540", light: "#DCD5C7", earInner: "#A29A8C", iris: "#85804F" },
+      girth: 0.87,
     },
   },
   colors: {
     furSheen: "#9EA4AA",
     nose: "#141212",
     irisRim: "#2A1A08",
-    sclera: "#EDE2B4",
+    sclera: "#FFFDF2",
     brows: "#3A3D42",
     lash: "#2A2A2E",
-    mouthInterior: "#4A161A",
+    mouthInterior: "#23171B",
     lip: "#2A2526",
     teeth: "#FBF5E8",
     tongue: "#D0646A",
   },
-  head: {
-    /** cranium centre (Head-bone space, base height) and radius */
-    center: [0, 0.12, -0.01] as [number, number, number],
-    radius: 0.125,
-    /** long snout: from inside the cranium forward, tip ≈ 0.33 m in front of the Head bone */
-    snoutCenter: [0, 0.075, 0.165] as [number, number, number],
-    snoutRadii: [0.072, 0.064, 0.165] as [number, number, number],
+  // Big Wolf: high round forehead, blunt wide muzzle. Little Wolf: flatter brow and longer nose.
+  heads: {
+    a: { center: [0, 0.15, -0.005] as V3, radius: 0.195,
+      snoutCenter: [0, 0.095, 0.225] as V3, snoutRadii: [0.142, 0.09, 0.183] as V3,
+      nose: [0.069, 0.055, 0.051] as V3, eyeX: 0.073, eyeY: 0.235, eyeR: 0.041, eyeHeight: 1.22 },
+    b: { center: [0, 0.137, -0.005] as V3, radius: 0.178,
+      snoutCenter: [0, 0.082, 0.243] as V3, snoutRadii: [0.116, 0.073, 0.215] as V3,
+      nose: [0.055, 0.037, 0.041] as V3, eyeX: 0.072, eyeY: 0.204, eyeR: 0.034, eyeHeight: 1.03 },
   },
   furNoise: { amp: 0.003, freq: 28 },
 } as const;
@@ -158,7 +156,8 @@ export function buildWolf(variant: WolfVariant): CharacterRig {
   const chest = extraBone(B.Spine2, "chest");
   // the head is authored at base size and scaled (like Bear) so the face rig stays exact
   const headS = extraBone(B.Head, "headScale");
-  headS.scale.setScalar(k);
+  headS.scale.setScalar(1.25 * k);
+  headS.position.y = -.1 * k; // larger cartoon head without increasing the ear-tip height
   // tail: three bones off the back of the hips, drooping
   const tail0 = extraBone(B.Hips, "tail0", 0, -0.02 * k, -0.11 * k);
   // the tail hangs a little to the character's left so it shows beside the leg from the front
@@ -169,6 +168,16 @@ export function buildWolf(variant: WolfVariant): CharacterRig {
 
   const fur = mats.add(furMaterial(C.furSheen));
   fur.name = "fur";
+  // Fine short guard hairs; the old shared bump scale read as deep vertical grooves on a close wolf face.
+  const compileFur = fur.onBeforeCompile;
+  fur.onBeforeCompile = (shader, renderer) => {
+    compileFur.call(fur, shader, renderer);
+    shader.uniforms.furFreq.value = 180;
+    shader.uniforms.furStretch.value = .28;
+    shader.uniforms.furValue.value = .13;
+    shader.uniforms.furBump.value = .0018;
+  };
+  fur.customProgramCacheKey = () => "mabear-wolf-short-coat-v1";
   const eyeMat = mats.add(eyeMaterial());
   eyeMat.name = "eyes";
   const cFur = col(C.fur);
@@ -178,21 +187,20 @@ export function buildWolf(variant: WolfVariant): CharacterRig {
   const fuzz = (g: THREE.BufferGeometry, s = 1) => roughen(g, WOLF_LOOK.furNoise.amp * s * k, WOLF_LOOK.furNoise.freq / k, (seed += 3.1));
 
   const W = (n: keyof typeof B) => restWorld(B[n]);
-  const armW = W("LeftArm");
   const legW = W("LeftUpLeg");
 
-  // ---- torso + neck: one thin sculpted surface (narrow chest, slight pot belly, bony shoulders, long neck)
+  // ---- torso: round chest and low abdomen flow into substantial haunches; no separate feather collar.
   {
     const core = [
-      { c: v(0, 1.37, -0.01), r: v(0.225 * g8, 0.22, 0.16 * g8) }, // deep chest: the widest part
-      { c: v(0, 1.43, 0.05), r: v(0.15 * g8, 0.11, 0.12 * g8) }, // pigeon chest under the ruff
-      { c: v(0, 1.13, 0.025), r: v(0.15 * g8, 0.2, 0.145 * g8) }, // narrow waist, a little pot belly
-      { c: v(0, 0.96, -0.02), r: v(0.18 * g8, 0.12, 0.13 * g8) }, // pelvis flowing into thick thighs
+      { c: v(0, 1.25, -0.015), r: v(0.255 * g8, 0.235, 0.19 * g8) },
+      { c: v(0, 1.15, 0.045), r: v(0.225 * g8, 0.26, 0.205 * g8) },
+      { c: v(0, 0.94, 0.035), r: v(0.225 * g8, 0.235, 0.2 * g8) },
+      { c: v(0, 0.79, -0.025), r: v(0.235 * g8, 0.145, 0.16 * g8) },
     ];
     const extras = [
-      { c: v(0.19, 1.49, -0.02), r: v(0.085, 0.075, 0.075) },
-      { c: v(-0.19, 1.49, -0.02), r: v(0.085, 0.075, 0.075) },
-      { c: v(0, 1.6, -0.005), r: v(0.068, 0.14, 0.068) }, // neck column
+      { c: v(0.225, 1.35, -0.02), r: v(0.1, 0.11, 0.105) },
+      { c: v(-0.225, 1.35, -0.02), r: v(0.1, 0.11, 0.105) },
+      { c: v(0, 1.43, -0.005), r: v(0.12, 0.15, 0.12) },
     ];
     const sdf = (p0: THREE.Vector3): number => {
       const p = p0.clone().divideScalar(k);
@@ -201,72 +209,28 @@ export function buildWolf(variant: WolfVariant): CharacterRig {
       for (const e of extras) d = smin(d, sdEllipsoid(p, e.c, e.r), 0.07);
       return d * k;
     };
-    const g = sdfBlob(11, v(0, 1.25 * k, 0), sdf, 0.9 * k);
-    // fur tufts on the body surface: a two-row chest ruff (light), a mane on the nape (fur)
-    const surf = (o: THREE.Vector3, dn: THREE.Vector3): THREE.Vector3 => {
-      let lo = 0;
-      let hi = 0.6 * k;
-      const q = new THREE.Vector3();
-      for (let it = 0; it < 24; it++) {
-        const mid = (lo + hi) / 2;
-        if (sdf(q.copy(dn).multiplyScalar(mid).add(o)) < 0) lo = mid;
-        else hi = mid;
-      }
-      return dn.clone().multiplyScalar(lo - 0.012 * k).add(o);
-    };
-    const ruff: THREE.BufferGeometry[] = [];
-    const cLightTip = cLight.clone().multiplyScalar(1.08);
-    const rows: Array<[number, number, number, number]> = [
-      // [y, phi half-range, count, length] — overlapping, irregular clumps (deterministic jitter)
-      [1.57, 1.3, 7, 0.1],
-      [1.49, 1.1, 7, 0.12],
-      [1.42, 0.8, 5, 0.12],
-      [1.36, 0.45, 3, 0.09],
-    ];
-    let jit = variant === "a" ? 1.3 : 4.1;
-    const rnd = () => ((jit = (jit * 9301 + 49297) % 233280) / 233280) * 2 - 1;
-    rows.forEach(([y, half, n, len], ri) => {
-      for (let j = 0; j < n; j++) {
-        const phi = -half + (2 * half * (j + 0.5 * (ri % 2))) / Math.max(1, n - 1 + (ri % 2)) + rnd() * 0.08;
-        const o = v(0, (y + rnd() * 0.012) * k, 0.02 * k);
-        const dn = v(Math.sin(phi), 0, Math.cos(phi));
-        const b = surf(o, dn);
-        // pale only at the front centre of the bib; the sides blend into the grey. Centre clumps lie flatter on the
-        // chest (fewer dark gaps → reads as fur, not feathers); side clumps stand out to break the silhouette.
-        const centre = smoothstep(0.9, 0.2, Math.abs(phi));
-        const dirv = dn.clone().multiplyScalar(0.55 - 0.3 * centre + 0.12 * rnd()).add(v(rnd() * 0.15, -0.85, 0));
-        b.addScaledVector(dn, -0.012 * k * centre);
-        const cb = cFur.clone().lerp(cLight, 0.15 + 0.55 * centre);
-        ruff.push(tuft(b, dirv, len * k * (0.85 + 0.3 * Math.abs(rnd())), 0.058 * k, cb, cb.clone().lerp(cLightTip, 0.25), 0.45));
-      }
-    });
-    for (let j = 0; j < 5; j++) {
-      const phi = Math.PI + (j - 2) * 0.32;
-      const dn = v(Math.sin(phi), 0, Math.cos(phi));
-      const b = surf(v(0, 1.57 * k, -0.01 * k), dn);
-      ruff.push(tuft(b, dn.clone().multiplyScalar(0.7).add(v(0, -0.5, 0)), 0.1 * k, 0.035 * k, cFur, cDark, 0.2));
-    }
-    const ruffG = mergeSame(ruff);
-    roughen(ruffG, 0.006 * k, 60 / k, 5.3); // break the clean leaf edges into scruffy fur
-    parts.push({ geom: toLocal(ruffG, chest), bone: chest, material: fur });
+    const g = sdfBlob(10, v(0, 1.1 * k, 0), sdf, 0.9 * k);
+    // A few short silhouette breaks at the nape. The long overlapping old ruff read as feathers.
+    const nape = [-1, 1].map(side => tuft(v(side * .115 * k, 1.45 * k, -.055 * k),
+      v(side * .8, -.35, -.7), .065 * k, .042 * k, cFur, cDark, .12));
+    parts.push({ geom: toLocal(mergeSame(nape), chest), bone: chest, material: fur });
     fuzz(g);
     const nrm = g.getAttribute("normal");
     let i = 0;
     paintVertices(g, (p, out) => {
-      // lighter throat-to-belly patch on the front
+      // Broad, continuous cream bib and abdomen; slightly ragged boundary follows the real fur marking.
       const nz = nrm.getZ(i++);
       const y = p.y / k;
-      const halfW = 0.02 + 0.045 * smoothstep(1.62, 1.42, y) * smoothstep(1.05, 1.28, y); // throat stripe → chest bib
-      const m = 0.8 * smoothstep(halfW + 0.025, halfW, Math.abs(p.x / k)) * smoothstep(0.2, 0.6, nz) * smoothstep(1.02, 1.22, y) * smoothstep(1.72, 1.6, y);
-      out.copy(cFur).lerp(cLight, m);
+      const x = p.x / k;
+      const halfW = (.105 + .08 * Math.exp(-(((y - 1.04) / .29) ** 2))) * g8;
+      const edge = noise3(x * 61, y * 48, 3) * .008;
+      const m = smoothstep(halfW + .023, halfW - .012, Math.abs(x) + edge)
+        * smoothstep(.12, .58, nz) * smoothstep(.7, .81, y) * smoothstep(1.57, 1.45, y);
+      out.copy(cFur).lerp(cDark, smoothstep(.05, -.19, p.z / k) * .28).lerp(cLight, m);
     });
     const chain: Array<[THREE.Object3D, number]> = [
-      [B.Hips, 1.0 * k],
-      [B.Spine, 1.13 * k],
-      [B.Spine1, 1.27 * k],
-      [chest, 1.42 * k],
-      [B.Neck, 1.56 * k],
-      [B.Head, 1.68 * k],
+      [B.Hips, .8 * k], [B.Spine, .96 * k], [B.Spine1, 1.12 * k],
+      [chest, 1.31 * k], [B.Neck, 1.4 * k], [B.Head, 1.46 * k],
     ];
     const weights = (p: THREE.Vector3): Weights => {
       const w: Weights = [];
@@ -281,9 +245,9 @@ export function buildWolf(variant: WolfVariant): CharacterRig {
         }
       const ax = Math.abs(p.x);
       const s = p.x > 0 ? "Left" : "Right";
-      const sh = smoothstep(0.08 * k, 0.16 * k, ax) * smoothstep(1.38 * k, 1.46 * k, p.y);
+      const sh = smoothstep(0.14 * k, 0.24 * k, ax) * smoothstep(1.24 * k, 1.34 * k, p.y);
       if (sh > 0) {
-        const arm = smoothstep(0.18 * k, 0.24 * k, ax) * 0.7;
+        const arm = smoothstep(0.23 * k, 0.31 * k, ax) * 0.7;
         for (const e of w) e[1] *= 1 - sh * 0.7;
         w.push([B[`${s}Shoulder`], sh * 0.7 * (1 - arm)], [B[`${s}Arm`], sh * 0.7 * arm]);
       }
@@ -298,45 +262,44 @@ export function buildWolf(variant: WolfVariant): CharacterRig {
   }
 
   // ---- head (base size, on the scaled head bone): cranium with cheek ruffs, long tapering snout, black nose
-  const H = WOLF_LOOK.head;
+  const H = WOLF_LOOK.heads[variant];
   const hc = new THREE.Vector3(...H.center);
   const sc = new THREE.Vector3(...H.snoutCenter);
   const sr = H.snoutRadii;
   const craniumR = (d: THREE.Vector3): number =>
     H.radius *
     (1 +
-      0.42 * (bump(d, dir(0.9, -0.42, 0.05), 0.13) + bump(d, dir(-0.9, -0.42, 0.05), 0.13)) + // pointed cheek ruffs
-      0.22 * (bump(d, dir(0.72, -0.66, -0.2), 0.12) + bump(d, dir(-0.72, -0.66, -0.2), 0.12)) +
+      0.34 * (bump(d, dir(0.9, -0.42, 0.05), 0.13) + bump(d, dir(-0.9, -0.42, 0.05), 0.13)) + // pointed cheek ruffs
+      0.14 * (bump(d, dir(0.72, -0.66, -0.2), 0.12) + bump(d, dir(-0.72, -0.66, -0.2), 0.12)) +
       0.06 * (bump(d, dir(0.3, 0.42, 0.85), 0.22) + bump(d, dir(-0.3, 0.42, 0.85), 0.22)) - // brow ridge
       0.06 * bump(d, dir(0, 1, 0), 0.5) +
       0.08 * bump(d, dir(0, 0.2, -1), 0.6)); // long skull at the back
   const cranium = blob(9, (d, out) => {
     out.copy(d).multiplyScalar(craniumR(d)).add(hc);
   });
-  const snout = blob(7, (d, out) => {
-    const fz = (d.z + 1) / 2; // 0 back .. 1 tip
-    const taper = 1 - 0.3 * fz * fz; // blunt tip: room for the nose and a mouth under it
-    // flat-ish top bridge, rounder jaw underneath
-    const yy = d.y > 0 ? d.y * (1 - 0.15 * fz) : d.y * 1.05;
-    out.set(d.x * sr[0] * taper, yy * sr[1] * taper - 0.012 * fz * fz, d.z * sr[2]).add(sc);
+  const snout = blob(8, (d, out) => {
+    const fz = (d.z + 1) / 2;
+    const taper = 1 - .22 * fz * fz;
+    // Rounded bridge, flattened underside: a physical upper muzzle above an articulated lower jaw.
+    const yy = d.y < -.2 ? -.2 + (d.y + .2) * .22 : d.y;
+    out.set(d.x * sr[0] * taper, yy * sr[1] - .005 * fz, d.z * sr[2]).add(sc);
   });
   paintVertices(cranium, (p, out) => {
     const d = p.clone().sub(hc).normalize();
     // light cheeks/throat under the eye line, darker crown and back of the head
-    const cheek = smoothstep(-0.05, -0.35, d.y) * smoothstep(-0.3, 0.3, d.z);
-    out.copy(cFur).lerp(cLight, cheek * 0.85).lerp(cDark, smoothstep(0.55, 0.95, d.y) * 0.35);
+    const cheek = smoothstep(.25, -.1, d.y) * smoothstep(-.58, -.05, d.z);
+    out.copy(cFur).lerp(cLight, cheek * .95).lerp(cDark, smoothstep(0.55, 0.95, d.y) * 0.35);
   });
-  const snoutShape = snout.clone(); // un-fuzzed copy: the mouth's projection surface
   paintVertices(snout, (p, out) => {
-    const below = smoothstep(sc.y + 0.01, sc.y - 0.03, p.y);
-    out.copy(cFur).lerp(cLight, 0.15 + 0.75 * below);
+    const pale = smoothstep(sc.y + sr[1] * .9, sc.y, p.y);
+    out.copy(cFur).lerp(cLight, .62 + .33 * pale);
   });
   fuzz(cranium, 0.5);
   parts.push({ geom: mergeSame([cranium, snout]), bone: headS, material: fur });
   const tipZ = sc.z + sr[2];
-  const noseAt = new THREE.Vector3(0, sc.y + sr[1] * 0.3, tipZ - 0.012);
+  const noseAt = new THREE.Vector3(0, sc.y + sr[1] * 0.3, tipZ - 0.019);
   const noseGeom = blob(4, (d, out) => {
-    out.set(d.x * 0.034, d.y * 0.024 * (d.y > 0 ? 1 : 0.8), d.z * 0.026).add(noseAt);
+    out.set(d.x * H.nose[0], d.y * H.nose[1] * (d.y > 0 ? 1 : .88), d.z * H.nose[2]).add(noseAt);
   });
   paintVertices(noseGeom, (_p, out) => out.copy(col(C.nose)));
   parts.push({ geom: noseGeom, bone: headS, material: eyeMat, shadow: false });
@@ -345,13 +308,13 @@ export function buildWolf(variant: WolfVariant): CharacterRig {
     const tufts: THREE.BufferGeometry[] = [];
     const cl = cLight.clone();
     for (const s of [1, -1]) {
-      for (const [dy, dz, len] of [[-0.3, 0.12, 0.085], [-0.45, -0.05, 0.1], [-0.6, -0.22, 0.08]] as const) {
+      for (const [dy, dz, len] of [[-0.2, .18, .055], [-0.4, .03, .065], [-0.55, -.18, .05]] as const) {
         const d = dir(0.9 * s, dy, dz);
         const b = d.clone().multiplyScalar(craniumR(d) * 0.94).add(hc);
-        tufts.push(tuft(b, v(0.85 * s, dy * 0.6 - 0.15, -0.45), len, 0.03, cFur.clone().lerp(cl, 0.7), cl, 0.3));
+        tufts.push(tuft(b, v(0.85 * s, dy * 0.6 - 0.15, -0.45), len, 0.045, cFur.clone().lerp(cl, 0.8), cl, 0.18));
       }
     }
-    for (const [x, len] of [[-0.03, 0.06], [0.0, 0.075], [0.03, 0.055]] as const) {
+    for (const [x, len] of [[-0.035, 0.032], [0.0, 0.045], [0.035, 0.025]] as const) {
       const d = dir(x * 4, 1, 0.25);
       const b = d.clone().multiplyScalar(craniumR(d) * 0.94).add(hc);
       tufts.push(tuft(b, v(x * 3, 1, 0.55), len, 0.022, cFur, cDark, 0.35));
@@ -369,9 +332,9 @@ export function buildWolf(variant: WolfVariant): CharacterRig {
     eb.rotation.set(-0.12, 0.3 * s, -0.28 * s);
     const g = blob(4, (d, out) => {
       const t = (d.y + 1) / 2; // 0 base .. 1 tip
-      const w = 0.07 * Math.pow(1 - t, 0.8) + 0.004;
+      const w = (variant === "a" ? .072 : .067) * Math.pow(1 - t, .75) + .003;
       const cup = d.z > 0 ? 0.017 * (1 - d.x * d.x) * (1 - t) : 0;
-      out.set(d.x * w, t * 0.205, d.z * 0.025 * (1 - 0.5 * t) - cup);
+      out.set(d.x * w, t * (variant === "a" ? .18 : .21), d.z * 0.025 * (1 - 0.5 * t) - cup);
     });
     paintVertices(g, (q, out) => {
       const inner = smoothstep(0.0, 0.012, q.z + 0.006) * smoothstep(0.055, 0.025, Math.abs(q.x) + q.y * 0.25) * smoothstep(0.18, 0.1, q.y);
@@ -382,7 +345,7 @@ export function buildWolf(variant: WolfVariant): CharacterRig {
   }
   root.updateMatrixWorld(true);
 
-  // ---- face rig: small, narrow, half-lidded (sly) eyes close above the snout root; heavy dark brows
+  // ---- face: readable white eyes with small pupils; pair-specific brow and skull proportions.
   const craniumZ = (x: number, y: number): number => {
     let z = hc.z + Math.sqrt(Math.max(H.radius ** 2 - (x - hc.x) ** 2 - (y - hc.y) ** 2, 0));
     const d = new THREE.Vector3();
@@ -393,35 +356,34 @@ export function buildWolf(variant: WolfVariant): CharacterRig {
     }
     return z;
   };
-  const snoutFront = frontSurface(snoutShape, { x0: -0.06, x1: 0.06, y0: sc.y - 0.075, y1: sc.y + 0.01 }, 0.002);
-  const snoutZ = (x: number, y: number) => snoutFront(x, y) + 0.002;
   const faceCfg: FaceConfig = {
     eyes: {
       surface: { center: H.center as V3, radius: H.radius, zAt: craniumZ },
-      x: 0.05,
-      y: hc.y + 0.012,
-      r: 0.021,
-      scaleX: 1.2,
-      scaleY: 0.85,
-      scaleZ: 0.6,
-      depth: 0.3,
-      iris: 0.78,
-      pupil: 0.45,
+      x: H.eyeX,
+      y: H.eyeY,
+      r: H.eyeR,
+      scaleX: 1.03,
+      scaleY: H.eyeHeight,
+      scaleZ: .55,
+      depth: .28,
+      iris: .35,
+      pupil: .79,
       irisColor: C.iris,
       irisRim: C.irisRim,
       sclera: C.sclera,
-      toeOut: -0.15,
+      toeOut: -.02,
+      surfaceAlignment: .35,
       lidColor: C.fur,
       lashColor: C.lash,
-      lidOpen: -0.08, // half-lidded: the sly look
+      lidOpen: variant === "a" ? -.3 : -.12,
       lidCap: 1.3,
       lashFlick: false,
       lidMaterial: fur,
     },
     eyeMaterial: eyeMat,
-    brows: { color: C.brows, y: 0.03, dx: 0.004, length: 0.06, thickness: 0.012, arch: 0.006, range: 0.02, material: fur },
+    brows: { color: variant === "b" ? C.light : C.furDark, y: .054, dx: .005, length: .09, thickness: .013, arch: variant === "a" ? .012 : .004, range: .027, material: fur },
     mouth: {
-      surface: { center: H.snoutCenter as V3, radius: sr[2], zAt: snoutZ },
+      surface: { center: H.snoutCenter as V3, radius: sr[2], zAt: () => sc.z + sr[2] },
       y: sc.y - 0.026,
       halfWidth: 0.03,
       height: 0.045,
@@ -431,24 +393,100 @@ export function buildWolf(variant: WolfVariant): CharacterRig {
       lip: C.lip,
       teeth: C.teeth,
       tongue: C.tongue,
-      smirk: 0.5, // a sly one-sided grin is the Wolves' resting face
+      smirk: variant === "b" ? .25 : .05,
     },
   };
   const face = buildFace(faceCfg, mats);
   headS.add(face.group);
+  // The general humanoid mouth is a decal; a long canine muzzle needs a real moving jaw in profile.
+  face.group.getObjectByName("mouth")!.visible = false;
+  const jaw = extraBone(headS, "jaw", 0, .066, .045);
+  const jawWidth = sr[0] * .92;
+  const jawLength = sr[2] * .94;
+  const jawCenterZ = sc.z - .045;
+  const lowerJaw = blob(7, (d, out) => {
+    const yy = d.y > .12 ? .12 + (d.y - .12) * .18 : d.y;
+    out.set(d.x * jawWidth * (1 - .13 * Math.max(0, d.z)), -.01 + yy * .041,
+      jawCenterZ + d.z * jawLength);
+  });
+  paintVertices(lowerJaw, (_p, out) => out.copy(cLight).lerp(cFur, .16));
+  parts.push({ geom: lowerJaw, bone: jaw, material: fur });
+  const mouthMat = mats.add(new THREE.MeshStandardMaterial({color: 0xffffff, vertexColors: true, roughness: .82}));
+  const interior = blob(4, (d, out) => out.set(d.x * jawWidth * .91, .002 + d.y * .009,
+    jawCenterZ + d.z * jawLength * .9));
+  paintVertices(interior, (_p, out) => out.copy(col(C.mouthInterior)));
+  parts.push({ geom: interior, bone: jaw, material: mouthMat });
+  const palate = interior.clone();
+  palate.scale(.94, .45, .95);
+  palate.translate(0, .065, .045);
+  parts.push({ geom: palate, bone: headS, material: mouthMat });
+  const throat = blob(5, (d, out) => out.set(d.x * jawWidth * .8, .066 + d.y * .027, .125 + d.z * .071));
+  paintVertices(throat, (_p, out) => out.copy(col(C.mouthInterior)));
+  parts.push({ geom: throat, bone: headS, material: mouthMat });
+  const tongue = blob(3, (d, out) => out.set(d.x * jawWidth * .54, .013 + d.y * .008, jawCenterZ + .047 + d.z * .07));
+  paintVertices(tongue, (_p, out) => out.copy(col(C.tongue)));
+  parts.push({ geom: tongue, bone: jaw, material: mouthMat });
+  // Small lower incisors and two side canines; avoid a human-looking full-width denture.
+  const teeth = [-.72, -.42, -.14, .14, .42, .72].map(x => blob(2, (d, out) => {
+    const fang = Math.abs(x) > .6;
+    const taper = 1 - (fang ? .38 : .08) * Math.max(0, d.y);
+    const round = (n: number) => Math.sign(n) * Math.pow(Math.abs(n), .65);
+    out.set(x * jawWidth + (fang ? d.x : round(d.x)) * (fang ? .011 : .0175) * taper,
+      .012 + (fang ? d.y : round(d.y)) * (fang ? .018 : .008),
+      jawCenterZ + jawLength * (.84 - .23 * Math.abs(x)) + (fang ? d.z : round(d.z)) * .008 * taper);
+  }));
+  const teethGeom = mergeSame(teeth);
+  paintVertices(teethGeom, (_p, out) => out.copy(col(C.teeth)));
+  parts.push({ geom: teethGeom, bone: jaw, material: mouthMat });
+  // Soft mouth corners connect the upper muzzle to the moving jaw. Without these
+  // two weighted cheek folds the open jaw reads as a separate floating paddle in profile.
+  const headRestInverse = headS.matrixWorld.clone().invert();
+  const cheekUpper = sc.y - .008, cheekLower = .053;
+  for (const side of [-1, 1]) {
+    const positions: number[] = [], indices: number[] = [];
+    const cols = 12, rows = 3;
+    for (let iy = 0; iy <= rows; iy++) for (let iz = 0; iz <= cols; iz++) {
+      const t = iz / cols, q = iy / rows;
+      const z = .075 + (.16 - .025 * Math.sin(q * Math.PI) - .075) * t;
+      const radius = Math.sqrt(Math.max(.08, 1 - ((z - sc.z) / sr[2]) ** 2));
+      positions.push(side * sr[0] * radius * (.985 + .12 * Math.sin(q * Math.PI) * Math.sin(t * Math.PI)),
+        cheekUpper * (1 - q) + cheekLower * q, z);
+    }
+    for (let iy = 0; iy < rows; iy++) for (let iz = 0; iz < cols; iz++) {
+      const a = iy * (cols + 1) + iz, b = a + 1, c = a + cols + 1, d = c + 1;
+      indices.push(...(side > 0 ? [a, b, c, b, d, c] : [a, c, b, b, c, d]));
+    }
+    const cheek = new THREE.BufferGeometry();
+    cheek.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+    cheek.setIndex(indices); cheek.computeVertexNormals();
+    paintVertices(cheek, (_p, out) => out.copy(cLight).lerp(cFur, .1));
+    parts.push({ geom: cheek, bone: headS, material: fur, weights: (p) => {
+      const local = p.clone().applyMatrix4(headRestInverse);
+      const w = Math.min(1, Math.max(0, (cheekUpper - local.y) / (cheekUpper - cheekLower)));
+      return [[headS, 1 - w], [jaw, w]];
+    } });
+  }
+  const faceUpdate = face.update.bind(face);
+  face.update = (params, sleeping) => {
+    faceUpdate(params, sleeping);
+    const shape = mouthShapeFor(params.emotion, params.viseme, params.visemeWeight);
+    jaw.rotation.x = sleeping ? .035 : .035 + shape.open * .72;
+    jaw.rotation.z = shape.asym * .025;
+    jaw.updateMatrixWorld(true);
+  };
   root.updateMatrixWorld(true);
   for (const p of face.parts) parts.push({ ...p, shadow: p.material === fur ? true : p.shadow });
 
-  // ---- arms: long and thin, smooth-skinned across the elbow; hands with a thumb and finger lumps
+  // ---- arms: rounded shoulder and forearm masses, with soft pale paws.
   const armLen = skel.upperArm + skel.foreArm;
   const armR = profile([
-    [0, 0.062],
-    [0.12, 0.066],
-    [0.35, 0.055],
-    [0.5, 0.042],
-    [0.62, 0.05],
-    [0.85, 0.04],
-    [1, 0.035],
+    [0, 0.091],
+    [0.12, 0.097],
+    [0.35, 0.079],
+    [0.5, 0.06],
+    [0.62, 0.075],
+    [0.85, 0.059],
+    [1, 0.05],
   ]);
   for (const side of ["Left", "Right"] as const) {
     const s = side === "Left" ? 1 : -1;
@@ -468,7 +506,7 @@ export function buildWolf(variant: WolfVariant): CharacterRig {
       g.computeVertexNormals();
     }
     fuzz(g, 0.6);
-    paintVertices(g, (_p, out) => out.copy(cFur));
+    paintVertices(g, (p, out) => out.copy(cFur).lerp(cLight, smoothstep(.25 * k, .56 * k, Math.abs(p.x)) * .5));
     const upper = B[`${side}Arm`];
     const fore = B[`${side}ForeArm`];
     const ex = restWorld(fore).x;
@@ -483,7 +521,8 @@ export function buildWolf(variant: WolfVariant): CharacterRig {
     const palm = blob(3, (d, out) => {
       out.set((0.045 + d.x * 0.05) * s, d.y * 0.022, d.z * 0.042);
     });
-    const fingers: THREE.BufferGeometry[] = [palm];
+    const wrist = blob(4, (d, out) => out.set(d.x * .043 * s, d.y * .039, d.z * .045));
+    const fingers: THREE.BufferGeometry[] = [palm, wrist];
     for (let f = 0; f < 3; f++) {
       fingers.push(
         blob(2, (d, out) => {
@@ -497,35 +536,25 @@ export function buildWolf(variant: WolfVariant): CharacterRig {
       }),
     );
     const hg = mergeSame(fingers);
-    hg.scale(1.75 * k, 1.6 * k, 1.6 * k); // big hands
-    paintVertices(hg, (_p, out) => out.copy(cDark));
+    hg.scale(1.28 * k, 2.05 * k, 1.65 * k);
+    paintVertices(hg, (_p, out) => out.copy(cLight).lerp(cFur, .36));
     parts.push({ geom: hg, bone: B[`${side}Hand`], material: fur });
-    // shaggy shoulders (on the arm: they follow it down) and an elbow tuft
-    const sh: THREE.BufferGeometry[] = [];
-    for (const [x, dx, dy, dz, len] of [
-      [-0.01, 0.2, 1, -0.1, 0.12], [0.04, 0.6, 0.8, 0.15, 0.14], [0.03, 0.5, 0.75, -0.6, 0.13], [0.08, 0.9, 0.5, -0.2, 0.12],
-    ] as const) {
-      sh.push(tuft(v(x * k * s, 0.04 * k, 0), v(dx * s, dy, dz), len * k * 0.9, 0.05 * k, cFur, cFur.clone().lerp(cLight, 0.15), 0.35));
-    }
-    parts.push({ geom: mergeSame(sh), bone: upper, material: fur });
-    const el = [
-      tuft(v(-0.01 * k * s, 0, -0.03 * k), v(0.45 * s, -0.1, -1), 0.08 * k, 0.026 * k, cFur, cDark, 0.15),
-      tuft(v(0.02 * k * s, -0.01 * k, -0.025 * k), v(0.7 * s, -0.3, -0.8), 0.065 * k, 0.022 * k, cFur, cDark, 0.15),
-    ];
-    parts.push({ geom: mergeSame(el), bone: fore, material: fur });
+    const elbowTuft = tuft(v(-.01 * k * s, 0, -.04 * k), v(.35 * s, -.1, -1),
+      .045 * k, .029 * k, cFur, cDark, .1);
+    parts.push({ geom: elbowTuft, bone: fore, material: fur });
   }
 
-  // ---- legs: long, thin, one piece across the knee; long dark feet
+  // ---- legs: substantial round haunches taper into hocks; large soft feet.
   const legLen = skel.upperLeg + skel.lowerLeg;
   const legR = profile([
-    [0, 0.11],
-    [0.2, 0.106],
-    [0.4, 0.08],
-    [0.52, 0.056],
-    [0.6, 0.054],
-    [0.72, 0.048],
-    [0.88, 0.037],
-    [1, 0.034],
+    [0, 0.145],
+    [0.2, 0.152],
+    [0.4, 0.117],
+    [0.52, 0.079],
+    [0.6, 0.075],
+    [0.72, 0.067],
+    [0.88, 0.049],
+    [1, 0.043],
   ]);
   for (const side of ["Left", "Right"] as const) {
     const g = limb(v(0, 0.02 * k, 0), v(0, -legLen, 0), (t) => legR(t) * k * g8, { detail: 6 });
@@ -549,15 +578,16 @@ export function buildWolf(variant: WolfVariant): CharacterRig {
     paintVertices(heel, (_p, out) => out.copy(cFur));
     const paw = blob(3, (d, out) => {
       const yy = d.y < -0.2 ? -0.2 - (d.y + 0.2) * 0.25 : d.y; // flat sole
-      out.set(d.x * 0.066, -0.05 + yy * 0.032, 0.12 + d.z * 0.072);
+      out.set(d.x * 0.087, -0.058 + yy * 0.042, 0.13 + d.z * 0.09);
     });
-    const toes = [-0.038, 0, 0.038].map((x) =>
-      blob(2, (d, out) => out.set(x + d.x * 0.024, -0.052 + d.y * 0.024, 0.178 - Math.abs(x) * 0.3 + d.z * 0.03)),
+    const toes = [-0.05, 0, 0.05].map((x) =>
+      blob(2, (d, out) => out.set(x + d.x * 0.031, -0.047 + d.y * 0.023, 0.201 - Math.abs(x) * 0.3 + d.z * 0.03)),
     );
     const pawG = mergeSame([paw, ...toes]);
-    paintVertices(pawG, (_p, out) => out.copy(cDark));
+    paintVertices(pawG, (_p, out) => out.copy(cLight).lerp(cFur, .54));
     const ftG = mergeSame([meta, heel, pawG]);
     ftG.scale(k, k, k);
+    ftG.translate(0, .018 * k, 0);
     parts.push({ geom: ftG, bone: B[`${side}Foot`], material: fur });
     // a tuft on the outer hip so the thigh mass reads in the front silhouette
     const s = side === "Left" ? 1 : -1;
@@ -580,7 +610,7 @@ export function buildWolf(variant: WolfVariant): CharacterRig {
       [0.9, 0.09],
       [1, 0.0],
     ]);
-    const g = tube(curve, (t) => tr(t) * k * (1 + 0.1 * Math.sin(t * 40)), 6);
+    const g = tube(curve, (t) => tr(t) * k * (1 + 0.025 * Math.sin(t * 28)), 6);
     g.computeVertexNormals();
     // bushy breakup: big soft tufts + fine noise
     const pos = g.getAttribute("position") as THREE.BufferAttribute;
@@ -590,7 +620,7 @@ export function buildWolf(variant: WolfVariant): CharacterRig {
       const y = pos.getY(i);
       const z = pos.getZ(i);
       // shaggy: lobes of fur along the length + fine breakup
-      const n = (noise3(x * 30, y * 30 + 2.1, z * 30) * 0.016 + Math.max(0, noise3(x * 70 + 3, y * 70, z * 70)) * 0.02) * k;
+      const n = (noise3(x * 30, y * 30 + 2.1, z * 30) * 0.005 + Math.max(0, noise3(x * 70 + 3, y * 70, z * 70)) * 0.006) * k;
       pos.setXYZ(i, x + nrm.getX(i) * n, y + nrm.getY(i) * n, z + nrm.getZ(i) * n);
     }
     g.computeVertexNormals();
@@ -610,7 +640,7 @@ export function buildWolf(variant: WolfVariant): CharacterRig {
     };
     paintVertices(g, (p, out) => {
       const t = tAt(p);
-      out.copy(cFur).lerp(cDark, 0.2 * smoothstep(0.3, 0.6, t)).lerp(cLight, smoothstep(0.78, 0.92, t));
+      out.copy(cFur).lerp(cDark, 0.2 * smoothstep(0.3, 0.6, t)).lerp(cDark, smoothstep(0.78, 0.95, t) * .55);
     });
     parts.push({
       geom: toLocal(g, B.Hips),
@@ -628,7 +658,7 @@ export function buildWolf(variant: WolfVariant): CharacterRig {
   let furSeed = variant === "a" ? 201 : 307;
   for (const part of parts) {
     if (part.material !== fur || /Foot|Leg/.test(part.bone.name) || part.geom.getAttribute("position").count < 600) continue;
-    part.geom = plushSurface(part.geom, Math.min(320, Math.floor(part.geom.getAttribute("position").count * 0.065)), 0.012 * k, ++furSeed);
+    part.geom = plushSurface(part.geom, Math.min(600, Math.floor(part.geom.getAttribute("position").count * 0.12)), 0.009 * k, ++furSeed);
   }
   const body = skinBody(root, parts);
 

@@ -5,5 +5,7 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   plugins: [react()],
   server: { proxy: { "/api": "http://127.0.0.1:8787", "/login": "http://127.0.0.1:8787" } },
-  build: { outDir: "dist", sourcemap: false, chunkSizeWarningLimit: 2000 },
+  build: { outDir: "dist", sourcemap: false, chunkSizeWarningLimit: 2000,
+    rolldownOptions: { input: { studio: "index.html", voice: "voice/index.html" } },
+  },
 });

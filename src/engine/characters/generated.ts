@@ -69,9 +69,10 @@ export function generatedRig(id: ActorId, model: THREE.Group, options: Generated
   const style = STYLES[id];
   const handSocket = new THREE.Object3D(); handSocket.name = 'handSocket'; bones.RightHand.add(handSocket);
 
-  // Fix the trial's split dress: magenta skirt vertices belong to the pelvis, not to opposite thighs.
+  // Repair the split skirt in every version of this asset. Sleeve/hand highlights
+  // must retain their arm weights; facial performance remains a separate opt-in.
   let dressVertices = 0;
-  if(id === 'masha') for(const mesh of meshes) dressVertices += repairDress(mesh,!!options.mashaPerformance);
+  if(id === 'masha') for(const mesh of meshes) dressVertices += repairDress(mesh);
   // Facial anchors are authored in metres, then converted through the imported skeleton's centimetre scale.
   const headAt=joint('Head');
   for(const side of [-1,1]) {
@@ -81,7 +82,7 @@ export function generatedRig(id: ActorId, model: THREE.Group, options: Generated
   }
   const performance=id==='masha'&&options.mashaPerformance?createMashaPerformance(meshes,bones,root):null;
   const contacts=performance?createMashaContacts(meshes,bones,root,handSocket,performance.mouthTarget):null;
-  const faces=id==='masha'&&!performance?meshes.map(addMashaFace):[];
+  const faces=id==='masha'&&!performance?meshes.map(mesh=>addMashaFace(mesh,bones.Hips.getWorldPosition(new THREE.Vector3()).y)):[];
   const samples: Sample[] = [];
   for(const mesh of meshes) {
     const pos = mesh.geometry.getAttribute('position');
@@ -148,7 +149,7 @@ export function generatedRig(id: ActorId, model: THREE.Group, options: Generated
   };
 }
 
-function repairDress(mesh:THREE.SkinnedMesh,precise=false):number {
+function repairDress(mesh:THREE.SkinnedMesh):number {
   const mat=(Array.isArray(mesh.material)?mesh.material[0]:mesh.material) as THREE.MeshStandardMaterial;
   const tex=mat.map, uv=mesh.geometry.getAttribute('uv'), position=mesh.geometry.getAttribute('position');
   if(!tex?.image || !uv) return 0;
@@ -159,30 +160,74 @@ function repairDress(mesh:THREE.SkinnedMesh,precise=false):number {
   const oldI=mesh.geometry.getAttribute('skinIndex'),oldW=mesh.geometry.getAttribute('skinWeight');
   const indices=new Uint16Array(position.count*4),weights=new Float32Array(position.count*4);
   const hip=mesh.skeleton.bones.findIndex(b=>b.name==='Hips');if(hip<0)return 0;
-  let count=0;
+  const candidate=new Uint8Array(position.count),cloth=new Uint8Array(position.count);
+  const seams=new Map<string,number>(),seamLinks:[number,number][]=[];
   for(let i=0;i<position.count;i++) {
     for(let k=0;k<4;k++){indices[i*4+k]=oldI.getComponent(i,k);weights[i*4+k]=oldW.getComponent(i,k);}
     mesh.getVertexPosition(i,p).applyMatrix4(mesh.matrixWorld);
-    if(p.y<.17 || p.y>.49 || Math.abs(p.x)>.24)continue;
-    // The broad colour mask also catches pink highlights on sleeves and hands.
-    // Restrict the repaired candidate to the actual tapered skirt silhouette.
-    if(precise&&Math.abs(p.x)>.115+(.49-p.y)*.30)continue;
+    // UV/normal seams duplicate vertices. Reconnect coincident rest positions
+    // before identifying enclosed texture islands; an index-only flood fill
+    // mistakes disconnected pieces of the tights for pale skirt patterns.
+    const key=`${Math.round(p.x*1e5)},${Math.round(p.y*1e5)},${Math.round(p.z*1e5)}`,first=seams.get(key);
+    if(first===undefined)seams.set(key,i);else seamLinks.push([first,i]);
+    // The measured source hem reaches 8 cm above the sole (not 17 cm).
+    // Stopping above that hem leaves its patterned band on opposite legs.
+    if(p.y<.08 || p.y>.49 || Math.abs(p.x)>.24)continue;
+    // The generated texture also paints saturated rose onto hidden leg faces.
+    // Keep the measured inner lower-leg volume on its original bones even when
+    // those pixels resemble cloth; otherwise individual shin triangles move
+    // onto the lap and leave the visible white tights torn.
+    const legRadius=.065-Math.max(0,p.y-.22)*.20;
+    if(p.y<.31&&Math.hypot(Math.abs(p.x)-.055,p.z)<legRadius)continue;
+    // Colour alone catches pink highlights on sleeves and hands, pinning them
+    // to the pelvis and stretching their triangles into long wrist strands.
+    if(Math.abs(p.x)>.115+(.49-p.y)*.30)continue;
+    candidate[i]=1;
     const x=Math.min(canvas.width-1,Math.max(0,Math.round(uv.getX(i)*(canvas.width-1))));
     const y=Math.min(canvas.height-1,Math.max(0,Math.round(uv.getY(i)*(canvas.height-1))));
     const off=(y*canvas.width+x)*4,r=pixels[off],g=pixels[off+1],b=pixels[off+2];
-    if(r>g*1.1 && b>g*1.02) {
-      indices.set([hip,0,0,0],i*4);weights.set([1,0,0,0],i*4);count++;
+    // Pale tights carry a pink baked-light tint. Only saturated rose can seed
+    // cloth; the topology fill below recovers its pale embroidered pattern.
+    if(g<Math.min(r,b)*.75)cloth[i]=1;
+  }
+  // Fill pale pattern islands enclosed by the rose cloth in the actual mesh.
+  // A radial mask also catches white tights. Their connected region reaches
+  // outside the skirt bounds (down to the shoes), so it must keep leg weights.
+  const adjacency:number[][]=Array.from({length:position.count},()=>[]),triangles=mesh.geometry.index;
+  if(triangles)for(let i=0;i<triangles.count;i+=3){
+    const a=triangles.getX(i),b=triangles.getX(i+1),c=triangles.getX(i+2);
+    adjacency[a].push(b,c);adjacency[b].push(a,c);adjacency[c].push(a,b);
+  }
+  for(const [a,b] of seamLinks){adjacency[a].push(b);adjacency[b].push(a);}
+  const seen=new Uint8Array(position.count);
+  for(let i=0;i<position.count;i++){
+    if(!candidate[i]||cloth[i]||seen[i])continue;
+    const component:number[]=[],stack=[i];let open=false,border=0;seen[i]=1;
+    while(stack.length){const v=stack.pop()!;component.push(v);
+      if(adjacency[v].length===0)open=true;
+      for(const n of adjacency[v]){
+        if(!candidate[n]){open=true;continue;}
+        if(cloth[n]){border++;continue;}
+        if(!seen[n]){seen[n]=1;stack.push(n);}
+      }
     }
+    if(!open&&border>0)for(const v of component)cloth[v]=1;
+  }
+  const skirtVertices:number[]=[];
+  for(let i=0;i<position.count;i++)if(cloth[i]){
+    indices.set([hip,0,0,0],i*4);weights.set([1,0,0,0],i*4);skirtVertices.push(i);
   }
   mesh.geometry.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(indices,4));
   mesh.geometry.setAttribute('skinWeight',new THREE.Float32BufferAttribute(weights,4));
-  return count;
+  mesh.userData.skirtVertices=skirtVertices;
+  return skirtVertices.length;
 }
 
 /** Subtle local facial deformation over the generated face, preserving the source texture and rest shape. */
-function addMashaFace(mesh:THREE.SkinnedMesh):(frame:ActorFrame)=>void {
+function addMashaFace(mesh:THREE.SkinnedMesh,hipY:number):(frame:ActorFrame)=>void {
   const positions=mesh.geometry.getAttribute('position');
-  const blink=new Float32Array(positions.count*3),mouth=new Float32Array(positions.count*3);
+  const blink=new Float32Array(positions.count*3),mouth=new Float32Array(positions.count*3),seated=new Float32Array(positions.count*3);
+  const skirt=new Set<number>(mesh.userData.skirtVertices??[]),cloth=new THREE.Vector3(),axis=new THREE.Vector3(1,0,0);
   const world=new THREE.Vector3(),zero=new THREE.Vector3(),ex=new THREE.Vector3(),ey=new THREE.Vector3(),ez=new THREE.Vector3();
   const matrix=new THREE.Matrix4(),delta=new THREE.Vector3();
   for(let i=0;i<positions.count;i++) {
@@ -195,7 +240,15 @@ function addMashaFace(mesh:THREE.SkinnedMesh):(frame:ActorFrame)=>void {
     if(world.z>.12&&Math.abs(world.x)<.067&&world.y>.59&&world.y<.662){
       const x=Math.max(0,1-(world.x/.067)**4),y=Math.min(1,(.662-world.y)/.012)*Math.min(1,(world.y-.59)/.025);mouthY=-.018*x*y;
     }
-    if(!blinkY&&!mouthY)continue;
+    cloth.set(0,0,0);
+    if(skirt.has(i)&&world.y<.43){
+      // Bend the repaired skirt forward over the lap. Keeping it as a vertical
+      // cone lets the bent white thighs punch through its front when seated.
+      const blend=Math.min(1,Math.max(0,(.43-world.y)/.08)),angle=-1.18*blend*blend*(3-2*blend);
+      cloth.set(world.x,world.y-hipY,world.z).applyAxisAngle(axis,angle);
+      cloth.y+=hipY;cloth.sub(world);
+    }
+    if(!blinkY&&!mouthY&&cloth.lengthSq()===0)continue;
     // Invert this vertex's rest skin transform to express metre-space displacement as local morph deltas.
     mesh.applyBoneTransform(i,zero.set(0,0,0)).applyMatrix4(mesh.matrixWorld);
     mesh.applyBoneTransform(i,ex.set(1,0,0)).applyMatrix4(mesh.matrixWorld).sub(zero);
@@ -204,8 +257,14 @@ function addMashaFace(mesh:THREE.SkinnedMesh):(frame:ActorFrame)=>void {
     matrix.makeBasis(ex,ey,ez).invert();
     if(blinkY){delta.set(0,blinkY,0).applyMatrix4(matrix);blink.set(delta.toArray(),i*3);}
     if(mouthY){delta.set(0,mouthY,0).applyMatrix4(matrix);mouth.set(delta.toArray(),i*3);}
+    if(cloth.lengthSq()>0){delta.copy(cloth).applyMatrix4(matrix);seated.set(delta.toArray(),i*3);}
   }
-  mesh.geometry.morphAttributes.position=[new THREE.Float32BufferAttribute(blink,3),new THREE.Float32BufferAttribute(mouth,3)];
+  mesh.geometry.morphAttributes.position=[new THREE.Float32BufferAttribute(blink,3),new THREE.Float32BufferAttribute(mouth,3),new THREE.Float32BufferAttribute(seated,3)];
   mesh.geometry.morphTargetsRelative=true;mesh.updateMorphTargets();
-  return frame=>{const a=mesh.morphTargetInfluences!;a[0]=frame.face.lidClose;a[1]=frame.face.viseme==='rest'?0:frame.face.visemeWeight*(frame.face.viseme==='open_wide'?1:.65);};
+  return frame=>{
+    const a=mesh.morphTargetInfluences!;a[0]=frame.face.lidClose;a[1]=frame.face.viseme==='rest'?0:frame.face.visemeWeight*(frame.face.viseme==='open_wide'?1:.65);
+    const bend=['LeftUpLeg','RightUpLeg'].reduce((sum,name)=>{const q=frame.bones[name];return sum+(q?Math.abs(2*Math.atan2(q[0],q[3])):0);},0)*.5;
+    const k=frame.posture==='sit'||frame.verb==='stand_up'?Math.min(1,Math.max(0,(bend-.35)/1.05)):0;
+    a[2]=k*k*(3-2*k);
+  };
 }

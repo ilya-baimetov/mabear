@@ -1,0 +1,87 @@
+[
+  {
+    variant: 'a',
+    verb: 'idle',
+    minSole: -0.0010109140233543865,
+    maxLowestSole: 0.005079038803572428
+  },
+  {
+    variant: 'a',
+    verb: 'walk_to',
+    minSole: -0.0069190047041221,
+    maxLowestSole: 0.014160091830705941
+  },
+  {
+    variant: 'a',
+    verb: 'run_to',
+    minSole: -0.0021665868746959804,
+    maxLowestSole: 0.029124157503420033
+  },
+  {
+    variant: 'a',
+    verb: 'wave',
+    minSole: -0.00019127300534487867,
+    maxLowestSole: 0.0017823038901499952
+  },
+  {
+    variant: 'a',
+    verb: 'sit',
+    minSole: 0.0062264190266850955,
+    maxLowestSole: 0.0062264190266850955
+  },
+  {
+    variant: 'a',
+    verb: 'sit_down',
+    minSole: -0.0013197106536767065,
+    maxLowestSole: 0.0062264190266850955
+  },
+  {
+    variant: 'a',
+    verb: 'stand_up',
+    minSole: -0.001771214634679977,
+    maxLowestSole: 0.0040611740834889075
+  },
+  {
+    variant: 'b',
+    verb: 'idle',
+    minSole: -0.0011453555053612743,
+    maxLowestSole: 0.002015425809791558
+  },
+  {
+    variant: 'b',
+    verb: 'walk_to',
+    minSole: 0.006897486265395034,
+    maxLowestSole: 0.013862951475928212
+  },
+  {
+    variant: 'b',
+    verb: 'run_to',
+    minSole: 0.006988147969735081,
+    maxLowestSole: 0.025614536831763096
+  },
+  {
+    variant: 'b',
+    verb: 'wave',
+    minSole: -0.0010485057575469786,
+    maxLowestSole: 0.0018604416972360007
+  },
+  {
+    variant: 'b',
+    verb: 'sit',
+    minSole: 0.005564972316505096,
+    maxLowestSole: 0.005564972316505096
+  },
+  {
+    variant: 'b',
+    verb: 'sit_down',
+    minSole: -0.0014631542093729664,
+    maxLowestSole: 0.005564972316505096
+  },
+  {
+    variant: 'b',
+    verb: 'stand_up',
+    minSole: -0.001652319620982402,
+    maxLowestSole: 0.0034763552713173666
+  }
+]
+Both actual skinned wolf meshes passed contact checks through idle, gait, sitting and rising.

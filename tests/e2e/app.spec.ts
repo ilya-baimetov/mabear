@@ -1,7 +1,7 @@
 // Real Worker + mock director regression coverage for the moment authoring UI.
 import { expect, test, type Page } from "@playwright/test";
 import { writeFileSync } from "node:fs";
-import { E2E_PASSWORD } from "../../playwright.config";
+import { login } from "./login";
 
 interface SegLike {
   offset: number;
@@ -14,11 +14,6 @@ interface SegLike {
 }
 
 test.describe.configure({ timeout: 180_000 });
-
-async function login(page: Page) {
-  const res = await page.request.post("/login", { form: { password: E2E_PASSWORD }, maxRedirects: 0 });
-  expect([200, 302, 303]).toContain(res.status());
-}
 
 async function open(page: Page, query = "") {
   await login(page);
@@ -201,7 +196,9 @@ test("7. pitch tools expose plan/cost/FPS/economics; a selected-moment remix mak
 
 test("7b. rain and spooky music compile; playback schedules dialogue, foley and music", async ({ page }) => {
   await open(page);
-  await typeMoment(page, 'It starts to rain. Spooky music. Masha runs home shouting "Bear!"');
+  // This local Worker intentionally has no paid voice provider. Use a baked
+  // selected-voice line; runtime generation is covered by the speech Worker tests.
+  await typeMoment(page, 'It starts to rain. Spooky music. Masha runs home shouting "Bear, wait for me!"');
   await allSettled(page);
   const segs = await segments(page), seg = segs[segs.length - 1].segment;
   expect(seg.ambience.some(a => a.layers.includes("rain"))).toBe(true);
@@ -213,7 +210,7 @@ test("7b. rain and spooky music compile; playback schedules dialogue, foley and 
   }, { timeout: 15_000 }).toBe(true);
 });
 
-test("8. real character close-ups and playback performance: FPS > 10, draw calls < 200", async ({ page }) => {
+test("8. real character close-ups render; playback loop stays active and draw calls remain below 200", async ({ page }) => {
   await open(page);
   await loadExample(page, "bears_nap");
   await page.getByTestId("play-all").click();
@@ -226,7 +223,9 @@ test("8. real character close-ups and playback performance: FPS > 10, draw calls
   expect(fpsSamples).toHaveLength(10);
   const avg = fpsSamples.reduce((a, b) => a + b, 0) / fpsSamples.length;
   const stats = await page.evaluate(() => window.__mabear!.stats());
-  console.log(`[perf] average FPS over 10 s playback (headless SwiftShader): ${avg.toFixed(1)}; draw calls: ${stats?.drawCalls}`);
+  // This is the requestAnimationFrame loop rate, not a GPU-drained throughput
+  // measurement. See the paired scene benchmark for actual completed frames.
+  console.log(`[render loop] average ticks/s over 10 s playback (${process.env.E2E_GPU === "hardware" ? "native GPU" : "SwiftShader"}): ${avg.toFixed(1)}; draw calls: ${stats?.drawCalls}`);
   expect(avg).toBeGreaterThan(10);
   expect(stats!.drawCalls).toBeLessThan(200);
   await stopIfPlaying(page);
@@ -359,8 +358,8 @@ test("fullscreen retains controls; keyboard seeks respect whole-story and select
   await loadExample(page, "bears_nap");
   await page.getByRole("button", { name: "Fullscreen", exact: true }).click();
   await expect.poll(() => page.evaluate(() => document.fullscreenElement?.classList.contains("stage-col"))).toBe(true);
-  await expect(page.getByTestId("play-all")).toBeVisible();
-  await page.getByTestId("play-all").click();
+  await expect(page.getByTestId("play")).toBeVisible();
+  await page.getByTestId("play").click();
   await expect(page.getByTestId("pause")).toBeVisible();
   await stopIfPlaying(page);
   const story = page.getByRole("slider", { name: "Story progress", exact: true });
@@ -371,6 +370,7 @@ test("fullscreen retains controls; keyboard seeks respect whole-story and select
   await page.getByRole("button", { name: "Fullscreen", exact: true }).click();
   await expect.poll(() => page.evaluate(() => document.fullscreenElement === null)).toBe(true);
   await page.getByTestId("moment-card").nth(1).click();
+  await page.getByTestId("scope-moment").click();
   const moment = page.getByRole("slider", { name: "Moment progress", exact: true });
   const expected = (await segments(page))[1];
   await moment.press("Home"); await moment.press("ArrowLeft");

@@ -1,0 +1,2389 @@
+{
+  "voice": {
+    "endpoint": "fal-ai/minimax/speech-2.8-hd",
+    "id": "Lively_Girl",
+    "revision": "lively-v1"
+  },
+  "prior_audition_estimate_usd": 0.10647,
+  "voice_cap_usd": 2,
+  "characters": 1041,
+  "estimated_generation_usd": 0.1041,
+  "requests": [
+    {
+      "index": 0,
+      "text": "Welcome to our garden!",
+      "lang": "en",
+      "uses": [
+        "garden_party"
+      ],
+      "key": "en:Welcome to our garden!",
+      "file": "416bfd15a31be9e4d3ed6f3a.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Welcome to our garden!",
+        "language_boost": "English",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 1,
+      "text": "Save a carrot for me!",
+      "lang": "en",
+      "uses": [
+        "garden_party"
+      ],
+      "key": "en:Save a carrot for me!",
+      "file": "66e4dd67005a0eacc98a4373.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Save a carrot for me!",
+        "language_boost": "English",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 2,
+      "text": "Everybody dance!",
+      "lang": "en",
+      "uses": [
+        "garden_party"
+      ],
+      "key": "en:Everybody dance!",
+      "file": "4bda634ec2120f8f62d2d0e5.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Everybody dance!",
+        "language_boost": "English",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 3,
+      "text": "Добро пожаловать в наш сад!",
+      "lang": "ru",
+      "uses": [
+        "garden_party"
+      ],
+      "key": "ru:Добро пожаловать в наш сад!",
+      "file": "22dc49a888888455ab608850.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Добро пожаловать в наш сад!",
+        "language_boost": "Russian",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 4,
+      "text": "Оставьте мне морковку!",
+      "lang": "ru",
+      "uses": [
+        "garden_party"
+      ],
+      "key": "ru:Оставьте мне морковку!",
+      "file": "acea528ad2bf9cc5ad3c6723.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Оставьте мне морковку!",
+        "language_boost": "Russian",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 5,
+      "text": "Все танцуют!",
+      "lang": "ru",
+      "uses": [
+        "garden_party"
+      ],
+      "key": "ru:Все танцуют!",
+      "file": "6880e0dfd8e966cb7c73e262.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Все танцуют!",
+        "language_boost": "Russian",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 6,
+      "text": "Bear, I'm making you pancakes!",
+      "lang": "en",
+      "uses": [
+        "pancake_morning"
+      ],
+      "key": "en:Bear, I'm making you pancakes!",
+      "file": "34f4659ce3686adb323815be.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Bear, I'm making you pancakes!",
+        "language_boost": "English",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 7,
+      "text": "Pancakes need lots of flour!",
+      "lang": "en",
+      "uses": [
+        "pancake_morning"
+      ],
+      "key": "en:Pancakes need lots of flour!",
+      "file": "6ea5d6393ff3156e9490f0d8.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Pancakes need lots of flour!",
+        "language_boost": "English",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 8,
+      "text": "No peeking, Bear!",
+      "lang": "en",
+      "uses": [
+        "pancake_morning"
+      ],
+      "key": "en:No peeking, Bear!",
+      "file": "2c98523d4c3099727fdadf59.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "No peeking, Bear!",
+        "language_boost": "English",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 9,
+      "text": "Breakfast is ready, Bear!",
+      "lang": "en",
+      "uses": [
+        "pancake_morning"
+      ],
+      "key": "en:Breakfast is ready, Bear!",
+      "file": "d3eba922a37a3f46d872ba2c.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Breakfast is ready, Bear!",
+        "language_boost": "English",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 10,
+      "text": "Мишка, я испеку тебе блины!",
+      "lang": "ru",
+      "uses": [
+        "pancake_morning"
+      ],
+      "key": "ru:Мишка, я испеку тебе блины!",
+      "file": "963bfc39c3d8fe109ce626ef.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Мишка, я испеку тебе блины!",
+        "language_boost": "Russian",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 11,
+      "text": "Для блинов нужно много-много муки!",
+      "lang": "ru",
+      "uses": [
+        "pancake_morning"
+      ],
+      "key": "ru:Для блинов нужно много-много муки!",
+      "file": "5197c4c57b1ce6ce18475252.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Для блинов нужно много-много муки!",
+        "language_boost": "Russian",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 12,
+      "text": "Мишка, не подглядывай!",
+      "lang": "ru",
+      "uses": [
+        "pancake_morning"
+      ],
+      "key": "ru:Мишка, не подглядывай!",
+      "file": "1e0b4d7fd34f14541770e666.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Мишка, не подглядывай!",
+        "language_boost": "Russian",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 13,
+      "text": "Мишка, завтрак готов!",
+      "lang": "ru",
+      "uses": [
+        "pancake_morning"
+      ],
+      "key": "ru:Мишка, завтрак готов!",
+      "file": "8291b86f162dee543e132576.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Мишка, завтрак готов!",
+        "language_boost": "Russian",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 14,
+      "text": "Bear is sleeping? Not for long!",
+      "lang": "en",
+      "uses": [
+        "bears_nap"
+      ],
+      "key": "en:Bear is sleeping? Not for long!",
+      "file": "1d412896b0cccebcaf54332f.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Bear is sleeping? Not for long!",
+        "language_boost": "English",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 15,
+      "text": "Bear, wake up! Let's play!",
+      "lang": "en",
+      "uses": [
+        "bears_nap"
+      ],
+      "key": "en:Bear, wake up! Let's play!",
+      "file": "0ee0e8c08de5e34eacdf2920.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Bear, wake up! Let's play!",
+        "language_boost": "English",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 16,
+      "text": "Faster, Bear, faster!",
+      "lang": "en",
+      "uses": [
+        "bears_nap"
+      ],
+      "key": "en:Faster, Bear, faster!",
+      "file": "57a0a4a3998185c2f04d1fc0.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Faster, Bear, faster!",
+        "language_boost": "English",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 17,
+      "text": "Good night, Bear. Let's play again tomorrow!",
+      "lang": "en",
+      "uses": [
+        "bears_nap"
+      ],
+      "key": "en:Good night, Bear. Let's play again tomorrow!",
+      "file": "2bf7ce5bad0088ccc0a91461.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Good night, Bear. Let's play again tomorrow!",
+        "language_boost": "English",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 18,
+      "text": "Мишка спит? Это ненадолго!",
+      "lang": "ru",
+      "uses": [
+        "bears_nap"
+      ],
+      "key": "ru:Мишка спит? Это ненадолго!",
+      "file": "5b2826fe2cfca4db79fc27b1.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Мишка спит? Это ненадолго!",
+        "language_boost": "Russian",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 19,
+      "text": "Мишка, вставай! Давай играть!",
+      "lang": "ru",
+      "uses": [
+        "bears_nap"
+      ],
+      "key": "ru:Мишка, вставай! Давай играть!",
+      "file": "f2b06d9b3c234081bdb71abe.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Мишка, вставай! Давай играть!",
+        "language_boost": "Russian",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 20,
+      "text": "Быстрее, Мишка, быстрее!",
+      "lang": "ru",
+      "uses": [
+        "bears_nap"
+      ],
+      "key": "ru:Быстрее, Мишка, быстрее!",
+      "file": "105438f627a728aa34bee33d.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Быстрее, Мишка, быстрее!",
+        "language_boost": "Russian",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 21,
+      "text": "Спокойной ночи, Мишка. Завтра ещё поиграем!",
+      "lang": "ru",
+      "uses": [
+        "bears_nap"
+      ],
+      "key": "ru:Спокойной ночи, Мишка. Завтра ещё поиграем!",
+      "file": "398486d3d28bc6a456629a4c.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Спокойной ночи, Мишка. Завтра ещё поиграем!",
+        "language_boost": "Russian",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 22,
+      "text": "Bear, wait for me!",
+      "lang": "en",
+      "uses": [
+        "fishing_trip"
+      ],
+      "key": "en:Bear, wait for me!",
+      "file": "ec4d4333fe5f79a5e8c1efb2.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Bear, wait for me!",
+        "language_boost": "English",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 23,
+      "text": "Bear, catch!",
+      "lang": "en",
+      "uses": [
+        "fishing_trip"
+      ],
+      "key": "en:Bear, catch!",
+      "file": "2459d1fe7713f9234db035ce.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Bear, catch!",
+        "language_boost": "English",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 24,
+      "text": "Hooray! Bear caught a fish!",
+      "lang": "en",
+      "uses": [
+        "fishing_trip"
+      ],
+      "key": "en:Hooray! Bear caught a fish!",
+      "file": "e52269d7fdc47522b1b721ac.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Hooray! Bear caught a fish!",
+        "language_boost": "English",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 25,
+      "text": "This is the best day ever.",
+      "lang": "en",
+      "uses": [
+        "fishing_trip"
+      ],
+      "key": "en:This is the best day ever.",
+      "file": "a78e98bff7ccdddb8cc8f5df.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "This is the best day ever.",
+        "language_boost": "English",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 26,
+      "text": "Мишка, подожди меня!",
+      "lang": "ru",
+      "uses": [
+        "fishing_trip"
+      ],
+      "key": "ru:Мишка, подожди меня!",
+      "file": "0aa706d5445a5f078b8e3e14.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Мишка, подожди меня!",
+        "language_boost": "Russian",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 27,
+      "text": "Мишка, лови!",
+      "lang": "ru",
+      "uses": [
+        "fishing_trip"
+      ],
+      "key": "ru:Мишка, лови!",
+      "file": "12c8137254edc3fa68d63eb0.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Мишка, лови!",
+        "language_boost": "Russian",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 28,
+      "text": "Ура! Мишка поймал рыбу!",
+      "lang": "ru",
+      "uses": [
+        "fishing_trip"
+      ],
+      "key": "ru:Ура! Мишка поймал рыбу!",
+      "file": "65a8a0430b12f647f89f16c2.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Ура! Мишка поймал рыбу!",
+        "language_boost": "Russian",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 29,
+      "text": "Это самый лучший день!",
+      "lang": "ru",
+      "uses": [
+        "fishing_trip"
+      ],
+      "key": "ru:Это самый лучший день!",
+      "file": "9f2ae2404397c4964413defb.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Это самый лучший день!",
+        "language_boost": "Russian",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 30,
+      "text": "So cozy!",
+      "lang": "en",
+      "uses": [
+        "cozy_evening"
+      ],
+      "key": "en:So cozy!",
+      "file": "6ac44b52160c3154a77cb849.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "So cozy!",
+        "language_boost": "English",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 31,
+      "text": "Delicious!",
+      "lang": "en",
+      "uses": [
+        "cozy_evening"
+      ],
+      "key": "en:Delicious!",
+      "file": "9b0c52ed1363890a48a3a113.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Delicious!",
+        "language_boost": "English",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 32,
+      "text": "Thank you for the pancakes!",
+      "lang": "en",
+      "uses": [
+        "cozy_evening"
+      ],
+      "key": "en:Thank you for the pancakes!",
+      "file": "61e80f41352b2783bdfdd619.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Thank you for the pancakes!",
+        "language_boost": "English",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 33,
+      "text": "Как уютно!",
+      "lang": "ru",
+      "uses": [
+        "cozy_evening"
+      ],
+      "key": "ru:Как уютно!",
+      "file": "8efda82359fb8c31f42c66ca.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Как уютно!",
+        "language_boost": "Russian",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 34,
+      "text": "Как вкусно!",
+      "lang": "ru",
+      "uses": [
+        "cozy_evening"
+      ],
+      "key": "ru:Как вкусно!",
+      "file": "3f220e5ef134a44383146d46.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Как вкусно!",
+        "language_boost": "Russian",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 35,
+      "text": "Спасибо за блины!",
+      "lang": "ru",
+      "uses": [
+        "cozy_evening"
+      ],
+      "key": "ru:Спасибо за блины!",
+      "file": "56875ba55d11b9b7352c4b09.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Спасибо за блины!",
+        "language_boost": "Russian",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 36,
+      "text": "Хи-хи!",
+      "lang": "ru",
+      "uses": [
+        "giggle"
+      ],
+      "key": "ru:Хи-хи!",
+      "file": "7fe5e4d149e9a8a7dedcc811.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Хи-хи!",
+        "language_boost": "Russian",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 37,
+      "text": "Hee-hee!",
+      "lang": "en",
+      "uses": [
+        "giggle"
+      ],
+      "key": "en:Hee-hee!",
+      "file": "9aa12d971db1c4e5cd3b20f9.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Hee-hee!",
+        "language_boost": "English",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 38,
+      "text": "Ха-ха-ха!",
+      "lang": "ru",
+      "uses": [
+        "laugh"
+      ],
+      "key": "ru:Ха-ха-ха!",
+      "file": "8d7db7c2bc9e71f3dd5dc61f.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Ха-ха-ха!",
+        "language_boost": "Russian",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 39,
+      "text": "Ha-ha-ha!",
+      "lang": "en",
+      "uses": [
+        "laugh"
+      ],
+      "key": "en:Ha-ha-ha!",
+      "file": "08ff01c5c1c25cc6e98fccd0.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Ha-ha-ha!",
+        "language_boost": "English",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 40,
+      "text": "Ой!",
+      "lang": "ru",
+      "uses": [
+        "gasp"
+      ],
+      "key": "ru:Ой!",
+      "file": "4aa3a35c4d0e55ed795c29c6.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Ой!",
+        "language_boost": "Russian",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 41,
+      "text": "Oh!",
+      "lang": "en",
+      "uses": [
+        "gasp"
+      ],
+      "key": "en:Oh!",
+      "file": "4eeabb7045bb95937cd95214.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Oh!",
+        "language_boost": "English",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 42,
+      "text": "Уиии!",
+      "lang": "ru",
+      "uses": [
+        "wheee"
+      ],
+      "key": "ru:Уиии!",
+      "file": "9e369b12f584776f4d4dc7be.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Уиии!",
+        "language_boost": "Russian",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 43,
+      "text": "Wheee!",
+      "lang": "en",
+      "uses": [
+        "wheee"
+      ],
+      "key": "en:Wheee!",
+      "file": "755d9d301ad05695270fc502.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Wheee!",
+        "language_boost": "English",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 44,
+      "text": "Хм!",
+      "lang": "ru",
+      "uses": [
+        "hmph"
+      ],
+      "key": "ru:Хм!",
+      "file": "be8039c9489905e952777c47.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Хм!",
+        "language_boost": "Russian",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 45,
+      "text": "Hmph!",
+      "lang": "en",
+      "uses": [
+        "hmph"
+      ],
+      "key": "en:Hmph!",
+      "file": "0ebf6cd6c6818f0ba736c2d6.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Hmph!",
+        "language_boost": "English",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 46,
+      "text": "Ой-ой!",
+      "lang": "ru",
+      "uses": [
+        "uh_oh"
+      ],
+      "key": "ru:Ой-ой!",
+      "file": "dd418e04b8964063539a8c8d.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Ой-ой!",
+        "language_boost": "Russian",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 47,
+      "text": "Uh-oh!",
+      "lang": "en",
+      "uses": [
+        "uh_oh"
+      ],
+      "key": "en:Uh-oh!",
+      "file": "42c193e9031c0c32e2431214.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Uh-oh!",
+        "language_boost": "English",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 48,
+      "text": "Аааа-хм.",
+      "lang": "ru",
+      "uses": [
+        "yawn"
+      ],
+      "key": "ru:Аааа-хм.",
+      "file": "0aa5ad7866e448b6c6e169cd.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Аааа-хм.",
+        "language_boost": "Russian",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 49,
+      "text": "Aaah-hm.",
+      "lang": "en",
+      "uses": [
+        "yawn"
+      ],
+      "key": "en:Aaah-hm.",
+      "file": "64ea99931d61b7a39819093f.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Aaah-hm.",
+        "language_boost": "English",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 50,
+      "text": "Ыыы!",
+      "lang": "ru",
+      "uses": [
+        "cry"
+      ],
+      "key": "ru:Ыыы!",
+      "file": "396c710430b77e49d9eaffbf.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Ыыы!",
+        "language_boost": "Russian",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 51,
+      "text": "Waaah!",
+      "lang": "en",
+      "uses": [
+        "cry"
+      ],
+      "key": "en:Waaah!",
+      "file": "be5f3f7c2d474e650c177217.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Waaah!",
+        "language_boost": "English",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 52,
+      "text": "Ура!",
+      "lang": "ru",
+      "uses": [
+        "cheer"
+      ],
+      "key": "ru:Ура!",
+      "file": "3ce0ce5962d8cfebc5925d06.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Ура!",
+        "language_boost": "Russian",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 53,
+      "text": "Hooray!",
+      "lang": "en",
+      "uses": [
+        "cheer"
+      ],
+      "key": "en:Hooray!",
+      "file": "13868ae752551d48164931c7.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Hooray!",
+        "language_boost": "English",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 54,
+      "text": "Аааа!",
+      "lang": "ru",
+      "uses": [
+        "scream_fun"
+      ],
+      "key": "ru:Аааа!",
+      "file": "6f7eb12ea6fe2e436cf000ed.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Аааа!",
+        "language_boost": "Russian",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 55,
+      "text": "Aaaah!",
+      "lang": "en",
+      "uses": [
+        "scream_fun"
+      ],
+      "key": "en:Aaaah!",
+      "file": "f5133102bc3113ff6d695efa.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Aaaah!",
+        "language_boost": "English",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 56,
+      "text": "Апчхи!",
+      "lang": "ru",
+      "uses": [
+        "sneeze"
+      ],
+      "key": "ru:Апчхи!",
+      "file": "188c02f13547d779633e7c40.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Апчхи!",
+        "language_boost": "Russian",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 57,
+      "text": "Ah-choo!",
+      "lang": "en",
+      "uses": [
+        "sneeze"
+      ],
+      "key": "en:Ah-choo!",
+      "file": "1b61b4dfb9b29e925c24b7f3.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Ah-choo!",
+        "language_boost": "English",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 58,
+      "text": "Ля-ля-ля!",
+      "lang": "ru",
+      "uses": [
+        "hum"
+      ],
+      "key": "ru:Ля-ля-ля!",
+      "file": "47f18d3c2317e292aa28b29b.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Ля-ля-ля!",
+        "language_boost": "Russian",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 59,
+      "text": "La-la-la!",
+      "lang": "en",
+      "uses": [
+        "hum"
+      ],
+      "key": "en:La-la-la!",
+      "file": "8756e56cdb5871d6466ec442.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "La-la-la!",
+        "language_boost": "English",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 60,
+      "text": "Эх.",
+      "lang": "ru",
+      "uses": [
+        "sigh"
+      ],
+      "key": "ru:Эх.",
+      "file": "dfa0cdc0d1efbacff28db2c1.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Эх.",
+        "language_boost": "Russian",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 61,
+      "text": "Ohhh.",
+      "lang": "en",
+      "uses": [
+        "sigh"
+      ],
+      "key": "en:Ohhh.",
+      "file": "699c0dfde3850d5c725322b6.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Ohhh.",
+        "language_boost": "English",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 62,
+      "text": "Хи-хи! Щекотно!",
+      "lang": "ru",
+      "uses": [
+        "tap reaction"
+      ],
+      "key": "ru:Хи-хи! Щекотно!",
+      "file": "7be2cd3ae83955f7bc0b5596.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Хи-хи! Щекотно!",
+        "language_boost": "Russian",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 63,
+      "text": "Hee-hee! That tickles!",
+      "lang": "en",
+      "uses": [
+        "tap reaction"
+      ],
+      "key": "en:Hee-hee! That tickles!",
+      "file": "41adc8d37d433571c834391a.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Hee-hee! That tickles!",
+        "language_boost": "English",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 64,
+      "text": "Привет! Давай играть!",
+      "lang": "ru",
+      "uses": [
+        "tap reaction"
+      ],
+      "key": "ru:Привет! Давай играть!",
+      "file": "d661498fdf1dc5f1bcdf8792.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Привет! Давай играть!",
+        "language_boost": "Russian",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    },
+    {
+      "index": 65,
+      "text": "Hi! Let's play!",
+      "lang": "en",
+      "uses": [
+        "tap reaction"
+      ],
+      "key": "en:Hi! Let's play!",
+      "file": "584c29b98e75829af2b423ac.mp3",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "input": {
+        "prompt": "Hi! Let's play!",
+        "language_boost": "English",
+        "voice_setting": {
+          "voice_id": "Lively_Girl",
+          "speed": 1,
+          "vol": 1,
+          "pitch": 0,
+          "emotion": "happy",
+          "english_normalization": false
+        },
+        "audio_setting": {
+          "sample_rate": 44100,
+          "bitrate": 256000,
+          "format": "mp3",
+          "channel": 1
+        },
+        "normalization_setting": {
+          "enabled": true,
+          "target_loudness": -18,
+          "target_range": 8,
+          "target_peak": -0.5
+        },
+        "output_format": "url"
+      }
+    }
+  ]
+}

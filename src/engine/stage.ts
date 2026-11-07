@@ -1,7 +1,8 @@
 // The Three.js stage (spec §7.1): renderer + series look + set + characters + props + fx.
 // render(frame) is a pure application of a FrameState (no internal clock), so playback and scrubbing look identical.
 import * as THREE from "three";
-import { ACTOR_IDS, type ActorId } from "../shared/schema";
+import { sceneLocationAt } from "../shared/bible/set";
+import { ACTOR_IDS, PROP_IDS, type ActorId } from "../shared/schema";
 import type { CharacterRig, FrameState, StageHandle, StageStats } from "./api";
 import { assetStatus, disposeGenerated, gltfSetElements, loadCharacter, loadPropOverrides, loadSetOverrides, TEST_GLTF_ID, type AssetStatus } from "./assets";
 import { createFx, type FxHandle } from "./fx/fx";
@@ -27,6 +28,7 @@ function rendererName(renderer: THREE.WebGLRenderer): string {
 import { createProps, type PropsHandle } from "./props/props";
 import { buildBearsYard, walkHeightAt, type SetHandle } from "./set/bearsYard";
 import { clearForeground } from './cameraClearance';
+import { applySceneLightIntensities } from './sceneLighting';
 import { loadGeneratedYard } from './set/generatedYard';
 import { assetUrl, loadEnvTextures } from "./set/textures";
 
@@ -69,6 +71,7 @@ export const MAX_BUFFER_PIXELS = 1920 * 1080;
 const SCALE_MIN = 0.5;
 
 const NO_FX: FrameState["fx"] = [];
+const INDOOR_BACKGROUND=new THREE.Color(0x453c30);
 
 export async function createStage(canvas: HTMLCanvasElement, opts: StageOptions = {}): Promise<StageHandleEx> {
   const postFlag: PostQuality | null = opts.post ?? parsePostQualityFlag(typeof location !== "undefined" ? location.search : "");
@@ -240,7 +243,9 @@ export async function createStage(canvas: HTMLCanvasElement, opts: StageOptions 
     },
     render(frame: FrameState) {
       // camera
-      const c = clearForeground(frame.camera,frame.actors);
+      const location=frame.camera.location??sceneLocationAt(frame.camera.look[0],frame.camera.look[2]);
+      const localActors=Object.fromEntries(Object.entries(frame.actors).filter(([id,a])=>(!frame.cast||frame.cast.includes(id as ActorId))&&sceneLocationAt(a.pos[0],a.pos[2])===location)) as FrameState['actors'];
+      const c = clearForeground(frame.camera,localActors);
       camera.position.set(c.pos[0], c.pos[1], c.pos[2]);
       if (Math.abs(camera.fov - c.fov) > 1e-3) {
         camera.fov = c.fov;
@@ -248,9 +253,13 @@ export async function createStage(canvas: HTMLCanvasElement, opts: StageOptions 
         updatePointScale();
       }
       camera.lookAt(c.look[0], c.look[1], c.look[2]);
+      set.updateView(c.look[0],c.look[2],location);
       followCamera(look, camera);
       // light
       const lp = applyLighting(look, scene, renderer, frame.lighting);
+      look.sky.visible=location!=='house';
+      scene.background=location==='house'?INDOOR_BACKGROUND:null;
+      applySceneLightIntensities(look,lp,location);
       if (post) post.grade.saturation = DEFAULT_GRADE.saturation - 0.16 * lp.stars; // calmer night palette
       set.update(frame.t, lp.windowGlow, pointScale);
       // actors (stand on the porch / pier / bridges)
@@ -260,6 +269,7 @@ export async function createStage(canvas: HTMLCanvasElement, opts: StageOptions 
         const rig = rigs[id];
         if (!a || !rig) continue;
         rig.apply(a);
+        rig.root.visible=rig.root.visible&&(!frame.cast||frame.cast.includes(id))&&sceneLocationAt(a.pos[0],a.pos[2])===location;
         const lift = walkHeightAt(a.pos[0], a.pos[2]);
         if (lift !== 0) rig.root.position.y += lift; // world matrices refresh in renderer.render / getWorldPosition
         sockets[id] = rig.handSocket;
@@ -271,8 +281,13 @@ export async function createStage(canvas: HTMLCanvasElement, opts: StageOptions 
         }
       }
       set.setSwing(swing);
-      props.apply(frame.props, sockets, yaws);
-      fx.apply(frame.fx ?? NO_FX, pointScale);
+      props.apply(frame.props, sockets, yaws, frame.actors);
+      for(const id of PROP_IDS) {
+        const p=frame.props[id],holder=p.attachedTo?frame.actors[p.attachedTo]:null;
+        const pos=holder?.pos??p.pos;
+        props.objects[id].visible=props.objects[id].visible&&(!p.attachedTo||!frame.cast||frame.cast.includes(p.attachedTo))&&sceneLocationAt(pos[0],pos[2])===location;
+      }
+      fx.apply(frame.fx?.filter(f=>sceneLocationAt(f.at[0],f.at[2])===location) ?? NO_FX, pointScale);
       updateEnvironment(look, scene, performance.now());
       renderer.info.reset();
       if (post) post.render();

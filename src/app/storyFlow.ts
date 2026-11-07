@@ -10,17 +10,15 @@ export function earlierChanges(s: AppState, id: string): number[] {
   return s.paragraphs.slice(0, index).flatMap((p, i) => p.text.trim() && (p.status === "draft" || p.pendingVersion !== null) ? [i] : []);
 }
 
+/** Editing selection is independent of whole-story playback. Only the selected-moment monitor follows it. */
 export function selectMoment(id: string): void {
-  playback.pause();
   const s = store.getState();
-  const index = s.paragraphs.findIndex(p => p.id === id);
-  if (index < 0) return;
-  const range = store.segmentRange(id);
-  const previous = s.paragraphs.slice(0, index).reverse().map(p => store.segmentRange(p.id)).find(Boolean);
+  if (!s.paragraphs.some(p => p.id === id)) return;
   store.select(id);
-  store.setPreviewScope({ kind: "moment", id });
-  playback.seek(range?.start ?? previous?.end ?? 0);
-  if (typeof window !== "undefined") window.__mabear?.closeup(null);
+  if (s.previewScope?.kind === "moment") {
+    playback.setScope({ kind: "moment", id });
+    if (typeof window !== "undefined") window.__mabear?.closeup(null);
+  }
 }
 
 /** Insert immediately after the selected moment; future writing keeps its identity and order. */
@@ -28,6 +26,7 @@ export function insertMoment(afterId: string): string {
   playback.pause();
   const id = store.addParagraph(afterId);
   selectMoment(id);
+  playback.setScope({ kind: "moment", id });
   return id;
 }
 
@@ -36,6 +35,8 @@ export function moveMoment(id: string, direction: -1 | 1): void {
   playback.pause();
   store.moveParagraph(id, direction);
   selectMoment(id);
+  store.setPreviewScope({ kind: "moment", id });
+  playback.seek(store.segmentRange(id)?.start ?? 0);
 }
 
 /** Whole-story input is explicit; typing in the dialog never directs or mutates the live story. */

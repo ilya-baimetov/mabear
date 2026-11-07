@@ -192,9 +192,19 @@ export class Tts {
     }
   }
 
+  pause(): void {
+    try { synth()?.pause(); } catch { /* platform speech may be unavailable */ }
+  }
+
+  resume(): void {
+    try { synth()?.resume(); } catch { /* platform speech may be unavailable */ }
+  }
+
   cancel(): void {
     try {
-      synth()?.cancel();
+      const s = synth();
+      s?.cancel();
+      s?.resume(); // cancellation must not leave the next utterance in a paused queue
     } catch {
       /* ignore */
     }

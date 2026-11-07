@@ -1,5 +1,6 @@
 // Set "Bear's yard" (spec §7.2). Origin at centre, +z toward the default camera (south). Units: metres.
 import type { MarkId, Surface, Vec2 } from "../schema";
+import {pondWaterAt,pondPierAt} from '../pond';
 
 export interface MarkDef {
   id: MarkId;
@@ -7,7 +8,7 @@ export interface MarkDef {
   /** yaw (radians) an actor standing at this mark should face; 0 = +z */
   facing: number;
   /** "cluster" groups nearby marks for the cinematographer's establishing-shot rule */
-  cluster: "house" | "garden" | "yard" | "pond" | "edge";
+  cluster: "house" | "interior" | "garden" | "yard" | "pond" | "edge";
   description: string;
 }
 
@@ -19,8 +20,8 @@ export const MARKS: Record<MarkId, MarkDef> = {
   beehive: { id: "beehive", pos: [10, -8], facing: Math.PI, cluster: "garden", description: "Wooden beehive on a stump; bees buzz nearby" },
   swing: { id: "swing", pos: [8, 2], facing: 0, cluster: "yard", description: "Rope swing hanging from a big oak" },
   hammock: { id: "hammock", pos: [-11, 2], facing: 0, cluster: "house", description: "Hammock between two pines (Bear's nap spot)" },
-  pond_shore: { id: "pond_shore", pos: [-6, 8], facing: 2.2, cluster: "pond", description: "Shore of a small round pond" },
-  pier: { id: "pier", pos: [-5.5, 9.5], facing: 2.4, cluster: "pond", description: "End of a small wooden pier; fishing spot" },
+  pond_shore: { id: "pond_shore", pos: [-6, 8], facing: Math.atan2(-2, 2), cluster: "pond", description: "Dry south-east shore of the woodland pond" },
+  pier: { id: "pier", pos: [-5.5, 9.5], facing: Math.atan2(-2.5, .5), cluster: "pond", description: "End of a small wooden pier; fishing spot" },
   table: { id: "table", pos: [2, 1.5], facing: 0, cluster: "yard", description: "Outdoor wooden table with a samovar/teapot" },
   bench: { id: "bench", pos: [2, 3], facing: Math.PI, cluster: "yard", description: "Bench beside the table" },
   woodpile: { id: "woodpile", pos: [-12, -5], facing: 0, cluster: "house", description: "Stacked logs and a chopping stump (no axe)" },
@@ -28,8 +29,28 @@ export const MARKS: Record<MarkId, MarkDef> = {
   big_tree: { id: "big_tree", pos: [-2, -10], facing: 0, cluster: "house", description: "Large pine behind the house; hiding spot" },
   bush: { id: "bush", pos: [6, 7], facing: 0, cluster: "yard", description: "Round bush; hiding spot" },
   creek: { id: "creek", pos: [12, 9], facing: -1.57, cluster: "edge", description: "Small creek on the yard's east edge with a plank footbridge" },
-  van: { id: "van", pos: [14, -1], facing: -1.57, cluster: "edge", description: "The Wolves' old ambulance van parked at the forest edge; set dressing and a hiding spot" },
+  van: { id: "van", pos: [12, -1], facing: Math.PI / 2, cluster: "edge", description: "The Wolves' old ambulance van parked at the forest edge; set dressing and a hiding spot" },
+  house_kitchen: { id: "house_kitchen", pos: [-4.25, -6.8], facing: 0, cluster: "interior", description: "Inside Bear's house: kitchen worktop for cooking pancakes" },
+  house_living: { id: "house_living", pos: [-7.8, -5.8], facing: 0, cluster: "interior", description: "Inside Bear's house: a comfortable seat in the living room" },
 };
+
+/** Water contact shared by fishing animation, its float, and the cast splash. */
+export const FISHING_WATER_TARGET: readonly [number, number, number] = [-8, .035, 10];
+
+export const isInteriorMark = (mark: string | null | undefined): mark is "house_kitchen" | "house_living" => mark === "house_kitchen" || mark === "house_living";
+/** Floor footprint; shared by semantic routing and physical interior rendering. */
+export const isInsideHouse = (x: number, z: number): boolean => x > -9.5 && x < -2.5 && z > -9 && z < -3.7;
+
+export type SceneLocation = 'yard'|'house'|'pond'|'wolves';
+/** Physical seat tops, shared by motion and camera head-height estimates. */
+export const SEAT_HEIGHT:Readonly<Record<string,number>>={bench:.45,hammock:.62,swing:.45,woodpile:.4,house_living:.47};
+/** Semantic scenes retain stable world coordinates for saved story continuity. */
+export function sceneLocationAt(x:number,z:number):SceneLocation{
+  if(isInsideHouse(x,z))return 'house';
+  if((x < -3.4 && z > 6.2)||pondWaterAt(x,z,.2))return 'pond';
+  if(x > 11 && z > -4.5 && z < 3)return 'wolves';
+  return 'yard';
+}
 
 /** Static obstacles for path planning: circles [x, z, radius] and axis-aligned boxes [minX, minZ, maxX, maxZ]. */
 export const OBSTACLES = {
@@ -48,6 +69,7 @@ export const OBSTACLES = {
 /** Waypoint graph for simple obstacle avoidance (~12 nodes). Edges are undirected. */
 export const WAYPOINTS: { id: string; pos: Vec2; links: string[] }[] = [
   { id: "w_clear", pos: [0, 0], links: ["w_porch", "w_east", "w_south", "w_pondE", "w_garden", "w_west"] },
+  { id: "w_tableW", pos: [.4,3.1], links: ["w_clear","w_south","w_east"] },
   { id: "w_porch", pos: [-6, -2.4], links: ["w_clear", "w_west", "w_nw"] },
   { id: "w_west", pos: [-10.5, -1.5], links: ["w_porch", "w_clear", "w_hammock", "w_nw", "w_pondW"] },
   { id: "w_hammock", pos: [-11, 2.6], links: ["w_west", "w_pondW"] },
@@ -71,15 +93,15 @@ export const WAYPOINTS: { id: string; pos: Vec2; links: string[] }[] = [
 
 /** Surface under a position (for footsteps). Wood: porch, pier, footbridge; water: creek/pond edge; dirt: path. */
 export function surfaceAt(x: number, z: number): Surface {
+  if (isInsideHouse(x, z)) return "wood";
   // porch boards
   if (x > -8.6 && x < -3.4 && z > -3.8 && z < -1.8) return "wood";
   // pier: from shore (-4.6, 7.2) to (-5.6, 9.8), ~1.2 m wide
-  if (x > -6.4 && x < -4.2 && z > 7.6 && z < 10.2) return "wood";
+  if (pondPierAt(x,z,.04)) return "wood";
   // footbridge over the creek
   if (x > 11 && x < 13 && z > 8.2 && z < 9.8) return "wood";
   // pond edge
-  const dp = Math.hypot(x + 8, z - 10);
-  if (dp < 4.1) return "water";
+  if (pondWaterAt(x,z,.25)) return "water";
   // creek band (roughly x ≈ 12 + 0.15*(z-9))
   if (Math.abs(x - (12 + 0.15 * (z - 9))) < 0.9) return "water";
   // forest path

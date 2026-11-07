@@ -1,5 +1,6 @@
 // Compiler-side contracts (frozen after M1; additive changes only).
-import type { Ambience, BeatScript, Intensity, Lang, MusicMood, Remix, RuleHit, Segment, Timeline, WorldState } from "../shared/schema";
+import type { ActorId, Ambience, BeatScript, Intensity, Lang, MusicMood, Remix, RuleHit, Segment, Timeline, WorldState } from "../shared/schema";
+import type { SpeechDurations } from '../shared/speech';
 
 /** Audio context carried across paragraph boundaries (resolved music + ambience of the previous segment). */
 export interface CarryAudio {
@@ -15,6 +16,8 @@ export interface CompileOptions {
   /** true for the first paragraph of the episode (establishing wide shot) */
   isFirst: boolean;
   carry: CarryAudio;
+  cast?:ActorId[];
+  speechDurations?: SpeechDurations;
 }
 
 export interface CompileResult {

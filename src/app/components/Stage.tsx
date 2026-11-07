@@ -1,12 +1,16 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { store } from "../store";
 import { useStore, useStrings } from "../useStore";
 import { playback } from "../playback";
 import type { StageHandle, AudioEngine } from "../../engine/api";
 import type { Player } from "../../engine/player/player";
-import { ACTOR_IDS, type ActorId } from "../../shared/schema";
+import { ACTOR_IDS, type ActorId, type CamKey } from "../../shared/schema";
+import { sceneLocationAt } from "../../shared/bible/set";
 import { CHARACTERS } from "../../shared/bible/characters";
 import { reactionTimeline } from "../react";
+import { publishStoryboardFrames } from "../storyboardFrames";
+import { storyboardTime } from "../storyboardTime";
+import { evaluate } from "../../engine/player/evaluate";
 import { castCloseup } from "../castCamera";
 import { MapPin, Maximize, Hand, LoaderCircle, Trees, ChevronRight, Users } from "lucide-react";
 
@@ -34,11 +38,23 @@ export function Stage({ exploring = false }: { exploring?: boolean }) {
   const handles = useRef<{ stage: StageHandle; player: Player; audio: AudioEngine | null; pick: (u: number, v: number) => ActorId | null } | null>(null);
   const down = useRef<{ x: number; y: number } | null>(null);
   const reactCount = useRef(0);
+  const capturedTimeline = useRef<string | null>(null);
+  const storyboardKey = useMemo(() => JSON.stringify(s.timeline), [s.timeline]);
   const [focus, setFocus] = useState<ActorId | null>(null);
+  const [location, setLocation] = useState<NonNullable<CamKey["location"]>>("yard");
+  const locationRef = useRef(location);
+  const placeNames = {
+    yard: { en: "Bear’s backyard", ru: "Во дворе у Мишки" },
+    house: { en: "Inside Bear’s house", ru: "В доме у Мишки" },
+    pond: { en: "The forest pond", ru: "Лесной пруд" },
+    wolves: { en: "The wolves’ camp", ru: "Лагерь волков" },
+  };
   useEffect(() => { if (s.playing) setFocus(null); }, [s.playing]);
   useEffect(() => {
     setFocus(null);
-    if (handles.current) handles.current.player.cameraOverride = null;
+    playback.reset();
+    publishStoryboardFrames({});
+    if (handles.current) { handles.current.player.cameraOverride = null; handles.current.player.castOverride = null; }
   }, [s.episodeId]);
 
   useEffect(() => {
@@ -68,6 +84,10 @@ export function Stage({ exploring = false }: { exploring?: boolean }) {
       const player = new Player({
         stage,
         audio,
+        onFrame: frame => {
+          const next = frame.camera.location ?? "yard";
+          if (locationRef.current !== next) { locationRef.current = next; setLocation(next); }
+        },
         onTime: (time, playing) => {
           if (playing && playing === store.getState().playing && Math.abs(time - lastT) < 0.06) return;
           lastT = time;
@@ -105,11 +125,14 @@ export function Stage({ exploring = false }: { exploring?: boolean }) {
         closeup: (actor, angle = 0) => {
           if (!actor) {
             player.cameraOverride = null;
+            player.castOverride = null;
             return;
           }
-          player.cameraOverride = (f) => castCloseup(stage.rigs[actor], f.actors[actor], angle);
+          player.castOverride = [actor];
+          player.cameraOverride = (f) => ({ ...castCloseup(stage.rigs[actor], f.actors[actor], angle), location: sceneLocationAt(f.actors[actor].pos[0], f.actors[actor].pos[2]) });
         },
         wide: (pos, look, fov = 45) => {
+          player.castOverride = null;
           player.cameraOverride = () => ({ pos, look, fov });
         },
         stats: () => stage.stats(),
@@ -155,6 +178,39 @@ export function Stage({ exploring = false }: { exploring?: boolean }) {
   useEffect(() => {
     handles.current?.player.setTimeline(s.timeline, s.lang);
   }, [s.timeline, s.lang, ready]);
+  // Capture actual compiled frames in the existing renderer, then restore the monitor in the
+  // same task. One frame per animation tick keeps the editor responsive; playback always wins.
+  useEffect(() => {
+    if (!ready || s.playing || s.waiting || !handles.current || !canvas.current || capturedTimeline.current === storyboardKey) return;
+    let cancelled = false, raf = 0, index = 0;
+    const frames: Record<string, string> = {};
+    const thumb = document.createElement("canvas");
+    thumb.width = 256; thumb.height = 144;
+    const ctx = thumb.getContext("2d");
+    const capture = () => {
+      if (cancelled || !handles.current || !canvas.current || !ctx) return;
+      const entry = s.timeline.segments[index];
+      if (!entry) { capturedTimeline.current = storyboardKey; publishStoryboardFrames(frames); return; }
+      const { stage, player } = handles.current;
+      const end = entry.offset + entry.segment.duration;
+      const bounded = { segments: s.timeline.segments.slice(0, index + 1), duration: end };
+      try {
+        stage.render(evaluate(bounded, entry.offset + storyboardTime(entry.segment)));
+        const source = canvas.current;
+        const cropWidth = Math.min(source.width, source.height * 16 / 9);
+        const cropHeight = Math.min(source.height, source.width * 9 / 16);
+        ctx.drawImage(source, (source.width - cropWidth) / 2, (source.height - cropHeight) / 2, cropWidth, cropHeight, 0, 0, 256, 144);
+        frames[s.segmentIds[index]] = thumb.toDataURL("image/webp", .72);
+      } finally {
+        if (player.frame) stage.render(player.frame);
+      }
+      index++;
+      raf = requestAnimationFrame(capture);
+    };
+    raf = requestAnimationFrame(capture);
+    return () => { cancelled = true; cancelAnimationFrame(raf); };
+  }, [s.timeline, s.segmentIds, s.episodeId, s.playing, s.waiting, ready, storyboardKey]);
+
   useEffect(() => {
     handles.current?.audio?.setVolume(s.volume);
     handles.current?.audio?.setMuted(s.muted);
@@ -180,13 +236,20 @@ export function Stage({ exploring = false }: { exploring?: boolean }) {
           void h.audio?.unlock();
           const st = store.getState();
           const rt = reactionTimeline(st, actor, reactCount.current++);
-          h.player.setTimeline(rt.timeline, st.lang);
-          h.player.play(rt.start, rt.end);
+          const request=reactCount.current;
+          const playReaction=()=>{
+            const current=store.getState();
+            if(handles.current!==h||request!==reactCount.current||current.episodeId!==st.episodeId||current.lang!==st.lang||current.timeline!==st.timeline||h.player.isPlaying||!playback.canReact())return;
+            h.player.setTimeline(rt.timeline, st.lang);
+            h.player.play(rt.start, rt.end);
+          };
+          if(h.audio?.prepare)void h.audio.prepare(rt.timeline,st.lang,rt.start,rt.end).then(playReaction).catch(()=>{});
+          else playReaction();
         }}
       />
-      <div className="stage-label"><span><MapPin size={12}/>{s.lang === "en" ? "THE LITTLE FOREST" : "МАЛЕНЬКИЙ ЛЕС"}</span><strong>{focus ? CHARACTERS[focus].name[s.lang] : s.lang === "en" ? "Bear’s backyard" : "Во дворе у Мишки"}</strong></div>
+      <div className="stage-label"><span><MapPin size={12}/>{s.lang === "en" ? "THE LITTLE FOREST" : "МАЛЕНЬКИЙ ЛЕС"}</span><strong>{focus ? CHARACTERS[focus].name[s.lang] : placeNames[location][s.lang]}</strong></div>
       <button className="fullscreen-btn" title={s.lang === "en" ? "Fullscreen" : "На весь экран"} aria-label={s.lang === "en" ? "Fullscreen" : "На весь экран"} onClick={() => { const el = wrap.current?.closest<HTMLElement>(".stage-col"); if (document.fullscreenElement) void document.exitFullscreen().catch(() => {}); else void el?.requestFullscreen?.().catch(() => {}); }}><Maximize size={18}/></button>
-      {ready && !s.waiting && <div className="stage-scope"><span className={s.playing ? "scope-live" : ""}/>{s.previewScope?.kind === "story" ? (s.lang === "en" ? `Whole-story preview${activeMoment >= 0 ? ` · moment ${activeMoment + 1}` : ""}` : `Просмотр всей истории${activeMoment >= 0 ? ` · момент ${activeMoment + 1}` : ""}`) : (s.lang === "en" ? `Moment ${Math.max(0, s.paragraphs.findIndex(p => p.id === s.selectedId)) + 1} preview` : `Просмотр момента ${Math.max(0, s.paragraphs.findIndex(p => p.id === s.selectedId)) + 1}`)}</div>}
+      {ready && !s.waiting && <div className="stage-scope"><span className={s.playing ? "scope-live" : ""}/>{s.previewScope?.kind !== "moment" ? (s.lang === "en" ? `Entire story${activeMoment >= 0 ? ` · moment ${activeMoment + 1}` : ""}` : `Просмотр всей истории${activeMoment >= 0 ? ` · момент ${activeMoment + 1}` : ""}`) : (s.lang === "en" ? `Moment ${Math.max(0, s.paragraphs.findIndex(p => p.id === (s.previewScope?.kind === "moment" ? s.previewScope.id : s.selectedId))) + 1} preview` : `Просмотр момента ${Math.max(0, s.paragraphs.findIndex(p => p.id === (s.previewScope?.kind === "moment" ? s.previewScope.id : s.selectedId))) + 1}`)}</div>}
       {s.waiting && <div className="getting-ready" data-testid="getting-ready" role="status"><LoaderCircle size={17} className="spin"/> {t.gettingReady}</div>}
       {exploring && ready && !s.playing && !s.waiting && (s.timeline.duration === 0 || s.t >= s.timeline.duration - 0.05) && <div className="tap-hint"><Hand size={14}/> {t.tapToReact}</div>}
       {!ready && !failed && <div className="stage-loading" role="status"><span className="loading-mark"><Trees size={43} strokeWidth={1.2}/></span><strong>{t.loading}</strong><span>{s.lang === "en" ? "A little world is waking up." : "Маленький мир просыпается."}</span><LoaderCircle size={20} className="spin"/></div>}

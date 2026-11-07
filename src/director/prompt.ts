@@ -62,7 +62,7 @@ function verbsText(): string {
     const d = GRAMMAR[v];
     const who = d.actors.length === ACTOR_IDS.length ? "everyone" : `${d.actors.join(", ")} only`;
     const item = d.needsItem ? "; item = the prop (required)" : "";
-    const home = VERB_HOME_MARK[v] ? `; happens at ${VERB_HOME_MARK[v]}` : "";
+    const home = v === "cook" ? "; table outdoors or house_kitchen indoors" : VERB_HOME_MARK[v] ? `; happens at ${VERB_HOME_MARK[v]}` : "";
     const implied = VERB_IMPLIED_PROP[v] ? ` with the ${VERB_IMPLIED_PROP[v]}` : "";
     return `- ${v} [${d.group}; ${who}; ${TARGET_TEXT[d.target]}${item}${home}${implied}]: ${d.description}`;
   });
@@ -111,6 +111,7 @@ Fields of every beat (all required; use null when not applicable):
 - Timing: beats are placed one after another. with_previous: true anchors a beat to the START of the previous beat (so it runs in parallel); false anchors it to the previous beat's END. delay_s (0–${MAX_DELAY_S}) offsets it from that anchor. Example: "Masha shouts two seconds into Bear's walk" = Bear walk_to beat, then Masha beat with with_previous: true, delay_s: 2. A character's own beats never overlap: the compiler queues them on that character's track. Idle characters are animated automatically, so you never need filler beats.
 - Objects: to use a prop the character must hold it. If nobody holds it yet, add a take beat first (target and item = the prop). give needs the giver to hold the item. eat needs a held edible item. throw needs a held item. cook/fish/water_plants imply the pan/rod/can and the place.
 - carry = Bear lifts Masha onto his shoulders (target "masha"); she stays up there until a later beat moves her.
+- Bear's house has usable indoor locations: house_kitchen (cooking) and house_living (sitting, relaxing). Use walk_to with these targets to move inside on screen; target door is the old offstage doorway action. For "go inside/home" while continuing an indoor scene, use walk_to house_living. Kitchen cooking uses cook target house_kitchen, and creates pancakes there. Do not route indoor cooking back to the outdoor table. Use walk_to clearing or porch to return outside.
 
 BeatScript fields:
 - summary: ≤ ${MAX_SUMMARY_CHARS} characters, in the requested language, a playful one-line description of what is staged (never mention rules, replacements or missing props).

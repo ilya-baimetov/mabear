@@ -1,0 +1,31 @@
+{
+  "selected_at": "2026-11-06",
+  "source": "Explicit user selection: Russian sample #2 and English sample #6",
+  "actor": "masha",
+  "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+  "voice_id": "Lively_Girl",
+  "candidate_id": "lively",
+  "audition_letter": "B",
+  "languages": {
+    "ru": {
+      "sample_number": 2,
+      "request_id": "01a1b300-2427-7452-9399-1bfc7d4f08c9",
+      "original": "public/assets/voices/masha-audition/lively-ru.mp3",
+      "audition_level_matched": "public/assets/voices/masha-audition/lively-ru-level.wav"
+    },
+    "en": {
+      "sample_number": 6,
+      "request_id": "01a1b300-2506-7062-8040-919b1029e1f1",
+      "original": "public/assets/voices/masha-audition/lively-en.mp3",
+      "audition_level_matched": "public/assets/voices/masha-audition/lively-en-level.wav"
+    }
+  },
+  "recipe_source": "docs/voice-audition/jobs.json, jobs with index 1 and 5",
+  "integration_status": "Deployed and verified in authenticated Chrome: 66 baked recordings, fresh Russian and English generation, cached replay after reload, and pause/resume from the same moment. See docs/voice-integration/live-verification.json.",
+  "constraints": [
+    "Do not automatically play other candidates or the old browser voice",
+    "The user reports currently playing voices are bad and are not their selected samples",
+    "Preserve exact selected provider/voice recipe; do not substitute a similar system voice",
+    "Work resumed by user; retain the approved $2 voice allowance and durable runtime cap"
+  ]
+}

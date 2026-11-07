@@ -10,6 +10,7 @@ import napEn from "./bears_nap.en.json";
 import napRu from "./bears_nap.ru.json";
 import fishingEn from "./fishing_trip.en.json";
 import fishingRu from "./fishing_trip.ru.json";
+import {cozyEvening} from './cozy_evening';
 
 /** JSON imports widen literal types; re-validate every BeatScript through the frozen schema. */
 function load(raw: unknown): FixtureEpisode {
@@ -22,9 +23,9 @@ function load(raw: unknown): FixtureEpisode {
   };
 }
 
-export const FIXTURES: FixtureEpisode[] = [gardenEn, gardenRu, pancakeEn, pancakeRu, napEn, napRu, fishingEn, fishingRu].map(load);
+export const FIXTURES: FixtureEpisode[] = [gardenEn, gardenRu, pancakeEn, pancakeRu, napEn, napRu, fishingEn, fishingRu,cozyEvening('en'),cozyEvening('ru')].map(load);
 
-export const FIXTURE_IDS: FixtureEpisode["id"][] = ["garden_party", "pancake_morning", "bears_nap", "fishing_trip"];
+export const FIXTURE_IDS: FixtureEpisode["id"][] = ["garden_party", "pancake_morning", "bears_nap", "fishing_trip", "cozy_evening"];
 
 /** Collapse whitespace, trim, and unify curly quotes so pasted text still matches. */
 export function normalizeFixtureText(text: string): string {

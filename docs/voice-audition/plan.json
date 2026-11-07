@@ -1,0 +1,52 @@
+{
+  "status": "approved; all eight initial samples completed",
+  "prior_asset_budget_usd": 23.2,
+  "prior_asset_budget_fully_reserved": true,
+  "proposed_new_cap_usd": 2,
+  "languages": [
+    "ru",
+    "en"
+  ],
+  "text": {
+    "ru": "Мишка, смотри, что я придумала! Давай сварим кашу. Только совсем чуть-чуть. Ой! Она опять убегает! Мишка, помоги! Ну вот... А теперь можно попробовать? Вкусно! Хи-хи!",
+    "en": "Bear, look what I thought of! Let's make some porridge. Just a tiny little bit. Oh! It's bubbling over again! Bear, help! There we go... Can I taste it now? Yummy! Hee-hee!"
+  },
+  "baseline": "Exact existing Tts.speak/chooseVoice/childPitch path in the listener's browser, Masha pitch1.6 rate1.05; show selected system voice.",
+  "candidates": [
+    {
+      "id": "leda",
+      "label": "Bright and playful",
+      "endpoint_id": "google/gemini-3.8-flash-tts",
+      "voice": "Leda",
+      "rate_usd_per_1000_characters": 0.045
+    },
+    {
+      "id": "lively",
+      "label": "Light and mischievous",
+      "endpoint_id": "fal-ai/minimax/speech-2.8-hd",
+      "voice": "Lively_Girl",
+      "rate_usd_per_1000_characters": 0.1
+    },
+    {
+      "id": "designed",
+      "label": "Custom cartoon voice",
+      "endpoint_id": "fal-ai/qwen-3-tts/voice-design/1.7b",
+      "rate_usd_per_1000_characters": 0.09
+    },
+    {
+      "id": "jessica",
+      "label": "Expressive storyteller",
+      "endpoint_id": "elevenlabs/tts/eleven-v4",
+      "voice": "Jessica",
+      "rate_usd_per_1000_characters": 0.08
+    }
+  ],
+  "limits": [
+    "No current-game voice replacement before user review",
+    "No other actors",
+    "No cloning or uploading a real performer's recording",
+    "No full MiniMax voice-design purchase at3USD pervoice",
+    "Published rates are estimates, not invoices"
+  ],
+  "approved_new_cap_usd": 2
+}
