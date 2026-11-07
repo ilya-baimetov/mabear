@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 720" fill="none">
+  <defs>
+    <g id="pine" fill="#DB8B16">
+      <path d="M55 0 29 52 38 50 16 91 28 88 4 136 37 129 31 158H79L73 129 106 136 82 88 94 91 72 50 81 52Z"/>
+      <path d="M49 150H61V187H49Z"/>
+    </g>
+    <g id="spruce" fill="#DB8B16">
+      <path d="M41 0 21 42 28 40 10 75 20 72 0 113 29 108 23 137H59L53 108 82 113 62 72 72 75 54 40 61 42Z"/>
+      <path d="M36 128H46V164H36Z"/>
+    </g>
+  </defs>
+  <g opacity=".18">
+    <path fill="#DB8B16" d="M0 602C101 572 190 620 294 606S470 579 573 611 749 627 834 602 1009 619 1120 600 1325 572 1440 602V720H0Z"/>
+    <use href="#pine" transform="translate(-40 313) scale(1.7)"/>
+    <use href="#spruce" transform="translate(80 430) scale(1.2)"/>
+    <use href="#pine" transform="translate(190 470) scale(.83)"/>
+    <use href="#spruce" transform="translate(324 511) scale(.64)"/>
+    <use href="#pine" transform="translate(1064 494) scale(.72)"/>
+    <use href="#spruce" transform="translate(1160 449) scale(1.04)"/>
+    <use href="#pine" transform="translate(1260 324) scale(1.6)"/>
+    <use href="#spruce" transform="translate(1370 421) scale(1.2)"/>
+  </g>
+  <g fill="#DB8B16" opacity=".1">
+    <path d="M50 223c13-14 24-6 20 4-5 11-19 12-20-4Zm1251-102c10-12 22-8 20 4-2 9-17 13-20-4ZM212 346c8-8 17-3 13 5-4 8-13 6-13-5Z"/>
+    <path d="m105 304 8-8 8 8-8 8Zm1249-60 9-9 9 9-9 9ZM334 450l6-6 6 6-6 6Z"/>
+  </g>
+</svg>

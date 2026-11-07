@@ -1,0 +1,198 @@
+{
+  "results": [
+    {
+      "width": 1440,
+      "height": 860,
+      "visibleTextarea": 122.625,
+      "textareaHeight": 130,
+      "editorScrollHeight": 240.8125,
+      "canvas": {
+        "x": 34,
+        "y": 156,
+        "w": 954,
+        "h": 308,
+        "scrollHeight": 308
+      },
+      "transport": {
+        "x": 34,
+        "y": 464,
+        "w": 954,
+        "h": 104,
+        "scrollHeight": 103
+      },
+      "scopeClipped": false,
+      "playHit": "play",
+      "bodyWidth": 1440
+    },
+    {
+      "width": 1440,
+      "height": 800,
+      "visibleTextarea": 62.625,
+      "textareaHeight": 130,
+      "editorScrollHeight": 180.8125,
+      "canvas": {
+        "x": 34,
+        "y": 156,
+        "w": 954,
+        "h": 250,
+        "scrollHeight": 250
+      },
+      "transport": {
+        "x": 34,
+        "y": 404,
+        "w": 954,
+        "h": 104,
+        "scrollHeight": 103
+      },
+      "scopeClipped": false,
+      "playHit": "play",
+      "bodyWidth": 1440
+    },
+    {
+      "width": 1280,
+      "height": 720,
+      "visibleTextarea": 0,
+      "textareaHeight": 130,
+      "editorScrollHeight": 100.8125,
+      "canvas": {
+        "x": 34,
+        "y": 156,
+        "w": 794,
+        "h": 250,
+        "scrollHeight": 250
+      },
+      "transport": {
+        "x": 34,
+        "y": 324,
+        "w": 794,
+        "h": 104,
+        "scrollHeight": 103
+      },
+      "scopeClipped": false,
+      "bodyWidth": 1280
+    },
+    {
+      "width": 1024,
+      "height": 768,
+      "visibleTextarea": 36.625,
+      "textareaHeight": 130,
+      "editorScrollHeight": 154.8125,
+      "canvas": {
+        "x": 28,
+        "y": 156,
+        "w": 594,
+        "h": 250,
+        "scrollHeight": 250
+      },
+      "transport": {
+        "x": 28,
+        "y": 378,
+        "w": 594,
+        "h": 104,
+        "scrollHeight": 103
+      },
+      "scopeClipped": false,
+      "playHit": "play",
+      "bodyWidth": 1024
+    },
+    {
+      "width": 900,
+      "height": 844,
+      "visibleTextarea": 130,
+      "textareaHeight": 130,
+      "editorScrollHeight": 391.234375,
+      "canvas": {
+        "x": 19,
+        "y": 184.078125,
+        "w": 862,
+        "h": 340,
+        "scrollHeight": 340
+      },
+      "transport": {
+        "x": 12,
+        "y": 697,
+        "w": 876,
+        "h": 137,
+        "scrollHeight": 135
+      },
+      "scopeClipped": false,
+      "playHit": "play",
+      "bodyWidth": 900
+    },
+    {
+      "width": 801,
+      "height": 844,
+      "visibleTextarea": 130,
+      "textareaHeight": 130,
+      "editorScrollHeight": 391.234375,
+      "canvas": {
+        "x": 19,
+        "y": 184.078125,
+        "w": 763,
+        "h": 340,
+        "scrollHeight": 340
+      },
+      "transport": {
+        "x": 12,
+        "y": 697,
+        "w": 777,
+        "h": 137,
+        "scrollHeight": 135
+      },
+      "scopeClipped": false,
+      "playHit": "play",
+      "bodyWidth": 801
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "visibleTextarea": 130,
+      "textareaHeight": 130,
+      "editorScrollHeight": 408.28125,
+      "canvas": {
+        "x": 16,
+        "y": 181,
+        "w": 358,
+        "h": 220,
+        "scrollHeight": 220
+      },
+      "transport": {
+        "x": 12,
+        "y": 697,
+        "w": 366,
+        "h": 137,
+        "scrollHeight": 135
+      },
+      "scopeClipped": false,
+      "playHit": "play",
+      "bodyWidth": 390
+    },
+    {
+      "width": 320,
+      "height": 740,
+      "visibleTextarea": 130,
+      "textareaHeight": 130,
+      "editorScrollHeight": 408.28125,
+      "canvas": {
+        "x": 16,
+        "y": 181,
+        "w": 288,
+        "h": 220,
+        "scrollHeight": 220
+      },
+      "transport": {
+        "x": 12,
+        "y": 593,
+        "w": 296,
+        "h": 137,
+        "scrollHeight": 135
+      },
+      "scopeClipped": false,
+      "playHit": "play",
+      "bodyWidth": 320
+    }
+  ],
+  "mobilePlayVisible": true,
+  "pausedAt": 1.0595,
+  "resumedAt": 1.0736000000000006
+}

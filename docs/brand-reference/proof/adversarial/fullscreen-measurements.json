@@ -1,0 +1,78 @@
+[
+  {
+    "width": 1280,
+    "fullscreen": true,
+    "playHit": "play",
+    "scopeHit": "scope-story",
+    "canvas": {
+      "x": 10,
+      "y": 72,
+      "w": 1260,
+      "h": 540
+    },
+    "transport": {
+      "x": 10,
+      "y": 612,
+      "w": 1260,
+      "h": 108
+    },
+    "overlap": false
+  },
+  {
+    "width": 900,
+    "fullscreen": true,
+    "playHit": "play",
+    "scopeHit": "scope-story",
+    "canvas": {
+      "x": 7,
+      "y": 66,
+      "w": 886,
+      "h": 542
+    },
+    "transport": {
+      "x": 7,
+      "y": 608,
+      "w": 886,
+      "h": 105
+    },
+    "overlap": false
+  },
+  {
+    "width": 390,
+    "fullscreen": true,
+    "playHit": "play",
+    "scopeHit": "scope-story",
+    "canvas": {
+      "x": 7,
+      "y": 66,
+      "w": 376,
+      "h": 542
+    },
+    "transport": {
+      "x": 7,
+      "y": 608,
+      "w": 376,
+      "h": 105
+    },
+    "overlap": false
+  },
+  {
+    "width": 320,
+    "fullscreen": true,
+    "playHit": "play",
+    "scopeHit": "scope-story",
+    "canvas": {
+      "x": 7,
+      "y": 66,
+      "w": 306,
+      "h": 542
+    },
+    "transport": {
+      "x": 7,
+      "y": 608,
+      "w": 306,
+      "h": 105
+    },
+    "overlap": false
+  }
+]

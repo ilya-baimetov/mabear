@@ -1,0 +1,21 @@
+{
+  "date": "2026-11-06",
+  "worker": "mabear-storybook",
+  "url": "https://mabear-storybook.ilya-baimetov.workers.dev",
+  "version": "15fa4191-b9ea-4094-9923-c58956697c0a",
+  "css": "assets/studio-BlUbu-X5.css",
+  "entry": "assets/studio-DjMaX1D8.js",
+  "unitTests": 652,
+  "uniqueBrowserScenarios": 21,
+  "responsiveViewports": [[1440,860],[1440,800],[1280,720],[1024,768],[901,720],[900,844],[801,844],[390,844],[320,740]],
+  "liveChecks": {
+    "authenticatedStudio": "verified in Chrome",
+    "pausedAt": 9.983600000047685,
+    "immediateResumedAt": 9.983600000047685,
+    "laterPausedAt": 16.0246,
+    "healthStatus": 200,
+    "anonymousRootStatus": 302,
+    "anonymousSpeechPostStatus": 401
+  },
+  "proof": "proof/07-live-deployed.jpg"
+}

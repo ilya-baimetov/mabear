@@ -5,7 +5,7 @@ import { store } from "../store";
 import { selectedMoment } from "../storyFlow";
 import { Play, Pause, RotateCcw, Volume2, VolumeX, Film, LoaderCircle, RefreshCw, Clapperboard } from "lucide-react";
 
-export const BAND_COLORS = ["#a2bba2", "#d5ba81", "#cea6bb", "#9cbfc6", "#b8acd0", "#d3ac91", "#94bdae", "#c3c18c"];
+export const BAND_COLORS = ["#f7c84f", "#e9b5d1", "#cdb7e6", "#a9dcd5", "#f5ba91", "#d6d49a", "#a9cde7", "#ecc0db"];
 export const timecode = (value: number) => `${Math.floor(value / 60)}:${String(Math.floor(value % 60)).padStart(2, "0")}`;
 
 function voiceErrorText(code: string, lang: "en" | "ru"): string {

@@ -1,0 +1,304 @@
+/* The official site's visual vocabulary, applied to the existing creation workflow.
+ * Keep layout and interaction rules in styles.css; this file owns the brand treatment.
+ * Reference, font licensing and provenance: docs/brand-reference/. */
+@font-face { font-family: "Nunito"; src: url('/assets/brand/Nunito-Variable.woff2') format('woff2'); font-style: normal; font-weight: 200 1000; font-display: swap; }
+@font-face { font-family: "Rubik One"; src: url('/assets/brand/RubikOne-Regular.woff2') format('woff2'); font-style: normal; font-weight: 400; font-display: swap; }
+:root {
+  --purple: #702c7e;
+  --purple-deep: #54295e;
+  --purple-dark: #3e194b;
+  --yellow: #fab31a;
+  --orange: #ed732e;
+  --forest: var(--purple-deep);
+  --forest-2: var(--purple);
+  --leaf: #d9bfdf;
+  --honey: var(--yellow);
+  --honey-soft: #fff3d3;
+  --magenta: #c4296c;
+  --magenta-soft: #fff0f6;
+  --cream: #ffc84c;
+  --ink: #45254e;
+  --ink-soft: #76677c;
+  --card: #fff;
+  --line: #e9dceb;
+  --shadow: 0 5px 0 #9c5a2316, 0 10px 28px #70411812;
+  --display: "Rubik One", "Nunito", sans-serif;
+}
+body { background: var(--cream); }
+.app {
+  background: url('/assets/brand/forest-silhouette.svg') center bottom / 1440px auto repeat-x,
+    linear-gradient(125deg, #ffd765, #fab31a 72%, #ffc94a);
+}
+button, input, textarea, select { accent-color: var(--magenta); }
+:is(button, input, textarea, select, [role="slider"], summary, a):focus-visible {
+  outline: 3px solid var(--purple-deep);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 2px #fff;
+}
+.stage-col :is(button, input, [role="slider"]):focus-visible { outline-color: #ffe083; }
+.btn { border-radius: 12px; }
+.btn:hover:not(:disabled) { background: #f2e6f4; }
+.btn.on { background: var(--magenta); color: white; }
+
+/* A small, dimensional studio identity; artwork remains the hero in the player. */
+.topbar { min-height: 94px; padding-top: 15px; padding-bottom: 15px; gap: 20px; }
+.brand { gap: 11px; }
+.logo { width: 45px; height: 45px; background: var(--magenta); color: #fff; border-radius: 15px 11px 15px 10px; transform: rotate(-7deg); box-shadow: 0 4px 0 #9f1f55; }
+.brand-wordmark { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
+.brand-name { font-family: var(--display); font-weight: 400; font-size: 29px; line-height: 1.08; letter-spacing: -1.3px; color: var(--purple-deep); text-shadow: 0 2px 0 #fff5; }
+.brand-name>span { color: #ad235f; }
+.brand-caption { display: block; font-size: 8px; letter-spacing: 2px; font-weight: 900; color: var(--purple-deep); padding: 0; margin: 0; border: 0; }
+.top-actions { gap: 8px; }
+.top-actions .btn { min-height: 40px; color: var(--purple-deep); }
+.top-actions .examples-trigger { background: #fff8e6; box-shadow: 0 3px 0 #ad741f24; }
+.top-actions .examples-trigger:hover { background: white; }
+.top-actions .new-story { background: var(--purple); color: #fff; border: 0; box-shadow: 0 3px 0 var(--purple-deep); border-radius: 13px 10px 14px 11px; }
+.top-actions .new-story:hover { background: var(--purple-deep); }
+.lang-toggle { background: #ac661525; border-radius: 12px; }
+.lang-toggle button { color: var(--purple-deep); min-width: 32px; }
+.lang-toggle button.on { color: white; background: var(--purple-deep); border-radius: 9px; box-shadow: none; }
+.story-name { border-radius: 14px; background: #fff6db80; padding: 8px 14px; gap: 3px; }
+.story-name label { color: #714a30; font-size: 8px; letter-spacing: 1.4px; }
+.story-name input { color: var(--purple-deep); font-size: 14px; }
+.story-name input::placeholder { color: #806344; }
+.story-name input:focus { border-color: var(--purple); }
+.story-name:focus-within { outline: 2px solid var(--purple); outline-offset: 2px; }
+
+/* Rich purple is reserved for the movie and its transport. */
+.moment-studio .stage-col { background: var(--purple-deep); border: 0; border-radius: 23px; box-shadow: 0 5px 0 #48204b40, 0 12px 25px #7d45181a; padding: 10px 10px 0; color: white; }
+.player-heading { padding: 5px 10px 13px; gap: 17px; }
+.player-label { color: #ffe3a2; letter-spacing: 1.2px; }
+.player-scope-switch { background: #35163f; border-radius: 12px; padding: 4px; }
+.player-scope-switch button { color: #e4cfe9; border-radius: 9px; }
+.player-scope-switch button[aria-pressed="true"] { background: var(--magenta); color: white; box-shadow: 0 2px 0 #28113050; }
+.player-scope-switch button>span { background: #fff3; }
+.player-scope-caption { color: #ead9ef; }
+.stage-wrap { border-radius: 16px; background: #dfc3a0; }
+.stage-label { color: var(--purple-deep); background: #fffffff2; border-color: #fff8; box-shadow: 0 3px 0 #54295e18; border-radius: 13px 11px 14px 10px; }
+.stage-label>span { color: #7c5a82; }
+.fullscreen-btn { color: var(--purple); background: #fffffff2; border-color: white; }
+.fullscreen-btn:hover { background: #fff1cf; }
+.stage-scope { background: #54295eeb; color: white; border-color: #fff3; border-radius: 10px; }
+.stage-scope>span { background: #e7c5ea; }
+.stage-scope>span.scope-live { background: #ffce51; box-shadow: 0 0 0 3px #ffce5125; }
+.tap-hint { color: var(--purple-deep); background: #fff9e9f5; }
+.getting-ready { color: var(--purple-deep); background: #fff6de; }
+.stage-loading { color: var(--purple-deep); background: radial-gradient(ellipse at 45% 35%, #fff6da, #f8d887); }
+.loading-mark { color: var(--magenta); border: 2px solid #d79bb8; border-radius: 24px 32px 25px 34px; }
+.stage-loading strong { font-family: var(--display); font-weight: 400; font-size: 24px; }
+.transport { border-color: #ffffff25; }
+.moment-transport { padding: 12px 10px 14px; }
+.moment-transport .btn-primary { color: var(--purple-dark); background: var(--yellow); box-shadow: 0 3px 0 #ad6719; border-radius: 12px 10px 13px 9px; font-size: 13px; font-weight: 900; }
+.moment-transport .btn-primary:hover:not(:disabled) { background: #ffd061; }
+.moment-transport .btn-primary:disabled { background: #cbb9ce; color: #604f68; box-shadow: none; }
+.transport .btn.icon { color: #eadbef; }
+.transport .btn.icon:hover:not(:disabled) { background: #ffffff1c; color: white; }
+.transport-state, .transport-context>span { color: #e2cde8; }
+.time b { color: white; }
+.time>span { color: #dbc2e2; }
+.volume input { accent-color: #ffd063; }
+.moment-transport .update-story { border-color: #f4bc68; background: #fff1; color: #ffe2a4; }
+.moment-transport .update-story:hover:not(:disabled) { background: #ffffff20; }
+.storybar { background: #3e194b; border-radius: 8px; }
+.band { border-right-color: var(--purple-deep); color: #3e2447; opacity: .88; }
+.playhead { background: white; box-shadow: 0 0 0 1px #54295e, 0 0 5px #54295e; }
+.timeline-empty { color: #e8d3eb; }
+.compact-scope button { color: #e2cce7; }
+.compact-scope button[aria-pressed="true"] { background: var(--magenta); color: white; border-radius: 8px; }
+.cast-heading, .cast-heading>small, .cast-friend { color: #e0c9e5; }
+.cast-world .cast-portrait { background: #784a85; color: #fff0d0; }
+.cast-friend.selected { color: #ffdb7b; }
+.cast-friend.selected .cast-portrait { outline-color: var(--yellow); }
+.cast-next { background: var(--purple); border-color: #a374ad; color: white; box-shadow: -6px 0 10px var(--purple-deep); }
+.moment-studio .stage-col:fullscreen { border-radius: 0; padding: 12px 12px 0; box-shadow: none; }
+
+/* The writing surface stays quiet. The shaped magenta heading carries the brand. */
+.moment-studio .moment-workbench { border: 0; border-radius: 23px; background: white; box-shadow: var(--shadow); }
+.moment-header { position: relative; padding: 18px 22px 17px; border: 0; color: white; background: var(--magenta); border-radius: 0 0 48% 4% / 0 0 9px 4px; }
+.eyebrow { color: #7e498c; }
+.moment-header .eyebrow { color: #ffe5f0; font-size: 9px; letter-spacing: 1.3px; }
+.moment-position>div { color: white; }
+.moment-position>div i { color: #ffdaeb; }
+.moment-position .btn:hover:not(:disabled) { background: #ffffff21; }
+.moment-header h1 { color: white; font-family: var(--display); font-size: 25px; font-weight: 400; letter-spacing: -.4px; line-height: 1.2; margin: 10px 0 8px; }
+.moment-header>p { color: #fff3f7; font-size: 11px; }
+.moment-header button:focus-visible { outline-color: #ffe18a; }
+.moment-editor-scroll { scrollbar-color: #d7badd transparent; }
+.moment-continuity { background: #f7f0fa; border-color: #ebddef; border-radius: 14px; }
+.context-label { color: #775382; }
+.previous-moment { color: #705279; }
+.context-actor>img { border-color: white; box-shadow: 0 1px 4px #54295e18; }
+.context-actor b { color: var(--purple-deep); }
+.context-actor small { color: #76617d; }
+.context-more { background: #e8d6ed; color: var(--purple); }
+.continuity-warning { border-color: #e6cddd; color: #805a23; }
+.direction-label { color: var(--purple-deep); font-size: 13px; }
+.direction-input { border: 1.5px solid #cdb6d3; background: white; border-radius: 13px; }
+.direction-input:focus-within { border-color: var(--magenta); box-shadow: 0 0 0 3px #c4296c17; }
+.direction-input textarea { color: var(--ink); }
+.direction-input textarea:focus-visible { outline: none; box-shadow: none; }
+.direction-input textarea::placeholder { color: #83748b; }
+.direction-input-foot>span { color: #796a80; font-size: 9px; }
+.direction-input-foot>button { color: var(--purple); font-size: 10px; }
+.direction-input-foot>button:hover, .direction-input-foot>button.on { background: #f4e9f6; color: var(--purple-deep); }
+.direction-toolbox { background: #fbf7fc; border-color: var(--line); }
+.toolbox-label { color: #775e81; }
+.author-cast button, .author-places button { background: white; color: var(--purple-deep); border-color: #e5d4e9; }
+.author-cast button:hover, .author-places button:hover { background: #f5eaf7; border-color: #b38cbe; }
+.moment-seeds>span { color: #796981; }
+.moment-seeds>button { color: var(--purple-deep); background: #fff8e8; border-color: #f0ddb3; border-radius: 11px; }
+.moment-seeds>button:hover { color: var(--purple-deep); background: #ffefc6; }
+.moment-seeds>button.seed-examples { color: #a21d59; }
+.moment-feedback, .moment-feedback>svg { color: #796181; }
+.moment-feedback.feedback-error { color: #873d26; background: #fff0dc; }
+.moment-feedback.feedback-error>svg, .moment-feedback.feedback-working { color: #875422; }
+.moment-options>button { color: #7c6584; font-size: 11px; }
+.moment-options>div>button { color: var(--purple-deep); background: #f8f1fa; }
+.moment-options>div>button:last-child { color: #9c3156; }
+.moment-actions { background: #fbf5fc; border-color: #eadbeb; gap: 9px; }
+.moment-result-row>span { color: #73507f; font-size: 11px; }
+.moment-result-row>button { color: var(--purple); background: white; border-color: #d8c0df; }
+.moment-result-row>button:hover { background: #f1e4f6; }
+.moment-preview { background: var(--magenta); border-color: var(--magenta); color: white; border-radius: 12px 10px 13px 10px; box-shadow: 0 3px 0 #991b52; }
+.moment-preview:hover:not(:disabled) { background: #ac205f; }
+.moment-preview:disabled { background: #e4d5e9; border-color: #e4d5e9; color: #86718f; box-shadow: none; }
+.moment-preview.has-preview { color: var(--purple); background: white; border-color: #bc96c9; box-shadow: 0 2px 0 #e8d8ed; }
+.moment-preview.has-preview:hover:not(:disabled) { background: #f5eaf9; }
+.next-moment { color: var(--purple-deep); border-color: #e5c57d; background: #fff5db; }
+.next-moment.next-ready { background: #ffdc7c; color: var(--purple-deep); border-color: #edc35f; }
+.next-moment:hover:not(:disabled) { background: #ffe6a5; }
+.insert-explanation { color: #7c6883; font-size: 10px; }
+.moment-actions .moment-polish-body { background: white; border-color: #e8d9ed; }
+.moment-actions .moment-polish-body p, .moment-look-controls>label>span { color: #795e83; }
+.moment-look-controls select { color: var(--purple-deep); border-color: #ceb3d8; background: #fff; }
+.angle-variation { background: #f7effa; border-color: #e2d0e8; color: var(--purple); }
+.angle-variation:hover { background: #ecdcf2; }
+
+/* Storyboard cards are tactile, with a distinct selected edge and current-shot badge. */
+.moment-studio .moment-sequence { background: #fffaf0; border: 0; border-radius: 23px; padding: 15px 17px 16px; box-shadow: var(--shadow); }
+.sequence-heading { margin-bottom: 13px; }
+.sequence-heading>div>span { color: var(--purple-deep); font-family: var(--display); font-size: 16px; font-weight: 400; letter-spacing: .1px; }
+.sequence-heading>div>span>svg { color: var(--magenta); width: 18px; height: 18px; }
+.sequence-heading strong { color: #7c647e; font-size: 12px; }
+.sequence-actions .btn { color: var(--purple); }
+.sequence-actions .watch-story { color: white; background: var(--purple); border: 0; border-radius: 11px 9px 12px 10px; box-shadow: 0 3px 0 var(--purple-deep); }
+.sequence-actions .watch-story:hover:not(:disabled) { color: white; background: var(--purple-deep); }
+.moment-strip { padding: 3px 3px 7px; scrollbar-color: #d4b7da transparent; }
+.moment-tile { color: var(--purple-deep); background: white; border: 1.5px solid #e4d8e4; border-radius: 15px; box-shadow: 0 3px 0 #e8d8dd88; }
+.moment-tile:hover { background: white; border-color: #b88ec2; }
+.moment-tile.selected { border-color: var(--magenta); background: #fff5f9; box-shadow: 0 0 0 1px var(--magenta), 0 4px 0 #c4296c1a; }
+.moment-tile.on-stage { background: white; box-shadow: 0 3px 0 #e8d8dd88; }
+.moment-tile.selected.on-stage { background: #fff5f9; box-shadow: 0 0 0 1px var(--magenta), 0 4px 0 #c4296c1a; }
+.storyboard-frame { border-color: #e8d6e9; }
+.moment-tile-top>b, .moment-tile.selected .moment-tile-top>b { color: var(--magenta); font-weight: 900; }
+.moment-tile-top>span { color: #79627e; }
+.moment-tile.on-stage .moment-tile-top>span { color: #724b18; background: #fff0be; padding: 2px 5px; border-radius: 5px; }
+.moment-tile-text { color: #563d60; font-size: 12px; }
+.moment-tile-foot { color: #7a627f; }
+.moment-tile.selected .moment-tile-foot>span:first-child { color: #ac205f; }
+.storyboard-add { color: var(--purple); background: #f9f0fc; border: 1.5px dashed #c9a7d3; border-radius: 15px; }
+.storyboard-add>svg { background: white; border-radius: 12px; width: 38px; height: 38px; padding: 8px; box-shadow: 0 2px 0 #e0cbe6; }
+.storyboard-add:hover { background: #f0e0f5; }
+
+/* The library and script dialogs belong to the same studio. */
+.story-library, .full-script-dialog, .replace-story-dialog { background: white; color: var(--ink); border: 0; border-radius: 25px; box-shadow: 0 8px 0 #54295e22, 0 24px 100px #34123d55; }
+:is(.story-library, .full-script-dialog, .replace-story-dialog)::backdrop { background: #3e194b88; }
+.library-heading h2, .full-script-content h2, .replace-story-dialog h2 { font-family: var(--display); font-weight: 400; font-size: 27px; letter-spacing: -.3px; color: var(--purple); }
+.library-heading p, .full-script-content>p, .replace-story-dialog p { color: #78617f; }
+.library-heading>.btn { color: var(--purple); }
+.library-card { background: #fff; color: var(--purple-deep); border-color: #e5d5e9; border-radius: 20px; box-shadow: 0 3px 0 #e9dbec; }
+.library-card:hover { box-shadow: 0 6px 0 #e3cfe9; }
+.library-card-copy>span:first-child { color: #966375; }
+.library-card h3 { font-family: var(--display); font-size: 19px; font-weight: 400; letter-spacing: -.3px; }
+.library-card p { color: #7c6482; }
+.library-open { color: var(--magenta); }
+.start-writing { color: white; background: var(--magenta); box-shadow: 0 3px 0 #961b52; }
+.start-writing:hover:not(:disabled) { background: #ad205e; }
+.full-script-content>textarea { background: #fffcff; color: var(--ink); border-color: #cfb5d8; }
+.full-script-content>footer>span { color: #796080; }
+.replace-icon { color: var(--magenta); background: #ffedf5; }
+.replace-story-dialog .replace-warning { color: #87657b; }
+
+@media (min-width: 1600px) {
+  .topbar { min-height: 100px; }
+  .moment-header h1 { font-size: 29px; }
+}
+@media (max-width: 1100px) {
+  .topbar { gap: 12px; }
+  .brand-name { font-size: 26px; }
+  .brand-caption { font-size: 7px; letter-spacing: 1.6px; }
+  .logo { width: 39px; height: 40px; }
+  .moment-header h1 { font-size: 23px; }
+  .player-heading { gap: 11px; }
+}
+/* Keep the direction itself visible on laptop-height screens. The movie and full
+ * storyboard retain their places; only the surrounding chrome becomes compact. */
+@media (min-width: 901px) {
+  /* A short window scrolls the document instead of crushing the canvas and
+   * writing area beneath their controls. Includes the storyboard's own height. */
+  .moment-studio.app { min-height: 860px; height: max(100dvh, 860px); }
+  .moment-studio .main { grid-template-rows: minmax(480px, 1fr) auto; }
+}
+@media (min-width: 901px) and (max-height: 900px) {
+  .topbar { min-height: 84px; padding-top: 10px; padding-bottom: 10px; }
+  .moment-header { padding: 11px 22px 12px; }
+  .moment-header h1 { font-size: 23px; margin: 5px 0 0; }
+  .moment-header>p { display: none; }
+  .moment-editor-scroll { padding-top: 12px; padding-bottom: 12px; }
+  .moment-continuity { padding: 9px 11px; margin-bottom: 11px; }
+  .previous-moment { -webkit-line-clamp: 1; margin: 6px 0 7px; }
+  .context-actors { margin-top: 7px; }
+  .direction-label { margin-bottom: 7px; }
+  .moment-actions { padding: 11px 22px 12px; gap: 6px; }
+  .moment-result-row { min-height: 22px; margin-bottom: 0; }
+  .moment-result-row>button { padding: 4px 6px; }
+  .moment-preview { min-height: 40px; }
+  .next-moment { min-height: 35px; }
+  .insert-explanation { margin: 0; line-height: 1.4; }
+  .moment-studio .moment-sequence { padding: 12px 17px; }
+  .sequence-heading { margin-bottom: 9px; }
+  .storyboard-frame { height: 76px; }
+}
+@media (max-width: 900px) {
+  .app { background-size: 1000px auto, auto; background-attachment: fixed; }
+  .topbar { min-height: auto; padding: 15px 14px; }
+  .top-actions { gap: 5px; }
+  .top-actions .btn { min-height: 37px; }
+  .moment-studio .story-name { background: #fff5d68f; border-radius: 10px; padding: 7px 10px; gap: 9px; }
+  .story-name input { font-size: 13px; }
+  .moment-studio .stage-col { padding: 7px; border-radius: 20px; }
+  .player-heading { padding: 5px 5px 11px; }
+  .player-scope-switch button { min-height: 35px; }
+  .moment-transport { background: #54295ef7; border-color: #ba84c6; border-radius: 19px; box-shadow: 0 6px 28px #35134055; }
+  .moment-studio .moment-workbench, .moment-studio .moment-sequence { border-radius: 20px; }
+  .moment-studio .moment-sequence { padding: 13px 12px; }
+  .sequence-heading>div>span { font-size: 14px; }
+  .sequence-heading strong { font-size: 10px; }
+  .sequence-actions .btn { font-size: 10px; }
+  .moment-header h1 { font-size: 26px; }
+  .stage-col:fullscreen .transport { background: var(--purple-deep); }
+}
+@media (max-width: 480px) {
+  .brand { gap: 7px; }
+  .brand-name { font-size: 23px; }
+  .brand-caption { font-size: 6px; letter-spacing: 1.6px; }
+  .logo { width: 31px; height: 34px; border-radius: 10px 8px 11px 8px; }
+  .logo svg { width: 21px; }
+  .top-actions { gap: 4px; }
+  .top-actions .btn { font-size: 10px; padding: 7px; }
+  .lang-toggle { margin-left: 2px; padding: 2px; }
+  .lang-toggle button { min-width: 27px; }
+  .library-heading h2 { font-size: 23px; }
+  .library-card h3 { font-size: 17px; }
+  .moment-transport .btn-primary { font-size: 12px; }
+}
+@media (max-width: 360px) {
+  .brand-name { font-size: 22px; }
+  .top-actions .btn { padding: 7px 5px; }
+  .top-actions .btn>svg { width: 12px; }
+  .lang-toggle button { min-width: 25px; }
+}
+@media (max-width: 380px) {
+  .player-heading .player-label { display: none; }
+  .player-scope-switch { width: 100%; margin-left: 0; justify-content: center; }
+}

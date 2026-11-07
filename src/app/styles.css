@@ -216,7 +216,7 @@ summary { cursor: pointer; font-weight: 800; color: var(--honey); }
   .cast-friend { flex-basis: 60px; }
   .app.with-bts .main { padding-right: 18px; grid-template-columns: minmax(0, 1fr) 340px; }
 }
-@media (max-width: 1000px) and (min-width: 801px) {
+@media (max-width: 1000px) and (min-width: 901px) {
   .main { grid-template-columns: minmax(0, 1fr) 315px; gap: 12px; padding: 0 14px 16px; }
   .topbar { padding-left: 16px; padding-right: 16px; }
   .transport-context { display: none; }
@@ -229,7 +229,7 @@ summary { cursor: pointer; font-weight: 800; color: var(--honey); }
   .stage-label { left: 12px; top: 12px; padding: 10px 12px; }
   .fullscreen-btn { top: 12px; right: 12px; }
 }
-@media (max-width: 800px) {
+@media (max-width: 900px) {
   .app { height: auto; min-height: 100dvh; }
   .topbar { display: grid; grid-template-columns: 1fr auto; gap: 12px 8px; padding: 14px 16px 13px; }
   .brand-name { font-size: 25px; }
@@ -311,7 +311,7 @@ summary { cursor: pointer; font-weight: 800; color: var(--honey); }
   .logo { display: none; }
   .top-actions .btn { padding: 7px 5px; }
 }
-@media (max-height: 650px) and (min-width: 801px) {
+@media (max-height: 650px) and (min-width: 901px) {
   .app { min-height: 560px; }
   .topbar { min-height: 66px; padding-top: 10px; padding-bottom: 10px; }
   .main { padding-bottom: 14px; }
@@ -326,7 +326,7 @@ summary { cursor: pointer; font-weight: 800; color: var(--honey); }
 
 /* A phone should never make the writer hunt for the Play button. */
 .cast-friend>span:last-child { display: block; max-width: 76px; overflow: hidden; text-overflow: ellipsis; }
-@media (max-width: 800px) {
+@media (max-width: 900px) {
   .main, .app.with-bts .main { padding-bottom: 136px; }
   .transport { position: fixed; z-index: 12; bottom: max(10px, env(safe-area-inset-bottom)); left: 12px; right: 12px; padding: 12px 14px 14px; border: 1px solid #526146; border-radius: 16px; background: #20382df5; backdrop-filter: blur(14px); box-shadow: 0 8px 32px #10251d40; }
   .cast-deck { padding-bottom: 15px; }
@@ -477,7 +477,7 @@ summary { cursor: pointer; font-weight: 800; color: var(--honey); }
   .moment-header h1 { font-size: 27px; }
   .app.moment-studio.with-bts .main { grid-template-columns: minmax(0, 1fr) 354px; padding-right: 18px; }
 }
-@media (max-width: 1000px) and (min-width: 801px) {
+@media (max-width: 1000px) and (min-width: 901px) {
   .moment-studio .main { grid-template-columns: minmax(0, 1fr) 330px; gap: 12px; }
   .story-name { width: 220px; }
   .moment-transport .btn-primary { min-width: 135px; font-size: 10px; padding: 12px 11px; }
@@ -488,7 +488,7 @@ summary { cursor: pointer; font-weight: 800; color: var(--honey); }
   .sequence-heading>span { font-size: 7px; letter-spacing: .7px; }
   .moment-position>.eyebrow { font-size: 8px; letter-spacing: 1px; }
 }
-@media (max-width: 800px) {
+@media (max-width: 900px) {
   .moment-studio .topbar { grid-template-columns: 1fr auto; gap: 11px 6px; }
   .moment-studio .story-name { grid-column: 1 / -1; grid-row: 2; width: 100%; flex-direction: row; gap: 10px; align-items: center; justify-content: center; padding-top: 2px; }
   .story-name input { width: auto; max-width: 240px; text-align: left; font-size: 12px; padding-left: 0; }
