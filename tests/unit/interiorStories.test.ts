@@ -5,7 +5,8 @@ import {initialWorldState} from '../../src/compiler/worldState';
 import {EMPTY_CARRY} from '../../src/compiler/audioCues';
 import {parseParagraph} from '../../src/director/offline/parser';
 import {getFixture} from '../../src/director/fixtures';
-import {isInsideHouse,MARKS} from '../../src/shared/bible/set';
+import {isInsideHouse,MARKS,sceneLocationAt} from '../../src/shared/bible/set';
+import {HOUSE_LIVING_SEAT_HEIGHT} from '../../src/shared/houseLayout';
 import {DEFAULT_REMIX} from '../../src/shared/schema';
 import {planPath} from '../../src/compiler/path';
 import {evaluate} from '../../src/engine/player/evaluate';
@@ -32,19 +33,26 @@ describe('usable house stories',()=>{
   expect(timeline.segments[0].segment.endState.actors.bear.mark).toBe('house_kitchen');
   expect(timeline.segments[0].segment.endState.props.pancakes.at).toBe('house_kitchen');
  });
- it('routes both boundary crossings through the door, never through a side wall',()=>{
-  for(const outside of [[0,0],[-12,-7],[0,-12]] as [number,number][]){
-   for(const mark of ['house_kitchen','house_living'] as const){
-    const inside=standPos(mark);expect(inside).toEqual(MARKS[mark].pos);
-    for(const path of [planPath(outside,inside),planPath(inside,outside)]){
-     expect(path).toContainEqual(MARKS.door.pos);
-     for(let i=1;i<path.length;i++){
-      const a=path[i-1],b=path[i];
-      if(isInsideHouse(...a)!==isInsideHouse(...b))expect(a[0]).toBe(-6);
-     }
-    }
-   }
+ it('cuts between the exterior and the independently staged interior without an invisible walk',()=>{
+  for(const mark of ['house_kitchen','house_living'] as const){
+   const inside=standPos(mark);expect(inside).toEqual(MARKS[mark].pos);
+   expect(planPath([0,0],inside)).toEqual([[0,0],inside]);
   }
+  const fixture=getFixture('cozy_evening','en')!;
+  const {timeline}=compileEpisode(fixture.paragraphs.map((p,i)=>({paragraphId:`p${i}`,version:1,beatScript:p.beatScript,remix:DEFAULT_REMIX})),'en');
+  let crossings=0;
+  for(const segment of timeline.segments)for(const actor of ['bear','masha'] as const)for(const clip of segment.segment.actorClips[actor]){
+   if(!clip.params.from||!clip.params.to||isInsideHouse(...clip.params.from)===isInsideHouse(...clip.params.to))continue;
+   crossings++;expect(clip.params.sceneCut).toBe(true);expect(clip.dur).toBeLessThanOrEqual(1);
+   const from=evaluate(timeline,segment.offset+clip.start+clip.dur*.2).actors[actor];
+   const to=evaluate(timeline,segment.offset+clip.start+clip.dur*.8).actors[actor];
+   expect([from.pos[0],from.pos[2]]).toEqual(clip.params.from);
+   expect([to.pos[0],to.pos[2]]).toEqual(clip.params.to);
+  }
+  expect(crossings).toBeGreaterThanOrEqual(4);
+ });
+ it('keeps every exterior semantic mark out of the revised house stage',()=>{
+  for(const mark of Object.values(MARKS))expect(sceneLocationAt(...mark.pos)==='house',mark.id).toBe(mark.cluster==='interior');
  });
  it.each(['en','ru'] as const)('plays the %s indoor sample inside, eats there, and returns outside',(lang)=>{
   const fixture=getFixture('cozy_evening',lang)!;
@@ -53,7 +61,7 @@ describe('usable house stories',()=>{
   expect(results[0].segment.endState.actors.bear.mark).toBe('house_kitchen');
   expect(results[0].segment.endState.actors.masha.mark).toBe('house_living');
   expect(results[0].segment.endState.props.pancakes.at).toBe('house_kitchen');
-  const pickup=results[1].segment.actorClips.bear.find(c=>c.verb==='take')!;
+  const pickup=results[1].segment.actorClips.bear.find(c=>c.verb==='take'&&c.params.item==='pancakes'&&c.params.pickUpAt)!;
   const pickupFrame=evaluate(timeline,timeline.segments[1].offset+pickup.start+pickup.dur*.51);
   expect(pickupFrame.props.pancakes.attachedTo).toBe('bear');
   expect(pickupFrame.props.frying_pan.attachedTo).toBeNull();
@@ -62,7 +70,7 @@ describe('usable house stories',()=>{
   expect(isInsideHouse(frame.actors.masha.pos[0],frame.actors.masha.pos[2])).toBe(true);
   expect(frame.actors.masha.posture).toBe('sit');
   expect(frame.actors.masha.opacity).toBe(1);
-  expect(SEAT_HEIGHT.house_living).toBe(.47);
+  expect(SEAT_HEIGHT.house_living).toBe(HOUSE_LIVING_SEAT_HEIGHT);
   expect(frame.camera.pos[2]).toBeGreaterThan(frame.camera.look[2]);
   for(const actor of ['masha','bear'] as const){
    const end=results[2].segment.endState.actors[actor];

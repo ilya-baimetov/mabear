@@ -2,15 +2,22 @@
 import type { ActorId, CamKey, Lang, Timeline, Vec3 } from "../../shared/schema";
 import type { AudioEngine, FrameState, StageHandle } from "../api";
 import { evaluate } from "./evaluate";
+import type { PlaybackEvaluator } from "../physics/rapierReplay";
 
 export interface PlayerOptions {
   stage: StageHandle;
   audio: AudioEngine | null;
   onTime?: (t: number, playing: boolean) => void;
   onFrame?: (frame: FrameState) => void;
+  /** Optional deterministic physics trajectory; unsupported stories retain animation. */
+  evaluator?: PlaybackEvaluator;
 }
 
 export class Player {
+  /** Thumbnails use the same canonical trajectory and ownership as playback. */
+  evaluateFrame(view: Timeline, t: number): FrameState {
+    return this.opts.evaluator?.evaluate(view, t) ?? evaluate(view, t);
+  }
   private timeline: Timeline = { segments: [], duration: 0 };
   /** A moment preview retains earlier context but excludes later moments from rendering and audio. */
   private previewTimeline: Timeline = this.timeline;
@@ -42,6 +49,7 @@ export class Player {
   }
 
   setTimeline(tl: Timeline, lang: Lang): void {
+    this.opts.evaluator?.setTimeline(tl);
     const wasPlaying = this.playing;
     const changed = tl !== this.timeline || lang !== this.lang;
     if (changed && this.resumableAudio) { this.opts.audio?.stop(); this.resumableAudio = false; }
@@ -137,7 +145,7 @@ export class Player {
     const atEnd = !this.playing && view.duration > 0 && this.t >= view.duration - 1e-3;
     const evalT = atEnd && atSegmentEnd ? view.duration + this.idleT : this.t;
     try {
-      let frame = evaluate(view, evalT);
+      let frame = this.opts.evaluator ? this.opts.evaluator.evaluate(view, evalT) : evaluate(view, evalT);
       if (this.cameraOverride) frame = { ...frame, camera: this.cameraOverride(frame) };
       if (this.castOverride) frame = { ...frame, cast: this.castOverride };
       this.lastFrame = frame;
@@ -156,5 +164,6 @@ export class Player {
   dispose(): void {
     cancelAnimationFrame(this.raf);
     this.opts.audio?.stop();
+    this.opts.evaluator?.dispose();
   }
 }

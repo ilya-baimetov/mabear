@@ -1,0 +1,21 @@
+{
+  "url": "file:///Users/ilya.baimetov/Projects/mabear/codex/docs/staging-interactions/index.html",
+  "defaultCase": "carry-lift",
+  "count": 11,
+  "playback": [
+    {
+      "elapsed": 0.6573000000000029,
+      "ready": 4,
+      "paused": true
+    },
+    {
+      "elapsed": 0.6572999999999993,
+      "ready": 4,
+      "paused": true
+    }
+  ],
+  "seekAndRestart": true,
+  "mobileOverflow": false,
+  "jsonRequests": [],
+  "errors": []
+}

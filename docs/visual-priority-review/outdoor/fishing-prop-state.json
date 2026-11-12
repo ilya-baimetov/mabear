@@ -1,0 +1,119 @@
+[
+  {
+    "t": 18,
+    "bear": {
+      "verb": "fish",
+      "holding": "fishing_rod"
+    },
+    "fishingRod": {
+      "visible": true,
+      "pos": [
+        -5.912408796508567,
+        1.08,
+        8.956560045117811
+      ],
+      "attachedTo": "bear"
+    },
+    "fish": {
+      "visible": false,
+      "pos": [
+        0,
+        -10,
+        0
+      ],
+      "attachedTo": null
+    },
+    "camera": {
+      "pos": [
+        -1.6748850375,
+        1.4313423437500001,
+        5.42748179375
+      ],
+      "look": [
+        -5.5,
+        0.533,
+        9.5
+      ],
+      "fov": 40,
+      "location": "pond"
+    }
+  },
+  {
+    "t": 19.285,
+    "bear": {
+      "verb": "fish",
+      "holding": "fishing_rod"
+    },
+    "fishingRod": {
+      "visible": true,
+      "pos": [
+        -6.102596988841181,
+        1.08,
+        9.1801799427185
+      ],
+      "attachedTo": "bear"
+    },
+    "fish": {
+      "visible": false,
+      "pos": [
+        0,
+        -10,
+        0
+      ],
+      "attachedTo": null
+    },
+    "camera": {
+      "pos": [
+        -1.77454,
+        1.41275,
+        5.53383
+      ],
+      "look": [
+        -5.5,
+        0.533,
+        9.5
+      ],
+      "fov": 40,
+      "location": "pond"
+    }
+  },
+  {
+    "t": 21,
+    "bear": {
+      "verb": "fish",
+      "holding": "fish"
+    },
+    "fishingRod": {
+      "visible": true,
+      "pos": [
+        -5.162498128678889,
+        0.28,
+        9.285308391280077
+      ],
+      "attachedTo": null
+    },
+    "fish": {
+      "visible": true,
+      "pos": [
+        -6.102596988841181,
+        1.08,
+        9.1801799427185
+      ],
+      "attachedTo": "bear"
+    },
+    "camera": {
+      "pos": [
+        -1.9261199625,
+        1.38447015625,
+        5.69559070625
+      ],
+      "look": [
+        -5.5,
+        0.533,
+        9.5
+      ],
+      "fov": 40,
+      "location": "pond"
+    }
+  }
+]

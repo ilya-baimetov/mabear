@@ -1,0 +1,58 @@
+[
+  {
+    "file": "approach-comparison.mp4",
+    "bytes": 7858128,
+    "sha256": "9a2dc31f89c1d71415574b9870287273e1b4166df33ca7dae9289283d9bd79ec",
+    "fullDecode": true,
+    "tailDecode": true
+  },
+  {
+    "file": "entry-comparison.mp4",
+    "bytes": 8010096,
+    "sha256": "b5cad0a10c9098e32e3987194b991d7db7f0adfd5d62c66eedc86780e420f441",
+    "fullDecode": true,
+    "tailDecode": true
+  },
+  {
+    "file": "before-after.mp4",
+    "bytes": 15867577,
+    "sha256": "86d824f6683c595fdd52f77afb0eb813ea2c96f035a5528ea89d334d8b964497",
+    "fullDecode": true,
+    "tailDecode": true
+  },
+  {
+    "file": "before/entry.mp4",
+    "bytes": 3619097,
+    "sha256": "6eb03cdfabe63f9dce85cac3a7d0c81af7ae81c3f67cb7f75db8151c7d8026b0",
+    "fullDecode": true,
+    "tailDecode": true
+  },
+  {
+    "file": "before/approach.mp4",
+    "bytes": 4823337,
+    "sha256": "5a1d416a9dadfd3801937ee61909821f22a2ad63ff412cdb40a3438a39120eae",
+    "fullDecode": true,
+    "tailDecode": true
+  },
+  {
+    "file": "after/entry.mp4",
+    "bytes": 12306634,
+    "sha256": "448f0acf1f997e19c9baa9736b3b9cd283dc459b92cfcc3f5f7dc95a7f297aa7",
+    "fullDecode": true,
+    "tailDecode": true
+  },
+  {
+    "file": "after/roundtrip.mp4",
+    "bytes": 26496763,
+    "sha256": "71832a28b70035b434d76b5ae9aa0b51799144e9241cc928f6e1d33e573ff940",
+    "fullDecode": true,
+    "tailDecode": true
+  },
+  {
+    "file": "after/approach.mp4",
+    "bytes": 5155361,
+    "sha256": "89dcead899817622db86d4d92bd114a1b16451b440761e512224eb5a9d1b3e28",
+    "fullDecode": true,
+    "tailDecode": true
+  }
+]

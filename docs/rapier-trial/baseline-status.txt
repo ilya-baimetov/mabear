@@ -1,0 +1,75 @@
+ M docs/player-storyboard/04-after-desktop.png
+ M docs/player-storyboard/05-after-mobile.png
+ M src/app/castCamera.ts
+ M src/compiler/camera.ts
+ M src/compiler/compile.ts
+ M src/compiler/path.ts
+ M src/engine/api.ts
+ M src/engine/cameraClearance.ts
+ M src/engine/characters/generated.ts
+ M src/engine/characters/mashaContacts.ts
+ M src/engine/characters/sourceContacts.ts
+ M src/engine/motion/library.ts
+ M src/engine/motion/verbs/body.ts
+ M src/engine/motion/verbs/common.ts
+ M src/engine/motion/verbs/gesture.ts
+ M src/engine/motion/verbs/objects.ts
+ M src/engine/player/evaluate.ts
+ M src/engine/props/props.ts
+ M src/engine/set/bearsYard.ts
+ M src/engine/set/forestLocations.ts
+ M src/engine/set/houseInterior.ts
+ M src/engine/stage.ts
+ M src/shared/bible/set.ts
+ M src/shared/propPlacement.ts
+ M src/shared/schema.ts
+ M tests/unit/camera.test.ts
+ M tests/unit/cameraClearance.test.ts
+ M tests/unit/interiorStories.test.ts
+ M tests/unit/interiorSurfaces.test.ts
+ M tests/unit/mashaPerformance.test.ts
+ M tests/unit/storySeatExit.test.ts
+ M tests/unit/storybookReview.test.ts
+?? docs/interior-integration/
+?? docs/interior-macro-reference/
+?? docs/interior-reference/
+?? docs/rapier-trial/
+?? docs/staging-interactions/
+?? docs/visual-priority-review/
+?? scripts/buildInteriorBlockout.ts
+?? scripts/captureInteriorBlockout.mjs
+?? scripts/checkCookingStaging.ts
+?? scripts/interior-integration-capture.ts
+?? scripts/interior-integration-comparison.ts
+?? scripts/interior-integration-media-check.ts
+?? scripts/interior-integration-package.ts
+?? scripts/interior-integration-player-check.ts
+?? scripts/interior-integration-ui-check.ts
+?? scripts/interior-integration.vite.ts
+?? scripts/staging-interactions-capture.ts
+?? scripts/staging-interactions-comparison.ts
+?? scripts/staging-interactions-embed.ts
+?? scripts/staging-interactions-media-check.ts
+?? scripts/staging-interactions-player-check.ts
+?? scripts/staging-interactions.vite.ts
+?? src/engine/characters/carryContacts.ts
+?? src/engine/characters/contactHands.ts
+?? src/engine/characters/hugContacts.ts
+?? src/engine/set/interiorShapes/
+?? src/shared/carrySupport.ts
+?? src/shared/cookingStation.ts
+?? src/shared/forestLayout.ts
+?? src/shared/houseLayout.ts
+?? src/shared/physicalInteractions.ts
+?? tests/unit/cameraVisibility.test.ts
+?? tests/unit/cookingStaging.test.ts
+?? tests/unit/houseNavigation.test.ts
+?? tests/unit/interiorContinuity.test.ts
+?? tests/unit/physicalInteractions.test.ts
+?? tools/interior-blockout.html
+?? tools/interior-blockout.ts
+?? tools/interior-integration.html
+?? tools/interior-integration.ts
+?? tools/interior-shapes/
+?? tools/staging-interactions.html
+?? tools/staging-interactions.ts

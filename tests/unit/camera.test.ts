@@ -56,7 +56,9 @@ describe("auto-cinematographer", () => {
     const s = run(SCENE, true);
     expect(s.camera[0].start).toBe(0);
     expect(s.camera[0].shot).toBe("wide");
-    expect(run(SCENE, false).camera[0].shot).not.toBe("wide");
+    // Use an unobstructed stationary beat to distinguish episode establishing
+    // from a legitimate wide fallback while running past another actor.
+    expect(run(BS([B({actor:"masha",verb:"wave"})]), false).camera[0].shot).not.toBe("wide");
   });
 
   it("covers the segment with shots of 1.2–6 s", () => {
@@ -203,11 +205,13 @@ describe("auto-cinematographer — the speaker owns the line; no trunks in the w
     expect(occlusionCost({ pos: [-7.5, 1.8, 6.5], look: [-11, 1.7, 2.2], fov: 40 }, [head])).toBe(0);
     // walls: through the house
     expect(occlusionCost({ pos: [-6, 1.5, -12], look: [-6, 1.0, 0], fov: 40 }, [{ head: [-6, 0.85, 0], w: 1 }])).toBeGreaterThanOrEqual(1);
-    // a Bear-to-hammock scene keeps both characters' heads in clear view
+    // A standing Bear-to-hammock scene keeps both heads in clear view. The
+    // furniture mount/recline uses native moving-head checks in cameraVisibility;
+    // its displaced head is not this standing root + HEAD_HEIGHT proxy.
     const nap = run(BS([
       B({ actor: "bear", verb: "walk_to", target: "hammock" }),
       B({ actor: "masha", verb: "run_to", target: "porch", with_previous: true }),
-      B({ actor: "bear", verb: "sleep", target: "hammock" }),
+      B({ actor: "bear", verb: "wave", target: "masha" }),
       B({ actor: "masha", verb: "peek", target: "bear", line: "Bear is sleeping? Not for long!" }),
     ]), true);
     for (const c of nap.camera) {

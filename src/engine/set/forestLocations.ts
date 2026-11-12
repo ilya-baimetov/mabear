@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { GeoBag, rng, xf, type LookMaterials } from '../look';
-import { NatureAssets, type NatureId, type NatureSpot } from './nature';
+import { NatureAssets, type NatureId } from './nature';
+import {FOREST_GROUND_SEGMENTS,forestHeightAt,forestNatureLayout} from '../../shared/forestLayout';
 
 /** Self-contained woodland locations. Coordinates remain stable for action contacts, but
  * neither location shares visible dressing with Bear's garden. */
@@ -8,9 +9,9 @@ export function buildForestLocation(kind:'pond'|'wolves',mats:LookMaterials,natu
   const root=new THREE.Group();root.name=`set:location:${kind}`;
   const b=new GeoBag(),r=rng(kind==='pond'?915:1015);
   const cx=kind==='pond'?-8:14,cz=kind==='pond'?10:-1;
-  const ground=new THREE.PlaneGeometry(120,120,70,70);ground.rotateX(-Math.PI/2);ground.translate(cx,-.025,cz);
+  const ground=new THREE.PlaneGeometry(120,120,FOREST_GROUND_SEGMENTS,FOREST_GROUND_SEGMENTS);ground.rotateX(-Math.PI/2);ground.translate(cx,-.025,cz);
   const colors:number[]=[],p=ground.attributes.position;
-  const heightAt=(x:number,z:number)=>-.025+Math.max(0,Math.hypot(x-cx,z-cz)-10)*(.035+.022*Math.sin(x*.3+z*.18))+(kind==='wolves'?Math.max(0,cz-z-5)*.09:0);
+  const heightAt=(x:number,z:number)=>forestHeightAt(kind,x,z);
   const base=new THREE.Color(kind==='pond'?0x648646:0x789449),shade=new THREE.Color();
   for(let i=0;i<p.count;i++){
     const x=p.getX(i),z=p.getZ(i),distance=Math.hypot(x-cx,z-cz);
@@ -88,33 +89,7 @@ export function buildForestLocation(kind:'pond'|'wolves',mats:LookMaterials,natu
   }
   const grass=new THREE.InstancedMesh(grassG,grassM,matrices.length);matrices.forEach((m,i)=>grass.setMatrixAt(i,m));grass.instanceMatrix.needsUpdate=true;grass.computeBoundingSphere();grass.receiveShadow=true;grass.name=`set:location:${kind}:grass`;root.add(grass);
   // A distinct deciduous grove: near birches, leafy understorey and deeper pine silhouettes.
-  const spots:Partial<Record<NatureId,NatureSpot[]>>={};
-  const add=(id:NatureId,spot:NatureSpot)=>(spots[id]??=[]).push({...spot,y:heightAt(spot.x,spot.z)+.025});
-  for(let i=0;i<(kind==='pond'?95:52);i++){
-    const a=r()*Math.PI*2,rad=9+Math.sqrt(r())*29,x=cx+Math.cos(a)*rad,z=cz+Math.sin(a)*rad;
-    // Clear the camera approach (+z/east) while keeping a continuous deep background.
-    if(rad<19&&((kind==='pond'&&x>cx+2&&z>cz-5)||(kind==='wolves'&&z>cz+1&&x<cx+9)))continue;
-    const id:NatureId=kind==='wolves'?(i%3===0?'Pine_5':i%2?'Pine_2':'Pine_3'):i%5===0?'Pine_2':i%3===0?'CommonTree_4':i%2?'BirchTree_1':'BirchTree_3';
-    add(id,{x,z,height:7+r()*4.5,yaw:r()*6.28,tint:.89+r()*.16});
-  }
-  for(let i=0;i<(kind==='pond'?115:32);i++){
-    const a=r()*Math.PI*2,rad=kind==='pond'?5.1+r()*10:4.8+r()*10;
-    const x=cx+Math.cos(a)*rad,z=cz+Math.sin(a)*rad;
-    if(kind==='pond'&&rad<(waterRadius?.(a)??3.5)+.5)continue;
-    if(kind==='pond'&&x>-6.5&&x<1.8&&z<9&&z>-3)continue;
-    if(kind==='wolves'&&x>10.5&&x<16.7&&z>-4&&z<5)continue;
-    add('Bush_Common',{x,z,height:.65+r()*(kind==='pond'?1.1:1.5),yaw:r()*6,tint:.94+r()*.14});
-    if(i%4===0)add('Fern_1',{x:x+.7,z:z+.4,height:.6+r()*.45,yaw:r()*6});
-  }
-  if(kind==='pond'){
-    for(let i=0;i<18;i++){
-      const a=Math.PI*.82+i/18*Math.PI*1.12,rad=7.4+(i%3)*1.2;
-      add(i%3===0?'CommonTree_4':'BirchTree_1',{x:cx+Math.cos(a)*rad,z:cz+Math.sin(a)*rad,height:8.5+(i%4)*.7,yaw:i*1.7,tint:.95});
-    }
-  }else{
-    add('Pine_2',{x:9.5,z:-5.6,height:11.5,yaw:1.2});
-    add('Pine_3',{x:19,z:-2.5,height:10.8,yaw:2});
-  }
+  const spots=forestNatureLayout(kind,waterRadius);
   for(const [id,ss]of Object.entries(spots))nature.add(root,id as NatureId,ss, id.startsWith('Pine')||id.startsWith('Birch'));
   root.visible=false;
   return root;

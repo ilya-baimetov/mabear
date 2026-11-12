@@ -11,6 +11,13 @@ export const INTERIOR_CAMERA_MAX_Y=3.05;
  * Uses a smooth clearance band, so body sway doesn't toggle a camera cut or hide a story actor.
  */
 export function clearForeground(camera:CamKey,actors:FrameState['actors']):CamKey {
+  const followed=camera.followActor&&actors[camera.followActor];
+  if(followed&&followed.opacity>.1&&followed.posture!=='offstage'&&sceneLocationAt(followed.pos[0],followed.pos[2])===(camera.location??sceneLocationAt(camera.look[0],camera.look[2]))){
+    // Carried-pair tracking follows the evaluated turn/eased path. The planned
+    // orbit retains its angle, height and distance; seeking remains stateless.
+    const dx=followed.pos[0]-camera.look[0],dz=followed.pos[2]-camera.look[2];
+    camera={...camera,pos:[camera.pos[0]+dx,camera.pos[1],camera.pos[2]+dz],look:[followed.pos[0],camera.look[1],followed.pos[2]]};
+  }
   const [cx,cy,cz]=camera.pos,[lx,ly,lz]=camera.look;
   const dx=lx-cx,dz=lz-cz,l2=dx*dx+dz*dz;if(l2<.01)return camera;
   let lift=0;

@@ -1,0 +1,13 @@
+# Deferred texture drafts
+
+These were generated before the user clarified that the overall design must be agreed first. They are unused, kept outside the shipped assets, and excluded from the blockout.
+
+Built-in image_gen tool; no Fal credit used. Both calls used `docs/yard-reference/frames/episode17-95s.jpg` as the reference image and `transparent_background:false`.
+
+## Circus poster
+
+Create a high quality game texture: ONE flat rectangular vintage Russian circus poster, full bleed and straight-on, no frame, no room, no perspective, no folds. Use the attached Masha and the Bear episode frame only as reference, particularly the circus poster on its LEFT. Recreate that poster's visual composition with real artistic detail: aged muted ochre paper, dark umber ink, heading ЦИРК in ornate period circus lettering, a stocky golden-brown performing bear with a dark muzzle, short round ears and cream belly, shown in a lively three-quarter pose balancing on a single small unicycle wheel, arms out and three or four juggling balls above. The bear must resemble the painted vintage circus bear from the reference, NOT a front-facing symmetrical smiling teddy bear or clipart. Hand-painted mid-century Russian lithograph / gouache illustration, subtle ink and paper wear, expressive anatomical silhouette, restrained muted brown/cream palette. Portrait aspect ratio about 2:3. Deliver ONLY the flat poster as a usable albedo texture. No lighting baked into the poster other than painted illustration shading, no real scene, no 3D mockup. This replaces the crude vector poster on a 3D wall.
+
+## Chair fabric
+
+Generate ONE high quality seamless tileable flat albedo material texture for Bear's worn upholstered armchair from Masha and the Bear, matching the dusty salmon/russet fabric seen on the chair in the reference image. Orthographic flat swatch filling entire square image, no object, no mockup, no perspective, no directional lighting, no folds, no seams or padding. Muted dusty burnt-salmon woven fabric ground, subtly mottled and softened by age. Thin cream-beige pinstripes running perfectly vertically, arranged in four evenly spaced groups across the tile, each group a pair of fine worn cream lines and a very thin darker russet accent, with broad salmon spaces between groups. Fine irregular woven fibers visible close-up, low contrast soft linen/cotton nap, not coarse burlap. Very subtle age variation. Seamless horizontally and vertically. Avoid saturated orange, glossy plastic, thick bright white stripes, large spots, geometric noise, baked shadows. The output will wrap custom 3D cushions, so it must remain a flat uniformly illuminated textile surface.

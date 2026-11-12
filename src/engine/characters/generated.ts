@@ -276,7 +276,7 @@ function addMashaFace(mesh:THREE.SkinnedMesh,hipY:number,facial=true):(frame:Act
   return frame=>{
     const a=mesh.morphTargetInfluences!;a[0]=facial?frame.face.lidClose:0;a[1]=!facial||frame.face.viseme==='rest'?0:frame.face.visemeWeight*(frame.face.viseme==='open_wide'?1:.65);
     const bend=['LeftUpLeg','RightUpLeg'].reduce((sum,name)=>{const q=frame.bones[name];return sum+(q?Math.abs(2*Math.atan2(q[0],q[3])):0);},0)*.5;
-    const k=frame.posture==='sit'||frame.verb==='stand_up'?Math.min(1,Math.max(0,(bend-.35)/1.05)):0;
+    const k=frame.posture==='sit'||frame.posture==='carried'||frame.verb==='stand_up'?Math.min(1,Math.max(0,(bend-.35)/1.05)):0;
     a[2]=k*k*(3-2*k);
   };
 }

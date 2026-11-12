@@ -1,6 +1,8 @@
 // Set "Bear's yard" (spec §7.2). Origin at centre, +z toward the default camera (south). Units: metres.
 import type { MarkId, Surface, Vec2 } from "../schema";
+import {COOKING_STATION} from '../cookingStation';
 import {pondWaterAt,pondPierAt} from '../pond';
+import {HOUSE_KITCHEN_MARK,HOUSE_KITCHEN_FACING,HOUSE_LIVING_MARK,HOUSE_LIVING_SEAT_HEIGHT,isHousePoint} from '../houseLayout';
 
 export interface MarkDef {
   id: MarkId;
@@ -15,11 +17,11 @@ export interface MarkDef {
 export const MARKS: Record<MarkId, MarkDef> = {
   clearing: { id: "clearing", pos: [0, 0], facing: 0, cluster: "yard", description: "Open grass in front of the house" },
   porch: { id: "porch", pos: [-6, -2.6], facing: 0, cluster: "house", description: "Wooden porch with three steps in front of Bear's house" },
-  door: { id: "door", pos: [-6, -3.6], facing: Math.PI, cluster: "house", description: "Front door of Bear's house; entering = walk to the door and go offstage" },
+  door: { id: "door", pos: [-6.63, -4.35], facing: Math.PI, cluster: "house", description: "Front door of Bear's house. Open/close it here; walk_to house_living enters and continues inside." },
   garden: { id: "garden", pos: [5, -5], facing: Math.PI, cluster: "garden", description: "Vegetable beds with carrots and cabbages, small fence" },
   beehive: { id: "beehive", pos: [10, -8], facing: Math.PI, cluster: "garden", description: "Wooden beehive on a stump; bees buzz nearby" },
   swing: { id: "swing", pos: [8, 2], facing: 0, cluster: "yard", description: "Rope swing hanging from a big oak" },
-  hammock: { id: "hammock", pos: [-11, 2], facing: 0, cluster: "house", description: "Hammock between two pines (Bear's nap spot)" },
+  hammock: { id: "hammock", pos: [-11, 2], facing: .8, cluster: "house", description: "Hammock between two pines (Bear's nap spot)" },
   pond_shore: { id: "pond_shore", pos: [-6, 8], facing: Math.atan2(-2, 2), cluster: "pond", description: "Dry south-east shore of the woodland pond" },
   pier: { id: "pier", pos: [-5.5, 9.5], facing: Math.atan2(-2.5, .5), cluster: "pond", description: "End of a small wooden pier; fishing spot" },
   table: { id: "table", pos: [2, 1.5], facing: 0, cluster: "yard", description: "Outdoor wooden table with a samovar/teapot" },
@@ -30,8 +32,8 @@ export const MARKS: Record<MarkId, MarkDef> = {
   bush: { id: "bush", pos: [6, 7], facing: 0, cluster: "yard", description: "Round bush; hiding spot" },
   creek: { id: "creek", pos: [12, 9], facing: -1.57, cluster: "edge", description: "Small creek on the yard's east edge with a plank footbridge" },
   van: { id: "van", pos: [12, -1], facing: Math.PI / 2, cluster: "edge", description: "The Wolves' old ambulance van parked at the forest edge; set dressing and a hiding spot" },
-  house_kitchen: { id: "house_kitchen", pos: [-4.25, -6.8], facing: 0, cluster: "interior", description: "Inside Bear's house: kitchen worktop for cooking pancakes" },
-  house_living: { id: "house_living", pos: [-7.8, -5.8], facing: 0, cluster: "interior", description: "Inside Bear's house: a comfortable seat in the living room" },
+  house_kitchen: { id: "house_kitchen", pos: [...HOUSE_KITCHEN_MARK], facing: HOUSE_KITCHEN_FACING, cluster: "interior", description: "Inside Bear's house: kitchen worktop for cooking pancakes" },
+  house_living: { id: "house_living", pos: [...HOUSE_LIVING_MARK], facing: 0, cluster: "interior", description: "Inside Bear's house: a comfortable seat in the living room" },
 };
 
 /** Water contact shared by fishing animation, its float, and the cast splash. */
@@ -39,12 +41,12 @@ export const FISHING_WATER_TARGET: readonly [number, number, number] = [-8, .035
 
 export const isInteriorMark = (mark: string | null | undefined): mark is "house_kitchen" | "house_living" => mark === "house_kitchen" || mark === "house_living";
 /** Floor footprint; shared by semantic routing and physical interior rendering. */
-export const isInsideHouse = (x: number, z: number): boolean => x > -9.5 && x < -2.5 && z > -9 && z < -3.7;
+export const isInsideHouse = isHousePoint;
 
 export type SceneLocation = 'yard'|'house'|'pond'|'wolves';
 /** Physical seat tops, shared by motion and camera head-height estimates. */
-export const SEAT_HEIGHT:Readonly<Record<string,number>>={bench:.45,hammock:.62,swing:.45,woodpile:.4,house_living:.47};
-/** Semantic scenes retain stable world coordinates for saved story continuity. */
+export const SEAT_HEIGHT:Readonly<Record<string,number>>={bench:.45,hammock:.62,swing:.45,woodpile:.4,house_living:HOUSE_LIVING_SEAT_HEIGHT};
+/** Semantic marks are recompiled into the current set; each stage has a separate footprint. */
 export function sceneLocationAt(x:number,z:number):SceneLocation{
   if(isInsideHouse(x,z))return 'house';
   if((x < -3.4 && z > 6.2)||pondWaterAt(x,z,.2))return 'pond';
@@ -61,6 +63,7 @@ export const OBSTACLES = {
     { id: "bush", c: [6, 7.6] as Vec2, r: 1.0 },
   ],
   boxes: [
+    { id: "cooking_helper", min: [COOKING_STATION.position[0]-COOKING_STATION.width/2, COOKING_STATION.stepBack] as Vec2, max: [COOKING_STATION.position[0]+COOKING_STATION.width/2, COOKING_STATION.topFront] as Vec2 },
     { id: "house", min: [-9.5, -9] as Vec2, max: [-2.5, -3.7] as Vec2 },
     { id: "van", min: [13, -3.2] as Vec2, max: [15.2, 1.2] as Vec2 },
   ],
@@ -68,12 +71,16 @@ export const OBSTACLES = {
 
 /** Waypoint graph for simple obstacle avoidance (~12 nodes). Edges are undirected. */
 export const WAYPOINTS: { id: string; pos: Vec2; links: string[] }[] = [
+  { id: "w_helperBack", pos: [.4,-.4], links: ["w_clear","w_tableW","w_garden","w_helperBackE"] },
+  { id: "w_helperBackE", pos: [1.8,-.4], links: ["w_helperBack","w_garden","w_east"] },
   { id: "w_clear", pos: [0, 0], links: ["w_porch", "w_east", "w_south", "w_pondE", "w_garden", "w_west"] },
   { id: "w_tableW", pos: [.4,3.1], links: ["w_clear","w_south","w_east"] },
   { id: "w_porch", pos: [-6, -2.4], links: ["w_clear", "w_west", "w_nw"] },
   { id: "w_west", pos: [-10.5, -1.5], links: ["w_porch", "w_clear", "w_hammock", "w_nw", "w_pondW"] },
   { id: "w_hammock", pos: [-11, 2.6], links: ["w_west", "w_pondW"] },
-  { id: "w_nw", pos: [-10.5, -9.8], links: ["w_west", "w_north", "w_porch"] },
+  { id: "w_nw", pos: [-17, -6.5], links: ["w_west", "w_farNW", "w_porch"] },
+  { id: "w_farNW", pos: [-17,-17], links: ["w_nw","w_farN"] },
+  { id: "w_farN", pos: [-2.7,-17], links: ["w_farNW","w_north"] },
   { id: "w_north", pos: [-1, -11.5], links: ["w_nw", "w_ne"] },
   { id: "w_ne", pos: [2, -8], links: ["w_north", "w_garden", "w_hive"] },
   { id: "w_garden", pos: [4, -3.5], links: ["w_clear", "w_ne", "w_hive", "w_east"] },

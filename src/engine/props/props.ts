@@ -7,7 +7,8 @@ import { PROP_IDS, type ActorId, type MarkId, type PropId, type Vec3 } from "../
 import type { ActorFrame, PropFrame } from "../api";
 import { GeoBag, bagToSingle, rng, xf, type LookMaterials } from "../look";
 import { restHeightAt } from "../set/bearsYard";
-import {PROP_SLOTS} from '../../shared/propPlacement';
+import {PROP_SLOTS,PROP_REST_HEIGHT,propPlacementAtMark} from '../../shared/propPlacement';
+import {HOUSE_PREP_TABLE,HOUSE_READING_TABLE} from '../../shared/houseLayout';
 export {PROP_SLOTS} from '../../shared/propPlacement';
 
 type R3 = [number, number, number];
@@ -223,17 +224,16 @@ export const PROP_VISUALS: Record<PropId, PropVisual> = {
 /** Hand-placed resting spots for each prop at its home mark (the set's own layout). */
 
 /** Rest heights the player assigns per mark (player/evaluate PROP_REST_HEIGHT); used to recognise a resting prop. */
-const PLAYER_REST_Y: Partial<Record<MarkId, number>> = {
-  table: 0.78, bench: 0.47, porch: 0.32, pier: 0.28, hammock: 0.66, beehive: 0.62, woodpile: 0.55, swing: 0.47, house_kitchen: .78, house_living: .47,
-};
+const PLAYER_REST_Y=PROP_REST_HEIGHT;
 
 /** If (pos) is a prop resting at a mark (as placed by the player), return that mark. Pure. */
 export function restingMark(pos: Vec3): MarkId | null {
   let best: MarkId | null = null;
   let bestD = 0.6;
   for (const id of Object.keys(MARKS) as MarkId[]) {
-    const m = MARKS[id];
-    const d = Math.hypot(pos[0] - m.pos[0], pos[2] - m.pos[1]);
+    if(id==='house_kitchen'&&Math.abs(pos[1]-HOUSE_PREP_TABLE.height)<.05&&Math.abs(pos[0]-HOUSE_PREP_TABLE.position[0])<HOUSE_PREP_TABLE.width/2&&Math.abs(pos[2]-HOUSE_PREP_TABLE.position[1])<HOUSE_PREP_TABLE.depth/2)return id;
+    const p=id==='house_kitchen'?HOUSE_PREP_TABLE.position:id==='house_living'?HOUSE_READING_TABLE.position:MARKS[id].pos;
+    const d = Math.hypot(pos[0] - p[0], pos[2] - p[1]);
     if (d < bestD && Math.abs(pos[1] - (PLAYER_REST_Y[id] ?? 0.03)) < 0.05) {
       best = id;
       bestD = d;
@@ -248,8 +248,7 @@ export function restPlacement(id: PropId, pos: Vec3): { pos: Vec3; rot: R3 } {
   const slot = PROP_SLOTS[id];
   const vis = PROP_VISUALS[id];
   if (mark && slot && slot.mark === mark) return { pos: [...slot.pos] as Vec3, rot: slot.rot ?? vis.restRot ?? [0, 0, 0] };
-  if(mark==='house_kitchen')return {pos:[-4.25,.78,-5.85],rot:vis.restRot??[0,0,0]};
-  if(mark==='house_living')return {pos:[pos[0],.47,pos[2]],rot:vis.restRot??[0,0,0]};
+  if(mark==='house_kitchen'||mark==='house_living')return propPlacementAtMark(id,mark);
   if (mark) {
     // resting at a non-home mark: keep the player's spread, sit on the set's real surface there
     return { pos: [pos[0], restHeightAt(pos[0], pos[2]), pos[2]], rot: vis.restRot ?? [0, 0, 0] };
@@ -347,6 +346,9 @@ export function createProps(mats: LookMaterials): PropsHandle {
             o.position.copy(_wp).add(_off);
             o.rotation.set(g.rot[0], yaw + g.rot[1], g.rot[2]);
           }
+        } else if (f.rotation) {
+          o.position.fromArray(f.pos);
+          o.quaternion.fromArray(f.rotation);
         } else {
           // cache: resting placement only changes when the player's position does (no per-frame allocation)
           const c = cache[id];

@@ -1,0 +1,3712 @@
+{
+  "mode": "after",
+  "sourceRoot": "/Users/ilya.baimetov/Projects/mabear/codex",
+  "source": "b49f81f61a2162540bdb07d1b25231a4ac3741c0c39f110e765bf788209fbe59",
+  "stable": true,
+  "capturedAt": "2026-11-09T23:54:24.772Z",
+  "info": {
+    "mode": "after",
+    "physicsInitMs": 75.5,
+    "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+    "buffer": [
+      1280,
+      720
+    ],
+    "assets": [
+      {
+        "id": "wolf_a",
+        "source": "procedural",
+        "ok": true
+      },
+      {
+        "id": "wolf_b",
+        "source": "procedural",
+        "ok": true
+      },
+      {
+        "id": "masha",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "squirrel",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "rosie",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "hare",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "rival_bear",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "bear",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "lady_bear",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "robot_test",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "prop:carrot",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "set:beehive",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "set:house",
+        "source": "gltf",
+        "ok": true
+      }
+    ],
+    "durations": {
+      "entry": 18.53,
+      "russian": 22.764000000000003,
+      "roundtrip": 37.558,
+      "held": 16.637999999999998,
+      "approach": 8,
+      "cozy": 71.685,
+      "regression": 68.166
+    }
+  },
+  "recordings": [
+    {
+      "id": "entry",
+      "filename": "entry.mp4",
+      "mime": "video/mp4;codecs=avc1.42e01e",
+      "duration": 18.53,
+      "frames": 1112,
+      "gapP95": 17.30000000000291
+    },
+    {
+      "id": "approach",
+      "filename": "approach.mp4",
+      "mime": "video/mp4;codecs=avc1.42e01e",
+      "duration": 8,
+      "frames": 480,
+      "gapP95": 17.200000000004366
+    },
+    {
+      "id": "roundtrip",
+      "filename": "roundtrip.mp4",
+      "mime": "video/mp4;codecs=avc1.42e01e",
+      "duration": 37.558,
+      "frames": 2254,
+      "gapP95": 17.30000000000291
+    }
+  ],
+  "frames": [
+    {
+      "id": "entry",
+      "t": 3.3000000000000003,
+      "objects": {
+        "house_door": 0
+      },
+      "actor": {
+        "pos": [
+          -4.180456705997909,
+          0,
+          -2.3333077298376357
+        ],
+        "verb": "walk_to",
+        "holding": null,
+        "box": {
+          "min": [
+            -5.477531023374963,
+            -0.17765992944131148,
+            -3.550458387876442
+          ],
+          "max": [
+            -3.061592527551179,
+            2.444940002610544,
+            -1.1314371335690556
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "carry": null,
+        "hug": null
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": {
+        "t": 3.3000000000000003,
+        "root": null,
+        "grounded": false,
+        "stride": 1,
+        "ball": null,
+        "sleeping": false,
+        "reason": "Masha is not in this story",
+        "steps": 0,
+        "computeMs": 0,
+        "samples": 1,
+        "caches": 1,
+        "revision": 1
+      },
+      "stats": {
+        "fps": 43.71584699453552,
+        "drawCalls": 109,
+        "triangles": 1989224
+      },
+      "camera": {
+        "pos": [
+          -4.202602448979592,
+          1.988,
+          2.3770277551020405
+        ],
+        "quat": [
+          -0.09469204974788634,
+          -0.018886026760305846,
+          -0.0017967549257416305,
+          0.9953258287513138
+        ]
+      }
+    },
+    {
+      "id": "entry",
+      "t": 6.2497,
+      "objects": {
+        "house_door": 0
+      },
+      "actor": {
+        "pos": [
+          -6.63,
+          0,
+          -4.35
+        ],
+        "verb": "look_at",
+        "holding": null,
+        "box": {
+          "min": [
+            -7.698089981443538,
+            0.031759727464219456,
+            -5.4145601077911465
+          ],
+          "max": [
+            -5.688624014640141,
+            2.654359659516075,
+            -3.411677355355783
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "carry": null,
+        "hug": null
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": {
+        "t": 6.2497,
+        "root": null,
+        "grounded": false,
+        "stride": 1,
+        "ball": null,
+        "sleeping": false,
+        "reason": "Masha is not in this story",
+        "steps": 0,
+        "computeMs": 0,
+        "samples": 1,
+        "caches": 1,
+        "revision": 1
+      },
+      "stats": {
+        "fps": 24.703557329712808,
+        "drawCalls": 108,
+        "triangles": 1889486
+      },
+      "camera": {
+        "pos": [
+          -1,
+          3.5,
+          3.7
+        ],
+        "quat": [
+          -0.09492866485221568,
+          0.29130874794197553,
+          0.02906422245250113,
+          0.9514636267010346
+        ]
+      }
+    },
+    {
+      "id": "entry",
+      "t": 7.224,
+      "objects": {
+        "house_door": 0.4628439154258726
+      },
+      "actor": {
+        "pos": [
+          -6.63,
+          0,
+          -4.35
+        ],
+        "verb": "open",
+        "holding": null,
+        "box": {
+          "min": [
+            -7.5437305567331725,
+            0.02027997031173906,
+            -5.282247639367913
+          ],
+          "max": [
+            -5.817743043608059,
+            2.6428799023635947,
+            -3.565046088737039
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "carry": null,
+        "hug": null
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": {
+        "t": 7.224,
+        "root": null,
+        "grounded": false,
+        "stride": 1,
+        "ball": null,
+        "sleeping": false,
+        "reason": "Masha is not in this story",
+        "steps": 0,
+        "computeMs": 0,
+        "samples": 1,
+        "caches": 1,
+        "revision": 1
+      },
+      "stats": {
+        "fps": 21.314387211367674,
+        "drawCalls": 108,
+        "triangles": 1889486
+      },
+      "camera": {
+        "pos": [
+          -1,
+          3.5,
+          3.7
+        ],
+        "quat": [
+          -0.09492866485221568,
+          0.29130874794197553,
+          0.02906422245250113,
+          0.9514636267010346
+        ]
+      }
+    },
+    {
+      "id": "entry",
+      "t": 8.4865,
+      "objects": {
+        "house_door": 1
+      },
+      "actor": {
+        "pos": [
+          -6.63,
+          0,
+          -5.001666666666666
+        ],
+        "verb": "walk_to",
+        "holding": null,
+        "box": {
+          "min": [
+            -7.5437305567331725,
+            0.27649514297348077,
+            -5.933914306034579
+          ],
+          "max": [
+            -5.817743043608059,
+            2.899095075025336,
+            -4.216712755403705
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "carry": null,
+        "hug": null
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": {
+        "t": 8.4865,
+        "root": null,
+        "grounded": false,
+        "stride": 1,
+        "ball": null,
+        "sleeping": false,
+        "reason": "Masha is not in this story",
+        "steps": 0,
+        "computeMs": 0,
+        "samples": 1,
+        "caches": 1,
+        "revision": 1
+      },
+      "stats": {
+        "fps": 19.412090964645817,
+        "drawCalls": 108,
+        "triangles": 1889486
+      },
+      "camera": {
+        "pos": [
+          -1,
+          3.5,
+          3.7
+        ],
+        "quat": [
+          -0.09492866485221568,
+          0.29130874794197553,
+          0.02906422245250113,
+          0.9514636267010346
+        ]
+      }
+    },
+    {
+      "id": "entry",
+      "t": 9.059,
+      "objects": {
+        "house_door": 1
+      },
+      "actor": {
+        "pos": [
+          -4.785,
+          0,
+          -10.521
+        ],
+        "verb": "walk_to",
+        "holding": null,
+        "box": {
+          "min": [
+            -6.047210918522214,
+            0.2713539894664223,
+            -11.690035475062318
+          ],
+          "max": [
+            -3.701162959078606,
+            2.893953921518278,
+            -9.338732227521323
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "carry": null,
+        "hug": null
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": {
+        "t": 9.059,
+        "root": null,
+        "grounded": false,
+        "stride": 1,
+        "ball": null,
+        "sleeping": false,
+        "reason": "Masha is not in this story",
+        "steps": 0,
+        "computeMs": 0,
+        "samples": 1,
+        "caches": 1,
+        "revision": 1
+      },
+      "stats": {
+        "fps": 15.420200464023308,
+        "drawCalls": 341,
+        "triangles": 1202952
+      },
+      "camera": {
+        "pos": [
+          -9.6,
+          2.7,
+          -8.9
+        ],
+        "quat": [
+          -0.09750575709720073,
+          -0.5139159494137925,
+          -0.05893596052632143,
+          0.8502408934107215
+        ]
+      }
+    },
+    {
+      "id": "entry",
+      "t": 10.16,
+      "objects": {
+        "house_door": 1
+      },
+      "actor": {
+        "pos": [
+          -5.715380891719747,
+          0,
+          -11.064750955414015
+        ],
+        "verb": "walk_to",
+        "holding": null,
+        "box": {
+          "min": [
+            -6.977494178391703,
+            0.1312891420526372,
+            -12.233665669652524
+          ],
+          "max": [
+            -4.631637443731617,
+            2.753889074104493,
+            -9.88254961055776
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "carry": null,
+        "hug": null
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": {
+        "t": 10.16,
+        "root": null,
+        "grounded": false,
+        "stride": 1,
+        "ball": null,
+        "sleeping": false,
+        "reason": "Masha is not in this story",
+        "steps": 0,
+        "computeMs": 0,
+        "samples": 1,
+        "caches": 1,
+        "revision": 1
+      },
+      "stats": {
+        "fps": 15.660344532777055,
+        "drawCalls": 341,
+        "triangles": 1202952
+      },
+      "camera": {
+        "pos": [
+          -9.6,
+          2.7,
+          -8.9
+        ],
+        "quat": [
+          -0.09750575709720073,
+          -0.5139159494137925,
+          -0.05893596052632143,
+          0.8502408934107215
+        ]
+      }
+    },
+    {
+      "id": "entry",
+      "t": 11.9117,
+      "objects": {
+        "house_door": 1
+      },
+      "actor": {
+        "pos": [
+          -6.889598067578277,
+          0,
+          -12.147341146876515
+        ],
+        "verb": "walk_to",
+        "holding": null,
+        "box": {
+          "min": [
+            -8.166814140899794,
+            -0.19441430828194436,
+            -13.373128230173316
+          ],
+          "max": [
+            -5.779091392389034,
+            2.4281856237699113,
+            -10.98636386592197
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "carry": null,
+        "hug": null
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": {
+        "t": 11.9117,
+        "root": null,
+        "grounded": false,
+        "stride": 1,
+        "ball": null,
+        "sleeping": false,
+        "reason": "Masha is not in this story",
+        "steps": 0,
+        "computeMs": 0,
+        "samples": 1,
+        "caches": 1,
+        "revision": 1
+      },
+      "stats": {
+        "fps": 15.021781587599786,
+        "drawCalls": 361,
+        "triangles": 1227520
+      },
+      "camera": {
+        "pos": [
+          -11.055,
+          2.983,
+          -11.596
+        ],
+        "quat": [
+          -0.1456569720372376,
+          -0.6293821356207875,
+          -0.12165334118028484,
+          0.7535666118121431
+        ]
+      }
+    },
+    {
+      "id": "entry",
+      "t": 14.1257,
+      "objects": {
+        "house_door": 1
+      },
+      "actor": {
+        "pos": [
+          -6.914937590562869,
+          0,
+          -12.1846380191857
+        ],
+        "verb": "walk_to",
+        "holding": null,
+        "box": {
+          "min": [
+            -8.025444265752112,
+            -0.23072208902172509,
+            -13.345615300140247
+          ],
+          "max": [
+            -5.637721517241351,
+            2.3918778430301306,
+            -10.958850935888899
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "carry": null,
+        "hug": null
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": {
+        "t": 14.1257,
+        "root": null,
+        "grounded": false,
+        "stride": 1,
+        "ball": null,
+        "sleeping": false,
+        "reason": "Masha is not in this story",
+        "steps": 0,
+        "computeMs": 0,
+        "samples": 1,
+        "caches": 1,
+        "revision": 1
+      },
+      "stats": {
+        "fps": 15.32033426183844,
+        "drawCalls": 341,
+        "triangles": 1202952
+      },
+      "camera": {
+        "pos": [
+          -9.6,
+          2.7,
+          -8.9
+        ],
+        "quat": [
+          -0.09750575709720073,
+          -0.5139159494137925,
+          -0.05893596052632143,
+          0.8502408934107215
+        ]
+      }
+    },
+    {
+      "id": "entry",
+      "t": 15.004900000000001,
+      "objects": {
+        "house_door": 1
+      },
+      "actor": {
+        "pos": [
+          -6.443,
+          0,
+          -11.49
+        ],
+        "verb": "look_at",
+        "holding": null,
+        "box": {
+          "min": [
+            -7.5438478470360275,
+            -0.20161797196046416,
+            -12.683536684642641
+          ],
+          "max": [
+            -5.163300538391425,
+            2.4209819600913915,
+            -10.298568991035314
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "carry": null,
+        "hug": null
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": {
+        "t": 15.004900000000001,
+        "root": null,
+        "grounded": false,
+        "stride": 1,
+        "ball": null,
+        "sleeping": false,
+        "reason": "Masha is not in this story",
+        "steps": 0,
+        "computeMs": 0,
+        "samples": 1,
+        "caches": 1,
+        "revision": 1
+      },
+      "stats": {
+        "fps": 15.661707129975508,
+        "drawCalls": 353,
+        "triangles": 1208392
+      },
+      "camera": {
+        "pos": [
+          -9.6,
+          2.7,
+          -8.9
+        ],
+        "quat": [
+          -0.09750575709720073,
+          -0.5139159494137925,
+          -0.05893596052632143,
+          0.8502408934107215
+        ]
+      }
+    },
+    {
+      "id": "entry",
+      "t": 15.899999999999999,
+      "objects": {
+        "house_door": 0.5379961252383796
+      },
+      "actor": {
+        "pos": [
+          -6.443,
+          0,
+          -11.49
+        ],
+        "verb": "close",
+        "holding": null,
+        "box": {
+          "min": [
+            -7.526795494310299,
+            -0.2074224259393003,
+            -12.672238289484756
+          ],
+          "max": [
+            -5.180832419487469,
+            2.4151775061125553,
+            -10.321018134208362
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "carry": null,
+        "hug": null
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": {
+        "t": 15.899999999999999,
+        "root": null,
+        "grounded": false,
+        "stride": 1,
+        "ball": null,
+        "sleeping": false,
+        "reason": "Masha is not in this story",
+        "steps": 0,
+        "computeMs": 0,
+        "samples": 1,
+        "caches": 1,
+        "revision": 1
+      },
+      "stats": {
+        "fps": 15.948963319250414,
+        "drawCalls": 343,
+        "triangles": 1203552
+      },
+      "camera": {
+        "pos": [
+          -9.6,
+          2.7,
+          -8.9
+        ],
+        "quat": [
+          -0.09750575709720073,
+          -0.5139159494137925,
+          -0.05893596052632143,
+          0.8502408934107215
+        ]
+      }
+    },
+    {
+      "id": "entry",
+      "t": 17.3,
+      "objects": {
+        "house_door": 0
+      },
+      "actor": {
+        "pos": [
+          -6.443,
+          0,
+          -11.49
+        ],
+        "verb": "wave",
+        "holding": null,
+        "box": {
+          "min": [
+            -7.526711857539343,
+            -0.2048528195919791,
+            -12.67217891487991
+          ],
+          "max": [
+            -5.180919669787425,
+            2.4177471124598764,
+            -10.321126041395331
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "carry": null,
+        "hug": null
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": {
+        "t": 17.3,
+        "root": null,
+        "grounded": false,
+        "stride": 1,
+        "ball": null,
+        "sleeping": false,
+        "reason": "Masha is not in this story",
+        "steps": 0,
+        "computeMs": 0,
+        "samples": 1,
+        "caches": 1,
+        "revision": 1
+      },
+      "stats": {
+        "fps": 16.16068336692901,
+        "drawCalls": 336,
+        "triangles": 1232514
+      },
+      "camera": {
+        "pos": [
+          -6.134,
+          2.032,
+          -7.186
+        ],
+        "quat": [
+          -0.08015979484026207,
+          0.03571224514367629,
+          0.0028737849903759235,
+          0.9961379343232514
+        ]
+      }
+    },
+    {
+      "id": "approach",
+      "t": 3.3000000000000003,
+      "objects": {
+        "house_door": 0
+      },
+      "actor": {
+        "pos": [
+          -4.180456705997909,
+          0,
+          -2.3333077298376357
+        ],
+        "verb": "walk_to",
+        "holding": null,
+        "box": {
+          "min": [
+            -5.477531023374963,
+            -0.17765992944131148,
+            -3.550458387876442
+          ],
+          "max": [
+            -3.061592527551179,
+            2.444940002610544,
+            -1.1314371335690556
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "carry": null,
+        "hug": null
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": {
+        "t": 3.3000000000000003,
+        "root": null,
+        "grounded": false,
+        "stride": 1,
+        "ball": null,
+        "sleeping": false,
+        "reason": "authored choreography: wave",
+        "steps": 0,
+        "computeMs": 0,
+        "samples": 1,
+        "caches": 1,
+        "revision": 2
+      },
+      "stats": {
+        "fps": 51.317139922641985,
+        "drawCalls": 182,
+        "triangles": 2235072
+      },
+      "camera": {
+        "pos": [
+          -0.0603322448979593,
+          1.988,
+          12.693872653061225
+        ],
+        "quat": [
+          -0.032099852059981525,
+          0.06699243916844189,
+          0.0021564105999278237,
+          0.9972346576835937
+        ]
+      }
+    },
+    {
+      "id": "roundtrip",
+      "t": 3.3000000000000003,
+      "objects": {
+        "house_door": 0
+      },
+      "actor": {
+        "pos": [
+          -4.180456705997909,
+          0,
+          -2.3333077298376357
+        ],
+        "verb": "walk_to",
+        "holding": null,
+        "box": {
+          "min": [
+            -5.477531023374963,
+            -0.17765992944131148,
+            -3.550458387876442
+          ],
+          "max": [
+            -3.061592527551179,
+            2.444940002610544,
+            -1.1314371335690556
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "carry": null,
+        "hug": null
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": {
+        "t": 3.3000000000000003,
+        "root": null,
+        "grounded": false,
+        "stride": 1,
+        "ball": null,
+        "sleeping": false,
+        "reason": "authored choreography: wave",
+        "steps": 0,
+        "computeMs": 0,
+        "samples": 1,
+        "caches": 1,
+        "revision": 3
+      },
+      "stats": {
+        "fps": 59.159929005303724,
+        "drawCalls": 109,
+        "triangles": 1989224
+      },
+      "camera": {
+        "pos": [
+          -4.202602448979592,
+          1.988,
+          2.3770277551020405
+        ],
+        "quat": [
+          -0.09469204974788634,
+          -0.018886026760305846,
+          -0.0017967549257416305,
+          0.9953258287513138
+        ]
+      }
+    },
+    {
+      "id": "roundtrip",
+      "t": 6.2497,
+      "objects": {
+        "house_door": 0
+      },
+      "actor": {
+        "pos": [
+          -6.63,
+          0,
+          -4.35
+        ],
+        "verb": "look_at",
+        "holding": null,
+        "box": {
+          "min": [
+            -7.698089981443538,
+            0.031759727464219456,
+            -5.4145601077911465
+          ],
+          "max": [
+            -5.688624014640141,
+            2.654359659516075,
+            -3.411677355355783
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "carry": null,
+        "hug": null
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": {
+        "t": 6.2497,
+        "root": null,
+        "grounded": false,
+        "stride": 1,
+        "ball": null,
+        "sleeping": false,
+        "reason": "authored choreography: wave",
+        "steps": 0,
+        "computeMs": 0,
+        "samples": 1,
+        "caches": 1,
+        "revision": 3
+      },
+      "stats": {
+        "fps": 55.855520384785514,
+        "drawCalls": 108,
+        "triangles": 1889486
+      },
+      "camera": {
+        "pos": [
+          -1,
+          3.5,
+          3.7
+        ],
+        "quat": [
+          -0.09492866485221568,
+          0.29130874794197553,
+          0.02906422245250113,
+          0.9514636267010346
+        ]
+      }
+    },
+    {
+      "id": "roundtrip",
+      "t": 7.224,
+      "objects": {
+        "house_door": 0.4628439154258726
+      },
+      "actor": {
+        "pos": [
+          -6.63,
+          0,
+          -4.35
+        ],
+        "verb": "open",
+        "holding": null,
+        "box": {
+          "min": [
+            -7.5437305567331725,
+            0.02027997031173906,
+            -5.282247639367913
+          ],
+          "max": [
+            -5.817743043608059,
+            2.6428799023635947,
+            -3.565046088737039
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "carry": null,
+        "hug": null
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": {
+        "t": 7.224,
+        "root": null,
+        "grounded": false,
+        "stride": 1,
+        "ball": null,
+        "sleeping": false,
+        "reason": "authored choreography: wave",
+        "steps": 0,
+        "computeMs": 0,
+        "samples": 1,
+        "caches": 1,
+        "revision": 3
+      },
+      "stats": {
+        "fps": 52.747252747252745,
+        "drawCalls": 108,
+        "triangles": 1889486
+      },
+      "camera": {
+        "pos": [
+          -1,
+          3.5,
+          3.7
+        ],
+        "quat": [
+          -0.09492866485221568,
+          0.29130874794197553,
+          0.02906422245250113,
+          0.9514636267010346
+        ]
+      }
+    },
+    {
+      "id": "roundtrip",
+      "t": 8.4865,
+      "objects": {
+        "house_door": 1
+      },
+      "actor": {
+        "pos": [
+          -6.63,
+          0,
+          -5.001666666666666
+        ],
+        "verb": "walk_to",
+        "holding": null,
+        "box": {
+          "min": [
+            -7.5437305567331725,
+            0.27649514297348077,
+            -5.933914306034579
+          ],
+          "max": [
+            -5.817743043608059,
+            2.899095075025336,
+            -4.216712755403705
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "carry": null,
+        "hug": null
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": {
+        "t": 8.4865,
+        "root": null,
+        "grounded": false,
+        "stride": 1,
+        "ball": null,
+        "sleeping": false,
+        "reason": "authored choreography: wave",
+        "steps": 0,
+        "computeMs": 0,
+        "samples": 1,
+        "caches": 1,
+        "revision": 3
+      },
+      "stats": {
+        "fps": 50.07093382490826,
+        "drawCalls": 108,
+        "triangles": 1889486
+      },
+      "camera": {
+        "pos": [
+          -1,
+          3.5,
+          3.7
+        ],
+        "quat": [
+          -0.09492866485221568,
+          0.29130874794197553,
+          0.02906422245250113,
+          0.9514636267010346
+        ]
+      }
+    },
+    {
+      "id": "roundtrip",
+      "t": 9.059,
+      "objects": {
+        "house_door": 1
+      },
+      "actor": {
+        "pos": [
+          -4.785,
+          0,
+          -10.521
+        ],
+        "verb": "walk_to",
+        "holding": null,
+        "box": {
+          "min": [
+            -6.047210918522214,
+            0.2713539894664223,
+            -11.690035475062318
+          ],
+          "max": [
+            -3.701162959078606,
+            2.893953921518278,
+            -9.338732227521323
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "carry": null,
+        "hug": null
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": {
+        "t": 9.059,
+        "root": null,
+        "grounded": false,
+        "stride": 1,
+        "ball": null,
+        "sleeping": false,
+        "reason": "authored choreography: wave",
+        "steps": 0,
+        "computeMs": 0,
+        "samples": 1,
+        "caches": 1,
+        "revision": 3
+      },
+      "stats": {
+        "fps": 47.51346214940261,
+        "drawCalls": 341,
+        "triangles": 1202952
+      },
+      "camera": {
+        "pos": [
+          -9.6,
+          2.7,
+          -8.9
+        ],
+        "quat": [
+          -0.09750575709720073,
+          -0.5139159494137925,
+          -0.05893596052632143,
+          0.8502408934107215
+        ]
+      }
+    },
+    {
+      "id": "roundtrip",
+      "t": 10.16,
+      "objects": {
+        "house_door": 1
+      },
+      "actor": {
+        "pos": [
+          -5.715380891719747,
+          0,
+          -11.064750955414015
+        ],
+        "verb": "walk_to",
+        "holding": null,
+        "box": {
+          "min": [
+            -6.977494178391703,
+            0.1312891420526372,
+            -12.233665669652524
+          ],
+          "max": [
+            -4.631637443731617,
+            2.753889074104493,
+            -9.88254961055776
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "carry": null,
+        "hug": null
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": {
+        "t": 10.16,
+        "root": null,
+        "grounded": false,
+        "stride": 1,
+        "ball": null,
+        "sleeping": false,
+        "reason": "authored choreography: wave",
+        "steps": 0,
+        "computeMs": 0,
+        "samples": 1,
+        "caches": 1,
+        "revision": 3
+      },
+      "stats": {
+        "fps": 46.47560030983733,
+        "drawCalls": 341,
+        "triangles": 1202952
+      },
+      "camera": {
+        "pos": [
+          -9.6,
+          2.7,
+          -8.9
+        ],
+        "quat": [
+          -0.09750575709720073,
+          -0.5139159494137925,
+          -0.05893596052632143,
+          0.8502408934107215
+        ]
+      }
+    },
+    {
+      "id": "roundtrip",
+      "t": 11.9117,
+      "objects": {
+        "house_door": 1
+      },
+      "actor": {
+        "pos": [
+          -6.889598067578277,
+          0,
+          -12.147341146876515
+        ],
+        "verb": "walk_to",
+        "holding": null,
+        "box": {
+          "min": [
+            -8.166814140899794,
+            -0.19441430828194436,
+            -13.373128230173316
+          ],
+          "max": [
+            -5.779091392389034,
+            2.4281856237699113,
+            -10.98636386592197
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "carry": null,
+        "hug": null
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": {
+        "t": 11.9117,
+        "root": null,
+        "grounded": false,
+        "stride": 1,
+        "ball": null,
+        "sleeping": false,
+        "reason": "authored choreography: wave",
+        "steps": 0,
+        "computeMs": 0,
+        "samples": 1,
+        "caches": 1,
+        "revision": 3
+      },
+      "stats": {
+        "fps": 45.45110218430283,
+        "drawCalls": 361,
+        "triangles": 1227520
+      },
+      "camera": {
+        "pos": [
+          -11.055,
+          2.983,
+          -11.596
+        ],
+        "quat": [
+          -0.1456569720372376,
+          -0.6293821356207875,
+          -0.12165334118028484,
+          0.7535666118121431
+        ]
+      }
+    },
+    {
+      "id": "roundtrip",
+      "t": 14.1257,
+      "objects": {
+        "house_door": 1
+      },
+      "actor": {
+        "pos": [
+          -6.914937590562869,
+          0,
+          -12.1846380191857
+        ],
+        "verb": "walk_to",
+        "holding": null,
+        "box": {
+          "min": [
+            -8.025444265752112,
+            -0.23072208902172509,
+            -13.345615300140247
+          ],
+          "max": [
+            -5.637721517241351,
+            2.3918778430301306,
+            -10.958850935888899
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "carry": null,
+        "hug": null
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": {
+        "t": 14.1257,
+        "root": null,
+        "grounded": false,
+        "stride": 1,
+        "ball": null,
+        "sleeping": false,
+        "reason": "authored choreography: wave",
+        "steps": 0,
+        "computeMs": 0,
+        "samples": 1,
+        "caches": 1,
+        "revision": 3
+      },
+      "stats": {
+        "fps": 44.434570089257775,
+        "drawCalls": 341,
+        "triangles": 1202952
+      },
+      "camera": {
+        "pos": [
+          -9.6,
+          2.7,
+          -8.9
+        ],
+        "quat": [
+          -0.09750575709720073,
+          -0.5139159494137925,
+          -0.05893596052632143,
+          0.8502408934107215
+        ]
+      }
+    },
+    {
+      "id": "roundtrip",
+      "t": 15.004900000000001,
+      "objects": {
+        "house_door": 1
+      },
+      "actor": {
+        "pos": [
+          -6.443,
+          0,
+          -11.49
+        ],
+        "verb": "look_at",
+        "holding": null,
+        "box": {
+          "min": [
+            -7.5438478470360275,
+            -0.20161797196046416,
+            -12.683536684642641
+          ],
+          "max": [
+            -5.163300538391425,
+            2.4209819600913915,
+            -10.298568991035314
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "carry": null,
+        "hug": null
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": {
+        "t": 15.004900000000001,
+        "root": null,
+        "grounded": false,
+        "stride": 1,
+        "ball": null,
+        "sleeping": false,
+        "reason": "authored choreography: wave",
+        "steps": 0,
+        "computeMs": 0,
+        "samples": 1,
+        "caches": 1,
+        "revision": 3
+      },
+      "stats": {
+        "fps": 43.519257277363195,
+        "drawCalls": 353,
+        "triangles": 1208392
+      },
+      "camera": {
+        "pos": [
+          -9.6,
+          2.7,
+          -8.9
+        ],
+        "quat": [
+          -0.09750575709720073,
+          -0.5139159494137925,
+          -0.05893596052632143,
+          0.8502408934107215
+        ]
+      }
+    },
+    {
+      "id": "roundtrip",
+      "t": 15.899999999999999,
+      "objects": {
+        "house_door": 0.5379961252383796
+      },
+      "actor": {
+        "pos": [
+          -6.443,
+          0,
+          -11.49
+        ],
+        "verb": "close",
+        "holding": null,
+        "box": {
+          "min": [
+            -7.526795494310299,
+            -0.2074224259393003,
+            -12.672238289484756
+          ],
+          "max": [
+            -5.180832419487469,
+            2.4151775061125553,
+            -10.321018134208362
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "carry": null,
+        "hug": null
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": {
+        "t": 15.899999999999999,
+        "root": null,
+        "grounded": false,
+        "stride": 1,
+        "ball": null,
+        "sleeping": false,
+        "reason": "authored choreography: wave",
+        "steps": 0,
+        "computeMs": 0,
+        "samples": 1,
+        "caches": 1,
+        "revision": 3
+      },
+      "stats": {
+        "fps": 42.65908282971916,
+        "drawCalls": 343,
+        "triangles": 1203552
+      },
+      "camera": {
+        "pos": [
+          -9.6,
+          2.7,
+          -8.9
+        ],
+        "quat": [
+          -0.09750575709720073,
+          -0.5139159494137925,
+          -0.05893596052632143,
+          0.8502408934107215
+        ]
+      }
+    },
+    {
+      "id": "roundtrip",
+      "t": 19.3,
+      "objects": {
+        "house_door": 0.46253124999999956
+      },
+      "actor": {
+        "pos": [
+          -6.443,
+          0,
+          -11.49
+        ],
+        "verb": "open",
+        "holding": null,
+        "box": {
+          "min": [
+            -7.526795494310299,
+            -0.207027452324378,
+            -12.672238289484756
+          ],
+          "max": [
+            -5.180832419487469,
+            2.4155724797274774,
+            -10.321018134208362
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "carry": null,
+        "hug": null
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": {
+        "t": 19.3,
+        "root": null,
+        "grounded": false,
+        "stride": 1,
+        "ball": null,
+        "sleeping": false,
+        "reason": "authored choreography: wave",
+        "steps": 0,
+        "computeMs": 0,
+        "samples": 1,
+        "caches": 1,
+        "revision": 3
+      },
+      "stats": {
+        "fps": 41.81184668989547,
+        "drawCalls": 343,
+        "triangles": 1203552
+      },
+      "camera": {
+        "pos": [
+          -9.6,
+          2.7,
+          -8.9
+        ],
+        "quat": [
+          -0.09750575709720073,
+          -0.5139159494137925,
+          -0.05893596052632143,
+          0.8502408934107215
+        ]
+      }
+    },
+    {
+      "id": "roundtrip",
+      "t": 20.986,
+      "objects": {
+        "house_door": 1
+      },
+      "actor": {
+        "pos": [
+          -5.512619108280255,
+          0,
+          -10.946249044585988
+        ],
+        "verb": "walk_to",
+        "holding": null,
+        "box": {
+          "min": [
+            -6.596362556268385,
+            0.1519189868675253,
+            -12.128450389442245
+          ],
+          "max": [
+            -4.2505058216082965,
+            2.7745189189193806,
+            -9.777334330347479
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "carry": null,
+        "hug": null
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": {
+        "t": 20.986,
+        "root": null,
+        "grounded": false,
+        "stride": 1,
+        "ball": null,
+        "sleeping": false,
+        "reason": "authored choreography: wave",
+        "steps": 0,
+        "computeMs": 0,
+        "samples": 1,
+        "caches": 1,
+        "revision": 3
+      },
+      "stats": {
+        "fps": 40.97520999261395,
+        "drawCalls": 341,
+        "triangles": 1202952
+      },
+      "camera": {
+        "pos": [
+          -9.6,
+          2.7,
+          -8.9
+        ],
+        "quat": [
+          -0.09750575709720073,
+          -0.5139159494137925,
+          -0.05893596052632143,
+          0.8502408934107215
+        ]
+      }
+    },
+    {
+      "id": "roundtrip",
+      "t": 21.905,
+      "objects": {
+        "house_door": 1
+      },
+      "actor": {
+        "pos": [
+          -6.63,
+          0,
+          -5.5
+        ],
+        "verb": "walk_to",
+        "holding": null,
+        "box": {
+          "min": [
+            -7.442256956391941,
+            0.27783461217182714,
+            -6.284953911262961
+          ],
+          "max": [
+            -5.716269443266827,
+            2.9004345442236827,
+            -4.5677523606320865
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "carry": null,
+        "hug": null
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": {
+        "t": 21.905,
+        "root": null,
+        "grounded": false,
+        "stride": 1,
+        "ball": null,
+        "sleeping": false,
+        "reason": "authored choreography: wave",
+        "steps": 0,
+        "computeMs": 0,
+        "samples": 1,
+        "caches": 1,
+        "revision": 3
+      },
+      "stats": {
+        "fps": 40.14452026914043,
+        "drawCalls": 108,
+        "triangles": 1889486
+      },
+      "camera": {
+        "pos": [
+          -1,
+          3.5,
+          3.7
+        ],
+        "quat": [
+          -0.09492866485221568,
+          0.29130874794197553,
+          0.02906422245250113,
+          0.9514636267010346
+        ]
+      }
+    },
+    {
+      "id": "roundtrip",
+      "t": 22.582500000000003,
+      "objects": {
+        "house_door": 1
+      },
+      "actor": {
+        "pos": [
+          -6.63,
+          0,
+          -4.84833333333333
+        ],
+        "verb": "walk_to",
+        "holding": null,
+        "box": {
+          "min": [
+            -7.442256956391941,
+            0.2733433553215693,
+            -5.633287244596291
+          ],
+          "max": [
+            -5.716269443266827,
+            2.8959432873734245,
+            -3.916085693965417
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "carry": null,
+        "hug": null
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": {
+        "t": 22.582500000000003,
+        "root": null,
+        "grounded": false,
+        "stride": 1,
+        "ball": null,
+        "sleeping": false,
+        "reason": "authored choreography: wave",
+        "steps": 0,
+        "computeMs": 0,
+        "samples": 1,
+        "caches": 1,
+        "revision": 3
+      },
+      "stats": {
+        "fps": 38.57032656446281,
+        "drawCalls": 108,
+        "triangles": 1889486
+      },
+      "camera": {
+        "pos": [
+          -1,
+          3.5,
+          3.7
+        ],
+        "quat": [
+          -0.09492866485221568,
+          0.29130874794197553,
+          0.02906422245250113,
+          0.9514636267010346
+        ]
+      }
+    },
+    {
+      "id": "roundtrip",
+      "t": 26.400000000000002,
+      "objects": {
+        "house_door": 1
+      },
+      "actor": {
+        "pos": [
+          -3.6354765914776364,
+          0,
+          -1.9299144744623882
+        ],
+        "verb": "walk_to",
+        "holding": null,
+        "box": {
+          "min": [
+            -4.753105425845571,
+            -0.23817527057369992,
+            -3.1314879745458084
+          ],
+          "max": [
+            -2.339506217218844,
+            2.3844246614781555,
+            -0.7146797498868085
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "carry": null,
+        "hug": null
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": {
+        "t": 26.400000000000002,
+        "root": null,
+        "grounded": false,
+        "stride": 1,
+        "ball": null,
+        "sleeping": false,
+        "reason": "authored choreography: wave",
+        "steps": 0,
+        "computeMs": 0,
+        "samples": 1,
+        "caches": 1,
+        "revision": 3
+      },
+      "stats": {
+        "fps": 37.10804626464738,
+        "drawCalls": 110,
+        "triangles": 1994765
+      },
+      "camera": {
+        "pos": [
+          -4.3291661858905535,
+          2.4,
+          4.809526653807119
+        ],
+        "quat": [
+          -0.08129015839127329,
+          -0.027346340596063293,
+          -0.002231215392123461,
+          0.9963127568603144
+        ]
+      }
+    },
+    {
+      "id": "roundtrip",
+      "t": 32.4,
+      "objects": {
+        "house_door": 1
+      },
+      "actor": {
+        "pos": [
+          -3.786849999999997,
+          0,
+          -2.0522499999999972
+        ],
+        "verb": "walk_to",
+        "holding": null,
+        "box": {
+          "min": [
+            -5.082820374258789,
+            -0.20243487568976537,
+            -3.2674847245755765
+          ],
+          "max": [
+            -2.669221165632062,
+            2.42016505636209,
+            -0.850676499916577
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "carry": null,
+        "hug": null
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": {
+        "t": 32.4,
+        "root": null,
+        "grounded": false,
+        "stride": 1,
+        "ball": null,
+        "sleeping": false,
+        "reason": "authored choreography: wave",
+        "steps": 0,
+        "computeMs": 0,
+        "samples": 1,
+        "caches": 1,
+        "revision": 3
+      },
+      "stats": {
+        "fps": 35.741943169295105,
+        "drawCalls": 108,
+        "triangles": 1889486
+      },
+      "camera": {
+        "pos": [
+          -1,
+          3.9463477823126967,
+          3.7
+        ],
+        "quat": [
+          -0.11751173886912454,
+          0.2905358256017789,
+          0.0359784615594195,
+          0.9489391316484238
+        ]
+      }
+    },
+    {
+      "id": "roundtrip",
+      "t": 35.3519,
+      "objects": {
+        "house_door": 1
+      },
+      "actor": {
+        "pos": [
+          -6.63,
+          0,
+          -4.35
+        ],
+        "verb": "look_at",
+        "holding": null,
+        "box": {
+          "min": [
+            -7.700355063325615,
+            0.024212031606555384,
+            -5.41645907611171
+          ],
+          "max": [
+            -5.686743013823805,
+            2.646811963658411,
+            -3.4093916795085377
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "carry": null,
+        "hug": null
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": {
+        "t": 35.3519,
+        "root": null,
+        "grounded": false,
+        "stride": 1,
+        "ball": null,
+        "sleeping": false,
+        "reason": "authored choreography: wave",
+        "steps": 0,
+        "computeMs": 0,
+        "samples": 1,
+        "caches": 1,
+        "revision": 3
+      },
+      "stats": {
+        "fps": 34.514496086463666,
+        "drawCalls": 108,
+        "triangles": 1889486
+      },
+      "camera": {
+        "pos": [
+          -1,
+          3.5,
+          3.7
+        ],
+        "quat": [
+          -0.09492866485221568,
+          0.29130874794197553,
+          0.02906422245250113,
+          0.9514636267010346
+        ]
+      }
+    },
+    {
+      "id": "roundtrip",
+      "t": 36.328,
+      "objects": {
+        "house_door": 0.5372047114845049
+      },
+      "actor": {
+        "pos": [
+          -6.63,
+          0,
+          -4.35
+        ],
+        "verb": "close",
+        "holding": null,
+        "box": {
+          "min": [
+            -7.5437305567331725,
+            0.021357937749581224,
+            -5.282247639367913
+          ],
+          "max": [
+            -5.817743043608059,
+            2.6439578698014365,
+            -3.565046088737039
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "carry": null,
+        "hug": null
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": {
+        "t": 36.328,
+        "root": null,
+        "grounded": false,
+        "stride": 1,
+        "ball": null,
+        "sleeping": false,
+        "reason": "authored choreography: wave",
+        "steps": 0,
+        "computeMs": 0,
+        "samples": 1,
+        "caches": 1,
+        "revision": 3
+      },
+      "stats": {
+        "fps": 33.370411568409345,
+        "drawCalls": 108,
+        "triangles": 1889486
+      },
+      "camera": {
+        "pos": [
+          -1,
+          3.5,
+          3.7
+        ],
+        "quat": [
+          -0.09492866485221568,
+          0.29130874794197553,
+          0.02906422245250113,
+          0.9514636267010346
+        ]
+      }
+    },
+    {
+      "id": "russian",
+      "t": 14.338,
+      "objects": {
+        "house_door": 1
+      },
+      "actor": {
+        "pos": [
+          -5.65624203821656,
+          0,
+          -11.030187898089173
+        ],
+        "verb": "walk_to",
+        "holding": null,
+        "box": {
+          "min": [
+            -6.918355324888519,
+            0.1243970360333369,
+            -12.199102612327682
+          ],
+          "max": [
+            -4.572498590228431,
+            2.7469969680851922,
+            -9.847986553232916
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "carry": null,
+        "hug": null
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": {
+        "t": 14.338,
+        "root": null,
+        "grounded": false,
+        "stride": 1,
+        "ball": null,
+        "sleeping": false,
+        "reason": "Masha is not in this story",
+        "steps": 0,
+        "computeMs": 0,
+        "samples": 1,
+        "caches": 1,
+        "revision": 4
+      },
+      "stats": {
+        "fps": 59.642147117296226,
+        "drawCalls": 341,
+        "triangles": 1202952
+      },
+      "camera": {
+        "pos": [
+          -9.6,
+          2.7,
+          -8.9
+        ],
+        "quat": [
+          -0.09750575709720073,
+          -0.5139159494137925,
+          -0.05893596052632143,
+          0.8502408934107215
+        ]
+      }
+    },
+    {
+      "id": "held",
+      "t": 10.104,
+      "objects": {
+        "house_door": 1
+      },
+      "actor": {
+        "pos": [
+          -5.65624203821656,
+          0,
+          -11.030187898089173
+        ],
+        "verb": "walk_to",
+        "holding": "book",
+        "box": {
+          "min": [
+            -6.918355324888519,
+            0.1243970360333369,
+            -12.199102612327682
+          ],
+          "max": [
+            -4.572498590228431,
+            2.7469969680851922,
+            -9.847986553232916
+          ]
+        },
+        "contacts": {
+          "mode": "prop",
+          "prop": "book",
+          "contactPoint": [
+            -5.127253578601009,
+            1.044105032571983,
+            -11.51634322848101
+          ],
+          "gripPoint": [
+            -5.127685260153974,
+            1.044105032571983,
+            -11.516595520052073
+          ],
+          "radius": 0
+        },
+        "carry": null,
+        "hug": null
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": {
+        "t": 10.104,
+        "root": null,
+        "grounded": false,
+        "stride": 1,
+        "ball": null,
+        "sleeping": false,
+        "reason": "authored choreography: wave",
+        "steps": 0,
+        "computeMs": 0,
+        "samples": 1,
+        "caches": 1,
+        "revision": 5
+      },
+      "stats": {
+        "fps": 56.12197175694716,
+        "drawCalls": 342,
+        "triangles": 1203056
+      },
+      "camera": {
+        "pos": [
+          -9.6,
+          2.7,
+          -8.9
+        ],
+        "quat": [
+          -0.09750575709720073,
+          -0.5139159494137925,
+          -0.05893596052632143,
+          0.8502408934107215
+        ]
+      }
+    },
+    {
+      "id": "cozy",
+      "t": 26.917,
+      "objects": {
+        "house_door": 1
+      },
+      "actor": {
+        "pos": [
+          -11.05,
+          0,
+          -13.15
+        ],
+        "verb": "cook",
+        "holding": "frying_pan",
+        "box": {
+          "min": [
+            -12.13149554252181,
+            -0.20590267879560836,
+            -14.108189993979678
+          ],
+          "max": [
+            -10.091175471230256,
+            2.416697253256247,
+            -12.06164028492395
+          ]
+        },
+        "contacts": {
+          "mode": "prop",
+          "prop": "frying_pan",
+          "contactPoint": [
+            -11.93988709817528,
+            1.450764381971227,
+            -13.300335691676775
+          ],
+          "gripPoint": [
+            -11.953085438986053,
+            1.450764381971227,
+            -13.297497769929668
+          ],
+          "radius": 0.013
+        },
+        "carry": null,
+        "hug": null
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": {
+        "t": 26.917,
+        "root": null,
+        "grounded": false,
+        "stride": 1,
+        "ball": null,
+        "sleeping": false,
+        "reason": "paired choreography",
+        "steps": 0,
+        "computeMs": 0,
+        "samples": 1,
+        "caches": 1,
+        "revision": 6
+      },
+      "stats": {
+        "fps": 49.43968358991013,
+        "drawCalls": 498,
+        "triangles": 1956358
+      },
+      "camera": {
+        "pos": [
+          -10.375,
+          2.866,
+          -5.725
+        ],
+        "quat": [
+          -0.12573823015593966,
+          -0.05878070504282987,
+          -0.007463433903694223,
+          0.9902923928549008
+        ]
+      }
+    },
+    {
+      "id": "regression",
+      "t": 45,
+      "objects": {
+        "house_door": 0
+      },
+      "actor": {
+        "pos": [
+          -11.99648583901261,
+          0,
+          1.0316145108983594
+        ],
+        "verb": "walk_to",
+        "holding": null,
+        "box": {
+          "min": [
+            -13.298677574476502,
+            -0.2513790652919944,
+            -0.1982774089381556
+          ],
+          "max": [
+            -10.870653532793225,
+            2.3712208667598613,
+            2.231678832410176
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "carry": null,
+        "hug": null
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": {
+        "t": 45,
+        "root": null,
+        "grounded": false,
+        "stride": 1,
+        "ball": null,
+        "sleeping": false,
+        "reason": "paired choreography",
+        "steps": 0,
+        "computeMs": 0,
+        "samples": 1,
+        "caches": 1,
+        "revision": 7
+      },
+      "stats": {
+        "fps": 44.487284049735806,
+        "drawCalls": 199,
+        "triangles": 2242498
+      },
+      "camera": {
+        "pos": [
+          -15.828440265769979,
+          2.5,
+          4.97666008414099
+        ],
+        "quat": [
+          -0.10333006458393465,
+          -0.37361168446186876,
+          -0.041923200995435166,
+          0.9208581064447123
+        ]
+      }
+    }
+  ],
+  "benchmarks": [
+    {
+      "id": "entry",
+      "coldMs": 1.5,
+      "frames": 241,
+      "seconds": 4,
+      "meanFps": 59.99550033747465,
+      "gapP50": 16.700000000000728,
+      "gapP95": 17.299999999999272,
+      "evalP50": 0.39999985694885254,
+      "evalP95": 0.5,
+      "renderP50": 4.5,
+      "renderP95": 5.700000047683716,
+      "stats": {
+        "fps": 59.976009590444065,
+        "drawCalls": 109,
+        "triangles": 1989224
+      },
+      "physics": {
+        "t": 18.53,
+        "root": null,
+        "grounded": false,
+        "stride": 1,
+        "ball": null,
+        "sleeping": false,
+        "reason": "Masha is not in this story",
+        "steps": 0,
+        "computeMs": 0,
+        "samples": 1,
+        "caches": 1,
+        "revision": 1
+      }
+    },
+    {
+      "id": "approach",
+      "coldMs": 0.8000001907348633,
+      "frames": 241,
+      "seconds": 4,
+      "meanFps": 59.99250093738283,
+      "gapP50": 16.69999999999709,
+      "gapP95": 17.5,
+      "evalP50": 0.2999999523162842,
+      "evalP95": 0.40000009536743164,
+      "renderP50": 4.8999998569488525,
+      "renderP95": 6,
+      "stats": {
+        "fps": 59.95802937657737,
+        "drawCalls": 182,
+        "triangles": 2235072
+      },
+      "physics": {
+        "t": 8,
+        "root": null,
+        "grounded": false,
+        "stride": 1,
+        "ball": null,
+        "sleeping": false,
+        "reason": "authored choreography: wave",
+        "steps": 0,
+        "computeMs": 0,
+        "samples": 1,
+        "caches": 1,
+        "revision": 2
+      }
+    },
+    {
+      "id": "roundtrip",
+      "coldMs": 1,
+      "frames": 241,
+      "seconds": 4,
+      "meanFps": 59.99700014999255,
+      "gapP50": 16.69999999999709,
+      "gapP95": 17.40000000000873,
+      "evalP50": 0.39999985694885254,
+      "evalP95": 0.5,
+      "renderP50": 4.5,
+      "renderP95": 5.799999952316284,
+      "stats": {
+        "fps": 59.95802937657737,
+        "drawCalls": 109,
+        "triangles": 1989224
+      },
+      "physics": {
+        "t": 37.558,
+        "root": null,
+        "grounded": false,
+        "stride": 1,
+        "ball": null,
+        "sleeping": false,
+        "reason": "authored choreography: wave",
+        "steps": 0,
+        "computeMs": 0,
+        "samples": 1,
+        "caches": 1,
+        "revision": 3
+      }
+    }
+  ],
+  "errors": []
+}

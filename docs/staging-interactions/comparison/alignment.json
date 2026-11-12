@@ -1,0 +1,617 @@
+{
+  "results": [
+    {
+      "filename": "carry-lift.mp4",
+      "mime": "video/mp4;codecs=avc1.42e01e",
+      "alignment": [
+        {
+          "id": "carry-lift",
+          "label": "Carry · lift + settle",
+          "story": "bears_nap",
+          "actor": "bear",
+          "verb": "carry",
+          "lead": 1.1,
+          "tail": 1.3,
+          "description": "Masha rises onto Bear’s shoulders and settles into support. The original frozen story remains the before reference.",
+          "sides": [
+            {
+              "start": 31.185000000000002,
+              "end": 36.585,
+              "anchor": 32.285000000000004,
+              "src": "before/bears_nap.mp4"
+            },
+            {
+              "start": 38.38699999999999,
+              "end": 43.78699999999999,
+              "anchor": 39.486999999999995,
+              "src": "after/bears_nap.mp4"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "filename": "carry-walk.mp4",
+      "mime": "video/mp4;codecs=avc1.42e01e",
+      "alignment": [
+        {
+          "id": "carry-walk",
+          "label": "Carry · riding while walking",
+          "story": "bears_nap",
+          "actor": "bear",
+          "verbs": [
+            "walk_to",
+            "run_to",
+            "tiptoe_to"
+          ],
+          "afterVerb": "carry",
+          "lead": 0.5,
+          "tail": 0.4,
+          "description": "The first Bear locomotion after the shoulder lift, preserving Masha’s riding contact while he walks. This is not the earlier approach to the hammock.",
+          "sides": [
+            {
+              "start": 36.58,
+              "end": 43.48,
+              "anchor": 37.08,
+              "src": "before/bears_nap.mp4"
+            },
+            {
+              "start": 43.782,
+              "end": 50.681999999999995,
+              "anchor": 44.282,
+              "src": "after/bears_nap.mp4"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "filename": "hammock-wake.mp4",
+      "mime": "video/mp4;codecs=avc1.42e01e",
+      "alignment": [
+        {
+          "id": "hammock-wake",
+          "label": "Hammock · wake → ground",
+          "story": "bears_nap",
+          "actor": "bear",
+          "verb": "wake_up",
+          "lead": 1.5,
+          "tail": 1,
+          "endVerb": "stand_up",
+          "description": "Continuous sleep, wake, fall and standing sequence. The wake action starts are aligned; downstream timing remains unaltered.",
+          "sides": [
+            {
+              "start": 20.049,
+              "end": 27.085,
+              "anchor": 21.549,
+              "src": "before/bears_nap.mp4"
+            },
+            {
+              "start": 20.645,
+              "end": 27.681,
+              "anchor": 22.145,
+              "src": "after/bears_nap.mp4"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "filename": "hammock-sleep.mp4",
+      "mime": "video/mp4;codecs=avc1.42e01e",
+      "alignment": [
+        {
+          "id": "hammock-sleep",
+          "label": "Hammock · settle",
+          "story": "bears_nap",
+          "actor": "bear",
+          "verb": "sleep",
+          "lead": 1.6,
+          "tail": 1,
+          "description": "Bear’s approach, hammock support and settling pose.",
+          "sides": [
+            {
+              "start": 6.4,
+              "end": 13,
+              "anchor": 8,
+              "src": "before/bears_nap.mp4"
+            },
+            {
+              "start": 9.145,
+              "end": 15.745,
+              "anchor": 10.745,
+              "src": "after/bears_nap.mp4"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "filename": "cooking.mp4",
+      "mime": "video/mp4;codecs=avc1.42e01e",
+      "alignment": [
+        {
+          "id": "cooking",
+          "label": "Pancakes · cooking",
+          "story": "pancake_morning",
+          "actor": "masha",
+          "verb": "cook",
+          "lead": 1.1,
+          "tail": 1.2,
+          "description": "Masha’s height and stance, hand/pan contact, cooking surface and pancake motion.",
+          "sides": [
+            {
+              "start": 22.246,
+              "end": 28.546,
+              "anchor": 23.346,
+              "src": "before/pancake_morning.mp4"
+            },
+            {
+              "start": 24.223,
+              "end": 30.523,
+              "anchor": 25.323,
+              "src": "after/pancake_morning.mp4"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "filename": "hug.mp4",
+      "mime": "video/mp4;codecs=avc1.42e01e",
+      "alignment": [
+        {
+          "id": "hug",
+          "label": "Pancakes · hug + release",
+          "story": "pancake_morning",
+          "actor": "masha",
+          "verb": "hug",
+          "lead": 2,
+          "tail": 1,
+          "description": "Approach, two-character contact, body separation and release.",
+          "sides": [
+            {
+              "start": 52.952,
+              "end": 57.512,
+              "anchor": 54.952,
+              "src": "before/pancake_morning.mp4"
+            },
+            {
+              "start": 56.781,
+              "end": 61.341,
+              "anchor": 58.781,
+              "src": "after/pancake_morning.mp4"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "filename": "fishing-catch.mp4",
+      "mime": "video/mp4;codecs=avc1.42e01e",
+      "alignment": [
+        {
+          "id": "fishing-catch",
+          "label": "Fishing · catch",
+          "story": "fishing_trip",
+          "actor": "bear",
+          "verb": "fish",
+          "lead": 0.5,
+          "tail": 0.8,
+          "description": "Visibility of Bear, Masha and the fishing action.",
+          "sides": [
+            {
+              "start": 17.495,
+              "end": 22.795,
+              "anchor": 17.995,
+              "src": "before/fishing_trip.mp4"
+            },
+            {
+              "start": 17.495,
+              "end": 22.795,
+              "anchor": 17.995,
+              "src": "after/fishing_trip.mp4"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "filename": "fishing-hug.mp4",
+      "mime": "video/mp4;codecs=avc1.42e01e",
+      "alignment": [
+        {
+          "id": "fishing-hug",
+          "label": "Fishing · put down + hug",
+          "story": "fishing_trip",
+          "actor": "masha",
+          "verb": "hug",
+          "lead": 4.5,
+          "tail": 1,
+          "description": "Bear puts down the fishing prop and turns before Masha’s hug. The longer lead-in preserves the ownership change, approach, contact and release.",
+          "sides": [
+            {
+              "start": 22.461,
+              "end": 29.961,
+              "anchor": 26.961,
+              "src": "before/fishing_trip.mp4"
+            },
+            {
+              "start": 25.23,
+              "end": 32.730000000000004,
+              "anchor": 29.73,
+              "src": "after/fishing_trip.mp4"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "filename": "garden-eat.mp4",
+      "mime": "video/mp4;codecs=avc1.42e01e",
+      "alignment": [
+        {
+          "id": "garden-eat",
+          "label": "Garden · Hare",
+          "story": "garden_party",
+          "actor": "hare",
+          "verb": "eat",
+          "lead": 1.1,
+          "tail": 1.5,
+          "description": "Foreground obstruction and framing while Hare takes and eats the carrot.",
+          "sides": [
+            {
+              "start": 4.547000000000001,
+              "end": 9.147,
+              "anchor": 5.647,
+              "src": "before/garden_party.mp4"
+            },
+            {
+              "start": 4.547000000000001,
+              "end": 9.147,
+              "anchor": 5.647,
+              "src": "after/garden_party.mp4"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "filename": "garden-dance.mp4",
+      "mime": "video/mp4;codecs=avc1.42e01e",
+      "alignment": [
+        {
+          "id": "garden-dance",
+          "label": "Garden · group",
+          "story": "garden_party",
+          "actor": "rival_bear",
+          "verb": "dance",
+          "lead": 0.5,
+          "tail": 0.4,
+          "description": "Group visibility during the final garden celebration.",
+          "sides": [
+            {
+              "start": 21.631999999999998,
+              "end": 26.531999999999996,
+              "anchor": 22.131999999999998,
+              "src": "before/garden_party.mp4"
+            },
+            {
+              "start": 21.631999999999998,
+              "end": 26.531999999999996,
+              "anchor": 22.131999999999998,
+              "src": "after/garden_party.mp4"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "filename": "fishing-reaction.mp4",
+      "mime": "video/mp4;codecs=avc1.42e01e",
+      "alignment": [
+        {
+          "id": "fishing-reaction",
+          "label": "Fishing · reaction",
+          "story": "fishing_trip",
+          "actor": "bear",
+          "verb": "surprised",
+          "lead": 1.3,
+          "tail": 1.2,
+          "description": "Tree occlusion and framing around the ball splash and Bear’s reaction.",
+          "sides": [
+            {
+              "start": 9.995,
+              "end": 13.495,
+              "anchor": 11.295,
+              "src": "before/fishing_trip.mp4"
+            },
+            {
+              "start": 9.995,
+              "end": 13.495,
+              "anchor": 11.295,
+              "src": "after/fishing_trip.mp4"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "filename": "staging-before-after-montage.mp4",
+      "mime": "video/mp4;codecs=avc1.42e01e",
+      "alignment": [
+        {
+          "id": "carry-lift",
+          "label": "Carry · lift + settle",
+          "story": "bears_nap",
+          "actor": "bear",
+          "verb": "carry",
+          "lead": 1.1,
+          "tail": 1.3,
+          "description": "Masha rises onto Bear’s shoulders and settles into support. The original frozen story remains the before reference.",
+          "sides": [
+            {
+              "start": 31.185000000000002,
+              "end": 36.585,
+              "anchor": 32.285000000000004,
+              "src": "before/bears_nap.mp4"
+            },
+            {
+              "start": 38.38699999999999,
+              "end": 43.78699999999999,
+              "anchor": 39.486999999999995,
+              "src": "after/bears_nap.mp4"
+            }
+          ]
+        },
+        {
+          "id": "carry-walk",
+          "label": "Carry · riding while walking",
+          "story": "bears_nap",
+          "actor": "bear",
+          "verbs": [
+            "walk_to",
+            "run_to",
+            "tiptoe_to"
+          ],
+          "afterVerb": "carry",
+          "lead": 0.5,
+          "tail": 0.4,
+          "description": "The first Bear locomotion after the shoulder lift, preserving Masha’s riding contact while he walks. This is not the earlier approach to the hammock.",
+          "sides": [
+            {
+              "start": 36.58,
+              "end": 43.48,
+              "anchor": 37.08,
+              "src": "before/bears_nap.mp4"
+            },
+            {
+              "start": 43.782,
+              "end": 50.681999999999995,
+              "anchor": 44.282,
+              "src": "after/bears_nap.mp4"
+            }
+          ]
+        },
+        {
+          "id": "hammock-wake",
+          "label": "Hammock · wake → ground",
+          "story": "bears_nap",
+          "actor": "bear",
+          "verb": "wake_up",
+          "lead": 1.5,
+          "tail": 1,
+          "endVerb": "stand_up",
+          "description": "Continuous sleep, wake, fall and standing sequence. The wake action starts are aligned; downstream timing remains unaltered.",
+          "sides": [
+            {
+              "start": 20.049,
+              "end": 27.085,
+              "anchor": 21.549,
+              "src": "before/bears_nap.mp4"
+            },
+            {
+              "start": 20.645,
+              "end": 27.681,
+              "anchor": 22.145,
+              "src": "after/bears_nap.mp4"
+            }
+          ]
+        },
+        {
+          "id": "hammock-sleep",
+          "label": "Hammock · settle",
+          "story": "bears_nap",
+          "actor": "bear",
+          "verb": "sleep",
+          "lead": 1.6,
+          "tail": 1,
+          "description": "Bear’s approach, hammock support and settling pose.",
+          "sides": [
+            {
+              "start": 6.4,
+              "end": 13,
+              "anchor": 8,
+              "src": "before/bears_nap.mp4"
+            },
+            {
+              "start": 9.145,
+              "end": 15.745,
+              "anchor": 10.745,
+              "src": "after/bears_nap.mp4"
+            }
+          ]
+        },
+        {
+          "id": "cooking",
+          "label": "Pancakes · cooking",
+          "story": "pancake_morning",
+          "actor": "masha",
+          "verb": "cook",
+          "lead": 1.1,
+          "tail": 1.2,
+          "description": "Masha’s height and stance, hand/pan contact, cooking surface and pancake motion.",
+          "sides": [
+            {
+              "start": 22.246,
+              "end": 28.546,
+              "anchor": 23.346,
+              "src": "before/pancake_morning.mp4"
+            },
+            {
+              "start": 24.223,
+              "end": 30.523,
+              "anchor": 25.323,
+              "src": "after/pancake_morning.mp4"
+            }
+          ]
+        },
+        {
+          "id": "hug",
+          "label": "Pancakes · hug + release",
+          "story": "pancake_morning",
+          "actor": "masha",
+          "verb": "hug",
+          "lead": 2,
+          "tail": 1,
+          "description": "Approach, two-character contact, body separation and release.",
+          "sides": [
+            {
+              "start": 52.952,
+              "end": 57.512,
+              "anchor": 54.952,
+              "src": "before/pancake_morning.mp4"
+            },
+            {
+              "start": 56.781,
+              "end": 61.341,
+              "anchor": 58.781,
+              "src": "after/pancake_morning.mp4"
+            }
+          ]
+        },
+        {
+          "id": "fishing-catch",
+          "label": "Fishing · catch",
+          "story": "fishing_trip",
+          "actor": "bear",
+          "verb": "fish",
+          "lead": 0.5,
+          "tail": 0.8,
+          "description": "Visibility of Bear, Masha and the fishing action.",
+          "sides": [
+            {
+              "start": 17.495,
+              "end": 22.795,
+              "anchor": 17.995,
+              "src": "before/fishing_trip.mp4"
+            },
+            {
+              "start": 17.495,
+              "end": 22.795,
+              "anchor": 17.995,
+              "src": "after/fishing_trip.mp4"
+            }
+          ]
+        },
+        {
+          "id": "fishing-hug",
+          "label": "Fishing · put down + hug",
+          "story": "fishing_trip",
+          "actor": "masha",
+          "verb": "hug",
+          "lead": 4.5,
+          "tail": 1,
+          "description": "Bear puts down the fishing prop and turns before Masha’s hug. The longer lead-in preserves the ownership change, approach, contact and release.",
+          "sides": [
+            {
+              "start": 22.461,
+              "end": 29.961,
+              "anchor": 26.961,
+              "src": "before/fishing_trip.mp4"
+            },
+            {
+              "start": 25.23,
+              "end": 32.730000000000004,
+              "anchor": 29.73,
+              "src": "after/fishing_trip.mp4"
+            }
+          ]
+        },
+        {
+          "id": "garden-eat",
+          "label": "Garden · Hare",
+          "story": "garden_party",
+          "actor": "hare",
+          "verb": "eat",
+          "lead": 1.1,
+          "tail": 1.5,
+          "description": "Foreground obstruction and framing while Hare takes and eats the carrot.",
+          "sides": [
+            {
+              "start": 4.547000000000001,
+              "end": 9.147,
+              "anchor": 5.647,
+              "src": "before/garden_party.mp4"
+            },
+            {
+              "start": 4.547000000000001,
+              "end": 9.147,
+              "anchor": 5.647,
+              "src": "after/garden_party.mp4"
+            }
+          ]
+        },
+        {
+          "id": "garden-dance",
+          "label": "Garden · group",
+          "story": "garden_party",
+          "actor": "rival_bear",
+          "verb": "dance",
+          "lead": 0.5,
+          "tail": 0.4,
+          "description": "Group visibility during the final garden celebration.",
+          "sides": [
+            {
+              "start": 21.631999999999998,
+              "end": 26.531999999999996,
+              "anchor": 22.131999999999998,
+              "src": "before/garden_party.mp4"
+            },
+            {
+              "start": 21.631999999999998,
+              "end": 26.531999999999996,
+              "anchor": 22.131999999999998,
+              "src": "after/garden_party.mp4"
+            }
+          ]
+        },
+        {
+          "id": "fishing-reaction",
+          "label": "Fishing · reaction",
+          "story": "fishing_trip",
+          "actor": "bear",
+          "verb": "surprised",
+          "lead": 1.3,
+          "tail": 1.2,
+          "description": "Tree occlusion and framing around the ball splash and Bear’s reaction.",
+          "sides": [
+            {
+              "start": 9.995,
+              "end": 13.495,
+              "anchor": 11.295,
+              "src": "before/fishing_trip.mp4"
+            },
+            {
+              "start": 9.995,
+              "end": 13.495,
+              "anchor": 11.295,
+              "src": "after/fishing_trip.mp4"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": []
+}

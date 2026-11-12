@@ -29,6 +29,8 @@ import { createProps, type PropsHandle } from "./props/props";
 import { buildBearsYard, walkHeightAt, type SetHandle } from "./set/bearsYard";
 import { clearForeground } from './cameraClearance';
 import { applySceneLightIntensities } from './sceneLighting';
+import {applyHugContacts} from './characters/hugContacts';
+import {applyCarryContacts} from './characters/carryContacts';
 import { loadGeneratedYard } from './set/generatedYard';
 import { assetUrl, loadEnvTextures } from "./set/textures";
 
@@ -253,7 +255,7 @@ export async function createStage(canvas: HTMLCanvasElement, opts: StageOptions 
         updatePointScale();
       }
       camera.lookAt(c.look[0], c.look[1], c.look[2]);
-      set.updateView(c.look[0],c.look[2],location);
+      set.updateView(c.look[0],c.look[2],location,camera.position);
       followCamera(look, camera);
       // light
       const lp = applyLighting(look, scene, renderer, frame.lighting);
@@ -262,16 +264,22 @@ export async function createStage(canvas: HTMLCanvasElement, opts: StageOptions 
       applySceneLightIntensities(look,lp,location);
       if (post) post.grade.saturation = DEFAULT_GRADE.saturation - 0.16 * lp.stars; // calmer night palette
       set.update(frame.t, lp.windowGlow, pointScale);
+      renderer.localClippingEnabled=true;
+      set.setDoor(frame.objects?.house_door??0);
       // actors (stand on the porch / pier / bridges)
       let swing = 0;
       for (const id of ACTOR_IDS) {
         const a = frame.actors?.[id];
         const rig = rigs[id];
         if (!a || !rig) continue;
-        const lift = walkHeightAt(a.pos[0], a.pos[2]);
+        const lift = a.physicsRoot ? 0 : walkHeightAt(a.pos[0], a.pos[2]);
         // Contacts solve before the stage lifts the complete rig onto decking.
         // Convert the resting prop's world target into that same coordinate space.
-        const contactFrame=a.putDown&&lift!==0?{...a,putDown:{...a.putDown,position:[a.putDown.position[0],a.putDown.position[1]-lift,a.putDown.position[2]] as [number,number,number]}}:a;
+        const contactFrame=lift!==0?{...a,
+          ...(a.putDown?{putDown:{...a.putDown,position:[a.putDown.position[0],a.putDown.position[1]-lift,a.putDown.position[2]] as [number,number,number]}}:{}),
+          ...(a.pickup?{pickup:{...a.pickup,position:[a.pickup.position[0],a.pickup.position[1]-lift,a.pickup.position[2]] as [number,number,number]}}:{}),
+          face:{...a.face,lookAt:a.face.lookAt?[a.face.lookAt[0],a.face.lookAt[1]-lift,a.face.lookAt[2]] as [number,number,number]:null},
+        }:a;
         rig.apply(contactFrame);
         rig.root.visible=rig.root.visible&&(!frame.cast||frame.cast.includes(id))&&sceneLocationAt(a.pos[0],a.pos[2])===location;
         if (lift !== 0) rig.root.position.y += lift; // world matrices refresh in renderer.render / getWorldPosition
@@ -284,6 +292,8 @@ export async function createStage(canvas: HTMLCanvasElement, opts: StageOptions 
         }
       }
       set.setSwing(swing);
+      applyCarryContacts(rigs,frame);
+      applyHugContacts(rigs,frame);
       props.apply(frame.props, sockets, yaws, frame.actors);
       for(const id of PROP_IDS) {
         const p=frame.props[id],holder=p.attachedTo?frame.actors[p.attachedTo]:null;

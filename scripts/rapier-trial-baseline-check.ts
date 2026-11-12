@@ -1,0 +1,12 @@
+import {readFile,writeFile} from 'node:fs/promises';
+import {trialStories} from './rapier-trial-fixtures';
+const path='/tmp/mabear-rapier-baseline/scripts/rapier-trial-fixtures.ts';
+const old=(await import(path)).trialStories(),current=trialStories();
+const results:Record<string,boolean>={};
+for(const id of ['obstacle','regression'])results[id]=JSON.stringify(old[id])===JSON.stringify(current[id]);
+const manifest=JSON.parse(await readFile('docs/rapier-trial/baseline-manifest.json','utf8'));
+const capture=JSON.parse(await readFile('docs/rapier-trial/baseline/proof.json','utf8'));
+results.capturedSourceMatchesArchive=Object.entries(capture.source.files).every(([p,h])=>manifest.files[p]===h);
+if(!Object.values(results).every(Boolean))throw Error(JSON.stringify(results));
+await writeFile('docs/rapier-trial/baseline-parity.json',JSON.stringify({results,scope:'Old and new compilers yield identical obstacle/regression timelines; matched authored camera tracks. Baseline capture source matches every archived source-file hash. New drop cue is excluded from old-compiler parity.'},null,2));
+console.log(results);

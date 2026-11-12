@@ -180,9 +180,12 @@ export interface VerbCtx {
   targetLocal: Vec3 | null;
   /** height of the surface under the actor (bench, hammock…) for sit/sleep */
   seat: number;
-  /** Authored cushion contact for small characters on oversized furniture. */
+  /** Furniture-specific pelvis and leg fit, calibrated against shipped meshes. */
+  seatProfile?: 'armchair';
   seatClearance?: number;
   seatForward?: number;
+  /** Back-surface clearance for a raised lying support. */
+  lieClearance?: number;
 }
 
 export type VerbImpl = (localT: number, params: ClipParams, ctx: VerbCtx) => PoseLayer;

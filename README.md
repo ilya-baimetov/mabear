@@ -2,6 +2,8 @@
 
 Live: https://mabear-storybook.ilya-baimetov.workers.dev — same demo password as the original.
 
+Current release: **9 November 2026**, Worker version `ec664a01-3b2a-4ccc-833a-82b144469522`. Supported yard physics is enabled by default, with animation fallback for unsupported stories, hugs and shoulder rides. The house door can open/close, and Bear visibly crosses into the revised interior. See the [current implementation, before/after recordings and validation](docs/interactive-objects/README.md), [deployment record](docs/interactive-objects/deployment/deployment.json), and [repository contents](docs/REPOSITORY.md).
+
 A private, live 3D story playground based on the prototype in `../claude`. Write a short scene, press Play, and watch nine actors perform it: Masha, Bear, the Wolves, Lady Bear, Hare, Rosie, Squirrel, and Rival Bear. EN/RU, editable examples, paragraph versions, local camera/light/music remixes, character reactions, and the pitch inspector are preserved. Start with **Examples → Garden visitors** to see the expanded cast.
 
 ## Run locally
@@ -53,4 +55,4 @@ npm run deploy
 
 See the [current asset and budget ledger](docs/expansion/ASSETS.md), [adversarial review and fixes](docs/expansion/adversarial-review.md), [earlier upgrade report](docs/upgrade/REVIEW.md), and the original [technical spec](docs/SPEC.md).
 
-These are newly recreated prototype assets, not supplied production models. Character facial animation, contacts and synthesized audio remain approximations. No production likeness approval is implied.
+These are newly recreated prototype assets, not supplied production models. Character facial animation and contacts remain approximations. No production likeness approval is implied.

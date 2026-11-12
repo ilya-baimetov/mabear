@@ -309,9 +309,14 @@ export function parseParagraph(text: string, lang: Lang, startState: WorldState,
       };
 
       switch (verb) {
+        case 'open': case 'close':
+          if(mark==='door'||lex.itPronoun.test(clause)&&beats.some(b=>b.target==='door'))mkBeat(a,verb,{target:'door'});
+          break;
         case "walk_to": case "run_to": case "tiptoe_to": {
           // the Wolves go for the food first ("sneak up to steal Bear's honey" → the honey pot)
           let target: string | null = isWolf(a) ? mark ?? prop ?? object : mark ?? object ?? prop;
+          // Going TO the house is an approach. Going INSIDE is a threshold crossing.
+          if(target==='house_living'&&/\b(?:to|towards?)\s+(?:the\s+)?(?:house|cabin|hut)\b|к\s+дому|к\s+домик/iu.test(clause))target='door';
           // a Wolf running off with nowhere named scampers back to the van
           if (!target && isWolf(a) && verb === "run_to") target = "van";
           if (!target) target = startState.actors[a].mark === "clearing" ? "table" : "clearing";
@@ -326,6 +331,7 @@ export function parseParagraph(text: string, lang: Lang, startState: WorldState,
           break;
         case "enter":
           if(isInteriorMark(mark))mkBeat(a,'walk_to',{target:mark});
+          else if(mark==='door'||beats.some(b=>b.actor===a&&b.target==='door')||startState.actors[a].mark==='door')mkBeat(a,'walk_to',{target:'house_living'});
           else mkBeat(a,verb);
           break;
         case "carry":

@@ -1,0 +1,122 @@
+[
+  {
+    "file": "src/compiler/compile.ts",
+    "before": "4ccd878fcfbf7854981c2d021f5716682a06c911a1b9dac863562b828581f84c",
+    "after": "bf2a9cf524a6ad9f350a7bcb921dcb0f54eac9e6f5464a24fcde4cf3b493a4d6"
+  },
+  {
+    "file": "src/compiler/validate.ts",
+    "before": "30e992a325f26fdd32e65365a6b14050ddc54a767bb551805b68969af5c5cfc2",
+    "after": "63602a31eb21b2bb1ee6e6ae62886d64341d481db25cd9ae77bf714464d8a328"
+  },
+  {
+    "file": "src/compiler/worldState.ts",
+    "before": "2f0673f3b784a8d4d82528c2cd821f0cabfb21d09d592510e1fd19bf605a7192",
+    "after": "8e161c5d59f6b17de99d3c4d0f4c103fbc5cb2c4fefeb147611499a8b4654efd"
+  },
+  {
+    "file": "src/engine/stage.ts",
+    "before": "acc5c9060db768e4e0a29ceb3ef4a1a31ebf4805e2e32097553002208115a740",
+    "after": "e6180bf4415f126f79e2d9986632ec6ce264394cebc9e28012c6337f51b7b928"
+  },
+  {
+    "file": "src/engine/assets.ts",
+    "before": "e7d9d253431c0e3d19119139d4bb9f870191c88db98a6097a74c2b9f5c85fed7",
+    "after": "112f791bbc36686bfa708833c4f7d7c422bd580b021674cb9eec51b5e881bd6a"
+  },
+  {
+    "file": "src/engine/api.ts",
+    "before": "6cdddabce58c9cee82b505eaeb615d560c597f4f725c512ba58d183270d604e9",
+    "after": "7d1042f8e45751727b20b6993922b4dfb25cc962215d8eca06a024819d940f50"
+  },
+  {
+    "file": "src/engine/player/evaluate.ts",
+    "before": "7d26dd49cae00e3f770fc2bfcc9c16b969c72281026c97e0344016cc1d5d58c4",
+    "after": "3df578a79dc02659ad7a498b831acc2ee16eb9ebd8680358bb9d542928cffe43"
+  },
+  {
+    "file": "src/engine/player/player.ts",
+    "before": "da21832430a8145156a688e6bfab8327b352fdb82ebcf817c3f32b7b537f627b",
+    "after": "71b716093dbc454a6bd686591e3e8aaa2f7921188247a01fee3902f801fe66b4"
+  },
+  {
+    "file": "src/engine/set/bearsYard.ts",
+    "before": "693b6820afdf6abd177a5a420fb31c6e73434afbd742f9c8bf9cbf912064dcfc",
+    "after": "069da9c2c6a90ada9ff39af04aad78b1a1363adf0f5eec1ed49c7a0184446145"
+  },
+  {
+    "file": "src/engine/set/interiorShapes/architecture.ts",
+    "before": "3b1dbc577ef0bf97756eec08542497a3de8bf5a3eec3b3d9130cdf0047fedf81",
+    "after": "a66be72db0b73db4bd55ec387ffcebe0a3488cc0f767b97230cfaabc503ae59c"
+  },
+  {
+    "file": "src/engine/physics/stageReplay.ts",
+    "before": "b84b7572b2f04897e1ae17950220b4b9d89b8289306ddda111d9e3d2b89cff8c",
+    "after": "ef8ebe7c555387b7973bb61892ce96e4c021e9b1d73df48e12d2b5f34db5e7db"
+  },
+  {
+    "file": "src/engine/physics/rapierReplay.ts",
+    "before": "a776c982e0f5c574082febc35e0d90f7a3408226580c2033bc80dd44fc436d7b",
+    "after": "0d4b48eebe4a695e8e8d4483c1298c253c851875ed35c2177b9154049d87314f"
+  },
+  {
+    "file": "src/engine/motion/library.ts",
+    "before": "09f5abf05a0899dc918f6bc3c172f8c866e39874b6b72d819416dd70226a2313",
+    "after": "01c47784adb3d6797279e9f9ea24a8f2966b9db3f7a1698ee0f7651f2972f022"
+  },
+  {
+    "file": "src/shared/schema.ts",
+    "before": "c898a730ffdedb6d6bce81b8e0b3fb7cb1f4eb858557af339adf75a62f845d6c",
+    "after": "c5e5a999d0b341cc368123dc758921992b8ec8757aa5368f02264ecb5ef88283"
+  },
+  {
+    "file": "src/shared/grammar.ts",
+    "before": "3ab7ee8c9cce60315d6526eda6a0b568f01549bf994b175e06b1eea4be5704bd",
+    "after": "5fa31e443ad0caae93e1edacc525b8a3b5af1b28f766587efa87740ae9fe72e5"
+  },
+  {
+    "file": "src/shared/bible/set.ts",
+    "before": "3c238990fb16dc6f28c0e2b0281f57b0afde9895aefc3eb069c6638dda832dae",
+    "after": "733419d9db6a3951e49d109588f481a1b825a1f8930b476f754d79148729b25f"
+  },
+  {
+    "file": "src/director/prompt.ts",
+    "before": "b43e7dae74d6df9804c78c841f2cad388b60d03db3a4ec0505cf3f3dca73262a",
+    "after": "0a86ee82c206bd3f502f3ceb030b098205364599ab943d5c1502b59b145a6a6e"
+  },
+  {
+    "file": "src/director/offline/lexicon.en.ts",
+    "before": "91ecdf65a8f3e86aea7c84f79b405e037111aaa9b9d39b9ca882a62e977e0132",
+    "after": "02ab860d6bf52e0743e5e6a99294855b8aead771c2ad0b468323b4334c22db26"
+  },
+  {
+    "file": "src/director/offline/parser.ts",
+    "before": "a3e1807338c4ac4022ac4ec7d0c1a8197921468db13166679bcff4ed221c8370",
+    "after": "972347615857fe5ff3ce779914746bffa19edf2bddf92e3215c5c5a038238643"
+  },
+  {
+    "file": "src/director/offline/lexicon.ru.ts",
+    "before": "a70ddea962559bd3c748e107cea7cf6051bdff6bda16da7b2e9b4c907dc80c8d",
+    "after": "3408a73382b2dd00def6969d701e9d846e15a33bacdf58c942df4be3b29862be"
+  },
+  {
+    "file": "src/app/store.ts",
+    "before": "4c90ccfddb7674bf3bce23f1ea6fe9489c1b2bc80f3738f6a215c525412ecb73",
+    "after": "f4291daae3f9ba2e7d2983b41653be9eee15c86edf7a1abc8b15d2804985c9bf"
+  },
+  {
+    "file": "src/app/components/Stage.tsx",
+    "before": "cd28c2ff60ff6362a300c55585a2cc686f339ca83e80055099ba0f371aad0a13",
+    "after": "fd312bef8cbb4edc141643fdbe03ab5bc775d4bb933ba21e2e10f8f16ff053c5"
+  },
+  {
+    "file": "src/shared/interactiveObjects.ts",
+    "change": "added",
+    "after": "ac6914ea3c30d2cdf44a3a4d1c0ce87fba201c5d8b4b757f1a9c7902aae6affc"
+  },
+  {
+    "file": "src/engine/set/houseDoor.ts",
+    "change": "added",
+    "after": "b1e758715bef0d47bbfda3ee89b8fa0062ae5cf3e3ed69ba1b55423fa7233f00"
+  }
+]

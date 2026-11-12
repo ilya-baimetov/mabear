@@ -1,0 +1,16 @@
+[
+  {
+    "source": "before-after.mp4",
+    "duration": 26.533333,
+    "play": true,
+    "tail": 26.333333,
+    "ready": 4
+  },
+  {
+    "source": "after/roundtrip.mp4",
+    "duration": 37.550667,
+    "play": true,
+    "tail": 37.350666,
+    "ready": 4
+  }
+]

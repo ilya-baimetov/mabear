@@ -1,0 +1,25 @@
+{
+  "actual": {
+    "t": 5.906,
+    "root": [
+      0.9199689030647278,
+      0.00009780168533324307,
+      2.913933038711548
+    ],
+    "grounded": true,
+    "stride": 0.9999999999999999,
+    "ball": null,
+    "sleeping": false,
+    "reason": null,
+    "steps": 367,
+    "computeMs": 80.80000042915344,
+    "samples": 368,
+    "caches": 1,
+    "revision": 2
+  },
+  "authored": [
+    2,
+    0,
+    3
+  ]
+}

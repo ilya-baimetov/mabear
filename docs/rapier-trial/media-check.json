@@ -1,0 +1,82 @@
+[
+  {
+    "file": "drop-comparison.mp4",
+    "bytes": 2383636,
+    "sha256": "c84d4a1bf8577cbb83c0f9f26c353bd26af769063aaffe8bb0211ba14f415936",
+    "decoded": true,
+    "tailDecoded": true,
+    "progress": "frame=240\nfps=0.00\nstream_0_0_q=-0.0\nbitrate=N/A\ntotal_size=N/A\nout_time_us=8000000\nout_time_ms=8000000\nout_time=00:00:08.000000\ndup_frames=0\ndrop_frames=0\nspeed=  56x\n"
+  },
+  {
+    "file": "obstacle-comparison.mp4",
+    "bytes": 4470551,
+    "sha256": "07e6d155c1ba5293e50201c0ee41605d372aa27eee34ae0f6943e171f0c27276",
+    "decoded": true,
+    "tailDecoded": true,
+    "progress": "frame=278\nfps=0.00\nstream_0_0_q=-0.0\nbitrate=N/A\ntotal_size=N/A\nout_time_us=9266667\nout_time_ms=9266667\nout_time=00:00:09.266667\ndup_frames=0\ndrop_frames=0\nspeed=  33x\n"
+  },
+  {
+    "file": "regression-comparison.mp4",
+    "bytes": 15881489,
+    "sha256": "438d92081a246eea2bc8ff36ccdd0d7c728711e37a0d5a08201473c9b03c233f",
+    "decoded": true,
+    "tailDecoded": true,
+    "progress": "frame=464\nfps=0.00\nstream_0_0_q=-0.0\nbitrate=N/A\ntotal_size=N/A\nout_time_us=15466667\nout_time_ms=15466667\nout_time=00:00:15.466667\ndup_frames=0\ndrop_frames=0\nspeed=33.7x\n"
+  },
+  {
+    "file": "before-after.mp4",
+    "bytes": 22734324,
+    "sha256": "13c14bf75f8f7b37bcbc0752f2e113d81b63fd9959394c4cdf992e7a4018645b",
+    "decoded": true,
+    "tailDecoded": true,
+    "progress": "continue\nframe=982\nfps=0.00\nstream_0_0_q=-0.0\nbitrate=N/A\ntotal_size=N/A\nout_time_us=32733333\nout_time_ms=32733333\nout_time=00:00:32.733333\ndup_frames=0\ndrop_frames=0\nspeed=44.5x\n"
+  },
+  {
+    "file": "baseline/obstacle.mp4",
+    "bytes": 5947187,
+    "sha256": "74a7c6e6d7a7d6d01492d0f3a9ca586c5f4846953e763847b3db502a42708d14",
+    "decoded": true,
+    "tailDecoded": true,
+    "progress": "frame=278\nfps=0.00\nstream_0_0_q=-0.0\nbitrate=N/A\ntotal_size=N/A\nout_time_us=9258700\nout_time_ms=9258700\nout_time=00:00:09.258700\ndup_frames=0\ndrop_frames=0\nspeed=92.3x\n"
+  },
+  {
+    "file": "baseline/regression.mp4",
+    "bytes": 10280750,
+    "sha256": "d366e2b3e3545c101be14f1182aed377c24f0dc140998df4d8432aeb65b55fac",
+    "decoded": true,
+    "tailDecoded": true,
+    "progress": "frame=464\nfps=0.00\nstream_0_0_q=-0.0\nbitrate=N/A\ntotal_size=N/A\nout_time_us=15469300\nout_time_ms=15469300\nout_time=00:00:15.469300\ndup_frames=0\ndrop_frames=0\nspeed=79.8x\n"
+  },
+  {
+    "file": "control/drop.mp4",
+    "bytes": 8040761,
+    "sha256": "c26f983b102002e7114d20466b1ae6918720e481752a5937c69f0d9a50b76d27",
+    "decoded": true,
+    "tailDecoded": true,
+    "progress": "frame=378\nfps=0.00\nstream_0_0_q=-0.0\nbitrate=N/A\ntotal_size=N/A\nout_time_us=12594533\nout_time_ms=12594533\nout_time=00:00:12.594533\ndup_frames=0\ndrop_frames=0\nspeed=97.5x\n"
+  },
+  {
+    "file": "after/obstacle.mp4",
+    "bytes": 6190195,
+    "sha256": "ce82c73399fa6b011a823c9c650836be187145c4460d256370954a5b6c5f64b5",
+    "decoded": true,
+    "tailDecoded": true,
+    "progress": "frame=278\nfps=0.00\nstream_0_0_q=-0.0\nbitrate=N/A\ntotal_size=N/A\nout_time_us=9261333\nout_time_ms=9261333\nout_time=00:00:09.261333\ndup_frames=0\ndrop_frames=0\nspeed=76.8x\n"
+  },
+  {
+    "file": "after/regression.mp4",
+    "bytes": 10315241,
+    "sha256": "663f3463375306c92a5625058063647fb5e8cbe49c125b828d347402958fa734",
+    "decoded": true,
+    "tailDecoded": true,
+    "progress": "frame=464\nfps=0.00\nstream_0_0_q=-0.0\nbitrate=N/A\ntotal_size=N/A\nout_time_us=15468833\nout_time_ms=15468833\nout_time=00:00:15.468833\ndup_frames=0\ndrop_frames=0\nspeed=38.7x\n"
+  },
+  {
+    "file": "after/drop.mp4",
+    "bytes": 8008283,
+    "sha256": "ee7dd2084441df53d9c59192e4b851e126e9ce74b2e0ec09073e2ed12d2720ce",
+    "decoded": true,
+    "tailDecoded": true,
+    "progress": "frame=377\nfps=0.00\nstream_0_0_q=-0.0\nbitrate=N/A\ntotal_size=N/A\nout_time_us=12565567\nout_time_ms=12565567\nout_time=00:00:12.565567\ndup_frames=0\ndrop_frames=0\nspeed=41.9x\n"
+  }
+]

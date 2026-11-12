@@ -2,7 +2,8 @@ import * as THREE from 'three';
 import type {ActorFrame,CharacterRig} from '../api';
 import {PROP_CONTACTS} from '../../shared/propContacts';
 import {clapOpen} from '../../shared/contactTiming';
-import {solveArm} from './mashaContacts';
+import {kitchenSurfaceGrasp,prepTableLift,solveArm} from './mashaContacts';
+import {contactHands} from './contactHands';
 
 type Sample={mesh:THREE.SkinnedMesh;index:number;local:THREE.Vector3;u:number};
 type Hand={side:number;arm:THREE.Bone;elbow:THREE.Bone;wrist:THREE.Bone;restQ:THREE.Quaternion;basis:THREE.Quaternion;scale:THREE.Vector3;samples:Sample[];palm:Sample[];length:number;normal:THREE.Vector3};
@@ -59,10 +60,19 @@ export function addSourceContacts(rig:CharacterRig):boolean{
  if(measured.some(h=>!h))return false;
  const hands=measured as Hand[],torso=rig.bones.Spine2??rig.bones.Spine,restTorso=torso.getWorldQuaternion(new THREE.Quaternion()).invert(),height=rig.height,restShoulderY=rig.root.worldToLocal(at((measured as Hand[])[1].arm)).y;
  const baseApply=rig.apply.bind(rig),metrics:Record<string,unknown>={},socketPosition=rig.handSocket.position.clone(),socketRotation=rig.handSocket.quaternion.clone();rig.root.userData.contacts=metrics;
- const place=(h:Hand,local:THREE.Vector3,target:THREE.Vector3,q:THREE.Quaternion)=>{
-  const wristTarget=target.clone().sub(local.clone().multiply(h.scale).applyQuaternion(q)),pole=at(h.arm).add(new THREE.Vector3(h.side*height*.2,-height*.2,0).applyQuaternion(rig.root.quaternion));
+ const place=(h:Hand,local:THREE.Vector3,target:THREE.Vector3,q:THREE.Quaternion,poleOverride?:THREE.Vector3)=>{
+  const wristTarget=target.clone().sub(local.clone().multiply(h.scale).applyQuaternion(q)),pole=poleOverride??at(h.arm).add(new THREE.Vector3(h.side*height*.2,-height*.2,0).applyQuaternion(rig.root.quaternion));
   const error=solveArm(h.arm,h.elbow,h.wrist,wristTarget,pole);setWorldRotation(h.wrist,q);return error;
  };
+ contactHands.set(rig.root,hands.map(h=>({side:h.side as 1|-1,place(target,long,normal,strength,pole){
+  const base=[h.arm,h.elbow,h.wrist].map(b=>b.quaternion.clone()),q=orient(h,long,normal);
+  let best=-Infinity,local=h.palm[0].local;
+  for(const sample of h.palm){const d=sample.local.clone().multiply(h.scale).applyQuaternion(q).dot(normal);if(d>best){best=d;local=sample.local;}}
+  let error=place(h,local,target,q,pole);
+  for(let i=0;i<3;i++)error=place(h,h.wrist.worldToLocal(surface(h,normal,true)),target,q,pole);
+  if(strength<1)[h.arm,h.elbow,h.wrist].forEach((b,i)=>{const solved=b.quaternion.clone();b.quaternion.copy(base[i]).slerp(solved,strength);});
+  rig.root.updateMatrixWorld(true);return {error,point:surface(h,normal,true)};
+ }})));
  rig.apply=(frame:ActorFrame)=>{
   baseApply(frame);rig.root.updateMatrixWorld(true);for(const key of Object.keys(metrics))delete metrics[key];metrics.mode='free';
   rig.handSocket.userData.preciseGrip=false;
@@ -103,7 +113,37 @@ export function addSourceContacts(rig:CharacterRig):boolean{
    });
    Object.assign(metrics,{mode:'clap',targetGap:gap,surfaceGap:left.clone().sub(right).dot(axis),reachError:Math.max(...errors),strength,palmNormalDot:normals[0].dot(normals[1]),padOverlap,planeNormal:axis.toArray()});
   }
-  if(frame.putDown){
+  const reverseSurface=frame.putDown?kitchenSurfaceGrasp(frame,frame.putDown):null;
+  if(frame.pickup||reverseSurface){
+   const data=(frame.pickup??frame.putDown)!,h=hands[1],grip=PROP_CONTACTS[data.item],duration=frame.action?.duration??1,attach=duration*data.release,pickupTime=frame.pickup?time:duration-time;
+   const after=THREE.MathUtils.clamp((pickupTime-attach)/Math.max(.001,duration-attach),0,1),carry=THREE.MathUtils.clamp((after-.06)/.64,0,1),gripCarry=smooth((after-.18)/.52),strength=pickupTime<attach?smooth(pickupTime/Math.max(.001,attach-.035)):1;
+   const surfaceGrasp=kitchenSurfaceGrasp(frame,data);
+   const base=[h.arm,h.elbow,h.wrist].map(b=>b.quaternion.clone()),baseQ=h.wrist.getWorldQuaternion(new THREE.Quaternion());
+   const restQ=new THREE.Quaternion().setFromEuler(new THREE.Euler(...data.rotation,'YXZ')),heldQ=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),frame.yaw).multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(...(grip.rotation??[0,0,0]),'YXZ')));
+   const heldDirection=grip.support?new THREE.Vector3(0,1,0):new THREE.Vector3(0,0,1).applyQuaternion(heldQ),heldOrigin=surface(h,heldDirection,true).addScaledVector(heldDirection,grip.radius+.0005).sub(new THREE.Vector3(...grip.point).applyQuaternion(heldQ));
+   heldOrigin.y+=prepTableLift(frame,data.item,heldOrigin,.18);
+   const origin=new THREE.Vector3(...data.position);if(pickupTime>attach)origin.y+=.18*smooth(after/.18);origin.lerp(heldOrigin,carry);
+   const horizontal=Math.hypot(origin.x-data.position[0],origin.z-data.position[2]);
+   if(pickupTime>attach)origin.y=Math.max(origin.y,data.position[1]+.03*smooth(after/.1)*(1-smooth((horizontal-.15)/.25)));
+   if(pickupTime>attach)origin.y+=prepTableLift(frame,data.item,origin,.18)*smooth(after/.1);
+   const objectQ=restQ.clone().slerp(heldQ,carry),objectDelta=objectQ.clone().multiply(restQ.clone().invert());
+   const normal=surfaceGrasp?surfaceGrasp.normal.clone().applyQuaternion(objectDelta):grip.support?new THREE.Vector3(0,1,0):new THREE.Vector3(0,0,1).applyQuaternion(restQ),long=surfaceGrasp?surfaceGrasp.long.clone().applyQuaternion(objectDelta):grip.support?new THREE.Vector3(data.position[0],at(h.arm).y,data.position[2]).sub(at(h.arm)).normalize():new THREE.Vector3(0,1,0).applyQuaternion(restQ);
+   if(!surfaceGrasp&&!grip.support&&data.position[1]+new THREE.Vector3(...grip.point).applyQuaternion(restQ).y<frame.pos[1]+restShoulderY-height*.08)long.negate();
+   const direction=normal.clone().lerp(heldDirection,surfaceGrasp?gripCarry:carry);
+   if(surfaceGrasp&&normal.dot(heldDirection)<-.99)direction.addScaledVector(surfaceGrasp.outward,-Math.sin(gripCarry*Math.PI));direction.normalize();
+   const gripOffset=new THREE.Vector3(...grip.point).applyQuaternion(objectQ);
+   if(surfaceGrasp)gripOffset.copy(surfaceGrasp.offset).applyQuaternion(objectDelta).lerp(new THREE.Vector3(...grip.point).applyQuaternion(objectQ),gripCarry);
+   const handQ=orient(h,long,normal).slerp(baseQ,surfaceGrasp?gripCarry:carry),target=origin.clone().add(gripOffset).addScaledVector(direction,-grip.radius-.0005);
+   let best=-Infinity,local=h.palm[0].local;
+   for(const sample of h.palm){const d=sample.local.clone().multiply(h.scale).applyQuaternion(handQ).dot(direction);if(d>best){best=d;local=sample.local;}}
+   let error=place(h,local,target,handQ);
+   for(let i=0;i<4;i++)error=place(h,h.wrist.worldToLocal(surface(h,direction,true)),target,handQ);
+   if(strength<1)[h.arm,h.elbow,h.wrist].forEach((b,i)=>{const solved=b.quaternion.clone();b.quaternion.copy(base[i]).slerp(solved,strength);});
+   rig.root.updateMatrixWorld(true);
+   const touch=surface(h,direction,true),actualOrigin=touch.clone().addScaledVector(direction,grip.radius+.0005).sub(gripOffset);
+   rig.handSocket.position.copy(h.wrist.worldToLocal(actualOrigin.clone()));rig.handSocket.quaternion.copy(h.wrist.getWorldQuaternion(new THREE.Quaternion()).invert().multiply(objectQ));rig.handSocket.userData.preciseGrip=true;rig.handSocket.updateWorldMatrix(false,true);
+   Object.assign(metrics,{mode:frame.pickup?'pickup':'putDown',prop:data.item,strength,reachError:error,attachmentError:actualOrigin.distanceTo(new THREE.Vector3(...data.position)),targetError:actualOrigin.distanceTo(origin),contactPoint:touch.toArray(),targetPoint:target.toArray(),withdrawal:after,surfaceGrip:!!surfaceGrasp,releaseGap:actualOrigin.distanceTo(new THREE.Vector3(...data.position))});
+  }else if(frame.putDown){
    const drop=frame.putDown,h=hands[1],grip=PROP_CONTACTS[drop.item],duration=frame.action?.duration??1,release=duration*drop.release;
    // Meet the actual resting object before ownership changes, then withdraw
    // the empty paw. Both sides of the release evaluate the same contact pose.
@@ -145,6 +185,14 @@ export function addSourceContacts(rig:CharacterRig):boolean{
     Object.assign(metrics,{primaryReachError:error,strength:fishingWeight});
    }
    const touch=surface(h,direction,true),anchor=touch.clone().addScaledVector(direction,grip.radius+.0005),origin=anchor.clone().sub(new THREE.Vector3(...grip.point).applyQuaternion(q));
+   const tableLift=prepTableLift(frame,frame.holding,origin,.18);
+   if(tableLift>0){
+    const target=touch.clone();target.y+=tableLift;const handQ=h.wrist.getWorldQuaternion(new THREE.Quaternion());
+    let error=place(h,h.wrist.worldToLocal(touch.clone()),target,handQ);
+    for(let i=0;i<3;i++)error=place(h,h.wrist.worldToLocal(surface(h,direction,true)),target,handQ);
+    rig.root.updateMatrixWorld(true);touch.copy(surface(h,direction,true));anchor.copy(touch).addScaledVector(direction,grip.radius+.0005);origin.copy(anchor).sub(new THREE.Vector3(...grip.point).applyQuaternion(q));
+    Object.assign(metrics,{tableClearanceLift:tableLift,reachError:error});
+   }
    rig.handSocket.position.copy(h.wrist.worldToLocal(origin.clone()));rig.handSocket.quaternion.copy(h.wrist.getWorldQuaternion(new THREE.Quaternion()).invert().multiply(q));rig.handSocket.userData.preciseGrip=true;rig.handSocket.updateWorldMatrix(false,true);
    Object.assign(metrics,{mode:'prop',prop:frame.holding,contactPoint:touch.toArray(),gripPoint:anchor.toArray(),radius:grip.radius});
    if(frame.holding==='fishing_rod'&&frame.verb==='fish'){

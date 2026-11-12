@@ -3,6 +3,8 @@
 // asset manifest (src/engine/assets.ts). Static procedural geometry is merged per material across the whole set
 // (BufferGeometryUtils.mergeGeometries) to stay far below the ~150 draw-call budget; the anchors stay in the graph.
 import * as THREE from "three";
+import {buildHouseDoor,updateHouseDoor} from './houseDoor';
+import {entranceSupportAt} from '../../shared/interactiveObjects';
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
 import { Reflector } from "three/examples/jsm/objects/Reflector.js";
 import { mergeVertices, mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
@@ -11,9 +13,10 @@ import type { MarkId, Vec2 } from "../../shared/schema";
 import { GeoBag, lumpy, paint, rng, xf, type LookMaterials, type MatKey } from "../look";
 import { DETAIL_MEAN_SRGB, type EnvTextures } from "./textures";
 import { buildForestLocation } from "./forestLocations";
-import { buildHouseInterior, updateHouseInterior } from "./houseInterior";
+import { buildHouseInterior, updateHouseInterior, updateHouseInteriorView } from "./houseInterior";
 import { NatureAssets, type NatureId, type NatureSpot } from "./nature";
 import {pondRadius,POND_PIER_START} from '../../shared/pond';
+import {COOKING_STATION,cookingSupportHeightAt} from '../../shared/cookingStation';
 export {pondRadius} from '../../shared/pond';
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -96,11 +99,9 @@ function toLocal(x: number, z: number, def: SetElementDef): [number, number] {
 
 /** Height of the walkable surface under (x, z): porch deck + steps, pier, footbridges. 0 on the ground. */
 export function walkHeightAt(x: number, z: number): number {
-  // The generated house has a small doorstep; the former cabin's broad porch is now grass.
-  if (x > -6.9 && x < -5.1 && z > -4.7 && z < -3.9) {
-    const hz = clamp01((-3.9-z)/.3),hx=clamp01(Math.min(x+6.9,-5.1-x)/.15);
-    return .22*Math.min(hz,hx);
-  }
+  const entrance=entranceSupportAt(x,z);if(entrance>0)return entrance;
+  const cookingStep=cookingSupportHeightAt(x,z);
+  if(cookingStep>0)return cookingStep;
   // pier: local z along the pier from -0.3 (land) to 3.1
   {
     const [lx, lz] = toLocal(x, z, SET_ELEMENTS.pier);
@@ -772,7 +773,7 @@ function buildHammock(c: BuildCtx): void {
   queueNature(c, trees, "Pine_3", [{ x: -2.1, z: 0, height: 8.5, yaw: .8 }], true);
   queueNature(c, trees, "Pine_1", [{ x: 2.1, z: 0, height: 9.4, yaw: 2.1 }], true);
   // fabric: sagging striped grid
-  const U = 24, Vn = 6, L = 3.0, Wd = 0.9;
+  const U = 24, Vn = 6, L = 3.6, Wd = 1.1;
   const pos: number[] = [], col: number[] = [], uv: number[] = [], idx: number[] = [];
   const stripes = [0xf3e6c8, 0xd0483a, 0xf3e6c8, 0x3d7fc1, 0xf3e6c8, 0xd0483a];
   const cc = new THREE.Color();
@@ -811,7 +812,7 @@ function buildHammock(c: BuildCtx): void {
   b.addPainted("fabric", under);
   for (const s of [-1, 1]) {
     for (const zz of [-0.12, 0.12]) {
-      const { g: rg, m } = beam(V(s * 1.5, 1.05, zz * 0.6), V(s * 2.0, 1.45, 0), 0.015, 0.015, 4);
+      const { g: rg, m } = beam(V(s * 1.8, 1.05, zz * 0.6), V(s * 2.0, 1.45, 0), 0.015, 0.015, 4);
       b.add("wood", rg, 0xd2bc8e, m);
     }
   }
@@ -1004,6 +1005,17 @@ function buildTable(c: BuildCtx): void {
   });
   b.add("wood", cyl(0.08, 0.1, TABLE_TOP - 0.07, 10), 0x9a6a3e, xf([0, (TABLE_TOP - 0.07) / 2, 0]));
   for (let i = 0; i < 2; i++) b.add("wood", box(1.0, 0.07, 0.1), 0x8e5f36, xf([0, 0.035, 0], [0, (i * Math.PI) / 2 + 0.4, 0]));
+  // Child-sized helper: keep the adult table, raise Masha onto visible support.
+  // Build in table-local coordinates; the shared station is world-space.
+  const s=COOKING_STATION,x=s.position[0]-2,z0=s.topBack-1.5,z1=s.topFront-1.5;
+  b.add('wood',new RoundedBoxGeometry(s.width,.065,z1-z0,2,.018),0xa47b50,xf([x,s.top-.0325,(z0+z1)/2]));
+  const stepZ=(s.stepBack+s.topBack)/2-1.5;
+  b.add('wood',new RoundedBoxGeometry(s.width,.06,s.topBack-s.stepBack+.04,2,.015),0xa47b50,xf([x,s.stepTop-.03,stepZ]));
+  for(const side of [-1,1]){
+    for(const z of [z0+.08,z1-.08])b.add('wood',box(.075,s.top-.065,.075),0x8b633f,xf([x+side*(s.width/2-.075),(s.top-.065)/2,z]));
+    b.add('wood',box(.065,s.stepTop-.06,.075),0x8b633f,xf([x+side*(s.width/2-.075),(s.stepTop-.06)/2,s.stepBack-1.5+.09]));
+    b.add('wood',box(.06,.07,s.topFront-s.stepBack-.12),0x8b633f,xf([x+side*(s.width/2-.075),.10,(s.stepBack+s.topFront)/2-1.5]));
+  }
 }
 
 function buildSamovar(c: BuildCtx): void {
@@ -1780,12 +1792,13 @@ const BUILDERS: Record<SetElementId, (c: BuildCtx) => void> = {
 // ---------------------------------------------------------------------------------------------------------------
 
 export interface SetHandle {
+  setDoor(open:number):void;
   root: THREE.Group;
   /** Authored vegetation models and their textures have settled. */
   assetsReady: Promise<void>;
   natureStatus(): { loaded: string[]; failed: string[] };
   /** Select the opaque exterior or a usable cutaway room from the story camera focus. */
-  updateView(x:number,z:number,location?:SceneLocation):void;
+  updateView(x:number,z:number,location?:SceneLocation,cameraPosition?:THREE.Vector3):void;
   /** named anchor group per element ("set:<id>") — glTF replacements are loaded into these */
   elements: Record<SetElementId, THREE.Group>;
   /** pivot of the rope swing (rotate about local x to swing) */
@@ -1859,17 +1872,24 @@ export function buildBearsYard(mats: LookMaterials, opts: BuildSetOptions = {}):
 
   const interior = buildHouseInterior(mats);
   root.add(interior);
+  const outsideDoor=buildHouseDoor(),insideDoor=buildHouseDoor(true);
+  root.add(outsideDoor);interior.add(insideDoor);
+  insideDoor.position.sub(interior.position);
   const pondLocation=buildForestLocation("pond",mats,extra.nature,pondRadius);
   const wolvesLocation=buildForestLocation("wolves",mats,extra.nature);
   root.add(pondLocation,wolvesLocation);
   const smokeMat = extra.smoke?.material as THREE.ShaderMaterial | undefined;
   const beesMat = extra.bees?.material as THREE.ShaderMaterial | undefined;
   const handle: SetHandle = {
+    setDoor(open){updateHouseDoor(outsideDoor,open);updateHouseDoor(insideDoor,open);},
     root,
     assetsReady: Promise.all([...extra.nature.jobs,interior.userData.assetsReady]).then(() => undefined),
-    updateView(x,z,location=sceneLocationAt(x,z)) {
+    updateView(x,z,location=sceneLocationAt(x,z),cameraPosition) {
       for(const child of root.children) child.visible=false;
-      if(location==='house')interior.visible=true;
+      if(location==='house'){
+        interior.visible=true;
+        if(cameraPosition)updateHouseInteriorView(interior,cameraPosition);
+      }
       else if(location==='pond') {
         pondLocation.visible=true;elements.pond.visible=true;elements.pier.visible=true;
       } else if(location==='wolves') {

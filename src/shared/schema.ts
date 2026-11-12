@@ -55,7 +55,7 @@ export const VERBS = [
   // Emotion
   "laugh", "cry", "sulk", "surprised", "scared", "angry_stomp", "sneeze", "sigh",
   // Objects
-  "take", "give", "eat", "throw", "cook", "fish", "swing", "carry", "water_plants",
+  "take", "give", "eat", "throw", "cook", "fish", "swing", "carry", "water_plants", "drop", "open", "close",
 ] as const;
 export const VISEMES = ["rest", "open_small", "open_wide", "o", "e", "frown", "grin"] as const;
 export const FOLEY_IDS = [
@@ -193,6 +193,7 @@ const wolfStateDefault = (id: "wolf_a" | "wolf_b") =>
   ActorStateSchema.default(() => JSON.parse(JSON.stringify(WOLF_START[id])) as ActorState);
 
 export const WorldStateSchema = z.object({
+  objects:z.object({house_door:z.number().min(0).max(1)}).optional(),
   timeOfDay: TimeOfDaySchema,
   // wolf_a / wolf_b default in (additive): world states saved before the Wolves still parse.
   actors: z.object({ masha: ActorStateSchema, bear: ActorStateSchema, wolf_a: wolfStateDefault("wolf_a"), wolf_b: wolfStateDefault("wolf_b"), lady_bear: extraStateDefault("lady_bear"), hare: extraStateDefault("hare"), rosie: extraStateDefault("rosie"), squirrel: extraStateDefault("squirrel"), rival_bear: extraStateDefault("rival_bear") }),
@@ -216,12 +217,17 @@ export const ActorClipSchema = z.object({
     posture: PostureSchema.optional(), // posture during/after the clip
     ambient: z.boolean().optional(), // true = filled in by the compiler (ambient life), not from a beat
     sceneCut: z.boolean().optional(), // short offscreen travel between separate outdoor locations
+    portal:z.boolean().optional(), // visible doorway match cut, never a fade/offstage exit
+    arrivalYaw:z.number().optional(),
     putDown: MarkIdSchema.optional(), // compiler-authored reverse take, releases the held prop halfway through
+    pickUpAt: MarkIdSchema.optional(), // explicit surface contact before an indoor prop attaches to the hand
+    catchesFish: z.boolean().optional(), // ownership at the catch, independent of a later put-down in the same scene
+    dropAt: MarkIdSchema.optional(), // semantic fallback at release, independent of later ball ownership
   }),
 });
 export type ActorClip = z.infer<typeof ActorClipSchema>;
 
-export const CamKeySchema = z.object({ pos: Vec3Schema, look: Vec3Schema, fov: z.number(), location:z.enum(['yard','house','pond','wolves']).optional() });
+export const CamKeySchema = z.object({ pos: Vec3Schema, look: Vec3Schema, fov: z.number(), location:z.enum(['yard','house','pond','wolves']).optional(), followActor:ActorIdSchema.optional() });
 export type CamKey = z.infer<typeof CamKeySchema>;
 
 export const DialogueCueSchema = z.object({
@@ -275,6 +281,7 @@ export const FxCueSchema = z.object({ start: z.number(), dur: z.number(), id: Fx
 export type FxCue = z.infer<typeof FxCueSchema>;
 
 export const SegmentSchema = z.object({
+  objectCues:z.array(z.object({object:z.literal('house_door'),start:z.number(),dur:z.number(),from:z.number(),to:z.number()})).optional(),
   paragraphId: z.string(),
   version: z.number(),
   duration: z.number(),

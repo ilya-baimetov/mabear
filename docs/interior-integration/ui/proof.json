@@ -1,0 +1,16 @@
+{
+  "appUrl": "http://127.0.0.1:8810/",
+  "scriptSources": [
+    "http://127.0.0.1:8810/assets/studio-BNVTsQ2J.js"
+  ],
+  "fixture": "cozy_evening_en",
+  "paragraphs": 3,
+  "duration": 38.752,
+  "pausedAt": 7.2775404493402025,
+  "heldAt": 7.2775404493402025,
+  "resumedAt": 7.68384044931636,
+  "endedAt": 38.709,
+  "errors": [],
+  "apiRequests": [],
+  "scope": "Actual app UI and renderer; no paid API calls, audio disabled"
+}

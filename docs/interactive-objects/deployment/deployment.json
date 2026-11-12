@@ -1,0 +1,27 @@
+{
+  "deployedAt": "2026-11-10T00:11:17.557Z",
+  "version": "ec664a01-3b2a-4ccc-833a-82b144469522",
+  "previousVersion": "fc5b10ce-429a-4022-b8e7-f1fb8913b8fb",
+  "trafficPercent": 100,
+  "url": "https://mabear-storybook.ilya-baimetov.workers.dev",
+  "sourceFingerprint": "b49f81f61a2162540bdb07d1b25231a4ac3741c0c39f110e765bf788209fbe59",
+  "defaultPhysicsEnabled": true,
+  "interactiveObjects": [
+    "house_door"
+  ],
+  "animationFallback": "Unsupported stories, hugs, shoulder rides and physics initialization failures",
+  "validation": {
+    "priorLocalTests": 798,
+    "priorLocalTestFiles": 66,
+    "priorLocalTypecheck": "passed",
+    "freshProductionBuild": "passed",
+    "sourceMatchesReviewedRecordings": true,
+    "cloudflareDeployment": "100% traffic confirmed",
+    "liveHealth": "200; ok true",
+    "liveAuthentication": "Private app, demo and assets redirect to login; unauthenticated director returns 401",
+    "authenticatedLivePlayback": "Not repeated: available Chrome session is signed out. Local story, UI and built-app playback evidence retained."
+  },
+  "paidGenerationCalls": 0,
+  "authChanged": false,
+  "preexistingUserWorkPreserved": true
+}

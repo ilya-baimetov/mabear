@@ -1,0 +1,45 @@
+{
+  "checkedAt": "2026-11-10T00:12:11.349769+00:00",
+  "checks": [
+    {
+      "path": "/api/health",
+      "status": "HTTP/2 200 ",
+      "location": null,
+      "cacheControl": "private, no-store",
+      "contentType": "application/json"
+    },
+    {
+      "path": "/",
+      "status": "HTTP/2 302 ",
+      "location": "/login",
+      "cacheControl": "private, no-store",
+      "contentType": null
+    },
+    {
+      "path": "/physics/",
+      "status": "HTTP/2 302 ",
+      "location": "/login",
+      "cacheControl": "private, no-store",
+      "contentType": null
+    },
+    {
+      "path": "/assets/stageReplay-BKWHARNx.js",
+      "status": "HTTP/2 302 ",
+      "location": "/login",
+      "cacheControl": "private, no-store",
+      "contentType": null
+    },
+    {
+      "path": "/api/direct",
+      "status": "HTTP/2 401 ",
+      "location": null,
+      "cacheControl": "private, no-store",
+      "contentType": "application/json"
+    }
+  ],
+  "health": {
+    "ok": true,
+    "service": "mabear-storybook",
+    "edition": "codex"
+  }
+}

@@ -1,0 +1,97 @@
+{
+  "errors": [],
+  "views": [
+    {
+      "view": "connection",
+      "referenceLoaded": true,
+      "horizontalOverflow": false,
+      "paneHeights": [
+        503,
+        503
+      ]
+    },
+    {
+      "view": "kitchen",
+      "referenceLoaded": true,
+      "horizontalOverflow": false,
+      "paneHeights": [
+        503,
+        503
+      ]
+    },
+    {
+      "view": "corner",
+      "referenceLoaded": true,
+      "horizontalOverflow": false,
+      "paneHeights": [
+        503,
+        503
+      ]
+    },
+    {
+      "view": "opposite",
+      "referenceLoaded": true,
+      "horizontalOverflow": false,
+      "paneHeights": [
+        503,
+        503
+      ]
+    },
+    {
+      "view": "architecture",
+      "referenceLoaded": true,
+      "horizontalOverflow": false,
+      "paneHeights": [
+        503,
+        503
+      ]
+    },
+    {
+      "view": "reveal",
+      "referenceLoaded": true,
+      "horizontalOverflow": false,
+      "paneHeights": [
+        503,
+        503
+      ]
+    },
+    {
+      "view": "plan",
+      "referenceLoaded": true,
+      "horizontalOverflow": false,
+      "paneHeights": [
+        503,
+        503
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "name": "overview changes camera",
+      "passed": true
+    },
+    {
+      "name": "finite geometry and no texture maps",
+      "passed": true,
+      "meshes": 428,
+      "mapped": 0,
+      "nonfinite": 0
+    },
+    {
+      "name": "orbit changes camera",
+      "passed": true
+    },
+    {
+      "name": "reset restores camera",
+      "passed": true
+    },
+    {
+      "name": "scale figure toggle",
+      "passed": true
+    },
+    {
+      "name": "mobile has no horizontal overflow",
+      "passed": true
+    }
+  ]
+}

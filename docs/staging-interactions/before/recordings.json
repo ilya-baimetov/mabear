@@ -1,0 +1,46 @@
+{
+  "phase": "before",
+  "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+  "recordings": [
+    {
+      "story": "garden_party",
+      "filename": "garden_party.mp4",
+      "mime": "video/mp4;codecs=avc1.42e01e",
+      "duration": 26.732,
+      "frames": 1604,
+      "maxGapMs": 17.80000000000109,
+      "p95GapMs": 17.299999999999272
+    },
+    {
+      "story": "pancake_morning",
+      "filename": "pancake_morning.mp4",
+      "mime": "video/mp4;codecs=avc1.42e01e",
+      "duration": 57.552,
+      "frames": 3453,
+      "maxGapMs": 17.79999999998836,
+      "p95GapMs": 17.400000000001455
+    },
+    {
+      "story": "bears_nap",
+      "filename": "bears_nap.mp4",
+      "mime": "video/mp4;codecs=avc1.42e01e",
+      "duration": 60.88000000000001,
+      "frames": 3653,
+      "maxGapMs": 17.70000000001164,
+      "p95GapMs": 17.29999999998836
+    },
+    {
+      "story": "fishing_trip",
+      "filename": "fishing_trip.mp4",
+      "mime": "video/mp4;codecs=avc1.42e01e",
+      "duration": 40.731,
+      "frames": 2424,
+      "maxGapMs": 66.70000000001164,
+      "p95GapMs": 17.39999999999418
+    }
+  ],
+  "errors": [],
+  "failedRequests": [],
+  "sourceStable": true,
+  "sourceStableCheckedAt": "2026-11-07T05:31:41.442659+00:00"
+}

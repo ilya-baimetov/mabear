@@ -1,0 +1,27 @@
+{
+  "sourceFingerprint": "2f464091f07fd8aa364ac68a4b7c2528a26708e4e13e7193d905a2d2a5380b11",
+  "sourceStableAtCompletion": true,
+  "fullSuite": {
+    "files": 65,
+    "passed": 785,
+    "scope": "Before final drop gesture refinement",
+    "log": "checks/full-suite-before-gesture.txt"
+  },
+  "afterFinalGesture": {
+    "files": 3,
+    "passed": 25,
+    "scope": "Motion + real Rapier + real Player tests",
+    "log": "checks/final-targeted-tests.txt"
+  },
+  "typecheck": "passed",
+  "build": "passed; optional Rapier chunk size warning documented",
+  "independentReview": "accepted within scope",
+  "capturedBrowserErrors": [],
+  "capturedFailedRequests": [],
+  "noDeployment": true,
+  "noPaidServices": true,
+  "mediaDecoded": 10,
+  "nativeVideoPlayersVerified": 4,
+  "actualEditorControls": "passed after final gesture",
+  "builtDefaultPlayer": "no physics; no Rapier module requests"
+}

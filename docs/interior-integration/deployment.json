@@ -1,0 +1,66 @@
+{
+  "url": "https://mabear-storybook.ilya-baimetov.workers.dev",
+  "worker": "mabear-storybook",
+  "version": "cfcee0c6-3cbc-42ee-8b8e-7d6155192657",
+  "previousVersion": "0807bce8-79a8-4ce4-a74b-35fbe6d9830f",
+  "comparisonBaselineVersion": "40945b8e-b9ce-4e0d-9c43-40c8c71dfc01",
+  "verifiedAtUtc": "2026-11-07T09:59:30.435Z",
+  "reviewedSourceFingerprint": "a7d22476f0c7e15cd69d92fefac362248a00ba3dacfcf70bd2a4144b7326fe69",
+  "build": {
+    "entry": "assets/studio-BNVTsQ2J.js",
+    "entrySha256": "0342e1cf26e932b7e669e4403092a70e68be9070e04ab6fb0db81cc382e4bdf2",
+    "stage": "assets/stage-iZq6yKXD.js",
+    "stageSha256": "033df0a75c6524df8f68a640f5bbcfbfb75a65c0790835da6688a5e257c8fb2c",
+    "indexSha256": "d2f9c005af94e50ed1ac42cb0bab967f6479df4538b9dc2101f7e1099c9f240e",
+    "voiceEntry": "assets/voice-6uAmc0bY.js",
+    "voiceEntrySha256": "d93284e074d429b8c95199d4e4fe2d58b23a70286455c0256ab1bf53dbed5224",
+    "voiceIndexSha256": "8718383171244334335f4b9218bc1c77f129fc723859cf152ae93e62a78b9504",
+    "distFingerprint": "e6d8e6480bcda22f9b5173113e258b7ac824b26378253077a49158ee9afc6c08",
+    "fingerprintMethod": "SHA-256(JSON.stringify(path/SHA-256 pairs sorted using JavaScript localeCompare))",
+    "fileCount": 177,
+    "bytes": 62040658,
+    "html": [
+      "index.html",
+      "voice/index.html"
+    ],
+    "publicFileCount": 154,
+    "publicFingerprint": "ce097726c131071e84c4afe4402663d7525ee7759fb25214bff5742eaf205cf3"
+  },
+  "validation": {
+    "unitTests": 770,
+    "unitFiles": 63,
+    "typecheck": "passed",
+    "productionBuild": "passed",
+    "sourceMatchesReviewedCapture": true,
+    "publicChecks": "deployment-public-checks.json",
+    "productionEditorProof": "ui/proof.json",
+    "comparisonPlayerProof": "comparison/player-check.json",
+    "mediaProof": "media-check/proof.json",
+    "authenticatedChrome": {
+      "entryScriptMatched": true,
+      "existingStoryPreserved": true,
+      "storyTitle": "New voices · live check",
+      "playbackCompletedSeconds": 15.442,
+      "locationsObserved": [
+        "yard",
+        "house"
+      ],
+      "chairApproachVerifiedAt": 8.8,
+      "seatedPoseVerifiedAt": 11,
+      "consoleWarningsAndErrors": [],
+      "playheadRestoredTo": 0,
+      "soundRestored": true,
+      "screenshots": [
+        "live-chair-approach.jpg",
+        "live-deployed.jpg"
+      ]
+    }
+  },
+  "scope": "Reviewed connected house interior integrated into actual stories; shared furniture and prop surfaces, reachable kitchen interactions, indoor navigation, camera cutaways, chair entry/exit and clearance.",
+  "limits": [
+    "Materials remain simple; detailed textures were deliberately deferred.",
+    "Actual-story comparison movies were recorded locally from the same frozen source; authenticated live smoke used the existing saved two-scene story.",
+    "This release uses authored cartoon motion, not a general physics simulation."
+  ],
+  "supersededCandidate": "pre-chair-entry/release.json"
+}

@@ -62,6 +62,7 @@ const NEW_CAST_ALIASES: Record<string, ActorId> = {
   "гималайский_медведь": "rival_bear"
 };
 const TARGET_SYNONYMS: Record<string, string> = {
+  house_door:'door',front_door:'door',
   ...NEW_CAST_ALIASES,
   house: "house_living", home: "house_living", cabin: "house_living", hut: "house_living", inside: "house_living", steps: "porch", stairs: "porch",
   yard: "clearing", lawn: "clearing", meadow: "clearing", grass: "clearing", middle: "clearing", center: "clearing",
@@ -269,6 +270,9 @@ export function validateBeatScript(bs: BeatScript, startState: WorldState, lang:
     if (GRAMMAR[b.verb].target === "none") b.target = null;
     if (b.verb === "cook" && b.target === "house_living") b.target = "house_kitchen";
     if (b.verb === "cook" && b.target !== "house_kitchen" && b.target !== "table") b.target = null;
+    if((b.verb==='open'||b.verb==='close')&&b.target!=='door'){
+      errors.push(`${tag}: only the house door supports ${b.verb}`);b.verb='idle';b.target=null;
+    }
 
     // ---- items ----
     const vdef = GRAMMAR[b.verb];
@@ -283,10 +287,15 @@ export function validateBeatScript(bs: BeatScript, startState: WorldState, lang:
     } else if (b.item != null && VERB_IMPLIED_PROP[b.verb] !== b.item) {
       b.item = null;
     }
+    // The bounded drop cue only supports Masha's ball.
+    if (b.verb === "drop" && b.item !== "ball") {
+      errors.push(`${tag}: drop supports only the ball → shrug`);
+      b.verb = "shrug"; b.item = null;
+    }
     // simulate holding
     if (b.verb === "take" && b.item) holding[actor] = b.item;
     if (b.verb === "give" && b.item && isActor(b.target)) { holding[actor] = null; holding[b.target] = b.item; }
-    if (b.verb === "throw") holding[actor] = null;
+    if (b.verb === "throw" || b.verb === "drop") holding[actor] = null;
 
     // ---- emote / line (bear_silent) ----
     let emote = allowedEmote(actor, b.emote ?? null);

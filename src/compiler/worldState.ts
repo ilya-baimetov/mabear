@@ -31,7 +31,7 @@ export function worldStateDigest(ws: WorldState): string {
   };
   const props = Object.keys(ws.props).sort().map((k) => `${k}@${ws.props[k as PropId]?.at}`).join(";");
   // masha/bear first (unchanged layout); wolves appended so pre-wolf digests stay comparable in shape
-  return `${ws.timeOfDay}|${ACTOR_IDS.map((id) => a(id)).join("|")}|${props}`;
+  return `${ws.timeOfDay}|${ACTOR_IDS.map((id) => a(id)).join("|")}|${props}|door:${ws.objects?.house_door??0}`;
 }
 
 export function cloneWorldState(ws: WorldState): WorldState {

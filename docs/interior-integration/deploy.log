@@ -1,0 +1,40 @@
+
+> mabear@0.1.0 deploy
+> wrangler deploy
+
+
+ ⛅️ wrangler 4.157.0 (update available 4.158.0)
+───────────────────────────────────────────────
+🌀 Building list of assets...
+✨ Read 191 files from the assets directory /Users/ilya.baimetov/Projects/mabear/codex/dist
+🌀 Starting asset upload...
+🌀 Found 12 new or modified static assets to upload. Proceeding with upload...
++ /assets/GLTFLoader-CJ4bWb2M.js
++ /assets/bear-DQWczbcP.js
++ /assets/wolf-CmbKWeBx.js
++ /assets/generated-f7aTt0Kn.js
++ /index.html
++ /assets/masha-CdtA2-uv.js
++ /assets/face-SW6ZzAKz.js
++ /assets/stage-iZq6yKXD.js
++ /assets/player-DIboTyRH.js
++ /assets/sourceContacts-Ci7RvFET.js
++ /assets/audio-BbUIxhZx.js
++ /assets/studio-BNVTsQ2J.js
+Uploaded 4 of 12 assets
+Uploaded 8 of 12 assets
+Uploaded 12 of 12 assets
+✨ Success! Uploaded 12 files (165 already uploaded) (1.38 sec)
+
+Total Upload: 2169.85 KiB / gzip: 366.43 KiB
+Worker Startup Time: 32 ms
+Your Worker has access to the following bindings:
+Binding                              Resource            
+env.MASHA_SPEECH (MashaSpeech)       Durable Object      
+env.STORY_SERVICE (mabear)           Worker              
+env.ASSETS                           Assets              
+
+Uploaded mabear-storybook (4.88 sec)
+Deployed mabear-storybook triggers (0.34 sec)
+  https://mabear-storybook.ilya-baimetov.workers.dev
+Current Version ID: cfcee0c6-3cbc-42ee-8b8e-7d6155192657

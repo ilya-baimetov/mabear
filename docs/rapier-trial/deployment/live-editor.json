@@ -1,0 +1,10 @@
+{
+  "ready": true,
+  "physicsActive": true,
+  "reason": "paired choreography",
+  "segments": 2,
+  "playing": false,
+  "optionalLoads": [
+    "https://mabear-storybook.ilya-baimetov.workers.dev/assets/stageReplay-vPDS2S2c.js"
+  ]
+}

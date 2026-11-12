@@ -30,6 +30,8 @@ export const LEXICON_EN: Lexicon = {
   clauseSplit: /\s*(?:;|,?\s+(?:and then|and|then|but|so|after that|afterwards)\s+|,\s+(?=(?:then|and)\b)|,\s+)/u,
   simultaneous: W("while|meanwhile|at the same time|as well|too|together"),
   verbs: [
+    {re:W('opens?|opened|opening'),verb:'open'},
+    {re:W('closes?|closed|closing|shuts?|shut'),verb:'close'},
     { re: W("runs? after|ran after|chas(?:e|es|ed|ing)"), verb: "chase" },
     { re: W("gets? up|got up|stands? up|stood up"), verb: "stand_up" },
     { re: W("wakes? up|woke up|wakes|woke|awakens?|awake"), verb: "wake_up" },
@@ -71,6 +73,7 @@ export const LEXICON_EN: Lexicon = {
     { re: W("gives?|gave|hands?|handed|offers?|offered|brings?|brought|shares?|shared"), verb: "give" },
     { re: W("eats?|ate|eating|munch(?:es|ed)?|tastes?|tasted|licks?|licked|drinks?|drank|gobbles?|gobbled"), verb: "eat" },
     { re: W("throws?|threw|thrown|tosses?|tossed|kicks?|kicked"), verb: "throw" },
+    { re: W("drops?|dropped"), verb: "drop" },
     { re: W("swings?|swung|swinging"), verb: "swing" },
     { re: W("takes?|took|picks?(?: up)?|picked(?: up)?|grabs?|grabbed|steals?|stole|finds?|found|gets?|got"), verb: "take" },
   ],
@@ -203,6 +206,8 @@ export const LEXICON_EN: Lexicon = {
     { re: W("annoyed|irritated|grumbling"), emotion: "annoyed" },
   ],
   verbLabels: {
+    open:'opens the door',close:'closes the door',
+    drop: "drops",
     walk_to: "walks", run_to: "runs", tiptoe_to: "tiptoes", chase: "chases", enter: "arrives", exit: "leaves",
     idle: "waits", jump: "jumps", spin: "spins", dance: "dances", sit: "sits down", stand_up: "stands up",
     fall_down: "falls down", sleep: "sleeps", wake_up: "wakes up", yawn_stretch: "yawns", hide: "hides", peek: "peeks",

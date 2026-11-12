@@ -1,6 +1,7 @@
 // evaluate(timeline, t) → FrameState (spec §7.4). PURE and deterministic: no Date, no Math.random, no
 // globals mutated; blinks and fidgets are functions of t. The renderer applies the result each frame.
 import type { ActorFrame, FaceParams, FrameState, FxFrame, PropFrame } from "../api";
+import {doorOpenAt} from '../../shared/interactiveObjects';
 import {
   ACTOR_IDS, MARK_IDS, PROP_IDS, ADDED_ACTOR_START,
   type ActorClip, type ActorId, type CamKey, type Emotion, type MarkId, type Posture, type PropId, type PropLocation,
@@ -15,6 +16,9 @@ import { hash1 } from "../motion/verbs/common";
 import { swingAngle } from "../motion/verbs/objects";
 import {emotionWeights,emotionBlendSeconds,type EmotionWeights} from '../motion/emotion';
 import {propRestPosition as restPos,propPlacementAtMark} from '../../shared/propPlacement';
+import {carrySeatRoot,carryLiftRootHeight} from '../../shared/carrySupport';
+import {armchairMountMotion,hammockTiming,hammockTravelProgress} from '../../shared/physicalInteractions';
+import {cookingSupportHeightAt} from '../../shared/cookingStation';
 export {PROP_REST_HEIGHT} from '../../shared/propPlacement';
 
 // ---------- constants ----------
@@ -164,6 +168,7 @@ function resolveTrack(seg: Segment, actor: ActorId, extraPosture: { t: number; p
       const dYaw = Math.abs(wrapAngle(firstYaw - yaw));
       // turn in place before moving (Bear turns slower)
       turnDur = dYaw > 0.35 && length > 0.05 ? Math.min((actor === "bear" ? 0.55 : isWolfId(actor) ? 0.25 : 0.3) * (dYaw / Math.PI) + 0.1, clip.dur * 0.3) : 0;
+      if(p.arrivalYaw!==undefined)endYaw=p.arrivalYaw;
       if (isMark(p.target)) mark = p.target;
       else mark = null;
     } else {
@@ -181,7 +186,7 @@ function resolveTrack(seg: Segment, actor: ActorId, extraPosture: { t: number; p
         if (clip.verb === "wave" || clip.verb === "point_at" || clip.verb === "peek") endYaw = lerpAngle(yaw, endYaw, 0.5);
       }
       if (isMark(p.target) && (clip.verb === "sit" || clip.verb === "sleep" || clip.verb === "hide")) mark = p.target;
-      if(clip.verb==='stand_up'&&p.to&&fromPosture==='sit')mark=null;
+      if(p.to&&((clip.verb==='stand_up'&&fromPosture==='sit')||(p.target==='hammock'&&(fromPosture==='sleep'||fromPosture==='sit'))))mark=null;
     }
     posture = derivedPosture(clip, fromPosture);
     out.push({ clip, end: clip.start + clip.dur, startPos: pos, endPos, startYaw: yaw, endYaw, fromPosture, posture, mark, path, length, turnDur, firstYaw, slide, heavy: actor === "bear" });
@@ -221,6 +226,18 @@ function kinematics(r: Resolved, lt: number): Kin {
     return {pos:arrived?r.endPos:r.startPos,yaw:arrived?r.endYaw:r.startYaw,dist:0,turned:0,speed:0};
   }
   if (r.path && r.slide) {
+    if(clip.params.target==='house_living'&&clip.verb==='sit'&&r.fromPosture!=='sit'){
+      const motion=armchairMountMotion(!r.heavy,lt/clip.dur);
+      return{pos:pointAt(r.path,motion.travel*r.length),yaw:lerpAngle(r.startYaw,r.endYaw,smooth(clamp01(lt/.2))),dist:0,turned:0};
+    }
+    if(clip.params.target==='hammock'&&clip.verb==='sleep'&&r.fromPosture!=='sleep'){
+      const u=lt/clip.dur,k=hammockTravelProgress(true,u,clip.dur);
+      return {pos:pointAt(r.path,k*r.length),yaw:lerpAngle(r.startYaw,r.endYaw,smooth(clamp01(lt/Math.max(.001,hammockTiming(true,clip.dur).launch*.75)))),dist:0,turned:0};
+    }
+    if(clip.params.target==='hammock'&&(r.fromPosture==='sleep'||r.fromPosture==='sit')){
+      const u=lt/clip.dur,k=hammockTravelProgress(false,u,clip.dur);
+      return {pos:pointAt(r.path,k*r.length),yaw:lerpAngle(r.startYaw,r.endYaw,smooth(clamp01((lt-.38)/Math.max(.001,hammockTiming(false,clip.dur).launch-.48)))),dist:0,turned:0};
+    }
     // Clear the furniture before the pelvis lowers to its standing height.
     const moveDur=clip.verb==='stand_up'&&r.fromPosture==='sit'?clip.dur*.65:clip.dur;
     const k = smooth(clamp01(lt / Math.max(moveDur, 1e-3)));
@@ -271,6 +288,7 @@ function propLocationsAt(seg: Segment, localT: number): { at: Record<PropId, Pro
       const end = c.start + c.dur;
       if (item) touched.set(item, Math.max(touched.get(item) ?? 0, end));
       if (c.params.putDown && item) events.push({ t: c.start + c.dur * 0.5, prop: item, at: c.params.putDown });
+      else if (c.verb === "drop" && item) events.push({ t: c.start + c.dur * 0.5, prop: item, at: c.params.dropAt ?? "clearing" });
       else if (c.verb === "take" && item) events.push({ t: c.start + c.dur * 0.5, prop: item, at: a });
       else if (c.verb === "give" && item && isActor(c.params.target)) events.push({ t: c.start + c.dur * 0.6, prop: item, at: c.params.target });
       else if (c.verb === "throw" && item) {
@@ -285,7 +303,7 @@ function propLocationsAt(seg: Segment, localT: number): { at: Record<PropId, Pro
         if (pc && pc !== at.pancakes) events.push({ t: c.start + c.dur * 0.85, prop: "pancakes", at: pc });
       } else if (c.verb === "fish") {
         if(item)events.push({t:c.start,prop:item,at:a});
-        const f = seg.endState.props.fish?.at;
+        const f = c.params.catchesFish===true?a:c.params.catchesFish===false?undefined:seg.endState.props.fish?.at;
         if (f && f !== "hidden") events.push({ t: c.start + c.dur * 0.7, prop: "fish", at: f });
       } else if(c.verb==='water_plants'&&item)events.push({t:c.start,prop:item,at:a});
     }
@@ -402,14 +420,20 @@ function makeCtx(actor: ActorId, r: Resolved | null, kin: Kin, lt: number, t: nu
   }
   // only sit/lie on a raised surface when actually at it (the stage already lifts roots on the porch / pier)
   const seatMark0 = (clip?.params.target && isMark(clip.params.target) ? clip.params.target : null) ?? mark;
-  const seatPosition=clip?.verb==='stand_up'&&fromPosture==='sit'&&r?r.startPos:pos;
+  const exitingSeat=clip?.params.to&&(fromPosture==='sit'&&clip.verb==='stand_up'||clip.params.target==='hammock'&&(fromPosture==='sleep'||fromPosture==='sit'));
+  const mountingHammock=clip?.verb==='sleep'&&clip.params.target==='hammock'&&clip.params.to&&fromPosture!=='sleep';
+  const mountingArmchair=clip?.verb==='sit'&&clip.params.target==='house_living'&&clip.params.to&&fromPosture!=='sit';
+  const seatPosition=mountingHammock||mountingArmchair?clip!.params.to!:exitingSeat&&r?r.startPos:pos;
   const seatMark = seatMark0 && Math.hypot(MARKS[seatMark0].pos[0] - seatPosition[0], MARKS[seatMark0].pos[1] - seatPosition[1]) < 1.0 ? seatMark0 : null;
   void seg;
   return {
     actor, style, dur: clip ? clip.dur : 1, emotion: clip ? clip.emotion : "neutral", t,
     dist: kin.dist, turned: kin.turned, speed: kin.speed ?? 0, turnRate: kin.turnRate ?? 0, fromPosture, posture, targetLocal,
     seat: seatMark ? SEAT_HEIGHT[seatMark] ?? 0 : 0,
-    ...(seatMark==='house_living'&&actor==='masha'?{seatClearance:.11,seatForward:.40}:{}),
+    ...(seatMark==='house_living'?{seatProfile:'armchair' as const}:{}),
+    ...(seatMark==='house_living'&&actor==='masha'?{seatClearance:.11,seatForward:.43}:{}),
+    ...(seatMark==='house_living'&&actor==='bear'?{seatClearance:.24,seatForward:.35}:{}),
+    ...(seatMark==='hammock'&&actor==='bear'?{lieClearance:.25,seatClearance:.57}:{}),
   };
 }
 
@@ -492,7 +516,7 @@ function evalActor(actor: ActorId, inp: ActorCtxIn, bear: ActorFrame | null, car
   let ev = evaluatePose(verb, poseTime(inClip?r?.clip:undefined,clipLt), inClip && r ? r.clip.params : {}, ctx);
   // A previous seated idle has no groundW field. Body blending defaults that
   // absent value to 1, so retain the getting-up verb's explicit support ramp.
-  const transitionGroundWeight=(verb==='stand_up'||verb==='wake_up')&&fromPosture!=='stand'&&fromPosture!=='offstage'?ev.layer.groundW:undefined;
+  const transitionGroundWeight=verb==='sit'&&r?.clip.params.target==='house_living'&&r.clip.params.to?ev.layer.groundW:(verb==='stand_up'||verb==='wake_up'||r?.clip.params.target==='hammock'&&r.clip.params.to)&&fromPosture!=='stand'&&fromPosture!=='offstage'?ev.layer.groundW:undefined;
   // 0.2 s crossfade from the previous clip (or from the clip that just ended)
   let prevR: Resolved | null = null;
   let prevSeg = seg;
@@ -522,8 +546,8 @@ function evalActor(actor: ActorId, inp: ActorCtxIn, bear: ActorFrame | null, car
   if (carried && bear && carry) {
     const shoulder = shoulderSeat(bear);
     const k = easeInOut(carry.k);
-    const arc = Math.sin(k * Math.PI) * 0.3;
-    pos3 = [lerp(pos3[0], shoulder[0], k), lerp(0, shoulder[1], k) + arc, lerp(pos3[2], shoulder[2], k)];
+    const height = carryLiftRootHeight(k, shoulder[1]);
+    pos3 = [lerp(pos3[0], shoulder[0], k), height, lerp(pos3[2], shoulder[2], k)];
     finalYaw = lerpAngle(finalYaw, bear.yaw, k);
     if (k < 1) {
       const stand = evaluatePose("idle", clipLt, {}, { ...ctx, fromPosture: "stand", posture: "stand" }).layer;
@@ -540,7 +564,7 @@ function evalActor(actor: ActorId, inp: ActorCtxIn, bear: ActorFrame | null, car
   }
   // opacity: enter/exit fades, door exits, offstage holds
   let opacity = 1;
-  if(r?.clip.params.sceneCut){
+  if(r?.clip.params.sceneCut&&!r.clip.params.portal){
     const progress=clamp01((lt-r.clip.start)/r.clip.dur);
     opacity=smooth(Math.abs(progress-.5)*2);
   }
@@ -592,6 +616,7 @@ function evalActor(actor: ActorId, inp: ActorCtxIn, bear: ActorFrame | null, car
   }
   jiggle = clamp01(jiggle);
   const release=inClip&&r?.clip.params.putDown&&r.clip.params.item?{item:r.clip.params.item,...propPlacementAtMark(r.clip.params.item,r.clip.params.putDown)}:null;
+  const pickup=inClip&&r?.clip.params.pickUpAt&&r.clip.params.item?{item:r.clip.params.item,...propPlacementAtMark(r.clip.params.item,r.clip.params.pickUpAt)}:null;
   const frame: ActorFrame = {
     pos: pos3,
     yaw: finalYaw,
@@ -603,8 +628,11 @@ function evalActor(actor: ActorId, inp: ActorCtxIn, bear: ActorFrame | null, car
     holding: null,
     posture,
     verb,
-    action: { time:clipLt, duration:inClip&&r?r.clip.dur:0,...(inClip&&r&&verb==='fish'&&seg.endState.props.fish?.at===actor?{contactEnd:r.clip.dur*.7}:{}) },
+    action: { time:clipLt, duration:inClip&&r?r.clip.dur:0,...(inClip&&r&&verb==='fish'&&(r.clip.params.catchesFish===true||r.clip.params.catchesFish===undefined&&seg.endState.props.fish?.at===actor)?{contactEnd:r.clip.dur*.7}:{}) },
+    ...(inClip&&r&&verb==='hug'&&isActor(r.clip.params.target)?{interaction:{kind:'hug' as const,partner:r.clip.params.target}}:{}),
     ...(release?{putDown:{item:release.item,position:release.pos,rotation:release.rot,release:.5}}:{}),
+    ...(pickup?{pickup:{item:pickup.item,position:pickup.pos,rotation:pickup.rot,release:.5}}:{}),
+    ...(carried&&carry?{riding:{carrier:'bear' as const,progress:easeInOut(carry.k)}}:{}),
     secondary: { sway, jiggle, breathe: ev.breathe },
   };
   return { frame, carryLift: carry?.k ?? 0, mark, lookW, lookScale };
@@ -628,17 +656,17 @@ function talkPose(actor: ActorId, t: number, w: number): Record<string, [number,
 
 /** Where Masha sits when riding on Bear's shoulders (root position). */
 function shoulderSeat(bear: ActorFrame): Vec3 {
-  const s = STYLES.bear;
-  // The oversized head needs rear clearance; otherwise the rider's face sits inside Bear's skull.
-  const back = qrot(qaxis([0, 1, 0], bear.yaw), [0, 0, -0.16 * s.height]);
-  return [bear.pos[0] + back[0], bear.pos[1] + s.shoulderHeight + bear.hipsOffset[1], bear.pos[2] + back[2]];
+  return carrySeatRoot(bear);
 }
 
 /** Apply a look-at to an actor frame (head/neck bones + face.lookAt), faded by `weight`. */
 function applyLook(frame: ActorFrame, actor: ActorId, target: Vec3 | null, weight: number): void {
   if (!target || weight <= 0) return;
   const style = STYLES[actor];
-  const head: Vec3 = [frame.pos[0], frame.pos[1] + style.height * 0.82, frame.pos[2]];
+  // The stage lifts the complete rig after pose evaluation. Include that same
+  // support here so a child on the helper looks down toward the work surface.
+  const support = cookingSupportHeightAt(frame.pos[0], frame.pos[2]);
+  const head: Vec3 = [frame.pos[0], frame.pos[1] + support + style.height * 0.82, frame.pos[2]];
   const d: Vec3 = [target[0] - head[0], target[1] - head[1], target[2] - head[2]];
   const local = qrot(qaxis([0, 1, 0], -frame.yaw), d);
   const L = applyLookAt({ bones: frame.bones, hipsOffset: frame.hipsOffset }, lookAtPose(local, clamp01(weight)));
@@ -662,6 +690,7 @@ function cameraAt(seg: Segment, lt: number): CamKey {
     look: [lerp(cue.from.look[0], cue.to.look[0], k), lerp(cue.from.look[1], cue.to.look[1], k), lerp(cue.from.look[2], cue.to.look[2], k)],
     fov: lerp(cue.from.fov, cue.to.fov, k),
     location:cue.from.location??cue.to.location,
+    followActor:cue.from.followActor??cue.to.followActor,
   };
 }
 
@@ -863,15 +892,18 @@ export function evaluate(timeline: Timeline, t: number): FrameState {
     // partner for speaker attention: Masha ↔ Bear; the Wolves watch whoever is talking (else each other)
     const other: ActorId = a === "masha" ? "bear" : a === "bear" ? "masha" : speaker && speaker.actor !== a ? speaker.actor : a === "wolf_a" ? "wolf_b" : a === "wolf_b" ? "wolf_a" : "masha";
     const o = actors[other];
-    const otherHead: Vec3 = [o.pos[0], o.pos[1] + STYLES[other].height * 0.8, o.pos[2]];
+    const otherHead: Vec3 = [o.pos[0], o.pos[1] + cookingSupportHeightAt(o.pos[0],o.pos[2]) + STYLES[other].height * 0.8, o.pos[2]];
     const explicit = f.face.lookAt;
     const ev = evals[a];
     const ew = explicit ? ev.lookW : 0;
     const sw = speaker && o.opacity > 0.5 && (speaker.actor === other || speaker.actor === a) ? speaker.w * (1 - ew) : 0;
     // speaker attention first, explicit target on top: weights fade, so heads turn rather than snap
     f.face = { ...f.face, lookAt: null };
-    if (sw > 0) applyLook(f, a, otherHead, sw * ev.lookScale);
-    if (explicit && ew > 0) applyLook(f, a, explicit, ew * ev.lookScale);
+    // Once seated, neither performer twists their head through the other's
+    // face to satisfy the generic conversation gaze. They look along the ride.
+    const rideGaze=(a==='bear'||a==='masha')&&carry?1-smooth((carry.k-.4)/.4):1;
+    if (sw > 0) applyLook(f, a, otherHead, sw * ev.lookScale * rideGaze);
+    if (explicit && ew > 0) applyLook(f, a, explicit, ew * ev.lookScale * rideGaze);
   }
 
   // props and holding
@@ -882,6 +914,7 @@ export function evaluate(timeline: Timeline, t: number): FrameState {
   return {
     t,
     segmentIndex,
+    objects:{house_door:doorOpenAt(seg,ltc)},
     localT: segs.length === 0 ? t : ltc,
     actors,
     ...(segs.length?{cast:seg.cast??ACTOR_IDS.filter(a=>segs.slice(0,segmentIndex+1).some(s=>clipsOf(s.segment,a).some(c=>!c.params.ambient)))}:{}),

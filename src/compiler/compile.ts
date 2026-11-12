@@ -14,9 +14,14 @@ import { ACTOR_IDS } from "../shared/schema";
 import {propPlacementAtMark,propGripWorld} from '../shared/propPlacement';
 import {PROP_CONTACTS} from '../shared/propContacts';
 import {CHARACTER_REACH} from '../shared/characterReach';
+import {armchairMountMotion,avoidHammock,hammockExitPoint,hammockTiming,hammockTravelProgress,hugSpacing,interactionRadius} from '../shared/physicalInteractions';
+import {carryLiftHeadHeight} from '../shared/carrySupport';
+import {COOKING_STATION,cookingSupportHeightAt} from '../shared/cookingStation';
+import {HOUSE_COOKING_HELPER,HOUSE_CHILD_COOK_POSITION,HOUSE_STOVE,housePickupPosition,houseLocal,houseWorld} from '../shared/houseLayout';
+import {HOUSE_DOOR,INTERIOR_THRESHOLD,INTERIOR_APPROACH} from '../shared/interactiveObjects';
 import type {
   ActorClip, ActorId, Beat, BeatScript, Emotion, FxCue, FxId, LightingCue, MarkId, Posture, PropId, SfxId,
-  Vec2, Vec3, Verb, WorldState,
+  Vec2, Vec3, Verb, WorldState, Segment, CameraCue, CamKey,
 } from "../shared/schema";
 import { buildAudioCues, type AudioBeatEvent } from "./audioCues";
 import { HEAD_HEIGHT, planCamera, type CameraBeatInfo } from "./camera";
@@ -80,7 +85,7 @@ interface BeatTiming {
  *  (behind the table facing the camera, behind the tree/bush when hiding, on the shore side of the pond). */
 export function standPos(mark: MarkId): Vec2 {
   const m = MARKS[mark];
-  if (mark === "pier" || isInteriorMark(mark)) return v2(m.pos);
+  if (mark === "door" || mark === "pier" || isInteriorMark(mark)) return v2(m.pos);
   if (mark === "pond_shore") {
     const c = OBSTACLES.circles.find((o) => o.id === "pond")!;
     const d = [m.pos[0] - c.c[0], m.pos[1] - c.c[1]];
@@ -116,12 +121,14 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
   const tracks = Object.fromEntries(ACTORS.map((a) => [a, { clips: [], free: 0, states: [snap(ws, a, 0)] }])) as unknown as Record<ActorId, ActorTrack>;
   const compiledBeats: Beat[] = [];
   const timings: BeatTiming[] = [];
+  const preparationCameras:CameraBeatInfo[]=[];
+  const objectCues:NonNullable<Segment['objectCues']>=[];
+  const doorShots:CameraCue[]=[];
+  let doorFree=0;
   const events: AudioBeatEvent[] = [];
   const dialogue: ReturnType<typeof makeDialogueCue>[] = [];
   const fx: FxCue[] = [];
   const extraSfx: { t: number; id: SfxId; pos: Vec2 }[] = [];
-  const lastBeatIdx = Object.fromEntries(ACTORS.map((a) => [a, -1])) as Record<ActorId, number>;
-  bs0.beats.forEach((b, i) => { lastBeatIdx[b.actor] = i; });
   let flourUsed = false;
 
   // ---------- helpers ----------
@@ -140,7 +147,7 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
     for (const c of clips) {
       if (c.start > t) break;
       if (t < c.start + c.dur && c.params.path && c.params.path.length > 1) {
-        const k = (t - c.start) / Math.max(1e-6, c.dur);
+        const progress=(t-c.start)/Math.max(1e-6,c.dur),k=c.verb==='sit'&&c.params.target==='house_living'&&c.params.to?armchairMountMotion(a==='masha',progress).travel:c.params.target==='hammock'&&c.params.to&&!LOCOMOTION_VERBS.includes(c.verb)?hammockTravelProgress(c.verb==='sleep',progress,c.dur):progress;
         return c.params.sceneCut ? v2(k<.5?c.params.path[0]:c.params.path[c.params.path.length-1]) : pointAlong(c.params.path, k * pathLength(c.params.path));
       }
       p = c.params.to ?? c.params.from ?? p;
@@ -160,8 +167,18 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
    * floor root at the seat centre makes a short actor descend through it. */
   function seatExit(a:ActorId):{from:Vec2;to:Vec2;path:Vec2[];target:MarkId;facing:number}|null {
     const st=ws.actors[a],mark=st.mark;
+    if(mark==='hammock'&&(st.posture==='sleep'||st.posture==='sit')&&dist(st.pos,MARKS.hammock.pos)<1.05){
+      const from=v2(st.pos),candidates=([1,-1] as const).map(side=>clampWalkable(hammockExitPoint(from,a,side)));
+      const clearance=(p:Vec2)=>Math.min(...ACTORS.filter(o=>o!==a&&ws.actors[o].posture!=='offstage'&&ws.actors[o].posture!=='carried').flatMap(o=>[.2,.4,.6,.8,1].map(k=>dist([from[0]+(p[0]-from[0])*k,from[1]+(p[1]-from[1])*k],ws.actors[o].pos)-interactionRadius(o)-interactionRadius(a))));
+      const to=candidates.find(p=>clearance(p)>.12)??candidates.sort((p,q)=>clearance(q)-clearance(p))[0];
+      return{from,to:[r3(to[0]),r3(to[1])],path:[from,[r3(to[0]),r3(to[1])]],target:mark,facing:yawTo(from,to,st.facing)};
+    }
     if(st.posture!=='sit'||!mark||(SEAT_HEIGHT[mark]??0)<=.15||dist(st.pos,MARKS[mark].pos)>1.05)return null;
-    const facing=mark==='house_living'?MARKS[mark].facing:st.facing,distance=mark==='house_living'?.9:.65,from=v2(st.pos);
+    if(mark==='house_living'){
+      const from=v2(st.pos),p=houseLocal(from),corner=houseWorld([p[0]+.30,p[1]+.63]),to=houseWorld([p[0]+.65,p[1]+1.05]);
+      return{from,to,path:[from,corner,to],target:mark,facing:yawTo(from,corner,st.facing)};
+    }
+    const facing=st.facing,distance=.65,from=v2(st.pos);
     const to=clampWalkable([r3(from[0]+Math.sin(facing)*distance),r3(from[1]+Math.cos(facing)*distance)]);
     return{from,to,path:[from,to],target:mark,facing};
   }
@@ -173,9 +190,38 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
   }
   function headAt(a: ActorId, t: number): Vec3 {
     const p = posAt(a, t);
+    const smooth=(x:number)=>{x=Math.max(0,Math.min(1,x));return x*x*(3-2*x);};
+    const lerp=(x:number,y:number,k:number)=>x+(y-x)*k;
     const st=stateAt(a,t),seat=st.mark&&dist(p,MARKS[st.mark].pos)<1?(SEAT_HEIGHT[st.mark]??0):0;
-    const h = postureAt(a, t) === "carried" ? HEAD_HEIGHT.bear + 0.4 : postureAt(a, t) === "sleep" ? 0.6+seat : postureAt(a, t) === "sit" ? HEAD_HEIGHT[a] * 0.65+seat : HEAD_HEIGHT[a];
-    return [r3(p[0]), r3(h), r3(p[1])];
+    let h = postureAt(a, t) === "carried" ? 2.32 : postureAt(a, t) === "sleep" ? 0.6+seat : postureAt(a, t) === "sit" ? HEAD_HEIGHT[a] * 0.65+seat : HEAD_HEIGHT[a];
+    if(a==='bear'&&st.posture==='sleep'&&st.mark==='hammock')h=1.15;
+    const active=tracks[a].clips.find(c=>t>=c.start&&t<c.start+c.dur);
+    if(active?.verb==='sit'&&active.params.target==='house_living'&&active.params.to){
+      const motion=armchairMountMotion(a==='masha',(t-active.start)/active.dur);
+      h=lerp(HEAD_HEIGHT[a],HEAD_HEIGHT[a]*.65+SEAT_HEIGHT.house_living,motion.pose)+motion.lift-.045*motion.crouch;
+    }
+    if(active?.params.target==='hammock'&&active.params.to&&(active.verb==='sleep'||['sleep','sit'].includes(postureAt(a,active.start)))){
+      const time=t-active.start,mount=active.verb==='sleep',{launch,land,settled}=hammockTiming(mount,active.dur),flight=Math.max(0,Math.min(1,(time-launch)/(land-launch))),standing=HEAD_HEIGHT[a],seated=a==='bear'?2.35:standing*.65+SEAT_HEIGHT.hammock,lying=a==='bear'?1.15:.6+SEAT_HEIGHT.hammock,crouched=standing-.20;
+      if(mount){
+        if(time<launch)h=lerp(standing,crouched,smooth(time/launch));
+        else if(time<land)h=lerp(crouched,seated,flight)+4*.47*flight*(1-flight);
+        else h=lerp(seated,lying,smooth((time-settled)/Math.min(1.05,Math.max(.2,active.dur-settled))));
+      }else{
+        if(time<launch)h=lerp(postureAt(a,active.start)==='sleep'?lying:seated,seated,smooth(time/Math.min(.38,launch*.46)));
+        else if(time<land)h=lerp(seated,crouched,flight)+4*.25*flight*(1-flight);
+        else h=lerp(crouched,standing,smooth((time-land)/Math.max(.001,settled-land)));
+      }
+    }
+    if(a==='masha'){const lift=tracks.bear.clips.find(c=>c.verb==='carry'&&c.start<=t&&t<c.start+c.dur);if(lift)h=carryLiftHeadHeight(t-lift.start,lift.dur);}
+    const hug=active?.verb==='hug'?active:null;
+    if(hug&&postureAt(a,t)==='stand'&&isActor(hug.params.target)&&HEAD_HEIGHT[a]>HEAD_HEIGHT[hug.params.target]*1.4){
+      // Calibrated against the shipped rig's crouched hug (Bear Head Y≈1.41).
+      // Keep the camera with the embrace instead of aiming at the empty space
+      // above a kneeling adult. Match the pose's approach/release envelope.
+      const u=(t-hug.start)/hug.dur,k=Math.min(smooth(u/.22),smooth((1-u)/.22));
+      h-=.60*(HEAD_HEIGHT[a]/HEAD_HEIGHT.bear)*k;
+    }
+    return [r3(p[0]), r3(h+cookingSupportHeightAt(p[0],p[1])), r3(p[1])];
   }
   /** World point for a target id (mark / actor / prop). */
   function targetPoint(id: string | null, t: number): Vec3 | null {
@@ -185,12 +231,13 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
     if (isProp(id)) {
       const at = ws.props[id]?.at;
       if (at && isActor(at)) { const p = posAt(at, t); return [r3(p[0]), 0.8, r3(p[1])]; }
-      if (at && isMark(at)) { const p = MARKS[at].pos; return [p[0], 0.8, p[1]]; }
+      if (at && isMark(at)) return propPlacementAtMark(id,at).pos;
     }
     return null;
   }
   /** Where to stand to reach a target. */
   function approachPoint(a: ActorId, id: string, t: number, gap = 0.9): Vec2 | null {
+    if(id==='house_living'&&(a==='masha'||a==='bear')&&ws.actors[a].posture!=='sit')return armchairApproach(a);
     if (isMark(id)) return spread(a, standPos(id), t);
     if (isActor(id)) {
       const o = posAt(id, t);
@@ -198,14 +245,57 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
       let d: Vec2 = [me[0] - o[0], me[1] - o[1]];
       const l = Math.hypot(d[0], d[1]);
       d = l < 1e-3 ? [1, 0] : [d[0] / l, d[1] / l];
+      if(isInsideHouse(...o)){
+        const seated=ws.actors[id].posture==='sit'&&ws.actors[id].mark==='house_living';
+        // The chair pose advances the child's hips over the cushion edge.
+        // Root-to-root spacing alone put the server's belly into her face.
+        const reachGap=seated?Math.max(gap,1.35):gap;
+        const angle=seated?.35:Math.atan2(d[0],d[1]);
+        for(const turn of [0,.35,-.35,.7,-.7,1.2,-1.2,Math.PI]){
+          const candidate=clampWalkable([o[0]+Math.sin(angle+turn)*reachGap,o[1]+Math.cos(angle+turn)*reachGap]);
+          const path=planPath(me,candidate);
+          if(dist(path[path.length-1],candidate)<.03&&dist(candidate,o)<reachGap+.25&&dist(candidate,o)>.65)return candidate;
+        }
+      }
       return clampWalkable([o[0] + d[0] * gap, o[1] + d[1] * gap]);
     }
     if (isProp(id)) {
       const at = ws.props[id]?.at;
-      if (at && isMark(at)) return spread(a, standPos(at), t);
+      if (at && isMark(at)) {
+        if(isInteriorMark(at)){
+          const surface=propPlacementAtMark(id,at).pos,target:Vec2=[surface[0],surface[2]],me=posAt(a,t);
+          if(a==='masha'&&at==='house_kitchen')return housePickupPosition(id);
+          if(at==='house_kitchen'){
+            const candidate=houseWorld([-2.90,.75]),path=planPath(me,candidate);
+            if(dist(path[path.length-1],candidate)<.03)return candidate;
+          }
+          const angle=Math.atan2(me[0]-target[0],me[1]-target[1]);
+          for(const turn of [0,.5,-.5,1,-1,1.6,-1.6,Math.PI]){
+            const candidate=clampWalkable([target[0]+Math.sin(angle+turn)*.75,target[1]+Math.cos(angle+turn)*.75]);
+            const path=planPath(me,candidate);
+            if(dist(path[path.length-1],candidate)<.03&&dist(candidate,target)<1.15)return candidate;
+          }
+        }
+        return spread(a, standPos(at), t);
+      }
       if (at && isActor(at) && at !== a) return approachPoint(a, at, t, gap);
     }
     return null;
+  }
+  function armchairApproach(a:ActorId):Vec2{
+    const seat=MARKS.house_living;return[seat.pos[0],seat.pos[1]+(a==='masha'?1.02:1.45)];
+  }
+  /** A static-obstacle clamp can otherwise push an approach point back into
+   * the partner's belly. Search around the partner while retaining body room. */
+  function hugApproach(a:ActorId,partner:ActorId,t:number):Vec2 {
+    const centre=posAt(partner,t),me=v2(ws.actors[a].pos),gap=hugSpacing(a,partner,ws.actors[partner].posture==='sit'),angle=Math.atan2(me[0]-centre[0],me[1]-centre[1]);
+    for(const extra of [0,.15,.3])for(const turn of [0,.35,-.35,.7,-.7,1.05,-1.05,1.4,-1.4,1.9,-1.9,Math.PI]){
+      const p=clampWalkable([centre[0]+Math.sin(angle+turn)*(gap+extra),centre[1]+Math.cos(angle+turn)*(gap+extra)]);
+      if(dist(p,centre)>=gap-.005&&dist(p,centre)<=gap+extra+.025&&ACTORS.every(o=>o===a||o===partner||ws.actors[o].posture==='offstage'||ws.actors[o].posture==='carried'||dist(p,posAt(o,t))>=interactionRadius(a)+interactionRadius(o)+.08))return p;
+    }
+    const p=approachPoint(a,partner,t,gap+.5)!;
+    if(dist(p,centre)>=gap-.005)return p;
+    return [centre[0]+Math.sin(angle+Math.PI)*(gap+.5),centre[1]+Math.cos(angle+Math.PI)*(gap+.5)];
   }
   /** Avoid standing on top of another character (partner first, then everyone else). */
   function spread(a: ActorId, p: Vec2, t: number): Vec2 {
@@ -232,13 +322,27 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
     return s[verb] ?? s.walk_to;
   }
   /** Add a locomotion clip along a planned path; returns its end time. Updates world state. */
-  function locomote(a: ActorId, t: number, verb: Verb, dest: Vec2, emotion: Emotion, target: string | null, finalFacing?: number, path0?: Vec2[]): number {
+  function locomote(a: ActorId, t: number, verb: Verb, dest: Vec2, emotion: Emotion, target: string | null, finalFacing?: number, path0?: Vec2[], direct=false): number {
     const st = ws.actors[a];
     const from = v2(st.pos);
-    const path = path0 ?? planPath(from, dest);
+    if(!direct&&isInsideHouse(...from)!==isInsideHouse(...dest))return throughDoor(a,t,dest,emotion,target,finalFacing);
+    let path = path0 ?? planPath(from, dest);
+    if(a==='masha'){
+      const supportedFrom=cookingSupportHeightAt(...from)>.3,supportedTo=cookingSupportHeightAt(...dest)>.3;
+      const supportAt=supportedFrom?from:dest;
+      const entry:Vec2=isInsideHouse(...supportAt)?[...HOUSE_COOKING_HELPER.entry]:[COOKING_STATION.position[0],COOKING_STATION.stepBack-.25];
+      // Mount and leave by the two actual treads, not by popping up/down the
+      // tall side of the helper. This also covers leaving to put down the pan.
+      if(supportedTo&&!supportedFrom)path=[...planPath(from,entry),dest];
+      else if(supportedFrom&&!supportedTo)path=[from,entry,...planPath(entry,dest).slice(1)];
+    }
+    // The hammock remains an obstacle after the interaction ends. Ordinary
+    // departure previously bypassed the route used for hugs and approached
+    // the yard through its cloth and end branches, especially with a rider.
+    path=avoidHammock(path,a,a==='bear'&&ws.actors.masha.posture==='carried'?1.2:0);
     const len = pathLength(path);
     const fromScene=sceneLocationAt(...from),toScene=sceneLocationAt(...dest);
-    const sceneCut=fromScene!==toScene&&(!['yard','house'].includes(fromScene)||!['yard','house'].includes(toScene));
+    const sceneCut=fromScene!==toScene;
     const dur = sceneCut ? .9 : len < 0.3 ? 0.6 : Math.min(MAX_LOCO_S, Math.max(len / speed(a, verb), 0.8));
     const yaw = pathEndYaw(path, st.facing);
     addClip(a, t, dur, verb, emotion, {
@@ -258,6 +362,98 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
       record("masha", t + dur);
     }
     return t + dur;
+  }
+  function doorShot(start:number,end:number,inside:boolean):void {
+    if(end<=start)return;
+    const key:CamKey=inside?{pos:[-9.6,2.7,-8.9],look:[-5.6,1.65,-11],fov:47,location:'house'}:{pos:[-1,3.5,3.7],look:[-6,1.7,-3.7],fov:40,location:'yard'};
+    doorShots.push({start,dur:end-start,shot:'medium',from:key,to:key,overridden:true});
+  }
+  function doorAction(a:ActorId,t:number,to:number,emotion:Emotion):number {
+    t=Math.max(t,doorFree);
+    const st=ws.actors[a],inside=isInsideHouse(...st.pos),approach=inside?INTERIOR_APPROACH:HOUSE_DOOR.exterior.approach;
+    const start=t;
+    if(dist(st.pos,approach)>.05)t=locomote(a,t,'walk_to',approach,emotion,null,undefined,undefined,true);
+    const centre=inside?HOUSE_DOOR.interior.center:HOUSE_DOOR.exterior.center;
+    t=facePartner(a,t,centre,emotion);
+    const from=ws.objects?.house_door??0,dur=Math.abs(to-from)>.001?HOUSE_DOOR.duration:.45;
+    addClip(a,t,dur,to?'open':'close',emotion,{from:v2(st.pos),facing:st.facing,posture:'stand',item:st.holding??undefined,target:'door',lookAt:[centre[0],1.5,centre[1]]});
+    if(Math.abs(to-from)>.001){
+      objectCues.push({object:'house_door',start:t+.2,dur:dur-.2,from,to});
+      extraSfx.push({t:t+.25,id:'door_creak',pos:centre});
+    }
+    ws.objects={house_door:to};if(!inside)st.mark='door';record(a,t+dur);doorFree=t+dur;doorShot(start,t+dur,inside);
+    return t+dur;
+  }
+  function throughDoor(a:ActorId,t:number,dest:Vec2,emotion:Emotion,target:string|null,finalFacing?:number):number {
+    const st=ws.actors[a],entering=isInsideHouse(...dest),start=Math.max(t,doorFree);
+    t=start;
+    const approach=entering?HOUSE_DOOR.exterior.approach:INTERIOR_APPROACH;
+    const threshold=entering?HOUSE_DOOR.exterior.threshold:INTERIOR_THRESHOLD;
+    const arrival=entering?INTERIOR_THRESHOLD:HOUSE_DOOR.exterior.threshold;
+    const exit=entering?INTERIOR_APPROACH:HOUSE_DOOR.exterior.approach;
+    if(dist(st.pos,approach)>.05)t=locomote(a,t,'walk_to',approach,emotion,null,undefined,undefined,true);
+    if((ws.objects?.house_door??0)<.999)t=doorAction(a,t,1,emotion);
+    t=locomote(a,t,'walk_to',threshold,emotion,null,undefined,[v2(st.pos),threshold],true);
+    const cut=t+.05,yaw=entering?HOUSE_DOOR.interior.yaw:0;
+    addClip(a,t,.1,'walk_to',emotion,{from:threshold,to:arrival,path:[threshold,arrival],facing:st.facing,arrivalYaw:yaw,posture:'stand',item:st.holding??undefined,sceneCut:true,portal:true});
+    st.pos=v2(arrival);st.facing=yaw;st.mark=null;record(a,t+.1);t+=.1;
+    doorShot(start,cut,!entering);
+    t=locomote(a,t,'walk_to',exit,emotion,null,yaw,[arrival,exit],true);
+    doorFree=t;
+    doorShot(cut,t,entering);
+    return locomote(a,t,'walk_to',dest,emotion,target,finalFacing,undefined,true);
+  }
+  /** Finish a planted turn before any paired contact pose begins. */
+  function facePartner(a:ActorId,t:number,point:Vec2,emotion:Emotion):number {
+    const st=ws.actors[a],previous=tracks[a].clips.filter(c=>c.start+c.dur<=t+.001).at(-1);
+    // A semantic mark facing may differ from a walk's actual final tangent.
+    const fromYaw=previous&&LOCOMOTION_VERBS.includes(previous.verb)&&previous.params.path?pathEndYaw(previous.params.path,st.facing):st.facing;
+    const facing=yawTo(st.pos,point,fromYaw),delta=Math.abs(Math.atan2(Math.sin(facing-fromYaw),Math.cos(facing-fromYaw)));
+    if(delta<.02)return t;
+    // Match the evaluator's in-place turning speed, with a short settled beat.
+    const dur=Math.max(.25,delta/Math.PI*.7*(a==='bear'||a==='rival_bear'?1.8:1)+.10);
+    addClip(a,t,dur,'look_at',emotion,{from:v2(st.pos),facing,posture:st.posture,item:st.holding??undefined,lookAt:[point[0],HEAD_HEIGHT[a]*.7,point[1]]});
+    events.push({actor:a,verb:'look_at',start:t,dur,emote:null,hasLine:false,sfx:null,sfxAt:t,pos:v2(st.pos),main:false});
+    st.facing=facing;record(a,t+dur);return t+dur;
+  }
+  /** Keep a seated participant on its support while visibly freeing the paw.
+   * This uses the same reverse pickup/contact path as putting a cooking prop away. */
+  function putAsideForHug(a:ActorId,t:number,emotion:Emotion):number {
+    const st=ws.actors[a],item=st.holding;if(!item)return t;
+    const mark=st.mark??nearestMark(st.pos),placement=propPlacementAtMark(item,mark),grip=propGripWorld(placement.pos,placement.rot,PROP_CONTACTS[item].point);
+    if(st.posture==='stand'&&dist(st.pos,[grip[0],grip[2]])>CHARACTER_REACH[a].length+.35){
+      const destination=approachPoint(a,mark,t);
+      if(destination)t=locomote(a,t,'walk_to',destination,emotion,mark);
+    }
+    t=facePartner(a,t,[grip[0],grip[2]],emotion);
+    const dur=1;
+    addClip(a,t,dur,'take',emotion,{from:v2(st.pos),facing:st.facing,posture:st.posture,item,putDown:mark,lookAt:grip});
+    events.push({actor:a,verb:'take',start:t,dur,emote:null,hasLine:false,sfx:null,sfxAt:t+.5,pos:v2(st.pos),main:false});
+    ws.props[item]={at:mark};st.holding=null;record(a,t+dur);return t+dur;
+  }
+  /** A hand cannot reach a second prop while its socket still carries the
+   * first. Finish a visible, supported placement before planning the pickup. */
+  function putAsideBeforeInteriorPickup(a:ActorId,t:number,mark:MarkId,emotion:Emotion):number{
+    const st=ws.actors[a],item=st.holding;if(!item)return t;
+    const start=t,from=v2(st.pos);let contactStart=start;
+    const finish=(end:number)=>{
+      if(contactStart>start)preparationCameras.push({start,dur:contactStart-start,actor:a,verb:'walk_to',shot:'tracking',from,to:v2(st.pos),hasLine:false,lineStart:0,lineDur:0,punchline:false,emotion});
+      preparationCameras.push({start:contactStart,dur:end-contactStart,actor:a,verb:'take',shot:'medium',from:v2(st.pos),to:v2(st.pos),hasLine:false,lineStart:0,lineDur:0,punchline:false,emotion});return end;
+    };
+    if(mark!=='house_kitchen')return finish(putAsideForHug(a,t,emotion));
+    const placement=propPlacementAtMark(item,mark),grip=propGripWorld(placement.pos,placement.rot,PROP_CONTACTS[item].point);
+    const destination=a==='masha'?housePickupPosition(item):houseWorld(item==='frying_pan'?[-3,3.00]:[-2.90,.75]);
+    if(dist(st.pos,destination)>.04){
+      const start=t;t=locomote(a,t,'walk_to',destination,emotion,mark);
+      events.push({actor:a,verb:'walk_to',start,dur:t-start,emote:null,hasLine:false,sfx:null,sfxAt:start,pos:v2(st.pos),main:false});
+    }
+    t=facePartner(a,t,[grip[0],grip[2]],emotion);
+    contactStart=t;
+    const dur=1;
+    addClip(a,t,dur,'take',emotion,{from:v2(st.pos),facing:st.facing,posture:st.posture,item,putDown:mark,lookAt:grip});
+    events.push({actor:a,verb:'take',start:t,dur,emote:null,hasLine:false,sfx:null,sfxAt:t+.5,pos:v2(st.pos),main:false});
+    ws.props[item]={at:mark};st.holding=null;record(a,t+dur);
+    return finish(t+dur);
   }
   function dismount(t: number): number {
     const m = ws.actors.masha;
@@ -282,11 +478,60 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
   }
   function giveTo(a: ActorId, item: PropId) {
     if (ws.actors[a].holding && ws.actors[a].holding !== item) dropHeld(a);
+    // Implied tools (for example Masha taking over Bear's frying pan) must
+    // transfer the holder as well as the prop. Otherwise the former holder
+    // resurrects it when a following paragraph rebuilds ownership.
+    for(const other of ACTORS)if(other!==a&&ws.actors[other].holding===item)ws.actors[other].holding=null;
     ws.actors[a].holding = item;
     ws.props[item] = { at: a };
   }
   function addFx(id: FxId, start: number, dur: number, at: Vec3) {
     fx.push({ start: r3(start), dur: r3(dur), id, at: [r3(at[0]), r3(at[1]), r3(at[2])] });
+  }
+
+  /** Let a serving adult clear the chair before its occupant gets up. */
+  function clearChairExit(a:ActorId,t:number,emotion:Emotion):number {
+    const st=ws.actors[a];if(st.posture!=='sit'||st.mark!=='house_living')return t;
+    const exit=seatExit(a);if(!exit)return t;
+    for(const other of ACTORS){
+      const partner=ws.actors[other];if(other===a||partner.posture!=='stand'||!isInsideHouse(...partner.pos))continue;
+      const radius=interactionRadius(a)+interactionRadius(other)+.12;
+      const near=Array.from({length:15},(_,i)=>pointAlong(exit.path,pathLength(exit.path)*i/14)).some(p=>dist(p,partner.pos)<radius);
+      if(!near)continue;
+      const candidates=[[2.25,1.65],[2.65,.65],[1.9,2.5]].map(houseWorld).filter(p=>
+        ACTORS.every(o=>o===other||o===a||ws.actors[o].posture==='offstage'||dist(p,ws.actors[o].pos)>interactionRadius(other)+interactionRadius(o)+.15));
+      candidates.sort((p,q)=>pathLength(planPath(partner.pos,p))-pathLength(planPath(partner.pos,q)));
+      const destination=candidates.find(p=>dist(planPath(partner.pos,p).at(-1)!,p)<.03);
+      if(!destination)continue;
+      const start=Math.max(t,tracks[other].free);
+      t=locomote(other,start,'walk_to',destination,emotion,null,yawTo(destination,st.pos));
+      events.push({actor:other,verb:'walk_to',start,dur:t-start,emote:null,hasLine:false,sfx:null,sfxAt:start,pos:v2(destination),main:false});
+    }
+    return t;
+  }
+
+  /** A former occupant may still be beside the chair when the next actor
+   * backs into it. Move only a free standing participant out of that corridor. */
+  function clearChairEntry(a:ActorId,t:number,emotion:Emotion):number{
+    const corridor=[armchairApproach(a),v2(MARKS.house_living.pos)],length=pathLength(corridor);
+    for(const other of ACTORS){
+      const partner=ws.actors[other];
+      if(other===a||partner.posture!=='stand'||tracks[other].free>t+.001||!isInsideHouse(...partner.pos))continue;
+      const clearance=interactionRadius(a)+interactionRadius(other)+.18;
+      if(!Array.from({length:17},(_,i)=>pointAlong(corridor,length*i/16)).some(p=>dist(p,partner.pos)<clearance))continue;
+      const candidates=[[2.25,1.65],[2.65,.65],[1.9,2.5]].map(houseWorld).filter(p=>
+        ACTORS.every(o=>o===other||ws.actors[o].posture==='offstage'||dist(p,ws.actors[o].pos)>interactionRadius(other)+interactionRadius(o)+.15));
+      candidates.sort((p,q)=>pathLength(planPath(partner.pos,p))-pathLength(planPath(partner.pos,q)));
+      const destination=candidates.find(p=>{
+        const path=planPath(partner.pos,p),distance=pathLength(path);if(dist(path.at(-1)!,p)>.03)return false;
+        return Array.from({length:19},(_,i)=>pointAlong(path,distance*i/18)).every(at=>ACTORS.every(o=>o===other||ws.actors[o].posture==='offstage'||dist(at,ws.actors[o].pos)>interactionRadius(other)+interactionRadius(o)+.08));
+      });
+      if(!destination)continue;
+      const start=t,from=v2(partner.pos);t=locomote(other,t,'walk_to',destination,emotion,null,yawTo(destination,MARKS.house_living.pos));
+      events.push({actor:other,verb:'walk_to',start,dur:t-start,emote:null,hasLine:false,sfx:null,sfxAt:start,pos:v2(destination),main:false});
+      preparationCameras.push({start,dur:t-start,actor:other,verb:'walk_to',shot:'tracking',from,to:v2(destination),hasLine:false,lineStart:0,lineDur:0,punchline:false,emotion});
+    }
+    return t;
   }
 
   // ---------- beats ----------
@@ -311,7 +556,7 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
       repairs.push(`inserted enter: ${a} comes back before "${b.verb}"`);
       continue;
     }
-    if ((b.verb === "eat" || b.verb === "give" || b.verb === "throw") && b.item && st.holding !== b.item) {
+    if ((b.verb === "eat" || b.verb === "give" || b.verb === "throw" || b.verb === "drop") && b.item && st.holding !== b.item) {
       const at = ws.props[b.item]?.at;
       if (isActor(at) && at !== a) {
         errors.push(`${a} can't ${b.verb} the ${b.item}: ${at} is holding it`);
@@ -334,20 +579,25 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
     compiledBeats.push(b);
     const def = GRAMMAR[b.verb];
     const anchor = prevTiming ? (b.with_previous ? prevTiming.start : prevTiming.end) : 0;
-    let t = Math.max(anchor + b.delay_s, tracks[a].free);
+    // The doorway shot has exclusive staging until its traveller clears the
+    // steps; do not perform another actor's cooking/hug unseen behind that cut.
+    let t = Math.max(anchor + b.delay_s, tracks[a].free, doorFree);
     const interacts = (b.verb === "hug" || b.verb === "carry" || b.verb === "give") && isActor(b.target);
     if (interacts && isActor(b.target)) t = Math.max(t, tracks[b.target].free);
     const beatStart = t;
     const fromPos = posAt(a, t);
+    if(st.posture==='sit'&&(b.verb==='stand_up'||!SIT_OK.has(b.verb)))t=clearChairExit(a,t,b.emotion);
 
     // --- posture transitions (pre-clips) ---
     if (a === "masha" && st.posture === "carried" && !CARRIED_OK.has(b.verb)) t = dismount(t);
     if (a === "bear" && ws.actors.masha.posture === "carried" && ENDS_CARRY.has(b.verb)) t = Math.max(t, dismount(t));
     if (st.posture === "sleep" && !SLEEP_OK.has(b.verb)) {
-      addClip(a, t, GRAMMAR.wake_up.baseDuration, "wake_up", "sleepy", { from: v2(st.pos), facing: st.facing, posture: "stand", item: st.holding ?? undefined });
+      const exit=seatExit(a);
+      addClip(a, t, GRAMMAR.wake_up.baseDuration, "wake_up", "sleepy", { from: v2(st.pos), facing: st.facing, posture: "stand", item: st.holding ?? undefined,...exit });
       events.push({ actor: a, verb: "wake_up", start: t, dur: GRAMMAR.wake_up.baseDuration, emote: null, hasLine: false, sfx: null, sfxAt: t, pos: v2(st.pos), main: false });
       t += GRAMMAR.wake_up.baseDuration;
       st.posture = "stand";
+      if(exit){st.pos=v2(exit.to);st.facing=exit.facing;st.mark=null;}
       record(a, t);
     }
     if (st.posture === "sit" && b.verb!=='stand_up' && !SIT_OK.has(b.verb)) {
@@ -360,17 +610,52 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
       record(a, t);
     }
 
+    if(b.verb==='hug'&&isActor(b.target)){
+      t=putAsideForHug(a,t,b.emotion);t=putAsideForHug(b.target,t,b.emotion);
+    }
+    if(b.target==='house_living'&&(a==='masha'||a==='bear')&&st.posture!=='sit'&&(b.verb==='sit'||LOCOMOTION_VERBS.includes(b.verb)))t=clearChairEntry(a,t,b.emotion);
+    if(b.verb==='take'&&b.item&&st.holding&&st.holding!==b.item&&isInteriorMark(ws.props[b.item]?.at)){
+      t=putAsideBeforeInteriorPickup(a,t,ws.props[b.item].at as MarkId,b.emotion);
+    }
+
     // --- auto-walk to where the verb happens ---
     let walkDest: Vec2 | null = null;
     let walkTarget: string | null = null;
+    const seatedAtHammock=st.posture==='sit'&&st.mark==='hammock'&&dist(st.pos,MARKS.hammock.pos)<1.05;
     const home = b.verb === "cook" && (isInteriorMark(b.target) || b.target !== "table" && isInsideHouse(st.pos[0],st.pos[1]))
       ? "house_kitchen" : VERB_HOME_MARK[b.verb] as MarkId | undefined;
-    if (home) { walkDest = spread(a, standPos(home), t); walkTarget = home; }
+    const cookingStation=b.verb==='cook'&&a==='masha'&&(home==='table'||home==='house_kitchen');
+    const cookingSupport=home==='house_kitchen'?HOUSE_COOKING_HELPER:COOKING_STATION;
+    if (home) { walkDest = cookingStation?(home==='house_kitchen'?[...HOUSE_CHILD_COOK_POSITION]:[...cookingSupport.position]):spread(a, standPos(home), t); walkTarget = home; }
     else if (b.verb === "take" && b.item && ws.props[b.item]?.at !== "hidden" && ws.props[b.item]?.at !== a) { walkDest = approachPoint(a, b.item, t); walkTarget = b.item; }
-    else if (interacts && b.target) { walkDest = approachPoint(a, b.target, t, b.verb === "give" ? 1.0 : 0.7); walkTarget = b.target; }
-    else if ((b.verb === "sit" || b.verb === "sleep" || b.verb === "hide") && isMark(b.target)) { walkDest = spread(a, standPos(b.target), t); walkTarget = b.target; }
+    else if (interacts && b.target) {
+      if(b.verb==='hug'&&isActor(b.target)&&tracks[b.target].free<=t+1e-6&&ws.actors[b.target].posture==='stand'){
+        const partner=b.target,p=ws.actors[partner].pos,table=MARKS.table.pos;
+        // Clear the tabletop and both benches before making a small child the
+        // focus of a paired action. Move the partner's actual track/root first.
+        if(dist(p,table)<2.5&&!isInsideHouse(...p)){
+          const d=Math.max(.001,dist(p,table)),destination=clampWalkable([table[0]+(p[0]-table[0])/d*2.6,table[1]+(p[1]-table[1])/d*2.6]),start=t;
+          t=locomote(partner,t,'walk_to',destination,b.emotion,null);
+          events.push({actor:partner,verb:'walk_to',start,dur:t-start,emote:null,hasLine:false,sfx:null,sfxAt:start,pos:v2(destination),main:false});
+        }
+      }
+      walkDest=b.verb==='hug'&&isActor(b.target)?hugApproach(a,b.target,t):approachPoint(a,b.target,t,b.verb==='give'?1:.7);walkTarget=b.target;
+      // The receiver faces the arrival point while the child is still at a safe
+      // distance, rather than rotating through a closed embrace.
+      if(b.verb==='hug'&&isActor(b.target)&&walkDest&&['stand','sit'].includes(ws.actors[b.target].posture))t=facePartner(b.target,t,walkDest,b.emotion);
+    }
+    else if ((b.verb === "sit" || b.verb === "sleep" || b.verb === "hide") && isMark(b.target)) {
+      walkDest=spread(a,standPos(b.target),t);walkTarget=b.target;
+      if(b.verb==='sit'&&b.target==='house_living'&&st.posture!=='sit'&&(a==='masha'||a==='bear'))walkDest=armchairApproach(a);
+      if(b.verb==='sleep'&&b.target==='hammock'&&seatedAtHammock)walkDest=null;
+      else if(b.verb==='sleep'&&b.target==='hammock'&&st.posture!=='sleep'){
+        const points=([1,-1] as const).map(side=>clampWalkable(hammockExitPoint(MARKS.hammock.pos,a,side)));
+        points.sort((p,q)=>pathLength(avoidHammock(planPath(st.pos,p),a))-pathLength(avoidHammock(planPath(st.pos,q),a)));
+        walkDest=points[0];
+      }
+    }
     let walkInfo: BeatTiming["walk"] = null;
-    if (walkDest && dist(walkDest, st.pos) > 0.8 && st.posture !== "carried") {
+    if (walkDest && dist(walkDest, st.pos) > (b.verb==='hug'?.004:cookingStation||b.verb==='take'&&isInsideHouse(...walkDest)||b.verb==='sit'&&b.target==='house_living' ? .04 : .8) && st.posture !== "carried") {
       const d = dist(walkDest, st.pos);
       const verb: Verb = a === "masha" ? (b.emotion === "mischievous" && d < 6 ? "tiptoe_to" : d > 3 ? "run_to" : "walk_to")
         : isWolf(a) ? (b.emotion === "mischievous" && d < 8 ? "tiptoe_to" : b.emotion === "scared" || d > 5 ? "run_to" : "walk_to")
@@ -378,9 +663,15 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
       const s0 = t;
       const faceAfter = isMark(walkTarget) ? MARKS[walkTarget].facing : undefined;
       const wFrom = v2(st.pos);
-      t = locomote(a, t, verb, walkDest, b.emotion, walkTarget, faceAfter);
+      t = locomote(a, t, verb, walkDest, b.emotion, walkTarget, faceAfter,b.verb==='hug'||b.target==='hammock'?avoidHammock(planPath(wFrom,walkDest),a):undefined);
       events.push({ actor: a, verb, start: s0, dur: t - s0, emote: null, hasLine: false, sfx: null, sfxAt: s0, pos: v2(st.pos), main: false });
       walkInfo = { start: s0, dur: t - s0, verb, from: wFrom, to: v2(st.pos) };
+    }
+
+    if(b.verb==='sleep'&&b.target==='hammock'&&st.posture==='stand')t=facePartner(a,t,[st.pos[0]+Math.sin(MARKS.hammock.facing),st.pos[1]+Math.cos(MARKS.hammock.facing)],b.emotion);
+    if(b.verb==='sit'&&b.target==='house_living'&&st.posture!=='sit'&&(a==='masha'||a==='bear'))t=facePartner(a,t,[st.pos[0],st.pos[1]+1],b.emotion);
+    if(b.verb==='hug'&&isActor(b.target)&&['stand','sit'].includes(ws.actors[b.target].posture)){
+      const start=t;t=Math.max(facePartner(a,start,ws.actors[b.target].pos,b.emotion),facePartner(b.target,start,st.pos,b.emotion));
     }
 
     // Free both hands before applause. A visible reverse pickup preserves the
@@ -429,11 +720,13 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
     let sfxAt = mainStart + 0.15;
     const baseParams = (): ActorClip["params"] => ({ from: v2(st.pos), facing: st.facing, posture: st.posture, item: st.holding ?? undefined, target: b.target ?? undefined });
 
-    if (isLoco) {
+    if(b.verb==='open'||b.verb==='close'){
+      t=doorAction(a,t,b.verb==='open'?1:0,b.emotion);
+      mainDur=t-mainStart;
+    } else if (isLoco) {
       let dest: Vec2;
       let path: Vec2[] | undefined;
       let faceAfter: number | undefined;
-      let toDoor = false;
       if (b.verb === "enter") {
         if (st.posture === "offstage") {
           const fromP: Vec2 = st.mark === "door" ? v2(MARKS.door.pos) : v2(MARKS.path_entry.pos);
@@ -472,11 +765,11 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
         dest = ap ?? v2(st.pos);
         if (isMark(b.target)) faceAfter = MARKS[b.target].facing;
         else if (isActor(b.target)) faceAfter = yawTo(dest, posAt(b.target, t), st.facing);
-        toDoor = b.target === "door" && orig >= 0 && lastBeatIdx[a] === orig && b.sfx !== "knock";
+        // Reaching a door is an approach, never an offstage disappearance.
       } else dest = v2(st.pos);
       t = locomote(a, t, b.verb, dest, b.emotion, b.verb === "exit" ? "path_entry" : b.target, faceAfter, path);
       mainDur = t - mainStart;
-      if (b.verb === "exit" || toDoor) {
+      if (b.verb === "exit") {
         st.posture = "offstage";
         st.mark = b.verb === "exit" ? "path_entry" : "door";
         record(a, t);
@@ -500,10 +793,11 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
           break;
         case "take":
           item = b.item ?? undefined;
+          if(b.item&&isInteriorMark(ws.props[b.item]?.at))facing=facingTo(b.item);
           break;
         case "cook": case "fish": case "water_plants":
           item = (VERB_IMPLIED_PROP[b.verb] as PropId | undefined) ?? item;
-          facing = MARKS[home!].facing;
+          facing = cookingStation ? cookingSupport.facing : MARKS[home!].facing;
           break;
         case "sit": posture = "sit"; if (isMark(b.target) && dist(st.pos, standPos(b.target)) < 1.2) facing = MARKS[b.target].facing; break;
         case "sleep": posture = "sleep"; if (isMark(b.target) && dist(st.pos, standPos(b.target)) < 1.2) facing = MARKS[b.target].facing; break;
@@ -518,17 +812,26 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
         if (def.loopable) mainDur = lineDur;
         else tail = lineDur - mainDur;
       }
-      const lookAt = b.target ? targetPoint(b.target, t) : lineText && ws.actors[o].posture !== "offstage" ? headAt(o, t) : null;
+      const lookAt = b.verb==='cook'&&home==='house_kitchen'
+        ? (a==='masha'?[HOUSE_CHILD_COOK_POSITION[0]-.42,1.25,HOUSE_CHILD_COOK_POSITION[1]-.10]:[HOUSE_STOVE[0],1.30,HOUSE_STOVE[1]]) as Vec3
+        : b.target ? targetPoint(b.target, t) : lineText && ws.actors[o].posture !== "offstage" ? headAt(o, t) : null;
       if(VERB_IMPLIED_PROP[b.verb]&&item&&st.holding!==item)giveTo(a,item);
-      const exit=b.verb==='stand_up'?seatExit(a):null;
+      const exit=b.verb==='stand_up'||st.mark==='hammock'&&posture==='stand'&&(st.posture==='sleep'||st.posture==='sit')?seatExit(a):null;
+      const mount=b.verb==='sleep'&&b.target==='hammock'&&st.posture!=='sleep'&&!seatedAtHammock?{from:v2(st.pos),to:v2(MARKS.hammock.pos),path:[v2(st.pos),v2(MARKS.hammock.pos)],facing:MARKS.hammock.facing,target:'hammock' as const}:b.verb==='sit'&&b.target==='house_living'&&st.posture!=='sit'&&(a==='masha'||a==='bear')?{from:v2(st.pos),to:v2(MARKS.house_living.pos),path:[v2(st.pos),v2(MARKS.house_living.pos)],facing:MARKS.house_living.facing,target:'house_living' as const}:null;
       if(exit)facing=exit.facing;
-      addClip(a, mainStart, mainDur, b.verb, b.emotion, { ...baseParams(), facing: r3(facing), posture, item, lookAt: lookAt ?? undefined,...exit });
+      if(mount)facing=mount.facing;
+      const pickUpAt=b.verb==='take'&&item&&isInteriorMark(ws.props[item]?.at)?ws.props[item].at as MarkId:undefined;
+      addClip(a, mainStart, mainDur, b.verb, b.emotion, { ...baseParams(), facing: r3(facing), posture, item, lookAt: lookAt ?? undefined,...(pickUpAt?{pickUpAt}:{}),...(b.verb==='drop'?{dropAt:st.mark??nearestMark(st.pos)}:{}),...(b.verb==='fish'?{catchesFish:ws.props.fish?.at==='hidden'}:{}),...exit,...mount });
       if(exit){st.pos=v2(exit.to);st.mark=null;}
+      if(mount){st.pos=v2(mount.to);st.mark=mount.target;}
       st.facing = r3(facing);
       t = mainStart + mainDur;
 
       // --- world-state effects ---
       switch (b.verb) {
+        case "drop":
+          if (b.item) { ws.props[b.item] = { at: st.mark ?? nearestMark(st.pos) }; st.holding = null; }
+          break;
         case "take":
           if (b.item) {
             if (ws.props[b.item]?.at === "hidden") repairs.push(`the ${b.item} appeared for ${a}`);
@@ -599,10 +902,10 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
           }
           break;
         case "hug":
-          if (isActor(b.target) && tracks[b.target].free <= mainStart + 1e-6 && ws.actors[b.target].posture === "stand") {
+          if (isActor(b.target) && tracks[b.target].free <= mainStart + 1e-6 && ["stand","sit"].includes(ws.actors[b.target].posture)) {
             const tgt = b.target;
             const tf = r3(yawTo(ws.actors[tgt].pos, st.pos, ws.actors[tgt].facing));
-            addClip(tgt, mainStart, mainDur, "hug", "happy", { from: v2(ws.actors[tgt].pos), facing: tf, posture: "stand", item: ws.actors[tgt].holding ?? undefined, target: a });
+            addClip(tgt, mainStart, mainDur, "hug", "happy", { from: v2(ws.actors[tgt].pos), facing: tf, posture: ws.actors[tgt].posture, item: ws.actors[tgt].holding ?? undefined, target: a });
             ws.actors[tgt].facing = tf;
             record(tgt, mainStart + mainDur);
           }
@@ -631,7 +934,13 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
 
     // fx tied to the beat
     const head = headAt(a, mainStart);
-    if (b.verb === "sleep") addFx("zzz", mainStart + 0.5, Math.max(0.5, mainDur - 0.5), [head[0], head[1] + 0.5, head[2]]);
+    if (b.verb === "sleep") {
+      const mounting=tracks[a].clips.some(c=>c.start===mainStart&&c.verb==='sleep'&&c.params.target==='hammock'&&c.params.to);
+      const settle=mounting?hammockTiming(true,mainDur).settled:0;
+      const delay=mounting?Math.min(mainDur-.1,settle+Math.min(1.05,Math.max(.2,mainDur-settle))):.5;
+      const sleepingHead=headAt(a,mainStart+delay);
+      addFx("zzz",mainStart+delay,Math.max(mounting?.1:.5,mainDur-delay),[sleepingHead[0],sleepingHead[1]+.5,sleepingHead[2]]);
+    }
     if (b.verb === "fall_down") addFx("dust", mainStart + 0.4 * mainDur, 1.0, [st.pos[0], 0.1, st.pos[1]]);
     if (b.verb === "cry") addFx("tears", mainStart, mainDur, head);
     if (b.verb === "angry_stomp") addFx("anger_puff", mainStart, mainDur, [head[0], head[1] + 0.3, head[2]]);
@@ -776,7 +1085,7 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
 
   // ---------- camera ----------
   const lastLineIdx = timings.map((tm) => tm.hasLine).lastIndexOf(true);
-  const camBeats: CameraBeatInfo[] = [];
+  const camBeats: CameraBeatInfo[] = [...preparationCameras];
   timings.forEach((tm, i) => {
     const em = compiledBeats[i].emotion;
     if (tm.walk && tm.walk.dur > 0.5) {
@@ -788,11 +1097,23 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
       hasLine: tm.hasLine, lineStart: tm.lineStart, lineDur: tm.lineDur, punchline: tm.hasLine && i === lastLineIdx, emotion: em,
     });
   });
-  const camera = planCamera({
+  let camera = planCamera({
+    carriedByAt: (actor,t) => actor==='masha'&&(postureAt(actor,t)==='carried'||tracks.bear.clips.some(c=>c.verb==='carry'&&c.start<=t&&t<c.start+c.dur))?'bear':null,
     facingAt: (actor,t) => tracks[actor].clips.find(c=>c.start<=t&&t<c.start+c.dur)?.params.facing ?? stateAt(actor,t).facing,
     duration, beats: camBeats, posAt, visibleAt: (x, tt) => cast.includes(x)&&postureAt(x, tt) !== "offstage", headY: (x, tt) => headAt(x, tt)[1],
     dialogue: dialogue.map((d) => ({ start: d.start, dur: d.dur, actor: d.actor })), isFirst: opts.isFirst, cameraSeed: opts.remix.cameraSeed,
   });
+  // Door choreography must be readable even when a long beat spans two sets.
+  // Later inserts win; trim ordinary shots rather than overlapping cue ranges.
+  for(const shot of doorShots){
+    const lo=shot.start,hi=lo+shot.dur;
+    camera=camera.flatMap(c=>{
+      const end=c.start+c.dur;
+      if(end<=lo||c.start>=hi)return[c];
+      return [...(c.start<lo?[{...c,dur:lo-c.start}]:[]),...(end>hi?[{...c,start:hi,dur:end-hi}]:[])];
+    });
+    camera.push(shot);camera.sort((a,b)=>a.start-b.start);
+  }
 
   // ---------- lighting ----------
   const tod = opts.remix.timeOfDay ?? bs0.time_of_day ?? startState.timeOfDay;
@@ -819,6 +1140,7 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
       startState: cloneWorldState(startState),
       endState: ws,
       actorClips,
+      ...(objectCues.length?{objectCues}:{}),
       dialogue,
       emotes: audio.emotes,
       foley: audio.foley,

@@ -1,0 +1,55 @@
+[
+  {
+    "path": "/api/health",
+    "status": 200,
+    "expected": 200,
+    "location": null,
+    "cacheControl": "private, no-store",
+    "robots": "noindex, nofollow",
+    "body": {
+      "ok": true,
+      "service": "mabear-storybook",
+      "edition": "codex"
+    }
+  },
+  {
+    "path": "/",
+    "status": 302,
+    "expected": 302,
+    "location": "/login",
+    "cacheControl": "private, no-store",
+    "robots": "noindex, nofollow"
+  },
+  {
+    "path": "/login",
+    "status": 200,
+    "expected": 200,
+    "location": null,
+    "cacheControl": "private, no-store",
+    "robots": "noindex, nofollow"
+  },
+  {
+    "path": "/assets/studio-BNVTsQ2J.js",
+    "status": 302,
+    "expected": 302,
+    "location": "/login",
+    "cacheControl": "private, no-store",
+    "robots": "noindex, nofollow"
+  },
+  {
+    "path": "/assets/generated/masha.glb",
+    "status": 302,
+    "expected": 302,
+    "location": "/login",
+    "cacheControl": "private, no-store",
+    "robots": "noindex, nofollow"
+  },
+  {
+    "path": "/api/direct",
+    "status": 401,
+    "expected": 401,
+    "location": null,
+    "cacheControl": "private, no-store",
+    "robots": "noindex, nofollow"
+  }
+]

@@ -1,0 +1,29 @@
+{
+  "verifiedAt": "2026-11-07T09:51:08.485Z",
+  "sourceFingerprint": "a7d22476f0c7e15cd69d92fefac362248a00ba3dacfcf70bd2a4144b7326fe69",
+  "unitTests": {
+    "passed": 770,
+    "files": 63,
+    "command": "npm test -- --maxWorkers=1"
+  },
+  "typecheck": "passed",
+  "productionBuild": "passed",
+  "logs": {
+    "tests": {
+      "file": "tests.log",
+      "sha256": "8546ad9969d02772d244fdc9e0c887c4a7e467fc6959907044d26cdd839fa1dc"
+    },
+    "typecheck": {
+      "file": "typecheck.log",
+      "sha256": "5f7fa1dab9076dac2a17b376ceb3e521954e28092073f7c999f7e5c6ae4edee3"
+    },
+    "build": {
+      "file": "build.log",
+      "sha256": "601d72b1cf336e23fb0b175b5cf9148ab0f4b689ea99721ccc0954823ee4f83a"
+    }
+  },
+  "releaseSourceArchive": {
+    "file": "release-source.tar.gz",
+    "sha256": "9d5ab69446d42bda9e16a01d2d751c28f6db61e19d2a62c13e51ef04cbd8bade"
+  }
+}

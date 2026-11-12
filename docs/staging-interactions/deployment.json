@@ -1,0 +1,39 @@
+{
+  "url": "https://mabear-storybook.ilya-baimetov.workers.dev",
+  "worker": "mabear-storybook",
+  "version": "40945b8e-b9ce-4e0d-9c43-40c8c71dfc01",
+  "previousVersion": "443d65e0-89eb-43ff-830b-c416b574ee88",
+  "verifiedAtUtc": "2026-11-07T07:49:25.063Z",
+  "reviewedSourceFingerprint": "6a65b08213bfec5633e53fc30552c9741c4b38223578445f827ac0afca62c10f",
+  "build": {
+    "entry": "studio-BMhGpJhM.js",
+    "stage": "stage-BHp3CFrZ.js",
+    "indexSha256": "981bc20231daa365b3657cd3ac0c370205d57374ded97bdceec8b313c18d1f03"
+  },
+  "validation": {
+    "reviewedUnitTests": 752,
+    "reviewedUnitFiles": 61,
+    "typecheck": "passed before release",
+    "productionBuild": "passed again at deployment",
+    "sourceMatchesReviewedCapture": true,
+    "publicChecks": "deployment-public-checks.json",
+    "authenticatedChrome": {
+      "entryScriptMatched": true,
+      "existingStoryPreserved": true,
+      "playbackCompletedSeconds": 19.854,
+      "locationsObserved": [
+        "yard",
+        "house"
+      ],
+      "consoleWarningsAndErrors": [],
+      "playheadRestoredTo": 0,
+      "soundRestored": true,
+      "screenshot": "live-deployed.png"
+    }
+  },
+  "scope": "Reviewed staging, hammock/hug/cooking and Masha shoulder-carry changes, with current scene-editor layout.",
+  "limits": [
+    "Live smoke test used the existing saved two-scene story; all four sample-story animation comparisons were recorded locally before deployment.",
+    "No new AI directing quality assessment or physical-device compatibility test."
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "deployedAt": "2026-11-07T19:47:54.649615Z",
+  "version": "fc5b10ce-429a-4022-b8e7-f1fb8913b8fb",
+  "previousVersion": "cfcee0c6-3cbc-42ee-8b8e-7d6155192657",
+  "trafficPercent": 100,
+  "url": "https://mabear-storybook.ilya-baimetov.workers.dev",
+  "demo": "https://mabear-storybook.ilya-baimetov.workers.dev/physics/",
+  "editorOptIn": "https://mabear-storybook.ilya-baimetov.workers.dev/?physics=rapier",
+  "sourceFingerprint": "43333a61d9003d5dea00d8c207febb0761d8f7ffcaba7ca063fa0729b30f7dc4",
+  "captureFingerprint": "2f464091f07fd8aa364ac68a4b7c2528a26708e4e13e7193d905a2d2a5380b11",
+  "deploymentChanges": [
+    "Removed localhost-only restriction from explicit physics query flag",
+    "Added standalone silent read-only physics demo and production build entry"
+  ],
+  "validation": {
+    "tests": 785,
+    "testFiles": 65,
+    "typecheck": "passed",
+    "build": "passed",
+    "http": "health 200; private routes redirect unauthenticated clients to login",
+    "builtDemoBrowser": "bench, drop, shoulder-ride fixtures; play/pause, seek, physics toggle checked",
+    "liveDemoBrowser": "playback and ball settling at 3 seconds passed; no console errors",
+    "liveEditor": "opt-in active; existing saved story preserved and correctly bypasses root physics for paired choreography; no console errors",
+    "liveDefault": "ready; no physics evaluator or Rapier module loads"
+  },
+  "paidGenerationCalls": 0,
+  "defaultPhysicsEnabled": false,
+  "authChanged": false
+}

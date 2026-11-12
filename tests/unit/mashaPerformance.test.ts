@@ -5,6 +5,8 @@ import * as THREE from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {MeshoptDecoder} from 'three/addons/libs/meshopt_decoder.module.js';
 import {generatedRig} from '../../src/engine/characters/generated';
+import {buildHouseInterior} from '../../src/engine/set/houseInterior';
+import {createMaterials,disposeMaterials} from '../../src/engine/look';
 import {restFrame} from '../../src/engine/characters/rig';
 import type {CharacterRig} from '../../src/engine/api';
 import {evaluatePose,STYLES,type VerbCtx} from '../../src/engine/motion/library';
@@ -12,8 +14,21 @@ import {getFixture} from '../../src/director/fixtures';
 import {compileEpisode} from '../../src/compiler/episode';
 import {evaluate} from '../../src/engine/player/evaluate';
 import {DEFAULT_REMIX,type Beat,type BeatScript} from '../../src/shared/schema';
+import {initialWorldState} from '../../src/compiler/worldState';
+import {MARKS} from '../../src/shared/bible/set';
+import {cookingSupportHeightAt} from '../../src/shared/cookingStation';
+import {HOUSE_LIVING_SEAT_HEIGHT,HOUSE_PREP_TABLE} from '../../src/shared/houseLayout';
 
 type Pixels={width:number;height:number;data:Uint8ClampedArray};
+
+// Derive the clearance plane from the actual production furniture, not a
+// stale world coordinate from a previous room layout.
+const chairFront=(()=>{
+ const materials=createMaterials(),interior=buildHouseInterior(materials);interior.updateMatrixWorld(true);
+ const front=new THREE.Box3().setFromObject(interior.userData.anchors.chair).max.z;
+ interior.traverse(object=>{if(object instanceof THREE.Mesh){object.geometry.dispose();for(const material of Array.isArray(object.material)?object.material:[object.material])if(material.userData.setOwned)material.dispose();}});disposeMaterials(materials);
+ return front;
+})();
 
 /** Decode the real GLB textures without a WebGL context. The production bake
  * reads/writes pixels only; this shim implements those canvas operations. */
@@ -45,6 +60,37 @@ describe('Masha performance on the shipped GLB',()=>{
   rig=generatedRig('masha',gltf.scene,{height:1,mashaPerformance:true});
  },30_000);
  afterAll(()=>{rig?.dispose();vi.unstubAllGlobals();});
+
+ it('meets real kitchen props before attachment and keeps a held pan above the worktop',()=>{
+  for(const item of ['jam_jar','flour_bag','pancakes','frying_pan']as const){
+   const initial=initialWorldState();initial.actors.masha={...initial.actors.masha,pos:[...MARKS.house_kitchen.pos],mark:'house_kitchen',facing:MARKS.house_kitchen.facing};initial.props[item]={at:'house_kitchen'};
+   const beatScript:BeatScript={summary:'Masha takes an object from the kitchen table.',time_of_day:'day',mood:'calm',music:{mood:'calm',intensity:'soft',change:'start'},ambience:null,rule_hits:[],beats:[{actor:'masha',verb:'take',target:item,item,line:null,emote:null,sfx:null,emotion:'happy',with_previous:false,delay_s:0,shot:'auto'}]};
+   const timeline=compileEpisode([{paragraphId:'kitchen-contact',version:1,beatScript,remix:DEFAULT_REMIX}],'en',initial).timeline,segment=timeline.segments[0],clip=segment.segment.actorClips.masha.find(c=>c.params.pickUpAt)!;
+   const sample=(t:number)=>{
+    const frame=evaluate(timeline,t).actors.masha,lift=cookingSupportHeightAt(frame.pos[0],frame.pos[2]);
+    rig.apply({...frame,pickup:frame.pickup?{...frame.pickup,position:[frame.pickup.position[0],frame.pickup.position[1]-lift,frame.pickup.position[2]]}:undefined,face:{...frame.face,lookAt:frame.face.lookAt?[frame.face.lookAt[0],frame.face.lookAt[1]-lift,frame.face.lookAt[2]]:null}});
+    rig.root.position.y+=lift;rig.root.updateMatrixWorld(true);
+    return{frame,lift,contact:rig.root.userData.contacts.contactPoint as number[]|undefined,socket:rig.handSocket.getWorldPosition(new THREE.Vector3())};
+   };
+   const attach=segment.offset+clip.start+clip.dur*.5,before=sample(attach-.0001),after=sample(attach+.0001);
+   expect(after.socket.distanceTo(new THREE.Vector3(...after.frame.pickup!.position)),`${item} attachment must meet the real resting prop`).toBeLessThan(.001);
+   expect(before.socket.distanceTo(after.socket),`${item} attachment must not jump`).toBeLessThan(.001);
+   if(item!=='frying_pan'){
+    expect(after.contact![1]+after.lift,`${item} acquisition must touch above the worktop, not through its underside`).toBeGreaterThan(HOUSE_PREP_TABLE.height+.01);
+    expect(Math.hypot(after.contact![0]-after.frame.pickup!.position[0],after.contact![2]-after.frame.pickup!.position[2]),`${item} acquisition must use the exposed side/lip`).toBeGreaterThan(.05);
+   }
+   if(item==='pancakes'){
+    const face=rig.root.getObjectByName('masha:articulated-face')!,bounds=new THREE.Box3().setFromObject(face);
+    expect(bounds.min.y,'face must stay above the pancake stack while picking up its lip').toBeGreaterThan(HOUSE_PREP_TABLE.height+.143);
+   }
+   if(item==='frying_pan')for(const delay of [0,.05,.15,.3]){
+    const held=sample(Math.min(timeline.duration-.001,segment.offset+clip.start+clip.dur+delay));
+    expect(held.socket.y,`pan underside after take +${delay}s`).toBeGreaterThanOrEqual(HOUSE_PREP_TABLE.height-.001);
+    expect(rig.root.userData.contacts.reachError??0).toBeLessThan(.001);
+   }
+   expect(sample(attach+.0001).socket.distanceTo(after.socket),`${item} seeking back must restore the same contact`).toBeLessThan(1e-8);
+  }
+ });
 
  it('keeps actual story claps and pan release continuous at ownership and clip boundaries',()=>{
   const f=getFixture('pancake_morning','en')!,tl=compileEpisode(f.paragraphs.map((p,i)=>({paragraphId:String(i),version:1,beatScript:p.beatScript,remix:DEFAULT_REMIX})),'en').timeline;
@@ -195,9 +241,30 @@ describe('Masha performance on the shipped GLB',()=>{
     expect(mesh.morphTargetInfluences?.slice(0,2)).toEqual([0,0]);
    }});
    expect(draped).toBeGreaterThan(0);
-   for(const foot of ['LeftFoot','RightFoot'])expect(rig.bones[foot].getWorldPosition(new THREE.Vector3()).z).toBeGreaterThan(-5.31);
+   for(const foot of ['LeftFoot','RightFoot'])expect(rig.bones[foot].getWorldPosition(new THREE.Vector3()).z).toBeGreaterThan(chairFront+.01);
    expect(rig.root.userData.contacts.reachError??0).toBeLessThan(.001);
   }
+ });
+
+ it('rises in front of the actual armchair before moving onto its cushion',()=>{
+  const fixture=getFixture('cozy_evening','en')!,{timeline}=compileEpisode(fixture.paragraphs.map((p,i)=>({paragraphId:`mount-${i}`,version:1,beatScript:p.beatScript,remix:DEFAULT_REMIX})),'en');
+  const segment=timeline.segments.find(s=>s.segment.actorClips.masha.some(c=>c.verb==='sit'&&c.params.target==='house_living'))!,clips=segment.segment.actorClips.masha,clip=clips.find(c=>c.verb==='sit'&&c.params.target==='house_living')!;
+  expect(clip.params.to).toEqual(MARKS.house_living.pos);
+  const apply=(time:number)=>{const frame=evaluate(timeline,time).actors.masha;rig.apply(frame);return{frame,hips:rig.bones.Hips.getWorldPosition(new THREE.Vector3()),feet:['LeftFoot','RightFoot'].map(name=>rig.bones[name].getWorldPosition(new THREE.Vector3()))};};
+  const approach=clips.filter(c=>c.params.path&&c.start<clip.start).at(-1)!;
+  const before=apply(segment.offset+approach.start+approach.dur-.001);
+  expect(before.hips.z,'standing approach must stop outside solid upholstery').toBeGreaterThan(chairFront+.20);
+  let crossed=false;
+  for(let k=0;k<=1;k+=.025){
+   const pose=apply(segment.offset+clip.start+clip.dur*k);
+   if(pose.hips.z<chairFront+.06){
+    crossed=true;expect(pose.hips.y,`pelvis must clear the cushion before crossing its front at ${k}`).toBeGreaterThan(HOUSE_LIVING_SEAT_HEIGHT+.08);
+   }
+   for(const foot of pose.feet)expect(foot.z,`dangling feet stay outside the chair front at ${k}`).toBeGreaterThan(chairFront+.005);
+  }
+  expect(crossed).toBe(true);
+  const final=apply(segment.offset+clip.start+clip.dur-.001);expect(final.hips.y).toBeCloseTo(HOUSE_LIVING_SEAT_HEIGHT+.11,3);
+  const time=segment.offset+clip.start+clip.dur*.5,mid=apply(time);apply(segment.offset+clip.start+clip.dur);expect(apply(time).hips.toArray()).toEqual(mid.hips.toArray());
  });
 
  it('preserves authored gesture arms and a precise candy grip instead of forcing every verb into the idle hold',()=>{
@@ -306,7 +373,6 @@ describe('main Masha clothing on the shipped GLB',()=>{
   const {timeline}=compileEpisode(fixture.paragraphs.map((p,i)=>({paragraphId:`p${i}`,version:1,beatScript:p.beatScript,remix:DEFAULT_REMIX})),'en');
   const segment=timeline.segments.find(s=>s.segment.actorClips.masha.some(c=>c.verb==='eat'))!;
   const clip=segment.segment.actorClips.masha.find(c=>c.verb==='eat')!;
-  const chairFront=-5.32;
   for(const offset of [.1,.45,1,1.45,2]){
    rig.apply(evaluate(timeline,segment.offset+clip.start+offset).actors.masha);
    expect(rig.bones.Hips.getWorldPosition(new THREE.Vector3()).z).toBeLessThan(chairFront);

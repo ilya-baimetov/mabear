@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Masha and the Bear · visual priorities</title>
+  <style>
+    :root{color-scheme:light;--paper:#f4f3ed;--ink:#26342f;--muted:#617066;--line:#d5dacf;--card:#fffefa;--green:#355d4b;--soft:#e7eee5;--amber:#8b4c26;--amberbg:#f5e9dc}
+    *{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:76px}body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.55 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}a{color:var(--green);text-underline-offset:3px}a:hover{text-decoration-thickness:2px}a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid #bf722f;outline-offset:4px}button{font:inherit}main,header,footer{max-width:1340px;margin:auto;padding:0 28px}header{padding-top:38px;padding-bottom:25px}.eyebrow{font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}.topline{display:flex;align-items:center;justify-content:space-between;gap:16px}.status{border:1px solid #ceae8e;background:var(--amberbg);color:#71431e;border-radius:99px;padding:5px 12px;font-size:12px;font-weight:700}h1{font-size:clamp(30px,4vw,46px);line-height:1.08;letter-spacing:-.04em;max-width:850px;margin:17px 0 12px}h2{font-size:24px;line-height:1.2;letter-spacing:-.02em;margin:0}h3{font-size:16px;margin:0 0 6px}.lead{font-size:18px;max-width:900px;margin:0;color:#4b5d52}.scope{font-size:13px;color:var(--muted);margin:13px 0 0}.principles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:24px}.principle{border:1px solid var(--line);border-radius:10px;padding:12px 15px;background:var(--card)}.principle strong{display:block;font-size:15px}.principle span{display:block;font-size:13px;color:var(--muted);margin-top:3px}.principle:first-child{border-color:#7d9985;background:var(--soft)}nav{position:sticky;top:0;z-index:10;background:rgba(244,243,237,.97);border-block:1px solid var(--line);backdrop-filter:blur(10px)}.navinner{max-width:1340px;margin:auto;padding:9px 28px;display:flex;gap:8px;overflow:auto}nav a{white-space:nowrap;text-decoration:none;font-size:13px;font-weight:650;border:1px solid transparent;border-radius:7px;padding:6px 10px}nav a:hover{background:var(--soft);border-color:var(--line)}section{scroll-margin-top:82px}.ranking{padding:30px 0 28px}.section-intro{color:var(--muted);font-size:14px;margin:7px 0 15px}.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:10px;background:var(--card)}table{width:100%;border-collapse:collapse;font-size:14px}th{text-align:left;background:#e8ece4;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:#506153}th,td{padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:top}tr:last-child td{border:0}td:first-child{font-weight:800;width:45px}td:nth-child(2){width:190px}td:nth-child(3){min-width:225px}td:last-child{min-width:260px}td small{display:block;font-size:12px;color:var(--muted);margin-top:2px}.recommendation{background:var(--soft);border-left:4px solid var(--green);padding:12px 16px;margin:15px 0 0;font-size:14px}.case{margin:0 0 25px;border:1px solid var(--line);border-radius:12px;background:var(--card);overflow:hidden}.case-head{display:flex;gap:14px;align-items:start;padding:20px 22px 15px}.number{display:grid;place-items:center;width:35px;height:35px;flex-shrink:0;border-radius:10px;background:var(--soft);font-weight:800;color:var(--green)}.case-head h2{font-size:22px}.sub{margin:5px 0 0;color:var(--muted);font-size:14px}.pair{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border-block:1px solid var(--line)}figure{margin:0;background:var(--card)}.image-link{display:block;position:relative;line-height:0;background:#26342f;cursor:zoom-in}.image-link img{display:block;width:100%;height:auto;aspect-ratio:16/9;object-fit:contain}.image-link::after{content:'Enlarge';position:absolute;bottom:10px;right:10px;padding:5px 8px;background:rgba(27,40,32,.82);color:white;font:11px/1.3 system-ui;border-radius:5px;opacity:0;transition:opacity .15s}.image-link:hover::after,.image-link:focus-visible::after{opacity:1}figcaption{padding:9px 13px;font-size:12px;color:var(--muted);line-height:1.45}figcaption strong{color:var(--ink)}.kind{display:inline-block;margin-right:6px;border:1px solid #c6d4c7;background:#eef2e9;color:#3f5c48;padding:1px 5px;border-radius:4px;font-size:10px;font-weight:750;letter-spacing:.025em}.kind.diagnostic{background:#f5eee2;border-color:#dfc69e;color:#765526}.kind.source{background:#e8edf4;border-color:#c5d1df;color:#425d78}.notes{display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:21px;padding:18px 22px 20px;font-size:14px}.notes p{margin:0}.notes b{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:5px;color:#69766b}.notes .fix b{color:var(--green)}.notes .proof b{color:var(--amber)}.evidence-links{padding:11px 22px;border-top:1px solid var(--line);font-size:12px;display:flex;flex-wrap:wrap;gap:7px 18px;background:#f8f8f2}.limits{margin:32px 0 30px;padding:22px;border:1px solid var(--line);border-radius:12px;background:#e9ede6}.limits h2{font-size:21px}.limits-grid{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:14px}.limits p{font-size:14px;margin:0 0 10px}.limits p:last-child{margin-bottom:0}.links{display:flex;flex-wrap:wrap;gap:10px 20px;font-size:13px;margin-top:18px}footer{padding-bottom:30px;font-size:12px;color:var(--muted)}dialog{border:0;border-radius:10px;padding:0;max-width:96vw;width:1400px;max-height:94vh;background:#19241e;color:white;box-shadow:0 15px 80px #0007}dialog::backdrop{background:#07150ee0}.zoom-bar{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:10px 14px;font-size:13px}.zoom-bar button{background:#344d3d;color:white;border:1px solid #69816b;padding:5px 13px;border-radius:6px;cursor:pointer}dialog img{display:block;width:100%;max-height:calc(94vh - 65px);object-fit:contain}body.modal-open{overflow:hidden}@media(max-width:760px){header,main,footer{padding-left:16px;padding-right:16px}header{padding-top:24px}.topline{align-items:start}.status{max-width:140px;text-align:center;font-size:10px}.principles{grid-template-columns:1fr}.principle{padding:10px 13px}.principle span{margin-top:1px}.navinner{padding-inline:10px}.pair{grid-template-columns:1fr}.notes{grid-template-columns:1fr;gap:12px;padding:16px}.case-head{padding:16px}.case-head h2{font-size:20px}.limits-grid{grid-template-columns:1fr;gap:16px}.evidence-links{padding:11px 16px}.lead{font-size:16px}.ranking{padding-top:23px}.notes b{margin-bottom:2px}}@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}@media print{nav,.image-link::after,dialog{display:none!important}body{background:white;font-size:12px}.case{break-inside:avoid}.notes{font-size:12px}header{padding-top:0}.pair{grid-template-columns:1fr 1fr}a{color:inherit}footer{padding-bottom:0}}
+  </style>
+</head>
+<body>
+<header>
+  <div class="topline"><span class="eyebrow">Visual audit · 6 November 2026</span><span class="status">Review only · nothing deployed</span></div>
+  <h1>Make the action readable.<br>Then refine the world.</h1>
+  <p class="lead">The strongest evidence points to camera placement, body contact and usable spaces. Six examples below show where the current game loses the scene—and what would prove an improvement.</p>
+  <p class="scope">Current local game renders. The separate interior shape study is not integrated and is outside this audit. Click any image to inspect it at full size.</p>
+  <div class="principles" aria-label="User priority order">
+    <div class="principle"><strong>1 · Mise-en-scène</strong><span>Position actors, cameras and objects so the action reads.</span></div>
+    <div class="principle"><strong>2 · Recognizable shapes</strong><span>Approve proportions, silhouettes and physical relationships.</span></div>
+    <div class="principle"><strong>3 · Textures</strong><span>Refine surfaces after the first two pass. No porridge-pink stains.</span></div>
+  </div>
+</header>
+<nav aria-label="Report sections"><div class="navinner">
+  <a href="#priorities">Priorities</a><a href="#visibility">1 · Visibility</a><a href="#hammock">2 · Hammock</a><a href="#hug">3 · Hug</a><a href="#work">4 · Table work</a><a href="#fishing">5 · Fishing</a><a href="#world">6 · World</a><a href="#limits">Evidence limits</a>
+</div></nav>
+<main>
+  <section id="priorities" class="ranking">
+    <h2>Ranked across the game</h2>
+    <p class="section-intro">Proposed work order. These corrections have not been implemented.</p>
+    <div class="table-wrap" role="region" aria-label="Ranked priorities; scroll horizontally on narrow screens" tabindex="0"><table>
+      <thead><tr><th scope="col">#</th><th scope="col">Priority</th><th scope="col">Concrete problem</th><th scope="col">Proof needed before moving on</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Staging<small>Across stories</small></td><td><a href="#visibility">Foreground geometry hides the performance</a></td><td>Faces, acting hands and important props remain readable through the shot.</td></tr>
+        <tr><td>2</td><td>Staging / contact<small>Bear’s nap</small></td><td><a href="#hammock">Bear stands inside the hammock</a></td><td>A complete wake-up and dismount reaches clear ground.</td></tr>
+        <tr><td>3</td><td>Paired action<small>Pancake morning</small></td><td><a href="#hug">Hug and release leave bodies intersecting</a></td><td>Clear approach, supported embrace and separated release from two angles.</td></tr>
+        <tr><td>4</td><td>Staging / proportions<small>Masha at the table</small></td><td><a href="#work">Work surface hides the cook and her pan</a></td><td>Face, pan, both hands and support fit one coherent work position.</td></tr>
+        <tr><td>5</td><td>Staging / props<small>Fishing trip</small></td><td><a href="#fishing">Catch is obscured; rod jumps to a poor resting pose</a></td><td>A continuous, readable cast → catch → rod placement sequence.</td></tr>
+        <tr><td>6</td><td>Place composition<small>Pond and ambulance clearing</small></td><td>Dock dominates the pond; van sits on a flat patch</td><td>Approve shore/bench and slope/tree/vehicle blockouts beside source frames.</td></tr>
+        <tr><td>7</td><td>Recognizable shapes<small>Shared outdoor assets</small></td><td><a href="#world">Box-like van, sheet-like conifers and dome-shaped crops</a></td><td>Approve a small family of plain-material silhouettes at story distance.</td></tr>
+        <tr><td>8</td><td>Textures<small>After layout and shapes</small></td><td>Ground, wood, foliage and van wear have competing detail scales</td><td>One consistent daylight comparison with restrained surface contrast.</td></tr>
+      </tbody>
+    </table></div>
+    <p class="recommendation"><strong>Recommended first pass:</strong> camera visibility, hammock dismount and the hug. Then Masha’s work position and one complete fishing sequence. Recheck the same beats before expanding asset work.</p>
+  </section>
+
+  <section class="case" id="visibility">
+    <div class="case-head"><span class="number">1</span><div><h2>The camera hides the performance</h2><p class="sub">Observed in actual story framing, with both character and scenery occlusion.</p></div></div>
+    <div class="pair">
+      <figure><a class="image-link" href="story-renders/garden_party-24.500.png"><img src="story-renders/garden_party-24.500.png" width="1280" height="720" alt="Garden story: a cropped Rival Bear fills much of the foreground while Masha is small behind him."></a><figcaption><span class="kind">STORY CAMERA</span><strong>Garden visitors · 24.5 s.</strong> Cropped foreground bodies overwhelm the dance.</figcaption></figure>
+      <figure><a class="image-link" href="story-renders/fishing_trip-6.500.png"><img src="story-renders/fishing_trip-6.500.png" width="1280" height="720" alt="Fishing story with a large birch trunk obstructing the action."></a><figcaption><span class="kind">STORY CAMERA</span><strong>Fishing trip · 6.5 s.</strong> A near tree becomes the dominant subject.</figcaption></figure>
+    </div>
+    <div class="notes"><p><b>Observed</b>Scenery and nearby actors obscure the intended action. The fishing review also found a bush blocking a later reaction.</p><p class="fix"><b>Proposed next fix</b>Check each location’s occluders and moving actor volumes when choosing and clearing shots.</p><p class="proof"><b>Pass condition</b>Play the complete shot: the intended face, acting hands and key prop remain readable without accidental body crops.</p></div>
+    <div class="evidence-links"><a href="story-renders/fishing_trip-21.500.png">Later fishing obstruction</a><a href="story-renders/garden_party-sheet.png">Garden sequence evidence</a><a href="story-review.md">Detailed story audit</a></div>
+  </section>
+
+  <section class="case" id="hammock">
+    <div class="case-head"><span class="number">2</span><div><h2>Give the hammock a real exit</h2><p class="sub">The comic wake-up needs a physical transition from support to clear ground.</p></div></div>
+    <div class="pair">
+      <figure><a class="image-link" href="story-renders/bears_nap-27.500.png"><img loading="lazy" src="story-renders/bears_nap-27.500.png" width="1280" height="720" alt="Bear standing with hammock cloth running through his lower torso."></a><figcaption><span class="kind">STORY CAMERA</span><strong>Bear’s nap · 27.5 s.</strong> The cloth crosses the standing body.</figcaption></figure>
+      <figure><a class="image-link" href="story-renders/hammock-side-diagnostic.png"><img loading="lazy" src="story-renders/hammock-side-diagnostic.png" width="1280" height="720" alt="Alternate camera confirms the hammock intersects Bear's lower body."></a><figcaption><span class="kind diagnostic">DIAGNOSTIC CAMERA</span><strong>Same pose · 27.5 s.</strong> Side view confirms an intersection.</figcaption></figure>
+    </div>
+    <div class="notes"><p><b>Observed</b>The intersection persists in samples at 24.5, 27.5 and 30.5 s. Bear stands in the resting area.</p><p class="fix"><b>Proposed next fix</b>Author entry, sleeping support and dismount positions; move onto clear ground before standing gestures.</p><p class="proof"><b>Pass condition</b>Sleeping → waking → standing clears the cloth, trunks and branches in both the story view and a side view.</p></div>
+    <div class="evidence-links"><a href="story-renders/bears_nap-24.500.png">Earlier wake-up frame</a><a href="story-renders/bears_nap-sheet.png">Nap sequence evidence</a></div>
+  </section>
+
+  <section class="case" id="hug">
+    <div class="case-head"><span class="number">3</span><div><h2>Solve the hug as one paired action</h2><p class="sub">Body spacing and release matter before finger or facial polish.</p></div></div>
+    <div class="pair">
+      <figure><a class="image-link" href="story-renders/hug-side-diagnostic.png"><img loading="lazy" src="story-renders/hug-side-diagnostic.png" width="1280" height="720" alt="Side view of the hug shows Masha's face and upper body intersecting Bear's belly."></a><figcaption><span class="kind diagnostic">DIAGNOSTIC CAMERA</span><strong>Pancake morning · 56 s.</strong> Masha penetrates the belly silhouette; the embrace lacks convincing hand targets.</figcaption></figure>
+      <figure><a class="image-link" href="story-renders/pancake_morning-57.500.png"><img loading="lazy" src="story-renders/pancake_morning-57.500.png" width="1280" height="720" alt="After the hug, the story view still hides most of Masha inside Bear's silhouette."></a><figcaption><span class="kind">STORY CAMERA</span><strong>After the hug · 57.5 s.</strong> Masha remains largely concealed.</figcaption></figure>
+    </div>
+    <div class="notes"><p><b>Observed</b>The side check shows body penetration during the hug; the production shot still conceals Masha after both hug clips end.</p><p class="fix"><b>Proposed next fix</b>Coordinate approach distance, Bear’s lean, shoulder/back hand targets and a clear release position.</p><p class="proof"><b>Pass condition</b>Approach, embrace and separation all read from front and side, without treating root distance alone as collision proof.</p></div>
+    <div class="evidence-links"><a href="story-renders/hug-after-side-diagnostic.png">Release from the side</a><a href="story-review.md">Contact evidence and implementation starting points</a></div>
+  </section>
+
+  <section class="case" id="work">
+    <div class="case-head"><span class="number">4</span><div><h2>Stage a work surface Masha can use</h2><p class="sub">A correct hand grip is only one part of a believable cooking pose.</p></div></div>
+    <div class="pair">
+      <figure><a class="image-link" href="story-renders/pancake_morning-24.500.png"><img loading="lazy" src="story-renders/pancake_morning-24.500.png" width="1280" height="720" alt="Masha holds a pan beside the outdoor table, below the tabletop."></a><figcaption><span class="kind">STORY CAMERA</span><strong>Pancake morning · 24.5 s.</strong> The pan and hands sit below the work surface.</figcaption></figure>
+      <figure><a class="image-link" href="story-renders/pancake_morning-33.500.png"><img loading="lazy" src="story-renders/pancake_morning-33.500.png" width="1280" height="720" alt="The near table edge blocks Masha's face, while the pan hangs beneath it."></a><figcaption><span class="kind">STORY CAMERA</span><strong>Pancake morning · 33.5 s.</strong> The table crosses her face; the pan hangs below it.</figcaption></figure>
+    </div>
+    <div class="notes"><p><b>Observed</b>The actor, table height, pose and framing do not form a coherent cooking station.</p><p class="fix"><b>Proposed next fix</b>Give Masha a stable step or an actor-specific work position and pose, while preserving useful table scale for Bear.</p><p class="proof"><b>Pass condition</b>Face, working hands, pan, surface and footing are readable together throughout the cooking beat.</p></div>
+    <div class="evidence-links"><a href="story-renders/pancake_morning-sheet.png">Pancake sequence evidence</a><a href="story-metadata.json">Captured actor/contact metadata</a></div>
+  </section>
+
+  <section class="case" id="fishing">
+    <div class="case-head"><span class="number">5</span><div><h2>Make the catch—and the rod placement—read</h2><p class="sub">One complete fishing sequence is a useful test of camera, contacts and set layout together.</p></div></div>
+    <div class="pair">
+      <figure><a class="image-link" href="outdoor/pond-story.png"><img loading="lazy" src="outdoor/pond-story.png" width="1280" height="720" alt="Fishing from behind Bear hides his face and most of his hands, with Masha at the edge of the pier."></a><figcaption><span class="kind">STORY CAMERA</span><strong>Fishing trip · 19.285 s.</strong> Bear’s back hides the performance and much of the water.</figcaption></figure>
+      <figure><a class="image-link" href="outdoor/pond-story-21.png"><img loading="lazy" src="outdoor/pond-story-21.png" width="1280" height="720" alt="At the catch, the rod lies horizontally behind Bear and projects left across the shore and water."></a><figcaption><span class="kind">STORY CAMERA</span><strong>Fishing trip · 21 s.</strong> The released rod projects horizontally behind him.</figcaption></figure>
+    </div>
+    <div class="notes"><p><b>Observed</b>At 21 s, the action still reports <code>fish</code>, while the held object changes to the fish and the rod moves to a resting position. The placement is visually awkward.</p><p class="fix"><b>Proposed next fix</b>Choose a three-quarter angle showing face, hands and float. Make the rod-to-catch transition and resting location explicit.</p><p class="proof"><b>Pass condition</b>Review an uninterrupted cast, bite, catch and rod placement. Recheck the shoreline layout before polishing water or planks.</p></div>
+    <div class="evidence-links"><a href="outdoor/fishing-prop-state.json">Exact prop states</a><a href="outdoor/pond-overview.png">Current pond layout · diagnostic</a><a href="../yard-reference/frames/episode17-208s.jpg">Cartoon shore, bench and path</a><a href="https://www.youtube.com/watch?v=qBp1rCz_yQU&amp;t=208s" target="_blank" rel="noopener">Official episode 17 · 3:28 ↗</a></div>
+  </section>
+
+  <section class="case" id="world">
+    <div class="case-head"><span class="number">6</span><div><h2>Approve the place and silhouette before wear</h2><p class="sub">The ambulance clearing is a clear example of the layout → shape → surface order.</p></div></div>
+    <div class="pair">
+      <figure><a class="image-link" href="outdoor/ambulance-reference.png"><img loading="lazy" src="outdoor/ambulance-reference.png" width="1280" height="720" alt="Current ambulance is fully exposed on flat ground, with a rectangular body and sheet-like conifer foliage."></a><figcaption><span class="kind diagnostic">DIAGNOSTIC CAMERA</span><strong>Current game set.</strong> Flat immediate ground, exposed wheels, rectangular body and slab roof.</figcaption></figure>
+      <figure><a class="image-link" href="../yard-reference/frames/episode17-298s.jpg"><img loading="lazy" src="../yard-reference/frames/episode17-298s.jpg" width="1440" height="810" alt="Official cartoon frame shows the ambulance set into a grassy slope beside conifers."></a><figcaption><span class="kind source">CARTOON SOURCE</span><strong>Episode 17 · about 4:58.</strong> Slope, tree and vehicle form the composition. Episode-specific pots and food are not proposed additions.</figcaption></figure>
+    </div>
+    <div class="notes"><p><b>Observed / source boundary</b>The flat staging and box-like form are visible. The source supports a slope and rear/side silhouette; it does not establish measured dimensions or an exact front grille.</p><p class="fix"><b>Proposed next fix</b>Block slope, tree, van and actor space together. Then refine roof/body/window proportions. Apply the same silhouette review to conifers, shrubs and garden crops.</p><p class="proof"><b>Pass condition</b>Approve plain-material views beside the source first. Then test quieter ground, restrained wood contrast, glazing depth and localized wear in consistent daylight.</p></div>
+    <div class="evidence-links"><a href="https://www.youtube.com/watch?v=qBp1rCz_yQU&amp;t=298s" target="_blank" rel="noopener">Official episode 17 · 4:58 ↗</a><a href="outdoor/wolves-story.png">Actual wolves story framing</a><a href="outdoor/yard-garden.png">Garden / vegetation diagnostic</a><a href="outdoor-review.md">Full outdoor findings and source links</a></div>
+  </section>
+
+  <section class="limits" id="limits">
+    <h2>What this evidence does—and does not—establish</h2>
+    <div class="limits-grid">
+      <div><h3>Observed</h3><p>The story audit sampled 77 production-camera frames across five English sample stories, followed by targeted contact checks. Outdoor captures use the current game compiler, evaluator, assets and stage. No browser errors were reported in the documented initial capture runs.</p><p><strong>Story camera</strong> means normal compiled framing. <strong>Diagnostic camera</strong> changes only the view for inspection. <strong>Cartoon source</strong> is a saved official-episode frame, not a matched-camera reconstruction.</p></div>
+      <div><h3>Still unverified</h3><p>Sampled images do not certify continuous animation, audio, performance, mobile behavior, every contact or a live deployment. Precise landscape dimensions and unseen room/shore geometry remain inferred.</p><p>The apparent shoulder-carry “floating” issue was <strong>not confirmed</strong> by the reverse view and is excluded. The new interior study is separate. This audit made <strong>no game fixes, paid generations or deployment</strong>.</p></div>
+    </div>
+    <div class="links"><a href="story-review.md">Story audit</a><a href="outdoor-review.md">Outdoor audit</a><a href="story-metadata.json">Story capture metadata</a><a href="story-sweep.json">Story sweep</a><a href="outdoor/render-proof.json">Outdoor capture metadata</a></div>
+  </section>
+</main>
+<footer>Local visual review · recommendations await implementation and verification · existing screenshots only</footer>
+<dialog id="image-dialog" aria-labelledby="image-caption"><div class="zoom-bar"><span id="image-caption"></span><button type="button" id="close-image" aria-label="Close enlarged image">Close ×</button></div><img id="enlarged-image" alt=""></dialog>
+<script>
+  const dialog=document.getElementById('image-dialog'),large=document.getElementById('enlarged-image'),caption=document.getElementById('image-caption');
+  document.querySelectorAll('.image-link').forEach(link=>link.addEventListener('click',event=>{
+    if(event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;
+    event.preventDefault();const image=link.querySelector('img');large.src=link.href;large.alt=image.alt;
+    caption.textContent=link.closest('figure').querySelector('figcaption').textContent;
+    dialog.showModal();document.body.classList.add('modal-open');
+  }));
+  document.getElementById('close-image').addEventListener('click',()=>dialog.close());
+  dialog.addEventListener('close',()=>document.body.classList.remove('modal-open'));
+  dialog.addEventListener('click',event=>{if(event.target===dialog){const r=dialog.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)dialog.close();}});
+</script>
+</body>
+</html>

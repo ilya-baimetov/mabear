@@ -1,0 +1,36 @@
+{
+  "checks": [
+    {
+      "story": "garden_party",
+      "duration": 26.726667,
+      "width": 1280,
+      "height": 768,
+      "advanced": 0.3515,
+      "decoded": 15
+    },
+    {
+      "story": "pancake_morning",
+      "duration": 61.350033,
+      "width": 1280,
+      "height": 768,
+      "advanced": 0.3515,
+      "decoded": 16
+    },
+    {
+      "story": "bears_nap",
+      "duration": 68.054533,
+      "width": 1280,
+      "height": 768,
+      "advanced": 0.3516,
+      "decoded": 15
+    },
+    {
+      "story": "fishing_trip",
+      "duration": 44.518733,
+      "width": 1280,
+      "height": 768,
+      "advanced": 0.3518,
+      "decoded": 15
+    }
+  ]
+}

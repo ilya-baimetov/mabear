@@ -1,0 +1,45 @@
+
+ ⛅️ wrangler 4.157.0
+────────────────────
+🌀 Building list of assets...
+✨ Read 199 files from the assets directory /Users/ilya.baimetov/Projects/mabear/codex/dist
+🌀 Starting asset upload...
+🌀 Found 19 new or modified static assets to upload. Proceeding with upload...
++ /index.html
++ /assets/physics-Dd-1UpMi.js
++ /assets/bear-CeAhI5xd.js
++ /assets/wolf-CRZ2vl31.js
++ /assets/generated-DtZIPZtw.js
++ /assets/preload-helper-CTEEXgGV.js
++ /assets/stageReplay-vPDS2S2c.js
++ /assets/blend-BKY5UgjP.js
++ /assets/player-BaBufn5o.js
++ /assets/masha-pBHbotvA.js
++ /assets/face-BkY7wuul.js
++ /assets/schema-BAdP4l2n.js
++ /assets/studio-o91AxUMi.js
++ /physics/index.html
++ /assets/set-BpycUxby.js
++ /assets/sourceContacts-jcO4gkqi.js
++ /assets/audio-lFl7RlMZ.js
++ /assets/stage-Bg7wnrs-.js
++ /assets/bearsYard-C8QzoQcY.js
+Asset upload failed. Retrying... 1 of 5 attempts.
+
+Uploaded 6 of 19 assets
+Uploaded 12 of 19 assets
+Uploaded 19 of 19 assets
+✨ Success! Uploaded 19 files (165 already uploaded) (2.90 sec)
+
+Total Upload: 2170.67 KiB / gzip: 366.66 KiB
+Worker Startup Time: 35 ms
+Your Worker has access to the following bindings:
+Binding                              Resource            
+env.MASHA_SPEECH (MashaSpeech)       Durable Object      
+env.STORY_SERVICE (mabear)           Worker              
+env.ASSETS                           Assets              
+
+Uploaded mabear-storybook (6.41 sec)
+Deployed mabear-storybook triggers (0.28 sec)
+  https://mabear-storybook.ilya-baimetov.workers.dev
+Current Version ID: fc5b10ce-429a-4022-b8e7-f1fb8913b8fb

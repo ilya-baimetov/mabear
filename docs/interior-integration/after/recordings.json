@@ -1,0 +1,27 @@
+{
+  "phase": "after",
+  "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+  "sourceStable": true,
+  "recordings": [
+    {
+      "story": "cozy_evening_en",
+      "filename": "cozy_evening_en.mp4",
+      "mime": "video/mp4;codecs=avc1.42e01e",
+      "duration": 38.752,
+      "frames": 2326,
+      "maxGapMs": 18.70000000001164,
+      "p95GapMs": 18.5
+    },
+    {
+      "story": "kitchen_visit",
+      "filename": "kitchen_visit.mp4",
+      "mime": "video/mp4;codecs=avc1.42e01e",
+      "duration": 50.415000000000006,
+      "frames": 3025,
+      "maxGapMs": 18.70000000001164,
+      "p95GapMs": 17.79999999998836
+    }
+  ],
+  "errors": [],
+  "failedRequests": []
+}

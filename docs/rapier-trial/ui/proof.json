@@ -1,0 +1,155 @@
+{
+  "url": "http://127.0.0.1:8801/?physics=rapier",
+  "release": 1.6,
+  "duration": 8.8,
+  "paused": {
+    "t": 1.8492999999046333,
+    "physics": {
+      "t": 1.8492999999046333,
+      "root": null,
+      "grounded": false,
+      "stride": 1,
+      "ball": {
+        "pos": [
+          -0.035326825650650893,
+          0.3618129750657875,
+          0.5240721953061643
+        ],
+        "rotation": [
+          0.000011042694494781876,
+          -0.0000064534160623317395,
+          -0.000001633642909701561,
+          0.9999999999168718
+        ]
+      },
+      "sleeping": false,
+      "reason": "authored choreography: take",
+      "steps": 111,
+      "computeMs": 39.09999918937683,
+      "samples": 112,
+      "caches": 1,
+      "revision": 2
+    }
+  },
+  "held": {
+    "t": 1.8492999999046333,
+    "physics": {
+      "t": 1.8492999999046333,
+      "root": null,
+      "grounded": false,
+      "stride": 1,
+      "ball": {
+        "pos": [
+          -0.035326825650650893,
+          0.3618129750657875,
+          0.5240721953061643
+        ],
+        "rotation": [
+          0.000011042694494781876,
+          -0.0000064534160623317395,
+          -0.000001633642909701561,
+          0.9999999999168718
+        ]
+      },
+      "sleeping": false,
+      "reason": "authored choreography: take",
+      "steps": 111,
+      "computeMs": 39.1999990940094,
+      "samples": 112,
+      "caches": 1,
+      "revision": 2
+    }
+  },
+  "future": {
+    "t": 4.599899902343751,
+    "physics": {
+      "t": 4.599899902343751,
+      "root": null,
+      "grounded": false,
+      "stride": 1,
+      "ball": {
+        "pos": [
+          -0.035326825650650893,
+          -0.00006880756454574755,
+          0.5240721953061643
+        ],
+        "rotation": [
+          0.000011042694494781876,
+          -0.0000064534160623317395,
+          -0.000001633642909701561,
+          0.9999999999168718
+        ]
+      },
+      "sleeping": true,
+      "reason": "authored choreography: take",
+      "steps": 276,
+      "computeMs": 69.9999988079071,
+      "samples": 277,
+      "caches": 1,
+      "revision": 2
+    }
+  },
+  "back": {
+    "t": 1.4000000000000001,
+    "physics": {
+      "t": 1.4000000000000001,
+      "root": null,
+      "grounded": false,
+      "stride": 1,
+      "ball": null,
+      "sleeping": false,
+      "reason": "authored choreography: take",
+      "steps": 276,
+      "computeMs": 69.9999988079071,
+      "samples": 277,
+      "caches": 1,
+      "revision": 2
+    }
+  },
+  "futureAgain": {
+    "t": 4.599899902343751,
+    "physics": {
+      "t": 4.599899902343751,
+      "root": null,
+      "grounded": false,
+      "stride": 1,
+      "ball": {
+        "pos": [
+          -0.035326825650650893,
+          -0.00006880756454574755,
+          0.5240721953061643
+        ],
+        "rotation": [
+          0.000011042694494781876,
+          -0.0000064534160623317395,
+          -0.000001633642909701561,
+          0.9999999999168718
+        ]
+      },
+      "sleeping": true,
+      "reason": "authored choreography: take",
+      "steps": 276,
+      "computeMs": 69.9999988079071,
+      "samples": 277,
+      "caches": 1,
+      "revision": 2
+    }
+  },
+  "edited": {
+    "t": 0,
+    "root": null,
+    "grounded": false,
+    "stride": 1,
+    "ball": null,
+    "sleeping": false,
+    "reason": "travel outside the trial yard",
+    "steps": 0,
+    "computeMs": 0,
+    "samples": 1,
+    "caches": 1,
+    "revision": 3
+  },
+  "errors": [],
+  "interceptedApiRequests": [],
+  "rapierLoaded": true
+}

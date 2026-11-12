@@ -1,0 +1,3304 @@
+{
+  "phase": "after",
+  "source": "/Users/ilya.baimetov/Projects/mabear/codex",
+  "files": {
+    "src/app/App.tsx": "59d4c71c205a90ef73ebef3971917439b3343a8f640a5586ee5bdca074a05431",
+    "src/app/brand.css": "6e6bfaf9a75ac79c6d38c149a7760162e7a1f20f035451c626b2ac69e21584e9",
+    "src/app/castCamera.ts": "45224f39435ae3d1aa610c0f5114bd6822801f2d4cd52b99b6a415c0a0098491",
+    "src/app/components/BehindTheScenes.tsx": "e9886c905fb72e60cfd565dfacfe797df67df31bcb8f5eea80bd4e978972a724",
+    "src/app/components/DataView.tsx": "f971d2bbaf63c7c480c06a9f5cbfdf0a7dc2785b5a7a00ecf94ba2424e4e212a",
+    "src/app/components/Economics.tsx": "8a83cfd3a69d89abaf9d5c21ffebf256f8d68e85f84167f3aacfa3d3aa74f524",
+    "src/app/components/FullStoryDialog.tsx": "15c56d34bc63b6e66445d8933e728eca871ac23afb13ff3ca9956ec0ccb0f207",
+    "src/app/components/MomentSequence.tsx": "77f6c7c6bdb8e99f299406f232d416e4221bec38678d493249586ead99940f34",
+    "src/app/components/MomentWorkbench.tsx": "20830c783e7ae7a759316f5a3a171243b9ad0ed8b11e556e34ef2cf44db07873",
+    "src/app/components/ParagraphCard.tsx": "e7209f714242c5a23ecec0b395185c6c89cf5b3d6748f67b2ca05ea2991bd789",
+    "src/app/components/RemixButtons.tsx": "e3e00a0250ec73c497812a57a76fe8453d7689592697bb777235e79c82bc129c",
+    "src/app/components/ReplaceStoryDialog.tsx": "66c43a022bab9b9d1c2c86a951120f9bc6ef571832700c0d1847cb73140223ac",
+    "src/app/components/ScriptEditor.tsx": "31e55c6d33119fae4655b585b153fb4e1d78c33300b037fa6a0426f99784c1a5",
+    "src/app/components/Stage.tsx": "29f1e07fbc168a2ddd1a89c53143469d06490e0cb55eaca60962563c73cf95dd",
+    "src/app/components/StoryLibrary.tsx": "3dcc68704fdd6fa0f351bf0f94fa9f3654d2fba9e54c87b08b5339f127f407cb",
+    "src/app/components/SystemLayers.tsx": "95af787bca241f82e434bd77daaed8b084da93e87e6eb21fd1d605254aa62244",
+    "src/app/components/Timeline.tsx": "45300c6cf3c7dd9c184c45320ef669d2f7a0d4ef2c794b27b65bc6d0298e24ab",
+    "src/app/components/TopBar.tsx": "b823fd0d2c9a5f2fd5b3fe5142f1c47a8997c8a8eff479fbd1e69a8228de8032",
+    "src/app/components/VoicePicker.tsx": "30f63f81a1031b68cfb1913c544f92c0b174fbe27d64662eafcbf2b884ec6d31",
+    "src/app/components/assets/README.md": "6b3ba1516360553245f6bf495f36d34679a985b050a11c50434e4271cfc6758a",
+    "src/app/components/assets/bear.webp": "2ce1f601273f5424aa209e4c6946901617cf93f2e71290231cf0cc6f30ad610c",
+    "src/app/components/assets/hare.webp": "3201c6c8e05f24e41054e3c7715138f4cecabd01ad9086d3521891719dc0d0df",
+    "src/app/components/assets/lady_bear.webp": "9b63a396e266012e89d5fd93a07e748e7e3a4759dd6db0dcd115516755a18595",
+    "src/app/components/assets/masha.webp": "845e8355122004288f1171a79b56344509c2fadaf3dc17a5fe10efff1b7dec76",
+    "src/app/components/assets/rival_bear.webp": "bb1b1b08fcc11474b9a68e29b506118ab4e3f134bee46f766b0105ac30d72581",
+    "src/app/components/assets/rosie.webp": "ac4af41b8c8ac87a3b8dd85c7092bfc6dbb967bb90b8fab9d9e171840b7b1211",
+    "src/app/components/assets/squirrel.webp": "8adfe748135d8f2f1622316ff1ea540f129e964e2705fd019864605b279d8b08",
+    "src/app/components/assets/wolf_a.webp": "50b419d2b2a27af0f26a5ef7b1ee33da0bb25c8618398abb230008165868ca4e",
+    "src/app/components/assets/wolf_b.webp": "eb85d3d738f13ba62c8b0150cc1934154b6a5453f93c7afa2bc176db45ed4d0e",
+    "src/app/components/castPortraits.ts": "b0e8321a4212a12072ced1bb6ec1c546d93d6f476af64c145d60db06113a5cf5",
+    "src/app/components/studioView.ts": "04dff28afe59207fbf9ff46104e58280a0c64ca260b0a091ce62e2f127320059",
+    "src/app/i18n/en.ts": "0eec8ce94607a73146bbec7f01541b84dc082e6ab8b6b0f9869bcad4f3b346ec",
+    "src/app/i18n/index.ts": "456ce624e30e1ac48f2c1fc23df10aafb69667c387a2998c99f5b4977e9bdf9b",
+    "src/app/i18n/ru.ts": "b86b9b06042acfddda3a6a226dfec1dfdb9bc652e5f5685e564cd37d7a28fb3d",
+    "src/app/main.tsx": "a6dce5535f41faf7ff779d1bc94e381e8d714c46b1edddd6e1fe7e57a2893c9d",
+    "src/app/playback.ts": "a95924548842f6edbbaed1513eca291e99026204802fe36c81c3143d294dec8b",
+    "src/app/react.ts": "a60d39dc3bbf615f2dbc356bba99ac9323aa3bc1a7234766703127848d4b8bf1",
+    "src/app/store.ts": "4c90ccfddb7674bf3bce23f1ea6fe9489c1b2bc80f3738f6a215c525412ecb73",
+    "src/app/storyFlow.ts": "324be5e21fb3cc988177415bc4d3d71d9940d3b030c185d297fc912ed67afa08",
+    "src/app/storyboardFrames.ts": "87febd0de59bab7ab7f7f05bfa9bcee45294f20b8f816ce294f779223e1281c5",
+    "src/app/storyboardTime.ts": "2829ff8dd141e1635d4f8dc6ad53af0d7e2a9fea756f872cd3a181dc3f0fdf84",
+    "src/app/studio-layout.css": "02c3fe1c8325d364f319d8df57f2537383f42a0a51ad9969719414702012cb2a",
+    "src/app/styles.css": "f5192eccd44699262d8a83a1284af32954a836dd60487c120b13c43c6e6a0228",
+    "src/app/useOutsideClose.ts": "3380977e0f77f6824685ad501870fc49d42a084c45e7fb758c3ca5f3b074c905",
+    "src/app/useStore.ts": "f8bc20da7399a0efed9cd86d2d6d13230b44e03baaa7cebc72c5b164af36eb49",
+    "src/compiler/audioCues.ts": "556b2cfe84d00d7d139688a1c580b6b85ecf44d70841eb3e291feb22a801c2b1",
+    "src/compiler/camera.ts": "bffbe404a461fb83b919dd57e3adf092329e28b4d49214e6e8b95be2c8bb8e5d",
+    "src/compiler/compile.ts": "b7413df3421673d09ce719953d07e22aaeb60c1b129c32003fcfb91cd4be3084",
+    "src/compiler/dialogue.ts": "5c852a371b7c0a99bcf9301c791e6fc37580362eee4d233ab31a9cd66219cc38",
+    "src/compiler/episode.ts": "7c4fbbca116887065b178be430dcbfd64f9052280d230ee4423c9bfc06f1c76a",
+    "src/compiler/path.ts": "51949754416cc90da179d578c124e632a24a184e62c13f260c46d2f6be85f771",
+    "src/compiler/types.ts": "74f63af957133a7ee7164c8de0387aa42b954479583c584cee8486dedd6e4629",
+    "src/compiler/validate.ts": "34298ed088d5d6eb8a46dcbd7ed89934a8c2fdcc6f218396dd7091e321fdcf0d",
+    "src/compiler/worldState.ts": "2f0673f3b784a8d4d82528c2cd821f0cabfb21d09d592510e1fd19bf605a7192",
+    "src/director/client.ts": "f75a97ecea723e7778d35b5d1a94320a25ca0f749ead0932ead7a586cff1c93b",
+    "src/director/fixtures/bears_nap.en.json": "a50997d61cb1f640c99616d2b471e72e40ab0e99b983d223b819275b84536ebc",
+    "src/director/fixtures/bears_nap.ru.json": "98b1ca18e48377b0cf47dbff79f3fcdca5e3369ac42c8715d623669d5a3fb5a5",
+    "src/director/fixtures/cozy_evening.ts": "b41545493dcc434500033db851625bae80981ff9d5ca9b18f3dfe02305aaae2d",
+    "src/director/fixtures/fishing_trip.en.json": "b6c8907fd31248f8baac0583875c2a95df58738d425a19ccd8aae38cd3170459",
+    "src/director/fixtures/fishing_trip.ru.json": "b7c9e34f1aaea11dea974c3d38c6777538b38e1ed851ca2d3c8702aaed737ead",
+    "src/director/fixtures/garden_party.en.json": "84679bded58f1472c07089121bdeb74ca2c2babe04059e410a96351bc193e8f8",
+    "src/director/fixtures/garden_party.ru.json": "591615ab873c91ee46259646688f41ab6a36bab36199ec2d7a2819e9c6fd8bd0",
+    "src/director/fixtures/index.ts": "1871437a8d33f64798a0faa43b9eee4a69b6fbd278984511a562f14c1e81ea16",
+    "src/director/fixtures/pancake_morning.en.json": "9e198ed10e26dff7bf69752c37732865ce7a91176a1edd3103af53972b6b8c24",
+    "src/director/fixtures/pancake_morning.ru.json": "00e25d082af6ae9d6dac1923ddcbabcbc4667e11be89fece0b1226c7646fc3cc",
+    "src/director/offline/lexicon.en.ts": "b45f70eb661d2151626e408548246687e28f11032fcd7eb0cf70acfe7c7c5735",
+    "src/director/offline/lexicon.ru.ts": "50161bcec5f1cf0e6b6e476faa9a551399a6a8510cda9a2b3221fd6a1892537c",
+    "src/director/offline/parser.ts": "a3e1807338c4ac4022ac4ec7d0c1a8197921468db13166679bcff4ed221c8370",
+    "src/director/prompt.ts": "b43e7dae74d6df9804c78c841f2cad388b60d03db3a4ec0505cf3f3dca73262a",
+    "src/engine/api.ts": "a69b2ff8817f526ce1d728fb6c7fa196a5e06213e294170c6d5f8411f97de16f",
+    "src/engine/assets.ts": "e7d9d253431c0e3d19119139d4bb9f870191c88db98a6097a74c2b9f5c85fed7",
+    "src/engine/audio/ambience.ts": "a3cc4a125ddb6d5d47b9a4a4db19773f6073374839f93d6b5344e0586b4edc88",
+    "src/engine/audio/bus.ts": "956d334fecf3b3adb204d1549d9fc4b7634cdc727363a67fcfdb1ee0d7ff3a6a",
+    "src/engine/audio/foley.ts": "ddae44c4bf39617b3b716077c471f5c6983221c9b15d2edffc8385a158a71d3a",
+    "src/engine/audio/index.ts": "bcdf4f99ed17b1837abc0c35844df13cfe26a0bac5b097655efb7cacbcc0cd52",
+    "src/engine/audio/music.ts": "d6d873b4348d8ac691b1d9bb82b5966da95dc2c2c0ab7aef40c58dc75c25c692",
+    "src/engine/audio/recordedMusic.ts": "d1ea823b8885a92a04a65283395c3386253b09b65107b443ab9aff4dd2e9f3c0",
+    "src/engine/audio/recordedSpeech.ts": "0a4925cb5028daafa2f22a69d21bbc42a5e825bb08df93911bf9f392ac4ce33b",
+    "src/engine/audio/scheduler.ts": "f7c67bb7997bea7cfa6f1d82f15fa1c61559b717db8079de42c8fc1b2a97bdb8",
+    "src/engine/audio/sfx.ts": "a309e32cfb79f3a9198cba1bb82f48a9c9fb67828c2a758bae5ea956796fad92",
+    "src/engine/audio/synth.ts": "a03945254534482342aa964e1efce9c34ca47620f33fb2bbe6586d3537311429",
+    "src/engine/audio/tts.ts": "4232a9bbec7f4c03177b8d06557f05092dd6acb75985e9b5637367d5260498cb",
+    "src/engine/audio/vocals.ts": "1da73c0f059b2a0f01bd6abb8877b3404838e3b1f90cb88c62778b2b3d6f1c93",
+    "src/engine/cameraClearance.ts": "b66326b49406c5ab5186360084d47f8364461a53a64f35768eb82b6680cd5323",
+    "src/engine/characters/bear.ts": "eb06ea42a6a1dd9976ed0630603ffcc4d8eb141ced8cac84e439791273cebc14",
+    "src/engine/characters/carryContacts.ts": "762da665428f581a2a1a0a1abff45eaba942b94f190cf2bdbda5edd52e776df9",
+    "src/engine/characters/contactHands.ts": "a74d5ec7c84e34d762af1d14d2a54b0846852bb98a75a6df6c2b5da01504c447",
+    "src/engine/characters/face.ts": "6d7f994990ed3cc1b7b17dfef0deaa85cbf48cae64c6c64940ba8af68f5e0cd5",
+    "src/engine/characters/generated.ts": "abf41ac1f3ff5c4c336c1663382a6102d78f1168e5df2fe6315f321c5bceec41",
+    "src/engine/characters/generatedFace.ts": "96622f8917832264e7704301fc91e798d6d58db076ef869a9e4745c38e3e5bc3",
+    "src/engine/characters/hugContacts.ts": "53e95ebecd87284d6c7cd417af33949d344f895982b2a74ea58716d36a334879",
+    "src/engine/characters/masha.ts": "51d7f9a97f12605a54126b688899e87ef343a1267893f0446f6bbba99da74b41",
+    "src/engine/characters/mashaContacts.ts": "394a1e7bf1d885de17f8c49033c628bd0125b39abff6e5756183e02ca268ea49",
+    "src/engine/characters/mashaHands.ts": "3ca1754231262ce038c191e2e41c2db14cba208c4ccf22d8a26645452db4347d",
+    "src/engine/characters/mashaPerformance.ts": "7156cebe01cb1a9b512116707dc5694ff1383a0bb3e99f6f849980d169d659a3",
+    "src/engine/characters/rig.ts": "4ed67e396a98b29ddf47c1a25ea2d72290fd3452af877a3c0465fd681721c9cf",
+    "src/engine/characters/sourceContacts.ts": "8ad1f1344e65b5a0abf2033731a6bf84bfb2b4ea64ca84d64ee8c8a9fe49a717",
+    "src/engine/characters/squirrelBind.ts": "578dc1456d58985c9896cf426f0a7eaa4a2032fcccce1924a5701f346180c12b",
+    "src/engine/characters/wolf.ts": "0416b420f8d1e2f89d3a919c57f4e68710ea819382588012680d116690b49d3a",
+    "src/engine/fx/fx.ts": "3c882d3e31eb2faae8bf1e695761206f0e37611ddf0268b6ff06e2c99d224c59",
+    "src/engine/look.ts": "b037a19de810bc03f3ec61600d0f2c3bb9ed6402beb47502a66743133225e891",
+    "src/engine/motion/blend.ts": "63426e6dd367f7df4bd896032e41cb5f7dd112b2899d8b8d379b412493db5976",
+    "src/engine/motion/clips.generated.ts": "e36175d14425ee28b907b849590298f792f69f769e53fb4957bc15dec0b03a47",
+    "src/engine/motion/emotion.ts": "08ddff209616c5c262b0b1d2bd01755a2d5b325e08c80ada7426191f5ec21f7a",
+    "src/engine/motion/generatedProportions.ts": "df611c347e2010a48d7bdd3f75bb5ebb34e4736097deabd2a3e42a46c098ee08",
+    "src/engine/motion/library.ts": "34801d1869c64ad0c21f0cbde60704fd7934d0ec35f8f9806eea67883a914732",
+    "src/engine/motion/retarget.ts": "3c00b9725e26b2278206dca6646e1686cf4853cf1d7835a047c25576b37672a7",
+    "src/engine/motion/verbs/body.ts": "882fe7b79c88d5b0b0dc8e4c5f45a71d591d9b70fff9b46a3badee1c72f9945e",
+    "src/engine/motion/verbs/common.ts": "d1c302e84c06143cd9e832750f76d3bd442455d52794d22a414838b3c5143196",
+    "src/engine/motion/verbs/emotion.ts": "f99edb217d99ec35b5b05d2087e76e595f739500ea17baae639417113f6f97c5",
+    "src/engine/motion/verbs/gesture.ts": "768ee240a7fc3d6d8ff1e460b15d6b346f78cc9934d703ccf3d34751e28f2395",
+    "src/engine/motion/verbs/locomotion.ts": "afbf04a35a808e71505662e81a4bac68653c015c257b617bb5ffb23671f7780a",
+    "src/engine/motion/verbs/objects.ts": "4271011aa630f4adf234a84dff81f1603588b7a3b30724a76ad4a0ed7917bf3e",
+    "src/engine/pick.ts": "f6abb92251c9255644e1b0c890d09a5655c34cc18928a85f94173522a0ecb7d9",
+    "src/engine/player/evaluate.ts": "96e6b91f668bfc29360a5d01fa694f4aca6df1fb9cc45a87e4086abacc5089e3",
+    "src/engine/player/player.ts": "0d9c72db0c9b666ea04bc5402254cffa17387c5359055cd96308201824df5f78",
+    "src/engine/post/post.ts": "fe6d9828ec268eab80d8ff4603ba5ded8d04782852e44be15549b0d22e208f9f",
+    "src/engine/props/props.ts": "2b3a137285dabe06c2cdf599907db06f98648bac61964f7607cbf0f59be66dca",
+    "src/engine/sceneLighting.ts": "42c0e0ae4272336f25c12561ce9586edb54b1f102e19fe28c931ad98a83796d2",
+    "src/engine/set/bearsYard.ts": "693b6820afdf6abd177a5a420fb31c6e73434afbd742f9c8bf9cbf912064dcfc",
+    "src/engine/set/forestLocations.ts": "0d747eb7217d2a4c4f725330e7b7a682c4dc6032b7e67f591219389b64f7a281",
+    "src/engine/set/generatedYard.ts": "7486d3b72d273db6a4cf3bd046d72f27336c9d30bbc9e407dcca3b638270fde0",
+    "src/engine/set/houseInterior.ts": "85153dfc85cd9938994154777d8141dcbe1f9cc8608db90cf4286869ef7d1561",
+    "src/engine/set/interiorDecor.ts": "b4dbe35974042e4f0d0e1a88ba8eadc720e5eb40841e90d1356c97c74d79c239",
+    "src/engine/set/interiorShapes/architecture.ts": "3b1dbc577ef0bf97756eec08542497a3de8bf5a3eec3b3d9130cdf0047fedf81",
+    "src/engine/set/interiorShapes/kitchen.ts": "fb05e0a7df537600db6bdd94c99b0841a23784cc3ab1df87e9821d2aa8bf83ad",
+    "src/engine/set/interiorShapes/living.ts": "8666ceba45cdcf93bc621f66efe3d1be52fc657876a2e11a6d284a5acd9ca625",
+    "src/engine/set/nature.ts": "4cf50bf47f9080c12dc48172052f955bc064495d26faf4038c57a520f3762079",
+    "src/engine/set/textures.ts": "3e8e2baa8039e9031c699aee207e80fd37add797889149f2a020a68532be5b6d",
+    "src/engine/stage.ts": "1edb587d845db95dcd4d6e380ca877ab4d5379e11ae07ceae63308bf060284fb",
+    "src/shared/bible/characters.ts": "3d097f22b22ee4ecf24e7943bb2c5a60d98d4d42555d1ceac4d629c9537d55d0",
+    "src/shared/bible/props.ts": "0cc8b5f9d71c16493c598bfd63eebcf8bcded149cb8ef3e40593f66abf7256c5",
+    "src/shared/bible/set.ts": "3c238990fb16dc6f28c0e2b0281f57b0afde9895aefc3eb069c6638dda832dae",
+    "src/shared/carrySupport.ts": "1e21026e98f96267863a337e596c20d5a8176c372a12a296e264c0c9f7ce56dd",
+    "src/shared/characterReach.ts": "d40c4c2674ff76b1d59ed02f5ef932197cfe08d007aa1e5922a00e8b7a71daaa",
+    "src/shared/contactTiming.ts": "224dd27f912c75bb02c8bbaba089bbdb7ea751f351871bb0878f6978ac83545e",
+    "src/shared/cookingStation.ts": "270910300b7369fb9cc64cc791e73036e99b76ac6f8aa535ddd074b0205e950e",
+    "src/shared/forestLayout.ts": "aa6b82484266c232845cc8021a47ef5c170c805aca3ff6f0fa3014732786e496",
+    "src/shared/grammar.ts": "d6d8d188361654775d9985d6a3ad16738dfc850d3a31488e6528b3018f8bf234",
+    "src/shared/houseLayout.ts": "5adcd6a304ec368ce400cfc15c6aee09415e9addae2efb5f397615b01ca8d271",
+    "src/shared/physicalInteractions.ts": "0e07d87b7d0b7057322b7bf931a9452e513a750c7bf01256c19aca519bfbf562",
+    "src/shared/pond.ts": "e9939d242df2902c72cc0c38c3ed2e28c49ee8b665523afcd3e714f85768c120",
+    "src/shared/pricing.ts": "9b10568be144bb5dc7fddcca549c5ab3fe003b0d648681ed4f741e6f76018afd",
+    "src/shared/propContacts.ts": "0a0a50794d10bf1d54bd1cbf83caaa3f78414db4f843156e959127df17d54da6",
+    "src/shared/propPlacement.ts": "ce69b280901a4eec189a494d55c779a8cec2a4dda5a563749b643f2422b0b0ed",
+    "src/shared/recordedSpeech.json": "0d1fac3766b3354fc6e86567d33f14234fa2058c07e163292a99963b24aece42",
+    "src/shared/rules.ts": "7c6a30c0d4f58dff56ca129e3072757bfec5d4117fa07909e2505192ad0edf16",
+    "src/shared/schema.ts": "b172853f9c14480343251c94ea54e46205f04eaad875777bd587e8e1adbb220d",
+    "src/shared/speech.ts": "b16ad56f94bab3d4a198ca8f36698bdfb6c8583e3e7e218a0ed8d0733c345a63"
+  },
+  "fingerprint": "a7d22476f0c7e15cd69d92fefac362248a00ba3dacfcf70bd2a4144b7326fe69",
+  "harnessSha256": "a95a4fa88fce527398b84331faee48f8389cb68ef62af0e8b8d84ed8a97b1cdc",
+  "capturedAt": "2026-11-07T09:49:16.913Z",
+  "speechTiming": "Production recordedSpeech.json durations; silent evidence recording",
+  "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+  "assets": [
+    {
+      "id": "wolf_a",
+      "source": "procedural",
+      "ok": true
+    },
+    {
+      "id": "wolf_b",
+      "source": "procedural",
+      "ok": true
+    },
+    {
+      "id": "hare",
+      "source": "gltf",
+      "ok": true
+    },
+    {
+      "id": "rosie",
+      "source": "gltf",
+      "ok": true
+    },
+    {
+      "id": "lady_bear",
+      "source": "gltf",
+      "ok": true
+    },
+    {
+      "id": "masha",
+      "source": "gltf",
+      "ok": true
+    },
+    {
+      "id": "squirrel",
+      "source": "gltf",
+      "ok": true
+    },
+    {
+      "id": "bear",
+      "source": "gltf",
+      "ok": true
+    },
+    {
+      "id": "rival_bear",
+      "source": "gltf",
+      "ok": true
+    },
+    {
+      "id": "robot_test",
+      "source": "gltf",
+      "ok": true
+    },
+    {
+      "id": "prop:carrot",
+      "source": "gltf",
+      "ok": true
+    },
+    {
+      "id": "set:beehive",
+      "source": "gltf",
+      "ok": true
+    },
+    {
+      "id": "set:house",
+      "source": "gltf",
+      "ok": true
+    }
+  ],
+  "post": 3,
+  "buffer": [
+    1280,
+    720
+  ],
+  "durations": {
+    "cozy_evening_en": 38.752,
+    "cozy_evening_ru": 38.543000000000006,
+    "kitchen_visit": 50.415000000000006,
+    "kitchen_pickups": 10.481
+  },
+  "segments": {
+    "cozy_evening_en": [
+      {
+        "offset": 0,
+        "duration": 10.633
+      },
+      {
+        "offset": 10.633,
+        "duration": 21.838
+      },
+      {
+        "offset": 32.471000000000004,
+        "duration": 6.281
+      }
+    ],
+    "cozy_evening_ru": [
+      {
+        "offset": 0,
+        "duration": 10.633
+      },
+      {
+        "offset": 10.633,
+        "duration": 21.838
+      },
+      {
+        "offset": 32.471000000000004,
+        "duration": 6.072
+      }
+    ],
+    "kitchen_visit": [
+      {
+        "offset": 0,
+        "duration": 12.521
+      },
+      {
+        "offset": 12.521,
+        "duration": 22.429
+      },
+      {
+        "offset": 34.95,
+        "duration": 15.465
+      }
+    ],
+    "kitchen_pickups": [
+      {
+        "offset": 0,
+        "duration": 10.481
+      }
+    ]
+  },
+  "clips": [
+    {
+      "story": "cozy_evening_en",
+      "actor": "masha",
+      "verb": "walk_to",
+      "start": 5.133,
+      "dur": 0.9,
+      "params": {
+        "from": [
+          0.25,
+          0.5
+        ],
+        "to": [
+          -7.35,
+          -13.255
+        ],
+        "path": [
+          [
+            0.25,
+            0.5
+          ],
+          [
+            -7.35,
+            -13.255
+          ]
+        ],
+        "facing": -2.637,
+        "posture": "stand",
+        "target": "house_living",
+        "sceneCut": true
+      }
+    },
+    {
+      "story": "cozy_evening_en",
+      "actor": "masha",
+      "verb": "look_at",
+      "start": 6.033,
+      "dur": 0.688,
+      "params": {
+        "from": [
+          -7.35,
+          -13.255
+        ],
+        "facing": 0,
+        "posture": "stand",
+        "lookAt": [
+          -7.35,
+          0.595,
+          -12.255
+        ]
+      }
+    },
+    {
+      "story": "cozy_evening_en",
+      "actor": "masha",
+      "verb": "sit",
+      "start": 6.721,
+      "dur": 1.2,
+      "params": {
+        "from": [
+          -7.35,
+          -13.255
+        ],
+        "facing": 0,
+        "posture": "sit",
+        "target": "house_living",
+        "lookAt": [
+          -7.35,
+          0.5,
+          -14.275
+        ],
+        "to": [
+          -7.35,
+          -14.275
+        ],
+        "path": [
+          [
+            -7.35,
+            -13.255
+          ],
+          [
+            -7.35,
+            -14.275
+          ]
+        ]
+      }
+    },
+    {
+      "story": "cozy_evening_en",
+      "actor": "masha",
+      "verb": "idle",
+      "start": 7.921,
+      "dur": 0.256,
+      "params": {
+        "from": [
+          -7.35,
+          -14.275
+        ],
+        "facing": 0,
+        "posture": "sit",
+        "lookAt": [
+          -11.05,
+          2.05,
+          -13.15
+        ]
+      }
+    },
+    {
+      "story": "cozy_evening_en",
+      "actor": "bear",
+      "verb": "walk_to",
+      "start": 0,
+      "dur": 4.133,
+      "params": {
+        "from": [
+          -1.65,
+          -0.25
+        ],
+        "to": [
+          2,
+          0.25
+        ],
+        "path": [
+          [
+            -1.65,
+            -0.25
+          ],
+          [
+            1.8,
+            -0.4
+          ],
+          [
+            2,
+            0.25
+          ]
+        ],
+        "facing": 1.614,
+        "posture": "stand",
+        "target": "frying_pan"
+      }
+    },
+    {
+      "story": "cozy_evening_en",
+      "actor": "bear",
+      "verb": "take",
+      "start": 4.133,
+      "dur": 1,
+      "params": {
+        "from": [
+          2,
+          0.25
+        ],
+        "facing": 0.298,
+        "posture": "stand",
+        "item": "frying_pan",
+        "target": "frying_pan",
+        "lookAt": [
+          1.6,
+          0.78,
+          1.2
+        ]
+      }
+    },
+    {
+      "story": "cozy_evening_en",
+      "actor": "bear",
+      "verb": "walk_to",
+      "start": 5.133,
+      "dur": 0.9,
+      "params": {
+        "from": [
+          2,
+          0.25
+        ],
+        "to": [
+          -11.05,
+          -13.15
+        ],
+        "path": [
+          [
+            2,
+            0.25
+          ],
+          [
+            -11.05,
+            -13.15
+          ]
+        ],
+        "facing": -2.369,
+        "posture": "stand",
+        "item": "frying_pan",
+        "target": "house_kitchen",
+        "sceneCut": true
+      }
+    },
+    {
+      "story": "cozy_evening_en",
+      "actor": "bear",
+      "verb": "cook",
+      "start": 6.033,
+      "dur": 4,
+      "params": {
+        "from": [
+          -11.05,
+          -13.15
+        ],
+        "facing": -1.359,
+        "posture": "stand",
+        "item": "frying_pan",
+        "target": "house_kitchen",
+        "lookAt": [
+          -12.18,
+          1.3,
+          -13.25
+        ]
+      }
+    },
+    {
+      "story": "cozy_evening_en",
+      "actor": "masha",
+      "verb": "take",
+      "start": 27.471,
+      "dur": 1.4,
+      "params": {
+        "from": [
+          -7.35,
+          -14.275
+        ],
+        "facing": 0.35,
+        "posture": "sit",
+        "item": "pancakes",
+        "target": "bear"
+      }
+    },
+    {
+      "story": "cozy_evening_en",
+      "actor": "masha",
+      "verb": "eat",
+      "start": 28.871,
+      "dur": 2,
+      "params": {
+        "from": [
+          -7.35,
+          -14.275
+        ],
+        "facing": 0,
+        "posture": "sit",
+        "item": "pancakes",
+        "lookAt": [
+          -6.887,
+          2.05,
+          -13.007
+        ]
+      }
+    },
+    {
+      "story": "cozy_evening_en",
+      "actor": "bear",
+      "verb": "walk_to",
+      "start": 10.633,
+      "dur": 5.164,
+      "params": {
+        "from": [
+          -11.05,
+          -13.15
+        ],
+        "to": [
+          -11,
+          -10
+        ],
+        "path": [
+          [
+            -11.05,
+            -13.15
+          ],
+          [
+            -10.19,
+            -12.115
+          ],
+          [
+            -9.67,
+            -12.03
+          ],
+          [
+            -9.67,
+            -10.07
+          ],
+          [
+            -11,
+            -10
+          ]
+        ],
+        "facing": 0.693,
+        "posture": "stand",
+        "item": "frying_pan",
+        "target": "house_kitchen"
+      }
+    },
+    {
+      "story": "cozy_evening_en",
+      "actor": "bear",
+      "verb": "look_at",
+      "start": 15.796999999999999,
+      "dur": 0.624,
+      "params": {
+        "from": [
+          -11,
+          -10
+        ],
+        "facing": -2.8241339183351615,
+        "posture": "stand",
+        "item": "frying_pan",
+        "lookAt": [
+          -11.23,
+          1.4349999999999998,
+          -10.7
+        ]
+      }
+    },
+    {
+      "story": "cozy_evening_en",
+      "actor": "bear",
+      "verb": "take",
+      "start": 16.421,
+      "dur": 1,
+      "params": {
+        "from": [
+          -11,
+          -10
+        ],
+        "facing": -2.8241339183351615,
+        "posture": "stand",
+        "item": "frying_pan",
+        "putDown": "house_kitchen",
+        "lookAt": [
+          -11.23,
+          1.23,
+          -10.7
+        ]
+      }
+    },
+    {
+      "story": "cozy_evening_en",
+      "actor": "bear",
+      "verb": "walk_to",
+      "start": 17.421,
+      "dur": 4.542,
+      "params": {
+        "from": [
+          -11,
+          -10
+        ],
+        "to": [
+          -10.9,
+          -12.25
+        ],
+        "path": [
+          [
+            -11,
+            -10
+          ],
+          [
+            -9.67,
+            -10.07
+          ],
+          [
+            -9.67,
+            -12.03
+          ],
+          [
+            -10.9,
+            -12.25
+          ]
+        ],
+        "facing": 1.623,
+        "posture": "stand",
+        "target": "pancakes"
+      }
+    },
+    {
+      "story": "cozy_evening_en",
+      "actor": "bear",
+      "verb": "take",
+      "start": 21.963,
+      "dur": 1,
+      "params": {
+        "from": [
+          -10.9,
+          -12.25
+        ],
+        "facing": -0.601,
+        "posture": "stand",
+        "item": "pancakes",
+        "target": "pancakes",
+        "lookAt": [
+          -11.4,
+          1.2,
+          -11.52
+        ],
+        "pickUpAt": "house_kitchen"
+      }
+    },
+    {
+      "story": "cozy_evening_en",
+      "actor": "bear",
+      "verb": "walk_to",
+      "start": 22.963,
+      "dur": 4.508,
+      "params": {
+        "from": [
+          -10.9,
+          -12.25
+        ],
+        "to": [
+          -6.8870879599351404,
+          -13.006846837656038
+        ],
+        "path": [
+          [
+            -10.9,
+            -12.25
+          ],
+          [
+            -10.19,
+            -12.115
+          ],
+          [
+            -7.47,
+            -12.115
+          ],
+          [
+            -6.887,
+            -13.007
+          ]
+        ],
+        "facing": 1.383,
+        "posture": "stand",
+        "item": "pancakes",
+        "target": "masha"
+      }
+    },
+    {
+      "story": "cozy_evening_en",
+      "actor": "bear",
+      "verb": "give",
+      "start": 27.471,
+      "dur": 1.4,
+      "params": {
+        "from": [
+          -6.8870879599351404,
+          -13.006846837656038
+        ],
+        "facing": -2.792,
+        "posture": "stand",
+        "item": "pancakes",
+        "target": "masha",
+        "lookAt": [
+          -7.35,
+          1.083,
+          -14.275
+        ]
+      }
+    },
+    {
+      "story": "cozy_evening_en",
+      "actor": "bear",
+      "verb": "nod",
+      "start": 30.871,
+      "dur": 1,
+      "params": {
+        "from": [
+          -6.8870879599351404,
+          -13.006846837656038
+        ],
+        "facing": -2.792,
+        "posture": "stand"
+      }
+    },
+    {
+      "story": "cozy_evening_en",
+      "actor": "masha",
+      "verb": "stand_up",
+      "start": 34.143,
+      "dur": 1,
+      "params": {
+        "from": [
+          -7.35,
+          -14.275
+        ],
+        "facing": 0.4444192099010982,
+        "posture": "stand",
+        "target": "house_living",
+        "to": [
+          -6.699999999999999,
+          -13.225
+        ],
+        "path": [
+          [
+            -7.35,
+            -14.275
+          ],
+          [
+            -7.05,
+            -13.645
+          ],
+          [
+            -6.699999999999999,
+            -13.225
+          ]
+        ]
+      }
+    },
+    {
+      "story": "cozy_evening_en",
+      "actor": "masha",
+      "verb": "walk_to",
+      "start": 35.143,
+      "dur": 0.9,
+      "params": {
+        "from": [
+          -6.699999999999999,
+          -13.225
+        ],
+        "to": [
+          0,
+          0
+        ],
+        "path": [
+          [
+            -6.7,
+            -13.225
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "facing": 0.469,
+        "posture": "stand",
+        "target": "clearing",
+        "sceneCut": true
+      }
+    },
+    {
+      "story": "cozy_evening_en",
+      "actor": "masha",
+      "verb": "wave",
+      "start": 36.043000000000006,
+      "dur": 2.109,
+      "params": {
+        "from": [
+          0,
+          0
+        ],
+        "facing": -1.373,
+        "posture": "stand",
+        "target": "bear",
+        "lookAt": [
+          -1,
+          2.05,
+          0.2
+        ]
+      }
+    },
+    {
+      "story": "cozy_evening_en",
+      "actor": "bear",
+      "verb": "walk_to",
+      "start": 32.471000000000004,
+      "dur": 1.672,
+      "params": {
+        "from": [
+          -6.887,
+          -13.007
+        ],
+        "to": [
+          -5.35,
+          -12.35
+        ],
+        "path": [
+          [
+            -6.887,
+            -13.007
+          ],
+          [
+            -5.35,
+            -12.35
+          ]
+        ],
+        "facing": 1.167,
+        "posture": "stand"
+      }
+    },
+    {
+      "story": "cozy_evening_en",
+      "actor": "bear",
+      "verb": "walk_to",
+      "start": 35.143,
+      "dur": 0.9,
+      "params": {
+        "from": [
+          -5.35,
+          -12.35
+        ],
+        "to": [
+          -1,
+          0.2
+        ],
+        "path": [
+          [
+            -5.35,
+            -12.35
+          ],
+          [
+            -1,
+            0.2
+          ]
+        ],
+        "facing": 0.334,
+        "posture": "stand",
+        "target": "clearing",
+        "sceneCut": true
+      }
+    },
+    {
+      "story": "cozy_evening_ru",
+      "actor": "masha",
+      "verb": "walk_to",
+      "start": 5.133,
+      "dur": 0.9,
+      "params": {
+        "from": [
+          0.25,
+          0.5
+        ],
+        "to": [
+          -7.35,
+          -13.255
+        ],
+        "path": [
+          [
+            0.25,
+            0.5
+          ],
+          [
+            -7.35,
+            -13.255
+          ]
+        ],
+        "facing": -2.637,
+        "posture": "stand",
+        "target": "house_living",
+        "sceneCut": true
+      }
+    },
+    {
+      "story": "cozy_evening_ru",
+      "actor": "masha",
+      "verb": "look_at",
+      "start": 6.033,
+      "dur": 0.688,
+      "params": {
+        "from": [
+          -7.35,
+          -13.255
+        ],
+        "facing": 0,
+        "posture": "stand",
+        "lookAt": [
+          -7.35,
+          0.595,
+          -12.255
+        ]
+      }
+    },
+    {
+      "story": "cozy_evening_ru",
+      "actor": "masha",
+      "verb": "sit",
+      "start": 6.721,
+      "dur": 1.2,
+      "params": {
+        "from": [
+          -7.35,
+          -13.255
+        ],
+        "facing": 0,
+        "posture": "sit",
+        "target": "house_living",
+        "lookAt": [
+          -7.35,
+          0.5,
+          -14.275
+        ],
+        "to": [
+          -7.35,
+          -14.275
+        ],
+        "path": [
+          [
+            -7.35,
+            -13.255
+          ],
+          [
+            -7.35,
+            -14.275
+          ]
+        ]
+      }
+    },
+    {
+      "story": "cozy_evening_ru",
+      "actor": "masha",
+      "verb": "idle",
+      "start": 7.921,
+      "dur": 0.256,
+      "params": {
+        "from": [
+          -7.35,
+          -14.275
+        ],
+        "facing": 0,
+        "posture": "sit",
+        "lookAt": [
+          -11.05,
+          2.05,
+          -13.15
+        ]
+      }
+    },
+    {
+      "story": "cozy_evening_ru",
+      "actor": "bear",
+      "verb": "walk_to",
+      "start": 0,
+      "dur": 4.133,
+      "params": {
+        "from": [
+          -1.65,
+          -0.25
+        ],
+        "to": [
+          2,
+          0.25
+        ],
+        "path": [
+          [
+            -1.65,
+            -0.25
+          ],
+          [
+            1.8,
+            -0.4
+          ],
+          [
+            2,
+            0.25
+          ]
+        ],
+        "facing": 1.614,
+        "posture": "stand",
+        "target": "frying_pan"
+      }
+    },
+    {
+      "story": "cozy_evening_ru",
+      "actor": "bear",
+      "verb": "take",
+      "start": 4.133,
+      "dur": 1,
+      "params": {
+        "from": [
+          2,
+          0.25
+        ],
+        "facing": 0.298,
+        "posture": "stand",
+        "item": "frying_pan",
+        "target": "frying_pan",
+        "lookAt": [
+          1.6,
+          0.78,
+          1.2
+        ]
+      }
+    },
+    {
+      "story": "cozy_evening_ru",
+      "actor": "bear",
+      "verb": "walk_to",
+      "start": 5.133,
+      "dur": 0.9,
+      "params": {
+        "from": [
+          2,
+          0.25
+        ],
+        "to": [
+          -11.05,
+          -13.15
+        ],
+        "path": [
+          [
+            2,
+            0.25
+          ],
+          [
+            -11.05,
+            -13.15
+          ]
+        ],
+        "facing": -2.369,
+        "posture": "stand",
+        "item": "frying_pan",
+        "target": "house_kitchen",
+        "sceneCut": true
+      }
+    },
+    {
+      "story": "cozy_evening_ru",
+      "actor": "bear",
+      "verb": "cook",
+      "start": 6.033,
+      "dur": 4,
+      "params": {
+        "from": [
+          -11.05,
+          -13.15
+        ],
+        "facing": -1.359,
+        "posture": "stand",
+        "item": "frying_pan",
+        "target": "house_kitchen",
+        "lookAt": [
+          -12.18,
+          1.3,
+          -13.25
+        ]
+      }
+    },
+    {
+      "story": "cozy_evening_ru",
+      "actor": "masha",
+      "verb": "take",
+      "start": 27.471,
+      "dur": 1.4,
+      "params": {
+        "from": [
+          -7.35,
+          -14.275
+        ],
+        "facing": 0.35,
+        "posture": "sit",
+        "item": "pancakes",
+        "target": "bear"
+      }
+    },
+    {
+      "story": "cozy_evening_ru",
+      "actor": "masha",
+      "verb": "eat",
+      "start": 28.871,
+      "dur": 2,
+      "params": {
+        "from": [
+          -7.35,
+          -14.275
+        ],
+        "facing": 0,
+        "posture": "sit",
+        "item": "pancakes",
+        "lookAt": [
+          -6.887,
+          2.05,
+          -13.007
+        ]
+      }
+    },
+    {
+      "story": "cozy_evening_ru",
+      "actor": "bear",
+      "verb": "walk_to",
+      "start": 10.633,
+      "dur": 5.164,
+      "params": {
+        "from": [
+          -11.05,
+          -13.15
+        ],
+        "to": [
+          -11,
+          -10
+        ],
+        "path": [
+          [
+            -11.05,
+            -13.15
+          ],
+          [
+            -10.19,
+            -12.115
+          ],
+          [
+            -9.67,
+            -12.03
+          ],
+          [
+            -9.67,
+            -10.07
+          ],
+          [
+            -11,
+            -10
+          ]
+        ],
+        "facing": 0.693,
+        "posture": "stand",
+        "item": "frying_pan",
+        "target": "house_kitchen"
+      }
+    },
+    {
+      "story": "cozy_evening_ru",
+      "actor": "bear",
+      "verb": "look_at",
+      "start": 15.796999999999999,
+      "dur": 0.624,
+      "params": {
+        "from": [
+          -11,
+          -10
+        ],
+        "facing": -2.8241339183351615,
+        "posture": "stand",
+        "item": "frying_pan",
+        "lookAt": [
+          -11.23,
+          1.4349999999999998,
+          -10.7
+        ]
+      }
+    },
+    {
+      "story": "cozy_evening_ru",
+      "actor": "bear",
+      "verb": "take",
+      "start": 16.421,
+      "dur": 1,
+      "params": {
+        "from": [
+          -11,
+          -10
+        ],
+        "facing": -2.8241339183351615,
+        "posture": "stand",
+        "item": "frying_pan",
+        "putDown": "house_kitchen",
+        "lookAt": [
+          -11.23,
+          1.23,
+          -10.7
+        ]
+      }
+    },
+    {
+      "story": "cozy_evening_ru",
+      "actor": "bear",
+      "verb": "walk_to",
+      "start": 17.421,
+      "dur": 4.542,
+      "params": {
+        "from": [
+          -11,
+          -10
+        ],
+        "to": [
+          -10.9,
+          -12.25
+        ],
+        "path": [
+          [
+            -11,
+            -10
+          ],
+          [
+            -9.67,
+            -10.07
+          ],
+          [
+            -9.67,
+            -12.03
+          ],
+          [
+            -10.9,
+            -12.25
+          ]
+        ],
+        "facing": 1.623,
+        "posture": "stand",
+        "target": "pancakes"
+      }
+    },
+    {
+      "story": "cozy_evening_ru",
+      "actor": "bear",
+      "verb": "take",
+      "start": 21.963,
+      "dur": 1,
+      "params": {
+        "from": [
+          -10.9,
+          -12.25
+        ],
+        "facing": -0.601,
+        "posture": "stand",
+        "item": "pancakes",
+        "target": "pancakes",
+        "lookAt": [
+          -11.4,
+          1.2,
+          -11.52
+        ],
+        "pickUpAt": "house_kitchen"
+      }
+    },
+    {
+      "story": "cozy_evening_ru",
+      "actor": "bear",
+      "verb": "walk_to",
+      "start": 22.963,
+      "dur": 4.508,
+      "params": {
+        "from": [
+          -10.9,
+          -12.25
+        ],
+        "to": [
+          -6.8870879599351404,
+          -13.006846837656038
+        ],
+        "path": [
+          [
+            -10.9,
+            -12.25
+          ],
+          [
+            -10.19,
+            -12.115
+          ],
+          [
+            -7.47,
+            -12.115
+          ],
+          [
+            -6.887,
+            -13.007
+          ]
+        ],
+        "facing": 1.383,
+        "posture": "stand",
+        "item": "pancakes",
+        "target": "masha"
+      }
+    },
+    {
+      "story": "cozy_evening_ru",
+      "actor": "bear",
+      "verb": "give",
+      "start": 27.471,
+      "dur": 1.4,
+      "params": {
+        "from": [
+          -6.8870879599351404,
+          -13.006846837656038
+        ],
+        "facing": -2.792,
+        "posture": "stand",
+        "item": "pancakes",
+        "target": "masha",
+        "lookAt": [
+          -7.35,
+          1.083,
+          -14.275
+        ]
+      }
+    },
+    {
+      "story": "cozy_evening_ru",
+      "actor": "bear",
+      "verb": "nod",
+      "start": 30.871,
+      "dur": 1,
+      "params": {
+        "from": [
+          -6.8870879599351404,
+          -13.006846837656038
+        ],
+        "facing": -2.792,
+        "posture": "stand"
+      }
+    },
+    {
+      "story": "cozy_evening_ru",
+      "actor": "masha",
+      "verb": "stand_up",
+      "start": 34.143,
+      "dur": 1,
+      "params": {
+        "from": [
+          -7.35,
+          -14.275
+        ],
+        "facing": 0.4444192099010982,
+        "posture": "stand",
+        "target": "house_living",
+        "to": [
+          -6.699999999999999,
+          -13.225
+        ],
+        "path": [
+          [
+            -7.35,
+            -14.275
+          ],
+          [
+            -7.05,
+            -13.645
+          ],
+          [
+            -6.699999999999999,
+            -13.225
+          ]
+        ]
+      }
+    },
+    {
+      "story": "cozy_evening_ru",
+      "actor": "masha",
+      "verb": "walk_to",
+      "start": 35.143,
+      "dur": 0.9,
+      "params": {
+        "from": [
+          -6.699999999999999,
+          -13.225
+        ],
+        "to": [
+          0,
+          0
+        ],
+        "path": [
+          [
+            -6.7,
+            -13.225
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "facing": 0.469,
+        "posture": "stand",
+        "target": "clearing",
+        "sceneCut": true
+      }
+    },
+    {
+      "story": "cozy_evening_ru",
+      "actor": "masha",
+      "verb": "wave",
+      "start": 36.043000000000006,
+      "dur": 1.9,
+      "params": {
+        "from": [
+          0,
+          0
+        ],
+        "facing": -1.373,
+        "posture": "stand",
+        "target": "bear",
+        "lookAt": [
+          -1,
+          2.05,
+          0.2
+        ]
+      }
+    },
+    {
+      "story": "cozy_evening_ru",
+      "actor": "bear",
+      "verb": "walk_to",
+      "start": 32.471000000000004,
+      "dur": 1.672,
+      "params": {
+        "from": [
+          -6.887,
+          -13.007
+        ],
+        "to": [
+          -5.35,
+          -12.35
+        ],
+        "path": [
+          [
+            -6.887,
+            -13.007
+          ],
+          [
+            -5.35,
+            -12.35
+          ]
+        ],
+        "facing": 1.167,
+        "posture": "stand"
+      }
+    },
+    {
+      "story": "cozy_evening_ru",
+      "actor": "bear",
+      "verb": "walk_to",
+      "start": 35.143,
+      "dur": 0.9,
+      "params": {
+        "from": [
+          -5.35,
+          -12.35
+        ],
+        "to": [
+          -1,
+          0.2
+        ],
+        "path": [
+          [
+            -5.35,
+            -12.35
+          ],
+          [
+            -1,
+            0.2
+          ]
+        ],
+        "facing": 0.334,
+        "posture": "stand",
+        "target": "clearing",
+        "sceneCut": true
+      }
+    },
+    {
+      "story": "kitchen_visit",
+      "actor": "masha",
+      "verb": "walk_to",
+      "start": 5.133,
+      "dur": 0.9,
+      "params": {
+        "from": [
+          0.25,
+          0.5
+        ],
+        "to": [
+          -7.35,
+          -13.255
+        ],
+        "path": [
+          [
+            0.25,
+            0.5
+          ],
+          [
+            -7.35,
+            -13.255
+          ]
+        ],
+        "facing": -2.637,
+        "posture": "stand",
+        "target": "house_living",
+        "sceneCut": true
+      }
+    },
+    {
+      "story": "kitchen_visit",
+      "actor": "masha",
+      "verb": "look_at",
+      "start": 6.033,
+      "dur": 0.688,
+      "params": {
+        "from": [
+          -7.35,
+          -13.255
+        ],
+        "facing": 0,
+        "posture": "stand",
+        "lookAt": [
+          -7.35,
+          0.595,
+          -12.255
+        ]
+      }
+    },
+    {
+      "story": "kitchen_visit",
+      "actor": "masha",
+      "verb": "sit",
+      "start": 6.721,
+      "dur": 1.2,
+      "params": {
+        "from": [
+          -7.35,
+          -13.255
+        ],
+        "facing": 0,
+        "posture": "sit",
+        "target": "house_living",
+        "lookAt": [
+          -7.35,
+          0.5,
+          -14.275
+        ],
+        "to": [
+          -7.35,
+          -14.275
+        ],
+        "path": [
+          [
+            -7.35,
+            -13.255
+          ],
+          [
+            -7.35,
+            -14.275
+          ]
+        ]
+      }
+    },
+    {
+      "story": "kitchen_visit",
+      "actor": "bear",
+      "verb": "walk_to",
+      "start": 0,
+      "dur": 4.133,
+      "params": {
+        "from": [
+          -1.65,
+          -0.25
+        ],
+        "to": [
+          2,
+          0.25
+        ],
+        "path": [
+          [
+            -1.65,
+            -0.25
+          ],
+          [
+            1.8,
+            -0.4
+          ],
+          [
+            2,
+            0.25
+          ]
+        ],
+        "facing": 1.614,
+        "posture": "stand",
+        "target": "frying_pan"
+      }
+    },
+    {
+      "story": "kitchen_visit",
+      "actor": "bear",
+      "verb": "take",
+      "start": 4.133,
+      "dur": 1,
+      "params": {
+        "from": [
+          2,
+          0.25
+        ],
+        "facing": 0.298,
+        "posture": "stand",
+        "item": "frying_pan",
+        "target": "frying_pan",
+        "lookAt": [
+          1.6,
+          0.78,
+          1.2
+        ]
+      }
+    },
+    {
+      "story": "kitchen_visit",
+      "actor": "bear",
+      "verb": "walk_to",
+      "start": 5.133,
+      "dur": 0.9,
+      "params": {
+        "from": [
+          2,
+          0.25
+        ],
+        "to": [
+          -11.05,
+          -13.15
+        ],
+        "path": [
+          [
+            2,
+            0.25
+          ],
+          [
+            -11.05,
+            -13.15
+          ]
+        ],
+        "facing": -2.369,
+        "posture": "stand",
+        "item": "frying_pan",
+        "target": "house_kitchen",
+        "sceneCut": true
+      }
+    },
+    {
+      "story": "kitchen_visit",
+      "actor": "bear",
+      "verb": "cook",
+      "start": 7.921,
+      "dur": 4,
+      "params": {
+        "from": [
+          -11.05,
+          -13.15
+        ],
+        "facing": -1.359,
+        "posture": "stand",
+        "item": "frying_pan",
+        "target": "house_kitchen",
+        "lookAt": [
+          -12.18,
+          1.3,
+          -13.25
+        ]
+      }
+    },
+    {
+      "story": "kitchen_visit",
+      "actor": "masha",
+      "verb": "stand_up",
+      "start": 12.521,
+      "dur": 1,
+      "params": {
+        "from": [
+          -7.35,
+          -14.275
+        ],
+        "facing": 0.4444192099010982,
+        "posture": "stand",
+        "target": "house_living",
+        "to": [
+          -6.699999999999999,
+          -13.225
+        ],
+        "path": [
+          [
+            -7.35,
+            -14.275
+          ],
+          [
+            -7.05,
+            -13.645
+          ],
+          [
+            -6.699999999999999,
+            -13.225
+          ]
+        ]
+      }
+    },
+    {
+      "story": "kitchen_visit",
+      "actor": "masha",
+      "verb": "walk_to",
+      "start": 13.521,
+      "dur": 1.341,
+      "params": {
+        "from": [
+          -6.699999999999999,
+          -13.225
+        ],
+        "to": [
+          -5.35,
+          -12.35
+        ],
+        "path": [
+          [
+            -6.7,
+            -13.225
+          ],
+          [
+            -5.35,
+            -12.35
+          ]
+        ],
+        "facing": 0.996,
+        "posture": "stand"
+      }
+    },
+    {
+      "story": "kitchen_visit",
+      "actor": "masha",
+      "verb": "walk_to",
+      "start": 22.14,
+      "dur": 5.166,
+      "params": {
+        "from": [
+          -5.35,
+          -12.35
+        ],
+        "to": [
+          -11.05,
+          -13.15
+        ],
+        "path": [
+          [
+            -5.35,
+            -12.35
+          ],
+          [
+            -7.47,
+            -12.115
+          ],
+          [
+            -10.19,
+            -12.115
+          ],
+          [
+            -11.05,
+            -13.15
+          ]
+        ],
+        "facing": -1.46,
+        "posture": "stand",
+        "target": "house_kitchen"
+      }
+    },
+    {
+      "story": "kitchen_visit",
+      "actor": "masha",
+      "verb": "walk_to",
+      "start": 27.306,
+      "dur": 3.044,
+      "params": {
+        "from": [
+          -11.05,
+          -13.15
+        ],
+        "to": [
+          -10.96,
+          -10.7
+        ],
+        "path": [
+          [
+            -11.05,
+            -13.15
+          ],
+          [
+            -10.19,
+            -12.115
+          ],
+          [
+            -9.83,
+            -11.05
+          ],
+          [
+            -10.96,
+            -10.7
+          ]
+        ],
+        "facing": 0.693,
+        "posture": "stand",
+        "target": "house_kitchen"
+      }
+    },
+    {
+      "story": "kitchen_visit",
+      "actor": "masha",
+      "verb": "cook",
+      "start": 30.35,
+      "dur": 4,
+      "params": {
+        "from": [
+          -10.96,
+          -10.7
+        ],
+        "facing": -1.571,
+        "posture": "stand",
+        "item": "frying_pan",
+        "target": "house_kitchen",
+        "lookAt": [
+          -11.38,
+          1.25,
+          -10.799999999999999
+        ]
+      }
+    },
+    {
+      "story": "kitchen_visit",
+      "actor": "bear",
+      "verb": "walk_to",
+      "start": 14.862000000000002,
+      "dur": 4.785,
+      "params": {
+        "from": [
+          -11.05,
+          -13.15
+        ],
+        "to": [
+          -7.35,
+          -12.825000000000001
+        ],
+        "path": [
+          [
+            -11.05,
+            -13.15
+          ],
+          [
+            -10.19,
+            -12.115
+          ],
+          [
+            -7.47,
+            -12.115
+          ],
+          [
+            -7.35,
+            -12.825
+          ]
+        ],
+        "facing": 0.693,
+        "posture": "stand",
+        "item": "frying_pan",
+        "target": "house_living"
+      }
+    },
+    {
+      "story": "kitchen_visit",
+      "actor": "bear",
+      "verb": "look_at",
+      "start": 19.647000000000002,
+      "dur": 1.293,
+      "params": {
+        "from": [
+          -7.35,
+          -12.825000000000001
+        ],
+        "facing": 0,
+        "posture": "stand",
+        "item": "frying_pan",
+        "lookAt": [
+          -7.35,
+          1.4349999999999998,
+          -11.825000000000001
+        ]
+      }
+    },
+    {
+      "story": "kitchen_visit",
+      "actor": "bear",
+      "verb": "sit",
+      "start": 20.94,
+      "dur": 1.2,
+      "params": {
+        "from": [
+          -7.35,
+          -12.825000000000001
+        ],
+        "facing": 0,
+        "posture": "sit",
+        "item": "frying_pan",
+        "target": "house_living",
+        "lookAt": [
+          -7.35,
+          0.5,
+          -14.275
+        ],
+        "to": [
+          -7.35,
+          -14.275
+        ],
+        "path": [
+          [
+            -7.35,
+            -12.825000000000001
+          ],
+          [
+            -7.35,
+            -14.275
+          ]
+        ]
+      }
+    },
+    {
+      "story": "kitchen_visit",
+      "actor": "masha",
+      "verb": "walk_to",
+      "start": 34.95,
+      "dur": 0.6,
+      "params": {
+        "from": [
+          -10.96,
+          -10.7
+        ],
+        "to": [
+          -11.22,
+          -10.7
+        ],
+        "path": [
+          [
+            -10.96,
+            -10.7
+          ],
+          [
+            -11.22,
+            -10.7
+          ]
+        ],
+        "facing": -1.571,
+        "posture": "stand",
+        "item": "frying_pan",
+        "target": "house_kitchen"
+      }
+    },
+    {
+      "story": "kitchen_visit",
+      "actor": "masha",
+      "verb": "take",
+      "start": 35.550000000000004,
+      "dur": 1,
+      "params": {
+        "from": [
+          -11.22,
+          -10.7
+        ],
+        "facing": -1.571,
+        "posture": "stand",
+        "item": "frying_pan",
+        "putDown": "house_kitchen",
+        "lookAt": [
+          -11.23,
+          1.23,
+          -10.7
+        ]
+      }
+    },
+    {
+      "story": "kitchen_visit",
+      "actor": "masha",
+      "verb": "walk_to",
+      "start": 36.550000000000004,
+      "dur": 0.8,
+      "params": {
+        "from": [
+          -11.22,
+          -10.7
+        ],
+        "to": [
+          -11.22,
+          -11.52
+        ],
+        "path": [
+          [
+            -11.22,
+            -10.7
+          ],
+          [
+            -11.22,
+            -11.52
+          ]
+        ],
+        "facing": 3.142,
+        "posture": "stand",
+        "target": "pancakes"
+      }
+    },
+    {
+      "story": "kitchen_visit",
+      "actor": "masha",
+      "verb": "take",
+      "start": 37.35,
+      "dur": 1,
+      "params": {
+        "from": [
+          -11.22,
+          -11.52
+        ],
+        "facing": -1.571,
+        "posture": "stand",
+        "item": "pancakes",
+        "target": "pancakes",
+        "lookAt": [
+          -11.4,
+          1.2,
+          -11.52
+        ],
+        "pickUpAt": "house_kitchen"
+      }
+    },
+    {
+      "story": "kitchen_visit",
+      "actor": "masha",
+      "verb": "walk_to",
+      "start": 38.35,
+      "dur": 4.336,
+      "params": {
+        "from": [
+          -11.22,
+          -11.52
+        ],
+        "to": [
+          -7.35,
+          -13.255
+        ],
+        "path": [
+          [
+            -11.22,
+            -11.52
+          ],
+          [
+            -9.83,
+            -11.05
+          ],
+          [
+            -7.47,
+            -12.115
+          ],
+          [
+            -7.35,
+            -13.255
+          ]
+        ],
+        "facing": 1.245,
+        "posture": "stand",
+        "item": "pancakes",
+        "target": "house_living"
+      }
+    },
+    {
+      "story": "kitchen_visit",
+      "actor": "masha",
+      "verb": "eat",
+      "start": 42.686,
+      "dur": 2,
+      "params": {
+        "from": [
+          -7.35,
+          -13.255
+        ],
+        "facing": 0,
+        "posture": "stand",
+        "item": "pancakes"
+      }
+    },
+    {
+      "story": "kitchen_visit",
+      "actor": "masha",
+      "verb": "walk_to",
+      "start": 44.68600000000001,
+      "dur": 1.829,
+      "params": {
+        "from": [
+          -7.35,
+          -13.255
+        ],
+        "to": [
+          -5.35,
+          -12.35
+        ],
+        "path": [
+          [
+            -7.35,
+            -13.255
+          ],
+          [
+            -5.35,
+            -12.35
+          ]
+        ],
+        "facing": 1.146,
+        "posture": "stand"
+      }
+    },
+    {
+      "story": "kitchen_visit",
+      "actor": "masha",
+      "verb": "walk_to",
+      "start": 47.515,
+      "dur": 0.9,
+      "params": {
+        "from": [
+          -5.35,
+          -12.35
+        ],
+        "to": [
+          1.78,
+          0.4
+        ],
+        "path": [
+          [
+            -5.35,
+            -12.35
+          ],
+          [
+            1.78,
+            0.4
+          ]
+        ],
+        "facing": 0.51,
+        "posture": "stand",
+        "target": "clearing",
+        "sceneCut": true
+      }
+    },
+    {
+      "story": "kitchen_visit",
+      "actor": "masha",
+      "verb": "wave",
+      "start": 48.415000000000006,
+      "dur": 1.4,
+      "params": {
+        "from": [
+          1.78,
+          0.4
+        ],
+        "facing": -1.792,
+        "posture": "stand",
+        "target": "bear",
+        "lookAt": [
+          0,
+          2.05,
+          0
+        ]
+      }
+    },
+    {
+      "story": "kitchen_visit",
+      "actor": "bear",
+      "verb": "stand_up",
+      "start": 46.515,
+      "dur": 1,
+      "params": {
+        "from": [
+          -7.35,
+          -14.275
+        ],
+        "facing": 0.4444192099010982,
+        "posture": "stand",
+        "target": "house_living",
+        "to": [
+          -6.699999999999999,
+          -13.225
+        ],
+        "path": [
+          [
+            -7.35,
+            -14.275
+          ],
+          [
+            -7.05,
+            -13.645
+          ],
+          [
+            -6.699999999999999,
+            -13.225
+          ]
+        ]
+      }
+    },
+    {
+      "story": "kitchen_visit",
+      "actor": "bear",
+      "verb": "walk_to",
+      "start": 47.515,
+      "dur": 0.9,
+      "params": {
+        "from": [
+          -6.699999999999999,
+          -13.225
+        ],
+        "to": [
+          0,
+          0
+        ],
+        "path": [
+          [
+            -6.7,
+            -13.225
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "facing": 0.469,
+        "posture": "stand",
+        "target": "clearing",
+        "sceneCut": true
+      }
+    },
+    {
+      "story": "kitchen_pickups",
+      "actor": "masha",
+      "verb": "walk_to",
+      "start": 0,
+      "dur": 3.281,
+      "params": {
+        "from": [
+          -11.05,
+          -13.15
+        ],
+        "to": [
+          -11.22,
+          -11.52
+        ],
+        "path": [
+          [
+            -11.05,
+            -13.15
+          ],
+          [
+            -10.19,
+            -12.115
+          ],
+          [
+            -9.83,
+            -11.05
+          ],
+          [
+            -11.22,
+            -11.52
+          ]
+        ],
+        "facing": 0.693,
+        "posture": "stand",
+        "target": "jam_jar"
+      }
+    },
+    {
+      "story": "kitchen_pickups",
+      "actor": "masha",
+      "verb": "take",
+      "start": 3.281,
+      "dur": 1,
+      "params": {
+        "from": [
+          -11.22,
+          -11.52
+        ],
+        "facing": -1.571,
+        "posture": "stand",
+        "item": "jam_jar",
+        "target": "jam_jar",
+        "lookAt": [
+          -11.4,
+          1.2,
+          -11.52
+        ],
+        "pickUpAt": "house_kitchen"
+      }
+    },
+    {
+      "story": "kitchen_pickups",
+      "actor": "masha",
+      "verb": "take",
+      "start": 4.281,
+      "dur": 1,
+      "params": {
+        "from": [
+          -11.22,
+          -11.52
+        ],
+        "facing": -1.571,
+        "posture": "stand",
+        "item": "jam_jar",
+        "putDown": "house_kitchen",
+        "lookAt": [
+          -11.4,
+          1.2,
+          -11.52
+        ]
+      }
+    },
+    {
+      "story": "kitchen_pickups",
+      "actor": "masha",
+      "verb": "walk_to",
+      "start": 5.281,
+      "dur": 0.8,
+      "params": {
+        "from": [
+          -11.22,
+          -11.52
+        ],
+        "to": [
+          -11.22,
+          -11.14
+        ],
+        "path": [
+          [
+            -11.22,
+            -11.52
+          ],
+          [
+            -11.22,
+            -11.14
+          ]
+        ],
+        "facing": 0,
+        "posture": "stand",
+        "target": "flour_bag"
+      }
+    },
+    {
+      "story": "kitchen_pickups",
+      "actor": "masha",
+      "verb": "take",
+      "start": 6.081,
+      "dur": 1,
+      "params": {
+        "from": [
+          -11.22,
+          -11.14
+        ],
+        "facing": -1.571,
+        "posture": "stand",
+        "item": "flour_bag",
+        "target": "flour_bag",
+        "lookAt": [
+          -11.4,
+          1.2269999999999999,
+          -11.14
+        ],
+        "pickUpAt": "house_kitchen"
+      }
+    },
+    {
+      "story": "kitchen_pickups",
+      "actor": "masha",
+      "verb": "take",
+      "start": 7.081,
+      "dur": 1,
+      "params": {
+        "from": [
+          -11.22,
+          -11.14
+        ],
+        "facing": -1.571,
+        "posture": "stand",
+        "item": "flour_bag",
+        "putDown": "house_kitchen",
+        "lookAt": [
+          -11.4,
+          1.2269999999999999,
+          -11.14
+        ]
+      }
+    },
+    {
+      "story": "kitchen_pickups",
+      "actor": "masha",
+      "verb": "walk_to",
+      "start": 8.081,
+      "dur": 0.8,
+      "params": {
+        "from": [
+          -11.22,
+          -11.14
+        ],
+        "to": [
+          -11.22,
+          -10.7
+        ],
+        "path": [
+          [
+            -11.22,
+            -11.14
+          ],
+          [
+            -11.22,
+            -10.7
+          ]
+        ],
+        "facing": 0,
+        "posture": "stand",
+        "target": "frying_pan"
+      }
+    },
+    {
+      "story": "kitchen_pickups",
+      "actor": "masha",
+      "verb": "take",
+      "start": 8.881,
+      "dur": 1,
+      "params": {
+        "from": [
+          -11.22,
+          -10.7
+        ],
+        "facing": -1.571,
+        "posture": "stand",
+        "item": "frying_pan",
+        "target": "frying_pan",
+        "lookAt": [
+          -11.47,
+          1.2,
+          -10.7
+        ],
+        "pickUpAt": "house_kitchen"
+      }
+    }
+  ],
+  "snapshots": [
+    {
+      "id": "seat-entry-1-bear-0.5",
+      "time": 21.540000000000003,
+      "start": 20.94,
+      "duration": 1.2,
+      "actor": "bear",
+      "verb": "sit",
+      "story": "kitchen_visit",
+      "location": "house",
+      "authoredCamera": {
+        "pos": [
+          -8.126851896431146,
+          1.9175789071266283,
+          -10.339842950340806
+        ],
+        "look": [
+          -7.379686638769744,
+          1.2176332782599062,
+          -14.157558352119693
+        ],
+        "fov": 42,
+        "location": "house"
+      },
+      "actualCamera": {
+        "pos": [
+          -8.126851896431146,
+          1.9175789071266283,
+          -10.339842950340806
+        ],
+        "quaternion": [
+          -0.08847939196352363,
+          -0.09610131666505689,
+          -0.008576796638698678,
+          0.9913941560713508
+        ],
+        "fov": 42
+      },
+      "actors": {
+        "masha": {
+          "verb": "idle",
+          "pos": [
+            -5.35,
+            0,
+            -12.35
+          ],
+          "actualRoot": [
+            -5.35,
+            0,
+            -12.35
+          ],
+          "yaw": -2.337,
+          "opacity": 1,
+          "posture": "stand",
+          "holding": null,
+          "finite": true,
+          "visible": true,
+          "location": "house",
+          "contacts": {
+            "mode": "free"
+          },
+          "handSocket": [
+            -5.297148819087691,
+            0.384417683788671,
+            -12.500872727333016
+          ],
+          "hands": {
+            "LeftHand": [
+              -5.500057394453029,
+              0.3879268773808038,
+              -12.315369795898116
+            ],
+            "RightHand": [
+              -5.297148819087691,
+              0.384417683788671,
+              -12.500872727333016
+            ]
+          },
+          "occluders": [
+            [],
+            []
+          ],
+          "projectedBounds": {
+            "x": [
+              0.9840442212312585,
+              1.7231690146976322
+            ],
+            "y": [
+              -1.6292667935909722,
+              -0.3094067149694235
+            ]
+          },
+          "worldBounds": {
+            "min": [
+              -5.599747902328601,
+              -0.008917463387944306,
+              -12.635787560977178
+            ],
+            "max": [
+              -4.968472117211997,
+              1.0447034989660338,
+              -12.008489095153552
+            ]
+          }
+        },
+        "bear": {
+          "verb": "sit",
+          "pos": [
+            -7.35,
+            0,
+            -13.617880249023441
+          ],
+          "actualRoot": [
+            -7.35,
+            0,
+            -13.617880249023441
+          ],
+          "yaw": 0,
+          "opacity": 1,
+          "posture": "sit",
+          "holding": "frying_pan",
+          "finite": true,
+          "visible": true,
+          "location": "house",
+          "contacts": {
+            "mode": "prop",
+            "prop": "frying_pan",
+            "contactPoint": [
+              -8.140425304610572,
+              1.132010014762652,
+              -12.93058507895696
+            ],
+            "gripPoint": [
+              -8.140425304610572,
+              1.132010014762652,
+              -12.91708507895696
+            ],
+            "radius": 0.013
+          },
+          "handSocket": [
+            -8.140425304610572,
+            1.1020100147626524,
+            -12.67708507895696
+          ],
+          "hands": {
+            "LeftHand": [
+              -6.52723059113567,
+              1.2247473579711725,
+              -13.037129955226707
+            ],
+            "RightHand": [
+              -8.186287749277222,
+              1.2379751393367056,
+              -13.042776368020291
+            ]
+          },
+          "occluders": [
+            [],
+            []
+          ],
+          "projectedBounds": {
+            "x": [
+              -0.43801041481713,
+              0.8189699802556387
+            ],
+            "y": [
+              -1.6616492509049152,
+              1.224705005195537
+            ]
+          },
+          "worldBounds": {
+            "min": [
+              -8.297026005463595,
+              0.017642064369495142,
+              -14.098795925026728
+            ],
+            "max": [
+              -6.409785507308759,
+              2.46785909684167,
+              -12.46882705504093
+            ]
+          }
+        }
+      },
+      "props": {
+        "frying_pan": {
+          "support": {
+            "name": "set:house:batch:rounded low checkers table:aged timber",
+            "height": 0.7365000247955322,
+            "baseGap": 0.36550977752712344
+          },
+          "visible": true,
+          "attachedTo": "bear",
+          "position": [
+            -8.140425304610572,
+            1.1020100147626524,
+            -12.67708507895696
+          ],
+          "rotation": [
+            -3.5161894186246323e-7,
+            5.844106800278304e-7,
+            7.381379963033586e-7,
+            "YXZ"
+          ],
+          "grip": [
+            -8.140425467013282,
+            1.1320099303740963,
+            -12.91708508950546
+          ],
+          "worldBounds": {
+            "min": [
+              -8.275425537581528,
+              1.1020098023226557,
+              -12.997862444191483
+            ],
+            "max": [
+              -8.00542522035077,
+              1.156391491446067,
+              -12.542084994697094
+            ]
+          },
+          "baseAgainstPrepTable": -0.09799019767734429
+        },
+        "pancakes": {
+          "support": {
+            "name": "set:house:batch:Turned-leg preparation table:aged timber",
+            "height": 1.2000000476837158,
+            "baseGap": -4.7516077739118145e-8
+          },
+          "visible": true,
+          "attachedTo": null,
+          "position": [
+            -11.4,
+            1.2,
+            -11.52
+          ],
+          "rotation": [
+            0,
+            0,
+            0,
+            "YXZ"
+          ],
+          "grip": [
+            -11.4,
+            1.2,
+            -11.52
+          ],
+          "worldBounds": {
+            "min": [
+              -11.550000005960465,
+              1.200000000167638,
+              -11.670000005960464
+            ],
+            "max": [
+              -11.249999994039536,
+              1.3424999982118606,
+              -11.369999994039535
+            ]
+          },
+          "baseAgainstPrepTable": 1.676381256032755e-10
+        },
+        "jam_jar": {
+          "support": null,
+          "visible": false,
+          "attachedTo": null,
+          "position": [
+            1.62,
+            0.78,
+            1.74
+          ],
+          "rotation": [
+            0,
+            0,
+            0,
+            "YXZ"
+          ],
+          "grip": [
+            1.62,
+            0.78,
+            1.74
+          ],
+          "worldBounds": {
+            "min": [
+              1.5519999963045121,
+              0.78,
+              1.671999996304512
+            ],
+            "max": [
+              1.688000003695488,
+              0.9288000005483628,
+              1.808000003695488
+            ]
+          },
+          "baseAgainstPrepTable": -0.41999999999999993
+        },
+        "flour_bag": {
+          "support": null,
+          "visible": false,
+          "attachedTo": null,
+          "position": [
+            2.42,
+            0.78,
+            1.8
+          ],
+          "rotation": [
+            0,
+            0,
+            0,
+            "YXZ"
+          ],
+          "grip": [
+            2.42,
+            0.78,
+            1.8
+          ],
+          "worldBounds": {
+            "min": [
+              2.2900000047683715,
+              0.7540000050514937,
+              1.6986074924468995
+            ],
+            "max": [
+              2.5499999952316283,
+              1.1200000035762787,
+              1.9013925075531006
+            ]
+          },
+          "baseAgainstPrepTable": -0.4459999949485063
+        }
+      },
+      "house": {
+        "geometryVersion": "integrated-interior-v1",
+        "revision": "reviewed-wall-return-04",
+        "anchors": {
+          "chair": {
+            "position": [
+              -7.35,
+              0,
+              -14.35
+            ],
+            "bounds": {
+              "min": [
+                -8.189999973773956,
+                -7.1525572131747595e-9,
+                -14.927683806419372
+              ],
+              "max": [
+                -6.029999947547912,
+                1.725000023841858,
+                -13.70999995470047
+              ]
+            }
+          },
+          "prepTable": {
+            "position": [
+              -12.53,
+              0,
+              -11.45
+            ],
+            "bounds": {
+              "min": [
+                -13.804999976158141,
+                0,
+                -12.260000002384185
+              ],
+              "max": [
+                -11.255000023841857,
+                1.2000000476837158,
+                -10.639999997615813
+              ]
+            }
+          },
+          "tableSurfaceY": 1.2,
+          "diningSeatY": 0.64,
+          "helper": {
+            "position": [
+              -8,
+              0,
+              -13
+            ],
+            "bounds": {
+              "min": [
+                -11.309999942779541,
+                -1.390775050680304e-8,
+                -11.649999976158142
+              ],
+              "max": [
+                -10.049999952316284,
+                0.800000011920929,
+                -10.450000047683716
+              ]
+            }
+          }
+        }
+      },
+      "stats": {
+        "fps": 4.625346902547783,
+        "drawCalls": 448,
+        "triangles": 1852086
+      }
+    }
+  ],
+  "sweep": [
+    {
+      "story": "kitchen_visit",
+      "time": 0,
+      "location": "yard",
+      "authoredCamera": {
+        "pos": [
+          -4.227,
+          3.363,
+          8.442
+        ],
+        "look": [
+          -0.7,
+          1,
+          0.125
+        ],
+        "fov": 44,
+        "location": "yard"
+      },
+      "actualCamera": {
+        "pos": [
+          -4.227,
+          3.363,
+          8.442
+        ],
+        "quaternion": [
+          -0.125013304482035,
+          -0.19757278214092375,
+          -0.025411978800904744,
+          0.9719521082815755
+        ],
+        "fov": 44
+      },
+      "actors": {
+        "masha": {
+          "verb": "idle",
+          "pos": [
+            0.25,
+            0,
+            0.5
+          ],
+          "actualRoot": [
+            0.25,
+            0,
+            0.5
+          ],
+          "yaw": 0,
+          "opacity": 1,
+          "posture": "stand",
+          "holding": null,
+          "finite": true,
+          "visible": true,
+          "location": "yard",
+          "contacts": {
+            "mode": "free"
+          },
+          "handSocket": [
+            0.10816157171742107,
+            0.3958602892420994,
+            0.5808384703867533
+          ],
+          "hands": {
+            "LeftHand": [
+              0.38714379975351004,
+              0.40039928947256154,
+              0.5667125743555946
+            ],
+            "RightHand": [
+              0.10816157171742107,
+              0.3958602892420994,
+              0.5808384703867533
+            ]
+          },
+          "occluders": [
+            [],
+            []
+          ],
+          "projectedBounds": {
+            "x": [
+              0.09705836991854179,
+              0.19391769888333332
+            ],
+            "y": [
+              -0.2741912922239797,
+              0.037515999313599765
+            ]
+          },
+          "worldBounds": {
+            "min": [
+              0.011654724996348897,
+              -0.002111088439567966,
+              0.19620743924004647
+            ],
+            "max": [
+              0.4511065979609109,
+              1.05150987391441,
+              0.7073759705567148
+            ]
+          }
+        },
+        "bear": {
+          "verb": "walk_to",
+          "pos": [
+            -1.65,
+            0,
+            -0.25
+          ],
+          "actualRoot": [
+            -1.65,
+            0,
+            -0.25
+          ],
+          "yaw": 0.12,
+          "opacity": 1,
+          "posture": "stand",
+          "holding": null,
+          "finite": true,
+          "visible": true,
+          "location": "yard",
+          "contacts": {
+            "mode": "free"
+          },
+          "handSocket": [
+            -2.4312155546972813,
+            1.0957685769389012,
+            0.009249315877903702
+          ],
+          "hands": {
+            "LeftHand": [
+              -0.8588172162081524,
+              1.08870187610724,
+              -0.13985827820839175
+            ],
+            "RightHand": [
+              -2.4312155546972813,
+              1.0957685769389012,
+              0.009249315877903702
+            ]
+          },
+          "occluders": [
+            [],
+            []
+          ],
+          "projectedBounds": {
+            "x": [
+              -0.3321585452041223,
+              0.07678130725863481
+            ],
+            "y": [
+              -0.41606175874170276,
+              0.41300366204692995
+            ]
+          },
+          "worldBounds": {
+            "min": [
+              -2.6472096050684972,
+              0.008151327850123874,
+              -0.839647115306027
+            ],
+            "max": [
+              -0.5795687065852924,
+              2.4583683603222988,
+              1.0037952343227239
+            ]
+          }
+        }
+      },
+      "props": {
+        "frying_pan": {
+          "support": {
+            "name": "set:merged_static:wood",
+            "height": 0.7799999713897701,
+            "baseGap": 2.8610229962922062e-8
+          },
+          "visible": true,
+          "attachedTo": null,
+          "position": [
+            1.6,
+            0.78,
+            1.2
+          ],
+          "rotation": [
+            0,
+            0.8,
+            0,
+            "YXZ"
+          ],
+          "grip": [
+            1.4278345381841147,
+            0.81,
+            1.0327903897566804
+          ],
+          "worldBounds": {
+            "min": [
+              1.2758330640400315,
+              0.78,
+              0.8796692496037908
+            ],
+            "max": [
+              1.790898485618927,
+              0.8343813295662403,
+              1.3908984856189268
+            ]
+          },
+          "baseAgainstPrepTable": -0.41999999999999993
+        },
+        "pancakes": {
+          "support": {
+            "name": "nature:Bush_Common:Leaves_TwistedTree",
+            "height": 1.0071660204992976,
+            "baseGap": 0.19283397966834048
+          },
+          "visible": false,
+          "attachedTo": null,
+          "position": [
+            -11.4,
+            1.2,
+            -11.52
+          ],
+          "rotation": [
+            0,
+            0,
+            0,
+            "YXZ"
+          ],
+          "grip": [
+            -11.4,
+            1.2,
+            -11.52
+          ],
+          "worldBounds": {
+            "min": [
+              -11.550000005960465,
+              1.200000000167638,
+              -11.670000005960464
+            ],
+            "max": [
+              -11.249999994039536,
+              1.3424999982118606,
+              -11.369999994039535
+            ]
+          },
+          "baseAgainstPrepTable": 1.676381256032755e-10
+        },
+        "jam_jar": {
+          "support": {
+            "name": "set:merged_static:wood",
+            "height": 0.7799999713897705,
+            "baseGap": 2.8610229518832853e-8
+          },
+          "visible": true,
+          "attachedTo": null,
+          "position": [
+            1.62,
+            0.78,
+            1.74
+          ],
+          "rotation": [
+            0,
+            0,
+            0,
+            "YXZ"
+          ],
+          "grip": [
+            1.62,
+            0.78,
+            1.74
+          ],
+          "worldBounds": {
+            "min": [
+              1.5519999963045121,
+              0.78,
+              1.671999996304512
+            ],
+            "max": [
+              1.688000003695488,
+              0.9288000005483628,
+              1.808000003695488
+            ]
+          },
+          "baseAgainstPrepTable": -0.41999999999999993
+        },
+        "flour_bag": {
+          "support": {
+            "name": "set:merged_static:wood",
+            "height": 0.7799999713897705,
+            "baseGap": -0.025999966338276836
+          },
+          "visible": true,
+          "attachedTo": null,
+          "position": [
+            2.42,
+            0.78,
+            1.8
+          ],
+          "rotation": [
+            0,
+            0,
+            0,
+            "YXZ"
+          ],
+          "grip": [
+            2.42,
+            0.78,
+            1.8
+          ],
+          "worldBounds": {
+            "min": [
+              2.2900000047683715,
+              0.7540000050514937,
+              1.6986074924468995
+            ],
+            "max": [
+              2.5499999952316283,
+              1.1200000035762787,
+              1.9013925075531006
+            ]
+          },
+          "baseAgainstPrepTable": -0.4459999949485063
+        }
+      },
+      "house": {
+        "geometryVersion": "integrated-interior-v1",
+        "revision": "reviewed-wall-return-04",
+        "anchors": {
+          "chair": {
+            "position": [
+              -7.35,
+              0,
+              -14.35
+            ],
+            "bounds": {
+              "min": [
+                -8.189999973773956,
+                -7.1525572131747595e-9,
+                -14.927683806419372
+              ],
+              "max": [
+                -6.029999947547912,
+                1.725000023841858,
+                -13.70999995470047
+              ]
+            }
+          },
+          "prepTable": {
+            "position": [
+              -12.53,
+              0,
+              -11.45
+            ],
+            "bounds": {
+              "min": [
+                -13.804999976158141,
+                0,
+                -12.260000002384185
+              ],
+              "max": [
+                -11.255000023841857,
+                1.2000000476837158,
+                -10.639999997615813
+              ]
+            }
+          },
+          "tableSurfaceY": 1.2,
+          "diningSeatY": 0.64,
+          "helper": {
+            "position": [
+              -8,
+              0,
+              -13
+            ],
+            "bounds": {
+              "min": [
+                -11.309999942779541,
+                -1.390775050680304e-8,
+                -11.649999976158142
+              ],
+              "max": [
+                -10.049999952316284,
+                0.800000011920929,
+                -10.450000047683716
+              ]
+            }
+          }
+        }
+      },
+      "stats": {
+        "fps": 4.625346902547783,
+        "drawCalls": 152,
+        "triangles": 2264786
+      }
+    }
+  ],
+  "errors": [],
+  "failedRequests": []
+}

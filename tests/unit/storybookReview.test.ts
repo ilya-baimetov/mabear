@@ -6,10 +6,12 @@ import { FIXTURES } from "../../src/director/fixtures";
 import { evaluate } from "../../src/engine/player/evaluate";
 import { buildMasha } from "../../src/engine/characters/masha";
 import { buildBear } from "../../src/engine/characters/bear";
-import { planPath, segmentClear } from "../../src/compiler/path";
+import { applyCarryContacts } from "../../src/engine/characters/carryContacts";
+import type { CharacterRig } from "../../src/engine/api";
+import { planPath, segmentClear, interiorSegmentClear } from "../../src/compiler/path";
 import { standPos } from "../../src/compiler/compile";
-import { MARKS } from "../../src/shared/bible/set";
-import type { MarkId } from "../../src/shared/schema";
+import { MARKS, isInsideHouse } from "../../src/shared/bible/set";
+import type { ActorId, MarkId } from "../../src/shared/schema";
 
 describe("language changes preserve authored work", () => {
   beforeEach(() => {
@@ -71,6 +73,8 @@ describe("cast focus follows the rendered pose", () => {
         const frame = evaluate(timeline, t);
         masha.apply(frame.actors.masha);
         bear.apply(frame.actors.bear);
+        // Match the stage: the carry fit runs after both rigs are posed.
+        applyCarryContacts({masha,bear} as Record<ActorId,CharacterRig>,frame);
         bear.root.traverse(o => { if ((o as THREE.SkinnedMesh).isSkinnedMesh) (o as THREE.SkinnedMesh).computeBoundingSphere(); });
         const camera = castCloseup(masha, frame.actors.masha, 0.18);
         const origin = new THREE.Vector3(...camera.pos);
@@ -112,12 +116,23 @@ describe("scenery-safe routes", () => {
     for (const from of Object.keys(MARKS) as MarkId[]) for (const to of Object.keys(MARKS) as MarkId[]) {
       const path = planPath(standPos(from), standPos(to));
       expect(path.at(-1), `${from} → ${to}`).toEqual(standPos(to));
-      expect(path.slice(1).every((p, i) => segmentClear(path[i], p)), `${from} → ${to}`).toBe(true);
+      const fromInside=isInsideHouse(...standPos(from)),toInside=isInsideHouse(...standPos(to));
+      if(fromInside!==toInside){
+        // Different stages have no swept ground segment; compiler tests verify
+        // the short scene cut and its evaluated endpoints.
+        expect(path,`${from} → ${to} cut`).toEqual([standPos(from),standPos(to)]);
+      }else{
+        const clear=fromInside?interiorSegmentClear:segmentClear;
+        expect(path.slice(1).every((p,i)=>clear(path[i],p)),`${from} → ${to}`).toBe(true);
+      }
     }
   });
 
   it("connects the walkable pocket southwest of the pond without crossing the water", () => {
-    const to: [number, number] = [-13.92, -12.35];
+    // The former target is now part of the separately staged kitchen. Keep
+    // this regression about an exterior destination west of that floor.
+    const to: [number, number] = [-16.92, -12.35];
+    expect(isInsideHouse(...to)).toBe(false);
     const path = planPath([-10.48, 12.88], to);
     expect(path.at(-1)).toEqual(to);
     expect(path.slice(1).every((p, i) => segmentClear(path[i], p))).toBe(true);

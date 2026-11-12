@@ -32,6 +32,12 @@ export const take: VerbImpl = (lt, _p, ctx) => {
   const L = armsOver(ctx, reachArm, reach);
   const H = armsOver(ctx, holdArm(), hold);
   const out = blendLayers(L, H, hold);
+  if (_p.pickUpAt === 'house_kitchen') {
+    // The worktop is near hand height (Masha stands on the helper). A floor
+    // pickup's crouch put faces into the food and paws through the apron.
+    // Keep the body upright; the contact rig reaches the actual table edge.
+    return addLayer(out, pose({ Spine: rx(.06 * reach), Spine1: rx(.02 * reach) }));
+  }
   const bend = reach * byPersona(ctx.actor, 0.35, 0.6, 0.5);
   return addLayer(out, pose({ Spine: rx(bend), Spine1: rx(bend * 0.4) }, leg("Left", 0.3 * reach, 0.5 * reach), leg("Right", 0.3 * reach, 0.5 * reach)), 1, [0, -0.08 * ctx.style.hipHeight * reach, 0]);
 };
@@ -44,6 +50,15 @@ export const give: VerbImpl = (lt, _p, ctx) => {
   const L = armsOver(ctx, arm("Right", down, 1.35, 0.25 + 0.6 * (1 - ext), -0.3), 1);
   const out = addLayer(L, { Spine: rx(byPersona(ctx.actor, -0.05, 0.25, 0.15) * ext), Head: rz(0.15 * ext) });
   return { ...out, face: { emotion: ctx.emotion === "neutral" ? "happy" : ctx.emotion, browRaise: 0.3 * ext } };
+};
+
+/** Release at 50%; no crouch or throw impulse. Keep the hand steady at release. */
+export const drop: VerbImpl = (lt, _p, ctx) => {
+  const u=lt/ctx.dur,extend=smooth(u/.35),release=1-smooth((u-.5)/.35);
+  // Offer the ball clear of the skirt before releasing it. Reuse the ordinary
+  // arm layer; the physics trial deliberately excludes character/ball contact.
+  const reach=arm("Right",-.6,0,.1,0);
+  return blendLayers(armsOver(ctx,holdArm(),release),armsOver(ctx,reach,release),extend);
 };
 
 export const eat: VerbImpl = (lt, _p, ctx) => {
@@ -132,7 +147,7 @@ export const carry: VerbImpl = (lt, _p, ctx) => {
   const sway = Math.sin(lt * 1.6) * 0.04 * settled;
   const out = addLayer(L, pose(
     { Spine: rx(0.45 * squat * (1 - lift) - 0.04 * settled), Spine1: rz(sway), Neck: rx(-0.12 * settled), Head: qmul(rx(-0.18 * settled), ry(0.15 * Math.sin(lt * 0.9) * settled)) },
-    leg("Left", 0.6 * squat, 1.1 * squat), leg("Right", 0.6 * squat, 1.1 * squat),
+    leg("Left", 1.22 * squat, 2.4 * squat), leg("Right", 1.22 * squat, 2.4 * squat),
   ));
   return { ...out, face: { emotion: ctx.emotion === "neutral" ? "happy" : ctx.emotion, browRaise: 0.3 * settled } };
 };

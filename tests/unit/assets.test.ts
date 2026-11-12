@@ -101,7 +101,8 @@ describe("set data", () => {
 
   it("walkable heights: porch deck, ramped steps, pier, footbridge; ground elsewhere", () => {
     expect(walkHeightAt(MARKS.porch.pos[0], MARKS.porch.pos[1])).toBe(0);
-    expect(walkHeightAt(-6,-4.2)).toBeCloseTo(.22,2);
+    expect(walkHeightAt(-6.63,-4.4)).toBeCloseTo(.24,2);
+    expect(walkHeightAt(-6.63,-5.4)).toBeCloseTo(.48,2);
     expect(walkHeightAt(-6, -1.7)).toBe(0);
     expect(walkHeightAt(-6, -1.7)).toBeLessThan(0.3);
     expect(walkHeightAt(0, 0)).toBe(0);

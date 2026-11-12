@@ -3,6 +3,7 @@
 // (`source: { gltf: url }`, plus `skeletonMap` when the official rig doesn't use Mixamo bone names).
 // The `robot_test` entry is a working glTF example (three.js RobotExpressive.glb, CC0) loaded as a hidden character.
 import * as THREE from "three";
+import {openHouseAperture} from './set/houseDoor';
 import { ACTOR_IDS, PROP_IDS, type Vec3, type ActorId } from "../shared/schema";
 import type { ActorFrame, CharacterRig } from "./api";
 import { SET_ELEMENT_IDS, SET_ELEMENTS, type SetElementId } from "./set/bearsYard";
@@ -187,6 +188,7 @@ export async function loadSetOverrides(anchors: Record<SetElementId, THREE.Group
         });
         for(const child of [...anchors[id].children]) if(child.name !== 'set:bees') { anchors[id].remove(child); child.traverse(o=>(o as THREE.Mesh).geometry?.dispose()); }
         anchors[id].add(normalized);
+        if(id==='house')openHouseAperture(normalized);
         status.set(e.id, { id: e.id, source: "gltf", ok: true });
       } catch (err) {
         status.set(e.id, { id: e.id, source: "gltf", ok: false, error: String(err) });

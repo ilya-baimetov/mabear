@@ -3,11 +3,42 @@ import type {ActorFrame} from '../api';
 import {createMashaHands,MASHA_HAND} from './mashaHands';
 import {PROP_CONTACTS} from '../../shared/propContacts';
 import {clapOpen} from '../../shared/contactTiming';
+import {contactHands} from './contactHands';
+import {HOUSE_PREP_TABLE} from '../../shared/houseLayout';
+import {cookingSupportHeightAt} from '../../shared/cookingStation';
 
 type Hand={side:'Left'|'Right';arm:THREE.Bone;elbow:THREE.Bone;wrist:THREE.Bone;long:THREE.Vector3;normal:THREE.Vector3;width:THREE.Vector3;restQ:THREE.Quaternion;basis:THREE.Quaternion;scale:THREE.Vector3;palm:THREE.Vector3;grip:THREE.Vector3};
 const clamp=THREE.MathUtils.clamp;
 const point=(b:THREE.Object3D)=>b.getWorldPosition(new THREE.Vector3());
 const smooth=(v:number)=>{v=clamp(v,0,1);return v*v*(3-2*v);};
+
+/** Keep a carried object's base above the worktop while it still overlaps it.
+ * The correction fades outside the table, and uses the same pre-helper-lift
+ * coordinates as the contact solver. Outdoor carries are unaffected. */
+export function prepTableLift(frame:ActorFrame,item:string,origin:THREE.Vector3,handClearance=.06):number{
+ const radius=({frying_pan:.135,pancakes:.15,flour_bag:.13,jam_jar:.07}as Record<string,number>)[item];
+ if(radius===undefined)return 0;
+ const table=HOUSE_PREP_TABLE;
+ const outside=Math.max(Math.abs(origin.x-table.position[0])-table.width/2-radius,Math.abs(origin.z-table.position[1])-table.depth/2-radius);
+ const weight=1-smooth(Math.max(0,outside)/.12);
+ return Math.max(0,table.height+(item==='frying_pan'?.018:handClearance)+(item==='flour_bag'?.027:0)-cookingSupportHeightAt(frame.pos[0],frame.pos[2])-origin.y)*weight;
+}
+
+/** A tabletop pickup starts at the exposed rim/side. Only after lifting does
+ * the hand move underneath for the normal carry; reaching through the table
+ * to a bottom-center support point is not a valid acquisition pose. */
+export function kitchenSurfaceGrasp(frame:ActorFrame,data:NonNullable<ActorFrame['pickup']>){
+ const table=HOUSE_PREP_TABLE;
+ if(Math.abs(data.position[0]-table.position[0])>table.width/2+.05||Math.abs(data.position[2]-table.position[1])>table.depth/2+.05)return null;
+ const outward=new THREE.Vector3(frame.pos[0]-data.position[0],0,frame.pos[2]-data.position[2]).normalize();
+ if(data.item==='pancakes')return{offset:outward.clone().multiplyScalar(.145).add(new THREE.Vector3(0,.015,0)),normal:new THREE.Vector3(0,-1,0),long:outward.clone().negate(),outward};
+ if(data.item==='jam_jar')return{offset:outward.clone().multiplyScalar(.062).add(new THREE.Vector3(0,.08,0)),normal:outward.clone().negate(),long:new THREE.Vector3(0,1,0),outward};
+ if(data.item==='flour_bag'){
+  const radius=1/Math.sqrt((outward.x/.13)**2+(outward.z/.104)**2);
+  return{offset:outward.clone().multiplyScalar(radius).add(new THREE.Vector3(0,.13,0)),normal:outward.clone().negate(),long:new THREE.Vector3(0,1,0),outward};
+ }
+ return null;
+}
 
 /** Analytic two-bone IK with a stable elbow pole. It uses measured source
  * lengths, so retargeted arm proportions cannot silently miss the contact. */
@@ -52,11 +83,58 @@ export function createMashaContacts(meshes:THREE.SkinnedMesh[],bones:Record<stri
   const error=solveArm(h.arm,h.elbow,h.wrist,wristTarget,pole);
   h.wrist.quaternion.copy(h.wrist.parent!.getWorldQuaternion(new THREE.Quaternion()).invert().multiply(q));h.wrist.updateWorldMatrix(false,true);return error;
  };
+ contactHands.set(root,hands.map(h=>({side:(h.side==='Left'?1:-1) as 1|-1,place(target,long,normal,strength){
+  const base=[h.arm,h.elbow,h.wrist].map(b=>b.quaternion.clone()),q=orient(h,long,normal),error=place(h,target,q,h.palm);
+  if(strength<1)[h.arm,h.elbow,h.wrist].forEach((b,i)=>{const solved=b.quaternion.clone();b.quaternion.copy(base[i]).slerp(solved,strength);});
+  root.updateMatrixWorld(true);return {error,point:h.wrist.localToWorld(h.palm.clone())};
+ }})));
  return {update(frame:ActorFrame){
   socket.userData.preciseGrip=false;socket.position.set(0,0,0);socket.quaternion.identity();for(const key of Object.keys(metrics))delete metrics[key];
   const time=frame.action?.time??0,rootQ=torsoDelta(),vec=(x:number,y:number,z:number)=>new THREE.Vector3(x,y,z).applyQuaternion(rootQ);
   const freeClap=frame.verb==='clap'&&!frame.holding;
-  if(frame.putDown){
+  const reverseSurface=frame.putDown?kitchenSurfaceGrasp(frame,frame.putDown):null;
+  if(frame.pickup||reverseSurface){
+   const data=(frame.pickup??frame.putDown)!,h=hands[1],prop=PROP_CONTACTS[data.item],duration=frame.action?.duration??1,attach=duration*data.release,pickupTime=frame.pickup?time:duration-time;
+   const after=clamp((pickupTime-attach)/Math.max(.001,duration-attach),0,1),carry=clamp((after-.06)/.64,0,1),gripCarry=smooth((after-.18)/.52),strength=pickupTime<attach?smooth(pickupTime/Math.max(.001,attach-.035)):1;
+   const surfaceGrasp=kitchenSurfaceGrasp(frame,data);
+   const base=[h.arm,h.elbow,h.wrist].map(b=>b.quaternion.clone()),baseQ=h.wrist.getWorldQuaternion(new THREE.Quaternion());
+   const restingQ=new THREE.Quaternion().setFromEuler(new THREE.Euler(...data.rotation,'YXZ'));
+   const heldQ=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),frame.yaw).multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(...(prop.rotation??[0,0,0]),'YXZ')));
+   // Exact support of the rebuilt palm in any orientation, expressed in wrist
+   // space. This keeps the socket on the actual hand while IK reaches the prop.
+   const supportLocal=(q:THREE.Quaternion,direction:THREE.Vector3)=>{
+    const delta=q.clone().multiply(h.restQ.clone().invert()),axes=[h.long,h.width,h.normal].map(v=>v.clone().applyQuaternion(delta)),radii=[MASHA_HAND.palmLength,MASHA_HAND.palmWidth,MASHA_HAND.palmDepth];
+    const offset=h.palm.clone().multiply(h.scale).applyQuaternion(q).addScaledVector(axes[2],-MASHA_HAND.palmDepth),denom=Math.hypot(...axes.map((axis,i)=>radii[i]*axis.dot(direction)));
+    for(let i=0;i<3;i++)offset.addScaledVector(axes[i],radii[i]**2*axes[i].dot(direction)/Math.max(denom,1e-9));
+    return offset.applyQuaternion(q.clone().invert()).divide(h.scale);
+   };
+   const heldDirection=prop.support?new THREE.Vector3(0,1,0):new THREE.Vector3(0,0,1).applyQuaternion(heldQ);
+   const heldOrigin=h.wrist.localToWorld(supportLocal(baseQ,heldDirection)).addScaledVector(heldDirection,prop.radius+.0005).sub(new THREE.Vector3(...prop.point).applyQuaternion(heldQ));
+   heldOrigin.y+=prepTableLift(frame,data.item,heldOrigin);
+   const origin=new THREE.Vector3(...data.position);
+   // Ownership changes only after full contact. Withdraw vertically first,
+   // then return toward the authored carry pose instead of dragging through a table.
+   if(pickupTime>attach)origin.y+=.12*smooth(after/.18);
+   origin.lerp(heldOrigin,carry);
+   const horizontal=Math.hypot(origin.x-data.position[0],origin.z-data.position[2]);
+   if(pickupTime>attach)origin.y=Math.max(origin.y,data.position[1]+.025*smooth(after/.1)*(1-smooth((horizontal-.15)/.25)));
+   if(pickupTime>attach)origin.y+=prepTableLift(frame,data.item,origin)*smooth(after/.1);
+   const objectQ=restingQ.clone().slerp(heldQ,carry),objectDelta=objectQ.clone().multiply(restingQ.clone().invert());
+   const normal=surfaceGrasp?surfaceGrasp.normal.clone().applyQuaternion(objectDelta):prop.support?new THREE.Vector3(0,1,0):new THREE.Vector3(0,0,1).applyQuaternion(restingQ);
+   const long=surfaceGrasp?surfaceGrasp.long.clone().applyQuaternion(objectDelta):prop.support?new THREE.Vector3(data.position[0],point(h.arm).y,data.position[2]).sub(point(h.arm)).normalize():new THREE.Vector3(1,0,0).applyQuaternion(restingQ);
+   const direction=normal.clone().lerp(heldDirection,surfaceGrasp?gripCarry:carry);
+   if(surfaceGrasp&&normal.dot(heldDirection)<-.99)direction.addScaledVector(surfaceGrasp.outward,-Math.sin(gripCarry*Math.PI));direction.normalize();
+   const gripOffset=new THREE.Vector3(...prop.point).applyQuaternion(objectQ);
+   if(surfaceGrasp)gripOffset.copy(surfaceGrasp.offset).applyQuaternion(objectDelta).lerp(new THREE.Vector3(...prop.point).applyQuaternion(objectQ),gripCarry);
+   const contactQ=orient(h,long,normal),handQ=contactQ.slerp(baseQ,surfaceGrasp?gripCarry:carry);
+   const target=origin.clone().add(gripOffset).addScaledVector(direction,-prop.radius-.0005);
+   const reachError=place(h,target,handQ,supportLocal(handQ,direction));
+   if(strength<1)[h.arm,h.elbow,h.wrist].forEach((b,i)=>{const solved=b.quaternion.clone();b.quaternion.copy(base[i]).slerp(solved,strength);});
+   root.updateMatrixWorld(true);
+   const actualQ=h.wrist.getWorldQuaternion(new THREE.Quaternion()),touch=h.wrist.localToWorld(supportLocal(actualQ,direction)),actualOrigin=touch.clone().addScaledVector(direction,prop.radius+.0005).sub(gripOffset);
+   socket.position.copy(h.wrist.worldToLocal(actualOrigin.clone()));socket.quaternion.copy(actualQ.invert().multiply(objectQ));socket.userData.preciseGrip=true;socket.updateWorldMatrix(false,true);
+   Object.assign(metrics,{mode:frame.pickup?'pickup':'putDown',prop:data.item,strength,reachError,attachmentError:actualOrigin.distanceTo(new THREE.Vector3(...data.position)),targetError:actualOrigin.distanceTo(origin),contactPoint:touch.toArray(),targetPoint:target.toArray(),withdrawal:after,surfaceGrip:!!surfaceGrasp,releaseError:actualOrigin.distanceTo(new THREE.Vector3(...data.position))});
+  }else if(frame.putDown){
    const h=hands[1],data=frame.putDown,prop=PROP_CONTACTS[data.item],duration=frame.action?.duration??1,release=duration*data.release,hold=.035;
    const strength=Math.min(smooth(time/Math.max(.001,release-hold)),smooth((duration-time)/Math.max(.001,duration-release-hold)));
    const base=[h.arm,h.elbow,h.wrist].map(b=>b.quaternion.clone()),restObjectQ=new THREE.Quaternion().setFromEuler(new THREE.Euler(...data.rotation,'YXZ'));
@@ -123,6 +201,13 @@ export function createMashaContacts(meshes:THREE.SkinnedMesh[],bones:Record<stri
    const centre=h.wrist.localToWorld(h.palm.clone()).addScaledVector(axes[2],-MASHA_HAND.palmDepth),denom=Math.hypot(...axes.map((axis,i)=>radii[i]*axis.dot(direction))),touch=centre.clone();
    for(let i=0;i<3;i++)touch.addScaledVector(axes[i],radii[i]**2*axes[i].dot(direction)/Math.max(denom,1e-9));
    const anchor=touch.clone().addScaledVector(direction,prop.radius+.0005),origin=anchor.clone().sub(new THREE.Vector3(...prop.point).applyQuaternion(objectQ));
+   const tableLift=prepTableLift(frame,frame.holding,origin);
+   if(tableLift>0){
+    const localContact=h.wrist.worldToLocal(touch.clone()),target=touch.clone();target.y+=tableLift;
+    const reachError=place(h,target,wristQ,localContact);root.updateMatrixWorld(true);
+    touch.copy(h.wrist.localToWorld(localContact));anchor.copy(touch).addScaledVector(direction,prop.radius+.0005);origin.copy(anchor).sub(new THREE.Vector3(...prop.point).applyQuaternion(objectQ));
+    Object.assign(metrics,{tableClearanceLift:tableLift,reachError});
+   }
    socket.position.copy(h.wrist.worldToLocal(origin));socket.quaternion.copy(wristQ.invert().multiply(objectQ));socket.userData.preciseGrip=true;socket.updateWorldMatrix(false,true);
    Object.assign(metrics,{mode:'prop',prop:frame.holding,contactPoint:touch.toArray(),gripPoint:anchor.toArray(),radius:prop.radius});
   }else{socket.position.set(0,0,0);socket.quaternion.identity();metrics.mode='free';}

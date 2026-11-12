@@ -1,0 +1,88 @@
+{
+  "ffmpeg": "ffmpeg version 9.0 Copyright (c) 2000-2026 the FFmpeg developers",
+  "verifiedAt": "2026-11-07T09:55:51.509Z",
+  "decodeMode": "Full and final-two-second decode; fail on errors; preserve native variable frame timestamps and demuxer time base",
+  "results": [
+    {
+      "path": "before/cozy_evening_en.mp4",
+      "bytes": 22367879,
+      "frames": 1024,
+      "decodedSeconds": 34.126133,
+      "tailFrames": 60,
+      "tailDimensions": [
+        1280,
+        768
+      ],
+      "tailChannelStandardDeviation": [
+        56.624525542745836,
+        60.79118106002514,
+        50.10938680882509
+      ]
+    },
+    {
+      "path": "before/kitchen_visit.mp4",
+      "bytes": 29975118,
+      "frames": 1354,
+      "decodedSeconds": 45.116567,
+      "tailFrames": 60,
+      "tailDimensions": [
+        1280,
+        768
+      ],
+      "tailChannelStandardDeviation": [
+        56.723108648075495,
+        57.33490628718887,
+        52.28851042763569
+      ]
+    },
+    {
+      "path": "after/cozy_evening_en.mp4",
+      "bytes": 25356431,
+      "frames": 1162,
+      "decodedSeconds": 38.726567,
+      "tailFrames": 60,
+      "tailDimensions": [
+        1280,
+        768
+      ],
+      "tailChannelStandardDeviation": [
+        57.64920636417502,
+        59.94894980287113,
+        50.3324875229907
+      ]
+    },
+    {
+      "path": "after/kitchen_visit.mp4",
+      "bytes": 33004673,
+      "frames": 1512,
+      "decodedSeconds": 50.3807,
+      "tailFrames": 60,
+      "tailDimensions": [
+        1280,
+        768
+      ],
+      "tailChannelStandardDeviation": [
+        47.53906436399562,
+        43.9437556718983,
+        43.422793242527234
+      ]
+    },
+    {
+      "path": "comparison/interior-before-after.mp4",
+      "bytes": 28440701,
+      "frames": 889,
+      "decodedSeconds": 30.027767,
+      "tailFrames": 60,
+      "tailDimensions": [
+        1920,
+        600
+      ],
+      "tailChannelStandardDeviation": [
+        60.998027442883064,
+        65.17271625115639,
+        61.413535883960336
+      ]
+    }
+  ],
+  "errors": []
+}

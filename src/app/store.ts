@@ -181,7 +181,7 @@ export function exportLog(): string {
 
 /** What changes staging between paragraphs: every actor's posture and held item (not position or facing). */
 export function materialDigest(ws: WorldState): string {
-  return ACTOR_IDS.map((id) => `${id}:${ws.actors[id]?.posture ?? "-"}:${ws.actors[id]?.holding ?? "-"}`).join("|");
+  return ACTOR_IDS.map((id) => `${id}:${ws.actors[id]?.posture ?? "-"}:${ws.actors[id]?.holding ?? "-"}`).join("|")+`|door:${ws.objects?.house_door??0}`;
 }
 
 function emptyTimeline(): Timeline {

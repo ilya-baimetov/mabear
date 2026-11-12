@@ -1,9 +1,10 @@
 // Body verbs and held postures (sit, lie, carried). Dance uses the RobotExpressive clip for the upper body;
 // the rest is procedural on top of the Mixamo idle.
 import type { Quat } from "../../api";
+import {armchairMountMotion,hammockTiming} from "../../../shared/physicalInteractions";
 import { addLayer, blendLayers, clamp01, easeInOut, qmul, smooth, window01, type PoseLayer } from "../blend";
 import {
-  UPPER, UPPER_NO_HEAD, arm, byPersona, idleBase, raiseArms, layer, leg, mask, noise1, pose, poseClip, rx, ry, rz,
+  UPPER, UPPER_NO_HEAD, arm, byPersona, idleBase, raiseArms, layer, leg, lowestFoot, mask, noise1, pose, poseClip, rx, ry, rz,
   sampleClip, type VerbCtx, type VerbImpl,
 } from "./common";
 
@@ -22,9 +23,12 @@ export function sitPose(ctx: VerbCtx): PoseLayer {
   const breathe = Math.sin(t * style.breathRate * Math.PI * 2) * 0.015;
   const swing = ctx.actor === "masha" ? Math.sin(t * 3.1) * 0.25 : 0; // Masha swings her dangling feet
   if (ctx.seat > 0.15) {
-    // on a bench / step: thighs forward, shins hanging
+    // Bear's broad seated mesh needs its knees in front of the armchair edge;
+    // the ordinary bench bend otherwise folds his shins through the cushion.
+    const chairBear = ctx.seatProfile === "armchair" && ctx.actor === "bear";
+    const knee = chairBear ? 1.5 : 1.3, out = chairBear ? .10 : .08;
     return layer(pose(
-      leg("Left", 1.5, 1.3 + swing, 0.08), leg("Right", 1.5, 1.3 - swing, 0.08),
+      leg("Left", 1.5, knee + swing, out), leg("Right", 1.5, knee - swing, out),
       arm("Left", 1.0, 0.55, 0.7), arm("Right", 1.0, 0.55, 0.7),
       { Spine: rx(0.05 + breathe), Head: ry(noise1(t * 0.4, 7) * 0.3) },
     ), [0, ctx.seat + (ctx.seatClearance ?? ((ctx.actor === "wolf_a" || ctx.actor === "wolf_b") ? (ctx.actor === "wolf_a" ? .215 : .19) * style.height / 2 : .04 * h)) - h, ctx.seatForward??-0.12*h]);
@@ -57,7 +61,7 @@ export function liePose(ctx: VerbCtx): PoseLayer {
     { Hips: LIE, Spine1: rx(-0.04 * br), Spine2: rx(-0.05 * br), Head: qmul(rx(-0.15), ry(0.35)) },
     leg("Left", 0.15, 0.25, 0.06), leg("Right", 0.25, 0.35, 0.04),
     arm("Left", 1.2, 0.7, 0.9), arm("Right", 1.2, 0.7, 0.9),
-  ), [0, ctx.seat + style.lieHeight - h, 0], { face: { lidClose: 1, emotion: "sleepy" } });
+  ), [0, ctx.seat + style.lieHeight + (ctx.lieClearance??0) - h, 0], { face: { lidClose: 1, emotion: "sleepy" } });
 }
 
 /** Masha riding on Bear's shoulders: legs astride, hands resting on his head. */
@@ -65,9 +69,9 @@ export function carriedPose(ctx: VerbCtx): PoseLayer {
   const { t } = ctx;
   const kick = Math.sin(t * 2.4) * 0.15;
   return layer(pose(
-    leg("Left", 1.35, 1.4 + kick, 0.55), leg("Right", 1.35, 1.4 - kick, 0.55),
+    leg("Left", 1.35, 1.4 + kick*.25, 0.90), leg("Right", 1.35, 1.4 - kick*.25, 0.90),
     arm("Left", 0.9, 1.2, 1.0, -0.6), arm("Right", 0.9, 1.2, 1.0, -0.6),
-    { Spine: rx(0.1), Head: ry(noise1(t * 0.5, 9) * 0.4) },
+    { Spine: rx(-.45), Spine1: rx(-.12), Head: qmul(rx(.50),ry(noise1(t * 0.5, 9) * 0.18)) },
   ), [0, -ctx.style.hipHeight * 0.85, 0]);
 }
 
@@ -135,6 +139,12 @@ export const dance: VerbImpl = (lt, _p, ctx) => {
 
 export const sit: VerbImpl = (lt, _p, ctx) => {
   const seated = ctx.fromPosture === "sit";
+  if(!seated&&ctx.seatProfile==='armchair'&&_p.to){
+    const motion=armchairMountMotion(ctx.actor==='masha',lt/ctx.dur);
+    const pose=blendLayers(standPose(ctx),sitPose(ctx),motion.pose);
+    const anticipatory=motion.crouch?addLayer(pose,{...leg('Left',.3*motion.crouch,.6*motion.crouch),...leg('Right',.3*motion.crouch,.6*motion.crouch)},1,[0,-.045*motion.crouch,0]):pose;
+    return{...anticipatory,ground:'lock',groundW:motion.ground,lift:motion.lift};
+  }
   const from = seated ? sitPose(ctx) : standPose(ctx);
   const k = lt / Math.min(0.9, ctx.dur);
   const wolfOnGround = (ctx.actor === "wolf_a" || ctx.actor === "wolf_b") && ctx.seat <= .15;
@@ -144,6 +154,7 @@ export const sit: VerbImpl = (lt, _p, ctx) => {
 };
 
 export const stand_up: VerbImpl = (lt, _p, ctx) => {
+  if(_p.target==='hammock'&&_p.to&&(ctx.fromPosture==='sit'||ctx.fromPosture==='sleep'))return hammockDismount(lt,_p,ctx);
   if (ctx.fromPosture === "stand" || ctx.fromPosture === "offstage") return idleBase(ctx); // already up
   const from = ctx.fromPosture === "sleep" ? liePose(ctx) : ctx.fromPosture === "sit" ? sitPose(ctx) : sitPose({ ...ctx, seat: 0 });
   const L = transition(from, standPose(ctx), lt / ctx.dur);
@@ -176,13 +187,57 @@ export const fall_down: VerbImpl = (lt, _p, ctx) => {
 };
 
 export const sleep: VerbImpl = (lt, _p, ctx) => {
+  if(_p.target==='hammock'&&_p.to&&ctx.fromPosture!=='sleep')return hammockMount(lt,_p,ctx);
   const from = ctx.fromPosture === "sleep" ? liePose(ctx) : ctx.fromPosture === "sit" ? sitPose(ctx) : standPose(ctx);
   const k = ctx.fromPosture === "sleep" ? 1 : lt / Math.min(1.4, ctx.dur * 0.4);
   const L = transition(from, liePose(ctx), k);
   return { ...L, groundW: ctx.fromPosture === "stand" ? 1 - easeInOut(k) : 0, face: { lidClose: smooth(k), emotion: "sleepy" } };
 };
 
+/** Seat contact persists through the swivel. Only the brief parabolic hop
+ * travels horizontally, followed immediately by a planted landing compression. */
+function hammockSeat(ctx:VerbCtx):PoseLayer{
+ const seated=sitPose(ctx);
+ return {...seated,bones:{...seated.bones,...leg('Left',1.8,.35,.10,1.45),...leg('Right',1.8,.35,.10,1.45)}};
+}
+function hammockGround(ctx:VerbCtx,depth:number):PoseLayer{
+ const base=standPose(ctx),bones={...base.bones,...leg('Left',depth,depth*2,.10,-depth),...leg('Right',depth,depth*2,.10,-depth),Spine:rx(.12*depth),...arm('Left',1.2,.25,.45),...arm('Right',1.2,.25,.45)};
+ const offset:[number,number,number]=[0,0,0];offset[1]=-lowestFoot(bones,offset,ctx.style);
+ return {...base,bones,hipsOffset:offset,ground:'free',groundW:1};
+}
+function hammockFlight(from:PoseLayer,to:PoseLayer,k:number,poseK:number,arc:number):PoseLayer{
+ const L=blendLayers(from,to,poseK);
+ return {...L,hipsOffset:[from.hipsOffset[0]+(to.hipsOffset[0]-from.hipsOffset[0])*k,from.hipsOffset[1]+(to.hipsOffset[1]-from.hipsOffset[1])*k+4*arc*k*(1-k),from.hipsOffset[2]+(to.hipsOffset[2]-from.hipsOffset[2])*k],ground:'free',groundW:0};
+}
+export const hammockMount:VerbImpl=(lt,_p,ctx)=>{
+ const {launch,land,settled}=hammockTiming(true,ctx.dur),seated=hammockSeat(ctx),q=clamp01((lt-launch)/(land-launch));
+ let L:PoseLayer;
+ if(lt<launch){const preload=Math.sin(Math.PI*.5*clamp01(lt/launch));L=hammockGround(ctx,.48*preload);}
+ else if(lt<land)L=hammockFlight(hammockGround(ctx,.48),seated,q,smooth(q/.5),.47);
+ else {const lieK=smooth((lt-settled)/Math.min(1.05,Math.max(.2,ctx.dur-settled))),settle=Math.sin(Math.PI*clamp01((lt-land)/(settled-land)))*.025;L=blendLayers(seated,liePose(ctx),lieK);L={...L,hipsOffset:[L.hipsOffset[0],L.hipsOffset[1]-settle,L.hipsOffset[2]],ground:'free',groundW:0,face:{lidClose:lieK,emotion:'sleepy'}};}
+ return L;
+};
+export const hammockDismount:VerbImpl=(lt,_p,ctx)=>{
+ const {launch,land,settled}=hammockTiming(false,ctx.dur),seated=hammockSeat(ctx),initial=ctx.fromPosture==='sleep'?liePose(ctx):seated;
+ let L:PoseLayer;
+ if(lt<launch){
+  L=transition(initial,seated,lt/Math.min(.38,launch*.46));
+  // A small supported forward lean announces the push off; the pelvis stays on cloth.
+  const push=smooth((lt-(launch-.15))/.15);L={...L,bones:{...L.bones,Spine:rx(.16*push)},ground:'free',groundW:0};
+ }else if(lt<land){
+  const q=(lt-launch)/(land-launch),landing=hammockGround(ctx,.50);
+  L=hammockFlight(seated,landing,q,smooth((q-.25)/.75),.25);
+ }else{
+  const q=clamp01((lt-land)/Math.max(.001,settled-land));
+  // Soles plant at touchdown; knees absorb weight, then recover at a fixed root.
+  const depth=.50+.15*Math.sin(Math.PI*clamp01(q/.42))-.50*smooth((q-.18)/.82);
+  L=hammockGround(ctx,depth);
+ }
+ return {...L,face:{lidClose:ctx.fromPosture==='sleep'?1-smooth(lt/.40):0,emotion:'sleepy'}};
+};
+
 export const wake_up: VerbImpl = (lt, _p, ctx) => {
+  if(_p.target==='hammock'&&_p.to&&(ctx.fromPosture==='sleep'||ctx.fromPosture==='sit'))return hammockDismount(lt,_p,ctx);
   const u = lt / ctx.dur;
   const lie = ctx.fromPosture === "sleep" ? liePose(ctx) : standPose(ctx);
   const sitUp = sitPose({ ...ctx, seat: ctx.fromPosture === "sleep" ? ctx.seat : 0 });

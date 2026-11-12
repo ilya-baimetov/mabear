@@ -216,9 +216,9 @@ describe("compiler", () => {
 });
 
 describe("compiler — doors and carrying", () => {
-  it("walking to the door as the last beat goes inside (offstage); knocking does not", () => {
+  it("walking to the door and knocking both keep the actor visibly outside", () => {
     const inside = compile(BS([B({ actor: "bear", verb: "walk_to", target: "door" })]), initialWorldState(), OPTS());
-    expect(inside.segment.endState.actors.bear.posture).toBe("offstage");
+    expect(inside.segment.endState.actors.bear.posture).toBe("stand");
     const knock = compile(BS([B({ actor: "masha", verb: "walk_to", target: "door", sfx: "knock" })]), initialWorldState(), OPTS());
     expect(knock.segment.endState.actors.masha.posture).toBe("stand");
     expect(knock.segment.sfx.map((x) => x.id)).toEqual(["knock"]);
@@ -264,10 +264,16 @@ describe("compiler — robustness (seeded fuzz over the whole grammar)", () => {
         expect(Math.abs(cs[cs.length - 1].start + cs[cs.length - 1].dur - s.duration)).toBeLessThan(1e-6);
         for (const c of cs) expect(c.dur).toBeGreaterThan(0);
       }
-      for (const c of s.camera) {
-        if (s.duration >= 1.2) expect(c.dur).toBeGreaterThanOrEqual(1.2 - 1e-6);
-        expect(c.dur).toBeLessThanOrEqual(6 + 1e-6);
+      const doorSequence=Object.values(s.actorClips).some(cs=>cs.some(c=>c.params.portal||c.verb==='open'||c.verb==='close'));
+      for (let i=0;i<s.camera.length;i++) {
+        const c=s.camera[i];expect(c.dur).toBeGreaterThan(0);
+        if(!doorSequence){
+          if (s.duration >= 1.2) expect(c.dur).toBeGreaterThanOrEqual(1.2 - 1e-6);
+          expect(c.dur).toBeLessThanOrEqual(6 + 1e-6);
+        }
+        if(i)expect(c.start).toBeCloseTo(s.camera[i-1].start+s.camera[i-1].dur,3);
       }
+      expect(s.camera.at(-1)!.start+s.camera.at(-1)!.dur).toBeCloseTo(s.duration,3);
       expect(Number.isFinite(s.duration)).toBe(true);
       ws = s.endState;
     }

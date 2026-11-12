@@ -10,13 +10,12 @@ import { CHARACTERS } from "../../shared/bible/characters";
 import { reactionTimeline } from "../react";
 import { publishStoryboardFrames } from "../storyboardFrames";
 import { storyboardTime } from "../storyboardTime";
-import { evaluate } from "../../engine/player/evaluate";
 import { castCloseup } from "../castCamera";
 import { MapPin, Maximize, Hand, LoaderCircle, Trees, ChevronRight, Users } from "lucide-react";
 
 declare global {
   interface Window {
-    __mabear?: { assets: () => unknown; rigs: () => unknown; screenOf: (actor: ActorId) => [number, number] | null; closeup: (actor: ActorId | null, angle?: number) => void; wide: (pos: [number, number, number], look: [number, number, number], fov?: number) => void; stats: () => { fps: number; drawCalls: number; triangles: number } | null; t: () => number; playing: () => boolean; segments: () => number; timeline: () => unknown; compiles: () => number; freeze: (on: boolean) => void; snapshot: () => string | null; quality: () => { scale: number; post: number } | null };
+    __mabear?: { objects:()=>unknown; physics: () => unknown; assets: () => unknown; rigs: () => unknown; screenOf: (actor: ActorId) => [number, number] | null; closeup: (actor: ActorId | null, angle?: number) => void; wide: (pos: [number, number, number], look: [number, number, number], fov?: number) => void; stats: () => { fps: number; drawCalls: number; triangles: number } | null; t: () => number; playing: () => boolean; segments: () => number; timeline: () => unknown; compiles: () => number; freeze: (on: boolean) => void; snapshot: () => string | null; quality: () => { scale: number; post: number } | null };
   }
 }
 
@@ -74,6 +73,17 @@ export function Stage({ exploring = false }: { exploring?: boolean }) {
         stage.dispose();
         return;
       }
+      // Supported stories use physics by default; keep a diagnostic animation control.
+      const trial = new URLSearchParams(window.location.search).get('physics') !== 'off';
+      let evaluator: import('../../engine/physics/rapierReplay').RapierReplay | undefined;
+      if (trial) {
+        try {
+          await stage.assetsReady;
+          const {createStageReplay} = await import('../../engine/physics/stageReplay');
+          evaluator = await createStageReplay(stage);
+        } catch (error) { console.warn('Physics unavailable; using animation playback.', error); }
+        if (disposed) { evaluator?.dispose(); stage.dispose(); return; }
+      }
       let audio: AudioEngine | null = null;
       try {
         audio = audioMod ? audioMod.createAudioEngine() : null;
@@ -84,6 +94,7 @@ export function Stage({ exploring = false }: { exploring?: boolean }) {
       const player = new Player({
         stage,
         audio,
+        evaluator,
         onFrame: frame => {
           const next = frame.camera.location ?? "yard";
           if (locationRef.current !== next) { locationRef.current = next; setLocation(next); }
@@ -112,6 +123,8 @@ export function Stage({ exploring = false }: { exploring?: boolean }) {
       ro = new ResizeObserver(fit);
       if (wrap.current) ro.observe(wrap.current);
       window.__mabear = {
+        objects:()=>({state:player.frame?.objects,panels:['outside','inside'].map(side=>{const o=stage.set.root.getObjectByName(`object:house_door:${side}`);return {side,open:o?.userData.open};})}),
+        physics:()=>evaluator?.inspect(store.getState().timeline,player.time)??null,
         assets:()=>stage.assets(),
         rigs:()=>Object.fromEntries(ACTOR_IDS.map(id=>[id,{name:stage.rigs[id].root.name,asset:stage.rigs[id].root.userData.asset,generated:stage.rigs[id].root.userData.generated}])),
         screenOf: (actor) => {
@@ -195,7 +208,7 @@ export function Stage({ exploring = false }: { exploring?: boolean }) {
       const end = entry.offset + entry.segment.duration;
       const bounded = { segments: s.timeline.segments.slice(0, index + 1), duration: end };
       try {
-        stage.render(evaluate(bounded, entry.offset + storyboardTime(entry.segment)));
+        stage.render(player.evaluateFrame(bounded, entry.offset + storyboardTime(entry.segment)));
         const source = canvas.current;
         const cropWidth = Math.min(source.width, source.height * 16 / 9);
         const cropHeight = Math.min(source.height, source.width * 9 / 16);

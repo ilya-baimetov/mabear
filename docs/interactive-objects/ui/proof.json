@@ -1,0 +1,275 @@
+{
+  "defaultPhysics": {
+    "t": 0,
+    "root": null,
+    "grounded": false,
+    "stride": 1,
+    "ball": null,
+    "sleeping": false,
+    "reason": "empty timeline",
+    "steps": 0,
+    "computeMs": 0,
+    "samples": 1,
+    "caches": 1,
+    "revision": 1
+  },
+  "paused": {
+    "t": 7.317,
+    "playing": false,
+    "objects": {
+      "state": {
+        "house_door": 0.5787705667743399
+      },
+      "panels": [
+        {
+          "side": "outside",
+          "open": 0.5787705667743399
+        },
+        {
+          "side": "inside",
+          "open": 0.5787705667743399
+        }
+      ]
+    },
+    "physics": {
+      "t": 7.317,
+      "root": [
+        0.25000086426734924,
+        0.00009893417358397549,
+        0.5000012516975403
+      ],
+      "grounded": true,
+      "stride": 1,
+      "ball": null,
+      "sleeping": false,
+      "reason": null,
+      "steps": 1113,
+      "computeMs": 245.40000009536743,
+      "samples": 1114,
+      "caches": 1,
+      "revision": 2
+    }
+  },
+  "held": {
+    "t": 7.317,
+    "playing": false,
+    "objects": {
+      "state": {
+        "house_door": 0.5787705667743399
+      },
+      "panels": [
+        {
+          "side": "outside",
+          "open": 0.5787705667743399
+        },
+        {
+          "side": "inside",
+          "open": 0.5787705667743399
+        }
+      ]
+    },
+    "physics": {
+      "t": 7.317,
+      "root": [
+        0.25000086426734924,
+        0.00009893417358397549,
+        0.5000012516975403
+      ],
+      "grounded": true,
+      "stride": 1,
+      "ball": null,
+      "sleeping": false,
+      "reason": null,
+      "steps": 1113,
+      "computeMs": 245.40000009536743,
+      "samples": 1114,
+      "caches": 1,
+      "revision": 2
+    }
+  },
+  "future": {
+    "t": 12.837920754866166,
+    "playing": false,
+    "objects": {
+      "state": {
+        "house_door": 1
+      },
+      "panels": [
+        {
+          "side": "outside",
+          "open": 1
+        },
+        {
+          "side": "inside",
+          "open": 1
+        }
+      ]
+    },
+    "physics": {
+      "t": 12.837920754866166,
+      "root": [
+        0.25000086426734924,
+        0.00009893417358397549,
+        0.5000012516975403
+      ],
+      "grounded": true,
+      "stride": 1,
+      "ball": null,
+      "sleeping": false,
+      "reason": null,
+      "steps": 1113,
+      "computeMs": 245.40000009536743,
+      "samples": 1114,
+      "caches": 1,
+      "revision": 2
+    }
+  },
+  "back": {
+    "t": 0,
+    "playing": false,
+    "objects": {
+      "state": {
+        "house_door": 0
+      },
+      "panels": [
+        {
+          "side": "outside",
+          "open": 0
+        },
+        {
+          "side": "inside",
+          "open": 0
+        }
+      ]
+    },
+    "physics": {
+      "t": 0,
+      "root": [
+        0.25,
+        -9.536743172944284e-9,
+        0.5
+      ],
+      "grounded": false,
+      "stride": 1,
+      "ball": null,
+      "sleeping": false,
+      "reason": null,
+      "steps": 1113,
+      "computeMs": 245.40000009536743,
+      "samples": 1114,
+      "caches": 1,
+      "revision": 2
+    }
+  },
+  "again": {
+    "t": 12.837920754866166,
+    "playing": false,
+    "objects": {
+      "state": {
+        "house_door": 1
+      },
+      "panels": [
+        {
+          "side": "outside",
+          "open": 1
+        },
+        {
+          "side": "inside",
+          "open": 1
+        }
+      ]
+    },
+    "physics": {
+      "t": 12.837920754866166,
+      "root": [
+        0.25000086426734924,
+        0.00009893417358397549,
+        0.5000012516975403
+      ],
+      "grounded": true,
+      "stride": 1,
+      "ball": null,
+      "sleeping": false,
+      "reason": null,
+      "steps": 1113,
+      "computeMs": 245.40000009536743,
+      "samples": 1114,
+      "caches": 1,
+      "revision": 2
+    }
+  },
+  "edited": {
+    "t": 0.35889999985694887,
+    "playing": false,
+    "objects": {
+      "state": {
+        "house_door": 0
+      },
+      "panels": [
+        {
+          "side": "outside",
+          "open": 0
+        },
+        {
+          "side": "inside",
+          "open": 0
+        }
+      ]
+    },
+    "physics": {
+      "t": 0.35889999985694887,
+      "root": null,
+      "grounded": false,
+      "stride": 1,
+      "ball": null,
+      "sleeping": false,
+      "reason": "authored choreography: wave",
+      "steps": 0,
+      "computeMs": 0,
+      "samples": 1,
+      "caches": 1,
+      "revision": 4
+    }
+  },
+  "deleted": {
+    "t": 0,
+    "playing": false,
+    "objects": {
+      "state": {
+        "house_door": 0
+      },
+      "panels": [
+        {
+          "side": "outside",
+          "open": 0
+        },
+        {
+          "side": "inside",
+          "open": 0
+        }
+      ]
+    },
+    "physics": {
+      "t": 0,
+      "root": [
+        0.25,
+        -9.536743172944284e-9,
+        0.5
+      ],
+      "grounded": false,
+      "stride": 1,
+      "ball": null,
+      "sleeping": false,
+      "reason": null,
+      "steps": 0,
+      "computeMs": 0,
+      "samples": 1,
+      "caches": 1,
+      "revision": 5
+    }
+  },
+  "errors": [],
+  "interceptedApiRequests": [
+    "http://127.0.0.1:8801/api/direct"
+  ]
+}

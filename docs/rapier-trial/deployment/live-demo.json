@@ -1,0 +1,26 @@
+{
+  "story": "drop",
+  "time": 3,
+  "enabled": true,
+  "playing": false,
+  "ball": {
+    "visible": true,
+    "attachedTo": null,
+    "pos": [
+      2.024539995411177,
+      0.4699317576406666,
+      2.845864067969472
+    ],
+    "rotation": [
+      4.273086631201295e-07,
+      0.7071863412857056,
+      -2.519973713788204e-05,
+      0.7070271968841553
+    ]
+  },
+  "physics": {
+    "reason": null,
+    "steps": 180,
+    "samples": 181
+  }
+}

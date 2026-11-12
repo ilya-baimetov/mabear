@@ -1,0 +1,21 @@
+# Review → update, 9 November 2026
+
+Self-review of the current implementation, followed by behavioral and rendered checks. No independent reviewer is claimed.
+
+| Finding | Consequence | Update / verification |
+|---|---|---|
+| Old compiler treated a final walk to `door` as offstage | Bear disappeared rather than entering | Removed that inference. Merely approaching stays visible. Crossing includes approach, opening, threshold, match cut and continuation inside. EN/RU text-story checks and actual recordings. |
+| Semantic door was in front of the actual model | Paths/feet could not meet the visible entrance | Raycast the rendered generated house, align the logical entrance, and provide support on exterior/interior steps. Review recorded approach/crossing frames. |
+| Generated house fused the panel into its facade | Rotating an added panel would reveal another closed door | Clip only the doorway volume from the existing facade, including its shadow, and render a separate moving panel plus shallow recess. The rest of the house asset remains intact. |
+| Door state absent from director/story material digests | Changing an earlier scene could reuse stale direction/state | Added logical door state to both cache digests. Tests also remove the opening scene and reconstruct closed state. Actual editor modification/deletion checks pass. |
+| Opening in one paragraph did not retain an outside door mark | “Bear comes in” in the next paragraph could arrive in the yard | Preserve the outside entrance mark after open/close; add a cross-paragraph entry test. |
+| Default Rapier could release a ball before a later semantic pickup | Ball would snap from its settled physical position to an authored mark | Keep that complete ball story on animation until pickup retargeting exists. Test a drop followed by pickup. |
+| Trial paired-interaction guard checked only Bear | Another actor hugging Masha could conflict with root physics | Guard every actor and Masha's actor-targeted movement; add guest-hug regression. Hugs and rides retain authored ownership. |
+| Thumbnail renderer bypassed the selected playback evaluator | Storyboard could contradict the physical result | Use the Player's canonical evaluator for thumbnail previews as well as the monitor. |
+| Physics initialization failure previously destroyed the stage | Enabling by default could make the whole app unusable | Catch the import/init failure and keep animation playback. Actual browser test blocks the module request and verifies rendering. |
+| First forward seek could compute all physics in one task | Occasional cold-seek delay | Warm the canonical cache in short background tasks; cancel obsolete preparation on edits/disposal. Determinism test compares warmed and synchronous results. Immediate uncached seeks remain synchronous; this is not a worker implementation. |
+| Door-only story simulated an absent Masha | Unnecessary cold work despite no visible physical actor | Decline root physics when Masha is absent from the complete story cast. |
+| Fixed doorway coverage hid concurrent cooking in Cozy evening | The action existed but was not meaningfully shown | Serialize subsequent beats until the current doorway passage clears its steps. Added a camera/actor staging regression and recaptured the actual sample. The rejected first capture is retained in `iteration-1/after/`. |
+| Generic camera-duration assertions assumed every shot lasted 1.2–6 seconds | They rejected a continuous doorway shot and precise threshold cut | Retain the existing rule for ordinary stories; for door choreography require positive, contiguous coverage through the complete scene. Actual frame checks ensure actor and camera are on the same side after crossing. |
+
+Remaining limits: opening/closing uses an authored reach gesture, without exact handle contact. The entrance is a matched camera cut between two independently staged sets, not one continuously traversable building. Only the house door is interactive. The current generated asset and fallback cabin have different shapes; validation uses the loaded generated house. Physics still covers the bounded central yard, one character capsule and one ball, with no general navigation, contact replanning or actor/ball collisions. Cold seeks can still block briefly. No live AI-director or paid voice request was made in these checks.

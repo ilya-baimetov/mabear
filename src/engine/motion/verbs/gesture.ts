@@ -2,7 +2,7 @@
 // the rest (clap, point, shrug, Bear's signature facepalm, hug) are procedural on the idle base.
 import { addLayer, clamp, qfromTo, qmul, window01, type PoseLayer } from "../blend";
 import {
-  ARMS, UPPER, UPPER_NO_HEAD, arm, byPersona, idleBase, mask, pose, rx, ry, rz, sampleClip, type VerbCtx, type VerbImpl,
+  ARMS, STYLES, UPPER, UPPER_NO_HEAD, arm, byPersona, idleBase, leg, mask, pose, rx, ry, rz, sampleClip, type VerbCtx, type VerbImpl,
 } from "./common";
 
 /** Play a gesture clip over the idle lower body. Bear plays clips slower. */
@@ -86,28 +86,30 @@ export const facepalm: VerbImpl = (lt, _p, ctx) => {
   return { ...L, face: { lidClose: 0.85 * up, emotion: "annoyed" } };
 };
 
-export const hug: VerbImpl = (lt, _p, ctx) => {
+export const hug: VerbImpl = (lt, p, ctx) => {
   const u = lt / ctx.dur;
   const k = window01(u, 0, 1, 0.22);
   const base = idleBase(ctx, 0.15);
-  if (ctx.actor === "bear") {
-    // tender: he bends down slowly, wraps her in, rocks gently side to side, eyes closed, head resting on hers
-    const rock = Math.sin(lt * 2.2) * 0.07 * k;
+  const partner=p.target&&p.target in STYLES?STYLES[p.target as keyof typeof STYLES]:null;
+  if (partner&&ctx.style.height>partner.height*1.4) {
+    // Lower to the smaller partner with the knees. A large forward torso bend
+    // buried the child's face even when the roots were correctly separated.
+    const rock = Math.sin(lt * 2.2) * 0.018 * k;
     const squeeze = 0.08 * Math.sin(u * Math.PI) * k;
     const arms = pose(arm("Left", 0.55, 1.15, 1.25 + squeeze, -0.2), arm("Right", 0.55, 1.15, 1.25 + squeeze, -0.2));
     const L = mask(base, { bones: arms, hipsOffset: [0, 0, 0] }, ARMS, k);
     const out = addLayer(L, {
-      Spine: rx(0.32 * k), Spine1: qmul(rx(0.12 * k), rz(rock)), Spine2: rz(rock * 0.6),
-      Neck: rx(0.18 * k), Head: qmul(rz(0.28 * k), rx(0.1 * k)),
-      LeftLeg: rx(0.25 * k), RightLeg: rx(0.25 * k), LeftUpLeg: rx(-0.12 * k), RightUpLeg: rx(-0.12 * k),
+      ...leg('Left',1.18*k,2.36*k,.04*k,-1.18*k),...leg('Right',1.18*k,2.36*k,.04*k,-1.18*k),
+      Spine: rx((ctx.fromPosture==='sit'?.44:.07) * k), Spine1: rz(rock), Spine2: rz(rock * 0.6),
+      Neck: rx(0.12 * k), Head: qmul(rz(0.12 * k), rx(0.1 * k)),
     });
     return { ...out, face: { emotion: "happy", lidClose: 0.8 * k } };
   }
-  // Masha reaches up on tiptoes and squeezes tight
+  // Hands are fitted to the partner's visible body after both rigs are posed.
   const squeeze = 0.15 * Math.sin(u * Math.PI * 3) * k;
   const arms = pose(arm("Left", -0.35, 1.15, 1.0 + squeeze), arm("Right", -0.35, 1.15, 1.0 + squeeze));
   const L = mask(base, { bones: arms, hipsOffset: [0, 0, 0] }, ARMS, k);
-  const out = addLayer(L, { Spine: rx(-0.12 * k), Head: qmul(rz(0.22 * k), rx(-0.15 * k)), LeftFoot: rx(0.5 * k), RightFoot: rx(0.5 * k) });
+  const out = addLayer(L, { Spine: rx(0.03 * k), Head: qmul(rz(0.12 * k), rx(-0.1 * k)) });
   return { ...out, face: { emotion: "happy", lidClose: 0.6 * k } };
 };
 

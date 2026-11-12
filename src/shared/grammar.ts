@@ -37,6 +37,8 @@ const ALL: ActorId[] = [...ACTOR_IDS];
 const STEPS: FoleyRule[] = [{ id: "footstep", when: "contacts" }];
 
 const defs: VerbDef[] = [
+  {id:'open',group:'objects',actors:ALL,target:'mark',needsItem:false,baseDuration:1.4,loopable:false,foley:[],effortVocal:null,description:'Open the house door. Target door. Does not enter; use walk_to house_living afterwards.'},
+  {id:'close',group:'objects',actors:ALL,target:'mark',needsItem:false,baseDuration:1.4,loopable:false,foley:[],effortVocal:null,description:'Close the house door from the current side. Target door.'},
   // Locomotion
   { id: "walk_to", group: "locomotion", actors: ALL, target: "mark_or_actor", needsItem: false, baseDuration: 1.5, loopable: true, foley: STEPS, effortVocal: null, description: "Walk to a mark or up to another character." },
   { id: "run_to", group: "locomotion", actors: ALL, target: "mark_or_actor", needsItem: false, baseDuration: 1.0, loopable: true, foley: [...STEPS, { id: "cloth_rustle", when: "start" }], effortVocal: null, description: "Run to a mark or a character (Masha's default way of moving)." },
@@ -77,6 +79,7 @@ const defs: VerbDef[] = [
   { id: "sneeze", group: "emotion", actors: ALL, target: "none", needsItem: false, baseDuration: 1.4, loopable: false, foley: [], effortVocal: "sneeze", description: "A big wind-up sneeze (e.g. from flour)." },
   { id: "sigh", group: "emotion", actors: ALL, target: "none", needsItem: false, baseDuration: 1.6, loopable: false, foley: [], effortVocal: "sigh", description: "A long sigh: shoulders rise and fall." },
   // Objects
+  { id: "drop", group: "objects", actors: ["masha"], target: "none", needsItem: true, baseDuration: 1.2, loopable: false, foley: [], effortVocal: null, description: "Masha lets go of the ball halfway through the gesture. Local Rapier trial supplies the fall; animation-only playback places it at its resting mark." },
   { id: "take", group: "objects", actors: ALL, target: "prop", needsItem: true, baseDuration: 1.0, loopable: false, foley: [{ id: "prop_pickup", when: "at", t: 0.5 }], effortVocal: null, description: "Pick up a prop (walks to it first if needed). item = the prop." },
   { id: "give", group: "objects", actors: ALL, target: "actor", needsItem: true, baseDuration: 1.4, loopable: false, foley: [{ id: "prop_pickup", when: "at", t: 0.6 }], effortVocal: null, description: "Hand the held item to another character. item = the prop, target = the receiver." },
   { id: "eat", group: "objects", actors: ALL, target: "none", needsItem: true, baseDuration: 2.0, loopable: true, foley: [{ id: "munch", when: "loop", every: 0.45 }], effortVocal: null, description: "Eat a held food item (jam, honey, pancakes, carrot, cake, lollipop)." },

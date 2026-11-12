@@ -1,0 +1,8 @@
+{
+  "results": {
+    "obstacle": true,
+    "regression": true,
+    "capturedSourceMatchesArchive": true
+  },
+  "scope": "Old and new compilers yield identical obstacle/regression timelines; matched authored camera tracks. Baseline capture source matches every archived source-file hash. New drop cue is excluded from old-compiler parity."
+}

@@ -1,0 +1,61 @@
+{
+  "proofs": [
+    {
+      "playing": {
+        "time": 0.0885,
+        "duration": 32.733333,
+        "width": 1920,
+        "height": 576,
+        "paused": false
+      },
+      "end": {
+        "time": 32.433332,
+        "ready": 4,
+        "error": null
+      }
+    },
+    {
+      "playing": {
+        "time": 0.0952,
+        "duration": 9.266667,
+        "width": 1920,
+        "height": 576,
+        "paused": false
+      },
+      "end": {
+        "time": 8.966667,
+        "ready": 4,
+        "error": null
+      }
+    },
+    {
+      "playing": {
+        "time": 0.091,
+        "duration": 8,
+        "width": 1920,
+        "height": 576,
+        "paused": false
+      },
+      "end": {
+        "time": 7.7,
+        "ready": 4,
+        "error": null
+      }
+    },
+    {
+      "playing": {
+        "time": 0.0963,
+        "duration": 15.466667,
+        "width": 1920,
+        "height": 576,
+        "paused": false
+      },
+      "end": {
+        "time": 15.166666,
+        "ready": 4,
+        "error": null
+      }
+    }
+  ],
+  "errors": []
+}

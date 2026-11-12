@@ -1,0 +1,52 @@
+{
+  "checkedAt": "2026-11-07T09:54:46.261Z",
+  "cases": [
+    "cozy_evening_en-02-bear-cook",
+    "cozy_evening_en-03-masha-eat",
+    "kitchen_visit-04-masha-cook",
+    "kitchen_visit-05-bear-sit",
+    "cozy_evening_en-04-bear-give",
+    "cozy_evening_en-05-masha-stand_up"
+  ],
+  "testedCase": "cozy_evening_en-03-masha-eat",
+  "start": {
+    "now": 725.8999999761581,
+    "times": [
+      20.1389,
+      28.2687
+    ]
+  },
+  "progressed": {
+    "now": 1529.0999999046326,
+    "times": [
+      20.9422,
+      29.072
+    ],
+    "rates": [
+      1,
+      1
+    ]
+  },
+  "elapsed": 0.8031999999284745,
+  "paused": [
+    20.9935,
+    29.1233
+  ],
+  "held": [
+    20.9935,
+    29.1233
+  ],
+  "sought": [
+    22.471,
+    30.521
+  ],
+  "ended": [
+    24.8348,
+    32.8848
+  ],
+  "replayed": [
+    20.1359,
+    28.2724
+  ],
+  "errors": []
+}

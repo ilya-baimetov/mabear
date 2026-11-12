@@ -16,6 +16,7 @@ export { STYLES, SEAT_HEIGHT } from "./verbs/common";
 
 /** Every verb in VERBS has an implementation (unit-tested). */
 export const VERB_IMPLS: Record<Verb, VerbImpl> = {
+  open:gesture.point_at, close:gesture.point_at,
   walk_to: loco.walk_to, run_to: loco.run_to, tiptoe_to: loco.tiptoe_to, chase: loco.chase, enter: loco.enter, exit: loco.exit,
   idle: body.idle, jump: body.jump, spin: body.spin, dance: body.dance, sit: body.sit, stand_up: body.stand_up,
   fall_down: body.fall_down, sleep: body.sleep, wake_up: body.wake_up, yawn_stretch: body.yawn_stretch, hide: body.hide, peek: body.peek,
@@ -23,12 +24,13 @@ export const VERB_IMPLS: Record<Verb, VerbImpl> = {
   shake_head: gesture.shake_head, shrug: gesture.shrug, facepalm: gesture.facepalm, hug: gesture.hug,
   laugh: emotion.laugh, cry: emotion.cry, sulk: emotion.sulk, surprised: emotion.surprised, scared: emotion.scared,
   angry_stomp: emotion.angry_stomp, sneeze: emotion.sneeze, sigh: emotion.sigh,
-  take: objects.take, give: objects.give, eat: objects.eat, throw: objects.throw_, cook: objects.cook, fish: objects.fish,
+  take: objects.take, give: objects.give, eat: objects.eat, throw: objects.throw_, drop: objects.drop, cook: objects.cook, fish: objects.fish,
   swing: objects.swing, carry: objects.carry, water_plants: objects.water_plants,
 };
 
 /** How each verb is realized — shown in the Behind-the-scenes data view (honesty labels, spec §2). */
 export const VERB_KIND: Record<Verb, VerbKind> = {
+  open:'procedural',close:'procedural',
   walk_to: "clip+procedural", run_to: "clip+procedural", tiptoe_to: "clip+procedural", chase: "clip+procedural",
   enter: "clip+procedural", exit: "clip+procedural",
   idle: "clip+procedural", jump: "procedural", spin: "procedural", dance: "clip+procedural", sit: "procedural",
@@ -38,7 +40,7 @@ export const VERB_KIND: Record<Verb, VerbKind> = {
   shake_head: "clip+procedural", shrug: "procedural", facepalm: "procedural", hug: "procedural",
   laugh: "procedural", cry: "clip+procedural", sulk: "procedural", surprised: "procedural", scared: "procedural",
   angry_stomp: "procedural", sneeze: "procedural", sigh: "procedural",
-  take: "procedural", give: "procedural", eat: "procedural", throw: "procedural", cook: "procedural", fish: "procedural",
+  take: "procedural", give: "procedural", eat: "procedural", throw: "procedural", drop: "procedural", cook: "procedural", fish: "procedural",
   swing: "procedural", carry: "procedural", water_plants: "procedural",
 };
 
@@ -97,7 +99,9 @@ export function evaluatePose(verb: Verb, localT: number, params: ClipParams, ctx
   let L: PoseLayer;
   const seatedLean = (held === "sit" || held === "carried") && (verb === "peek" || verb === "hide");
   let upright = false;
-  if ((POSTURE_VERBS.has(verb) && !seatedLean) || held === "stand" || held === "offstage") {
+  if(params.target==='hammock'&&params.to&&(held==='sleep'||held==='sit')&&ctx.posture==='stand'){
+    L=body.hammockDismount(localT,params,ctx);
+  } else if ((POSTURE_VERBS.has(verb) && !seatedLean) || held === "stand" || held === "offstage") {
     L = impl(localT, params, ctx);
     upright = true;
   } else if (held === "sleep" && ctx.posture !== "sleep") {
@@ -114,6 +118,11 @@ export function evaluatePose(verb: Verb, localT: number, params: ClipParams, ctx
   }
   const getsUpFromStanding = (verb === "stand_up" || verb === "wake_up") && (held === "stand" || held === "offstage");
   const standing = upright && (!FREE_VERBS.has(verb) || getsUpFromStanding);
+  if(held==='carried'){
+    // The upper-body gesture mask otherwise overwrites the rider's balancing
+    // lean, putting her large face against the back of the carrier's head.
+    L={...L,bones:{...L.bones,Spine:qmul(rx(-.45),L.bones.Spine??[0,0,0,1]),Spine1:qmul(rx(-.12),L.bones.Spine1??[0,0,0,1]),Head:qmul(rx(.50),L.bones.Head??[0,0,0,1])}};
+  }
   L = applyStyle(L, ctx, standing);
   if (standing && !LOCOMOTION_VERBS.includes(verb)) L = shuffle(L, ctx);
   const br = breathingPose(ctx.t, ctx.style.breathRate, ctx.style.breathDepth);

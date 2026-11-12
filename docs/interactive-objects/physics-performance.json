@@ -1,0 +1,170 @@
+{
+  "info": {
+    "mode": "after",
+    "physicsInitMs": 68.90000009536743,
+    "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+    "buffer": [
+      1280,
+      720
+    ],
+    "assets": [
+      {
+        "id": "wolf_a",
+        "source": "procedural",
+        "ok": true
+      },
+      {
+        "id": "wolf_b",
+        "source": "procedural",
+        "ok": true
+      },
+      {
+        "id": "rosie",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "hare",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "masha",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "lady_bear",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "squirrel",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "rival_bear",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "bear",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "robot_test",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "prop:carrot",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "set:beehive",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "set:house",
+        "source": "gltf",
+        "ok": true
+      }
+    ],
+    "durations": {
+      "obstacle": 9.274,
+      "drop": 12.6,
+      "regression": 68.082
+    }
+  },
+  "benchmarks": [
+    {
+      "id": "obstacle",
+      "coldMs": 107.79999995231628,
+      "frames": 235,
+      "seconds": 4,
+      "meanFps": 58.47076461769115,
+      "gapP50": 16.699999999999818,
+      "gapP95": 18.100000000000364,
+      "evalP50": 0.2999999523162842,
+      "evalP95": 0.40000009536743164,
+      "renderP50": 4.700000047683716,
+      "renderP95": 6.200000047683716,
+      "stats": {
+        "fps": 59.964021592762954,
+        "drawCalls": 172,
+        "triangles": 2029219
+      },
+      "physics": {
+        "t": 9.274,
+        "root": [
+          0.061176542192697525,
+          0.0000988745689392001,
+          0.4573943316936493
+        ],
+        "grounded": true,
+        "stride": 0.9999999999999999,
+        "ball": null,
+        "sleeping": false,
+        "reason": null,
+        "steps": 557,
+        "computeMs": 106.99999976158142,
+        "samples": 558,
+        "caches": 1,
+        "revision": 1
+      }
+    },
+    {
+      "id": "drop",
+      "coldMs": 130.59999990463257,
+      "frames": 236,
+      "seconds": 4,
+      "meanFps": 58.50282556200055,
+      "gapP50": 16.69999999999891,
+      "gapP95": 18.200000000000728,
+      "evalP50": 0.2999999523162842,
+      "evalP95": 0.40000009536743164,
+      "renderP50": 4.6000001430511475,
+      "renderP95": 5.799999952316284,
+      "stats": {
+        "fps": 60,
+        "drawCalls": 153,
+        "triangles": 1856871
+      },
+      "physics": {
+        "t": 12.6,
+        "root": [
+          1.9999960660934448,
+          -0.0004363155364990323,
+          2.559999704360962
+        ],
+        "grounded": true,
+        "stride": 1,
+        "ball": {
+          "pos": [
+            2.024539995411177,
+            0.4699317576406666,
+            2.845864067969472
+          ],
+          "rotation": [
+            4.273086631201295e-7,
+            0.7071863412857056,
+            -0.00002519973713788204,
+            0.7070271968841553
+          ]
+        },
+        "sleeping": true,
+        "reason": null,
+        "steps": 756,
+        "computeMs": 127.00000023841858,
+        "samples": 757,
+        "caches": 1,
+        "revision": 2
+      }
+    }
+  ]
+}

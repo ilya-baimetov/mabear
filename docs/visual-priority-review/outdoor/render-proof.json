@@ -1,0 +1,144 @@
+{
+  "capturedAt": "2026-11-07T04:50:13.088Z",
+  "shots": [
+    {
+      "name": "yard-story",
+      "t": 6.692,
+      "camera": {
+        "pos": [
+          0.5591200000000001,
+          3.846,
+          12.27312
+        ],
+        "look": [
+          1.2,
+          1,
+          -1.583
+        ],
+        "fov": 44,
+        "location": "yard"
+      },
+      "stats": {
+        "fps": 96.15384637427753,
+        "drawCalls": 167,
+        "triangles": 2662324
+      }
+    },
+    {
+      "name": "pond-story",
+      "t": 19.285,
+      "camera": {
+        "pos": [
+          -1.77454,
+          1.41275,
+          5.53383
+        ],
+        "look": [
+          -5.5,
+          0.533,
+          9.5
+        ],
+        "fov": 40,
+        "location": "pond"
+      },
+      "stats": {
+        "fps": 14.204545459356005,
+        "drawCalls": 176,
+        "triangles": 2872217
+      }
+    },
+    {
+      "name": "pond-reference",
+      "t": 19.285,
+      "camera": {
+        "pos": [
+          -8.2,
+          1.05,
+          12.35
+        ],
+        "look": [
+          -3.8,
+          0.8,
+          5.7
+        ],
+        "fov": 54,
+        "location": "pond"
+      },
+      "stats": {
+        "fps": 15.817779182609538,
+        "drawCalls": 61,
+        "triangles": 2205125
+      }
+    },
+    {
+      "name": "pond-overview",
+      "t": 19.285,
+      "camera": {
+        "pos": [
+          -0.5,
+          4.6,
+          15
+        ],
+        "look": [
+          -8.5,
+          0.3,
+          8.5
+        ],
+        "fov": 48,
+        "location": "pond"
+      },
+      "stats": {
+        "fps": 17.6633863256176,
+        "drawCalls": 61,
+        "triangles": 2205125
+      }
+    },
+    {
+      "name": "wolves-story",
+      "t": 2.12,
+      "camera": {
+        "pos": [
+          5.902326666666667,
+          3.242611111111111,
+          3.692718888888889
+        ],
+        "look": [
+          12,
+          1,
+          -1.45
+        ],
+        "fov": 44,
+        "location": "wolves"
+      },
+      "stats": {
+        "fps": 15.753544548838066,
+        "drawCalls": 57,
+        "triangles": 781427
+      }
+    },
+    {
+      "name": "ambulance-reference",
+      "t": 2.12,
+      "camera": {
+        "pos": [
+          10.8,
+          1.75,
+          -6.3
+        ],
+        "look": [
+          14.1,
+          1.25,
+          -1
+        ],
+        "fov": 48,
+        "location": "wolves"
+      },
+      "stats": {
+        "fps": 16.853071857216833,
+        "drawCalls": 47,
+        "triangles": 666291
+      }
+    }
+  ],
+  "errors": []
+}

@@ -24,6 +24,8 @@ export interface FaceParams {
 export interface ActorFrame {
   /** root world position [x, y, z] (y = 0 on the ground) */
   pos: Vec3;
+  /** Physics has supplied the support height; the stage must not lift it again. */
+  physicsRoot?: boolean;
   /** yaw radians; 0 = facing +z */
   yaw: number;
   /** 0..1 (offstage fade) */
@@ -40,8 +42,13 @@ export interface ActorFrame {
   verb: string;
   /** Deterministic clip time for geometry-aware contact solving. */
   action?: { time:number; duration:number; contactEnd?:number };
+  /** Active paired contact; both rigs have reached their world poses before solving. */
+  interaction?:{kind:'hug';partner:ActorId};
+  riding?:{carrier:ActorId;progress:number};
   /** Authored prop release: world origin/Euler YXZ; release is normalized clip progress. */
   putDown?: {item:PropId;position:Vec3;rotation:Vec3;release:number};
+  /** Surface pickup uses the same contact pose at its attachment instant. */
+  pickup?: {item:PropId;position:Vec3;rotation:Vec3;release:number};
   /** secondary-motion drivers 0..1 (hem sway, belly jiggle, ear wiggle) */
   secondary: { sway: number; jiggle: number; breathe: number };
 }
@@ -52,6 +59,8 @@ export interface PropFrame {
   pos: Vec3;
   /** attached to an actor's hand ("RightHand") */
   attachedTo: ActorId | null;
+  /** Physics world transform, at the prop's base origin. Bypasses semantic rest snapping. */
+  rotation?: Quat;
 }
 
 export interface FxFrame {
@@ -62,6 +71,7 @@ export interface FxFrame {
 }
 
 export interface FrameState {
+  objects?:{house_door:number};
   t: number;
   segmentIndex: number;
   /** segment-local time */

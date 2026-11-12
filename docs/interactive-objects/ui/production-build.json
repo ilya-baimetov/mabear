@@ -1,0 +1,36 @@
+{
+  "state": {
+    "physics": {
+      "t": 0,
+      "root": null,
+      "grounded": false,
+      "stride": 1,
+      "ball": null,
+      "sleeping": false,
+      "reason": "empty timeline",
+      "steps": 0,
+      "computeMs": 0,
+      "samples": 1,
+      "caches": 1,
+      "revision": 1
+    },
+    "objects": {
+      "state": {
+        "house_door": 0
+      },
+      "panels": [
+        {
+          "side": "outside",
+          "open": 0
+        },
+        {
+          "side": "inside",
+          "open": 0
+        }
+      ]
+    },
+    "rendered": true
+  },
+  "chunkLoaded": true,
+  "errors": []
+}

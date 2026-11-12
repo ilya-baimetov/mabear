@@ -1,0 +1,23 @@
+{
+  "changedFromPreTrialSnapshot": [
+    "package-lock.json",
+    "package.json",
+    "src/app/components/Stage.tsx",
+    "src/compiler/compile.ts",
+    "src/compiler/validate.ts",
+    "src/director/offline/lexicon.en.ts",
+    "src/director/offline/lexicon.ru.ts",
+    "src/engine/api.ts",
+    "src/engine/motion/library.ts",
+    "src/engine/motion/verbs/objects.ts",
+    "src/engine/player/evaluate.ts",
+    "src/engine/player/player.ts",
+    "src/engine/props/props.ts",
+    "src/engine/stage.ts",
+    "src/shared/grammar.ts",
+    "src/shared/schema.ts"
+  ],
+  "otherArchivedFilesUnchanged": true,
+  "publicAssetsUnchanged": true,
+  "missing": []
+}

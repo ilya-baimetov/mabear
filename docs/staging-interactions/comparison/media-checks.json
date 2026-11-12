@@ -1,0 +1,105 @@
+{
+  "checks": [
+    {
+      "story": "carry-lift.mp4",
+      "duration": 5.500567,
+      "width": 1280,
+      "height": 440,
+      "advanced": 0.3515,
+      "decoded": 15
+    },
+    {
+      "story": "carry-walk.mp4",
+      "duration": 7.0225,
+      "width": 1280,
+      "height": 440,
+      "advanced": 0.3516,
+      "decoded": 14
+    },
+    {
+      "story": "hammock-wake.mp4",
+      "duration": 7.136533,
+      "width": 1280,
+      "height": 440,
+      "advanced": 0.3503,
+      "decoded": 15
+    },
+    {
+      "story": "hammock-sleep.mp4",
+      "duration": 6.704667,
+      "width": 1280,
+      "height": 440,
+      "advanced": 0.3511,
+      "decoded": 14
+    },
+    {
+      "story": "cooking.mp4",
+      "duration": 6.413467,
+      "width": 1280,
+      "height": 440,
+      "advanced": 0.3506,
+      "decoded": 14
+    },
+    {
+      "story": "hug.mp4",
+      "duration": 4.676833,
+      "width": 1280,
+      "height": 440,
+      "advanced": 0.351,
+      "decoded": 14
+    },
+    {
+      "story": "fishing-catch.mp4",
+      "duration": 5.4279,
+      "width": 1280,
+      "height": 440,
+      "advanced": 0.3512,
+      "decoded": 14
+    },
+    {
+      "story": "fishing-hug.mp4",
+      "duration": 7.6143,
+      "width": 1280,
+      "height": 440,
+      "advanced": 0.3518,
+      "decoded": 14
+    },
+    {
+      "story": "garden-eat.mp4",
+      "duration": 4.704267,
+      "width": 1280,
+      "height": 440,
+      "advanced": 0.3312,
+      "decoded": 18
+    },
+    {
+      "story": "garden-dance.mp4",
+      "duration": 5.0207,
+      "width": 1280,
+      "height": 440,
+      "advanced": 0.3516,
+      "decoded": 15
+    },
+    {
+      "story": "fishing-reaction.mp4",
+      "duration": 3.597367,
+      "width": 1280,
+      "height": 440,
+      "advanced": 0.3509,
+      "decoded": 14
+    },
+    {
+      "story": "staging-before-after-montage.mp4",
+      "duration": 65.151767,
+      "width": 1280,
+      "height": 440,
+      "advanced": 0.3512,
+      "decoded": 13,
+      "tailCheck": {
+        "time": 64.701767,
+        "duration": 65.151767,
+        "ready": 4
+      }
+    }
+  ]
+}

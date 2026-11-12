@@ -1,0 +1,1879 @@
+{
+  "mode": "baseline",
+  "sourceRoot": "/tmp/mabear-rapier-baseline",
+  "source": {
+    "files": {
+      "src/app/App.tsx": "59d4c71c205a90ef73ebef3971917439b3343a8f640a5586ee5bdca074a05431",
+      "src/app/brand.css": "6e6bfaf9a75ac79c6d38c149a7760162e7a1f20f035451c626b2ac69e21584e9",
+      "src/app/castCamera.ts": "45224f39435ae3d1aa610c0f5114bd6822801f2d4cd52b99b6a415c0a0098491",
+      "src/app/components/BehindTheScenes.tsx": "e9886c905fb72e60cfd565dfacfe797df67df31bcb8f5eea80bd4e978972a724",
+      "src/app/components/DataView.tsx": "f971d2bbaf63c7c480c06a9f5cbfdf0a7dc2785b5a7a00ecf94ba2424e4e212a",
+      "src/app/components/Economics.tsx": "8a83cfd3a69d89abaf9d5c21ffebf256f8d68e85f84167f3aacfa3d3aa74f524",
+      "src/app/components/FullStoryDialog.tsx": "15c56d34bc63b6e66445d8933e728eca871ac23afb13ff3ca9956ec0ccb0f207",
+      "src/app/components/MomentSequence.tsx": "77f6c7c6bdb8e99f299406f232d416e4221bec38678d493249586ead99940f34",
+      "src/app/components/MomentWorkbench.tsx": "20830c783e7ae7a759316f5a3a171243b9ad0ed8b11e556e34ef2cf44db07873",
+      "src/app/components/ParagraphCard.tsx": "e7209f714242c5a23ecec0b395185c6c89cf5b3d6748f67b2ca05ea2991bd789",
+      "src/app/components/RemixButtons.tsx": "e3e00a0250ec73c497812a57a76fe8453d7689592697bb777235e79c82bc129c",
+      "src/app/components/ReplaceStoryDialog.tsx": "66c43a022bab9b9d1c2c86a951120f9bc6ef571832700c0d1847cb73140223ac",
+      "src/app/components/ScriptEditor.tsx": "31e55c6d33119fae4655b585b153fb4e1d78c33300b037fa6a0426f99784c1a5",
+      "src/app/components/Stage.tsx": "29f1e07fbc168a2ddd1a89c53143469d06490e0cb55eaca60962563c73cf95dd",
+      "src/app/components/StoryLibrary.tsx": "3dcc68704fdd6fa0f351bf0f94fa9f3654d2fba9e54c87b08b5339f127f407cb",
+      "src/app/components/SystemLayers.tsx": "95af787bca241f82e434bd77daaed8b084da93e87e6eb21fd1d605254aa62244",
+      "src/app/components/Timeline.tsx": "45300c6cf3c7dd9c184c45320ef669d2f7a0d4ef2c794b27b65bc6d0298e24ab",
+      "src/app/components/TopBar.tsx": "b823fd0d2c9a5f2fd5b3fe5142f1c47a8997c8a8eff479fbd1e69a8228de8032",
+      "src/app/components/VoicePicker.tsx": "30f63f81a1031b68cfb1913c544f92c0b174fbe27d64662eafcbf2b884ec6d31",
+      "src/app/components/assets/README.md": "6b3ba1516360553245f6bf495f36d34679a985b050a11c50434e4271cfc6758a",
+      "src/app/components/assets/bear.webp": "2ce1f601273f5424aa209e4c6946901617cf93f2e71290231cf0cc6f30ad610c",
+      "src/app/components/assets/hare.webp": "3201c6c8e05f24e41054e3c7715138f4cecabd01ad9086d3521891719dc0d0df",
+      "src/app/components/assets/lady_bear.webp": "9b63a396e266012e89d5fd93a07e748e7e3a4759dd6db0dcd115516755a18595",
+      "src/app/components/assets/masha.webp": "845e8355122004288f1171a79b56344509c2fadaf3dc17a5fe10efff1b7dec76",
+      "src/app/components/assets/rival_bear.webp": "bb1b1b08fcc11474b9a68e29b506118ab4e3f134bee46f766b0105ac30d72581",
+      "src/app/components/assets/rosie.webp": "ac4af41b8c8ac87a3b8dd85c7092bfc6dbb967bb90b8fab9d9e171840b7b1211",
+      "src/app/components/assets/squirrel.webp": "8adfe748135d8f2f1622316ff1ea540f129e964e2705fd019864605b279d8b08",
+      "src/app/components/assets/wolf_a.webp": "50b419d2b2a27af0f26a5ef7b1ee33da0bb25c8618398abb230008165868ca4e",
+      "src/app/components/assets/wolf_b.webp": "eb85d3d738f13ba62c8b0150cc1934154b6a5453f93c7afa2bc176db45ed4d0e",
+      "src/app/components/castPortraits.ts": "b0e8321a4212a12072ced1bb6ec1c546d93d6f476af64c145d60db06113a5cf5",
+      "src/app/components/studioView.ts": "04dff28afe59207fbf9ff46104e58280a0c64ca260b0a091ce62e2f127320059",
+      "src/app/i18n/en.ts": "0eec8ce94607a73146bbec7f01541b84dc082e6ab8b6b0f9869bcad4f3b346ec",
+      "src/app/i18n/index.ts": "456ce624e30e1ac48f2c1fc23df10aafb69667c387a2998c99f5b4977e9bdf9b",
+      "src/app/i18n/ru.ts": "b86b9b06042acfddda3a6a226dfec1dfdb9bc652e5f5685e564cd37d7a28fb3d",
+      "src/app/main.tsx": "a6dce5535f41faf7ff779d1bc94e381e8d714c46b1edddd6e1fe7e57a2893c9d",
+      "src/app/playback.ts": "a95924548842f6edbbaed1513eca291e99026204802fe36c81c3143d294dec8b",
+      "src/app/react.ts": "a60d39dc3bbf615f2dbc356bba99ac9323aa3bc1a7234766703127848d4b8bf1",
+      "src/app/store.ts": "4c90ccfddb7674bf3bce23f1ea6fe9489c1b2bc80f3738f6a215c525412ecb73",
+      "src/app/storyFlow.ts": "324be5e21fb3cc988177415bc4d3d71d9940d3b030c185d297fc912ed67afa08",
+      "src/app/storyboardFrames.ts": "87febd0de59bab7ab7f7f05bfa9bcee45294f20b8f816ce294f779223e1281c5",
+      "src/app/storyboardTime.ts": "2829ff8dd141e1635d4f8dc6ad53af0d7e2a9fea756f872cd3a181dc3f0fdf84",
+      "src/app/studio-layout.css": "02c3fe1c8325d364f319d8df57f2537383f42a0a51ad9969719414702012cb2a",
+      "src/app/styles.css": "f5192eccd44699262d8a83a1284af32954a836dd60487c120b13c43c6e6a0228",
+      "src/app/useOutsideClose.ts": "3380977e0f77f6824685ad501870fc49d42a084c45e7fb758c3ca5f3b074c905",
+      "src/app/useStore.ts": "f8bc20da7399a0efed9cd86d2d6d13230b44e03baaa7cebc72c5b164af36eb49",
+      "src/compiler/audioCues.ts": "556b2cfe84d00d7d139688a1c580b6b85ecf44d70841eb3e291feb22a801c2b1",
+      "src/compiler/camera.ts": "bffbe404a461fb83b919dd57e3adf092329e28b4d49214e6e8b95be2c8bb8e5d",
+      "src/compiler/compile.ts": "b7413df3421673d09ce719953d07e22aaeb60c1b129c32003fcfb91cd4be3084",
+      "src/compiler/dialogue.ts": "5c852a371b7c0a99bcf9301c791e6fc37580362eee4d233ab31a9cd66219cc38",
+      "src/compiler/episode.ts": "7c4fbbca116887065b178be430dcbfd64f9052280d230ee4423c9bfc06f1c76a",
+      "src/compiler/path.ts": "51949754416cc90da179d578c124e632a24a184e62c13f260c46d2f6be85f771",
+      "src/compiler/types.ts": "74f63af957133a7ee7164c8de0387aa42b954479583c584cee8486dedd6e4629",
+      "src/compiler/validate.ts": "34298ed088d5d6eb8a46dcbd7ed89934a8c2fdcc6f218396dd7091e321fdcf0d",
+      "src/compiler/worldState.ts": "2f0673f3b784a8d4d82528c2cd821f0cabfb21d09d592510e1fd19bf605a7192",
+      "src/director/client.ts": "f75a97ecea723e7778d35b5d1a94320a25ca0f749ead0932ead7a586cff1c93b",
+      "src/director/fixtures/bears_nap.en.json": "a50997d61cb1f640c99616d2b471e72e40ab0e99b983d223b819275b84536ebc",
+      "src/director/fixtures/bears_nap.ru.json": "98b1ca18e48377b0cf47dbff79f3fcdca5e3369ac42c8715d623669d5a3fb5a5",
+      "src/director/fixtures/cozy_evening.ts": "b41545493dcc434500033db851625bae80981ff9d5ca9b18f3dfe02305aaae2d",
+      "src/director/fixtures/fishing_trip.en.json": "b6c8907fd31248f8baac0583875c2a95df58738d425a19ccd8aae38cd3170459",
+      "src/director/fixtures/fishing_trip.ru.json": "b7c9e34f1aaea11dea974c3d38c6777538b38e1ed851ca2d3c8702aaed737ead",
+      "src/director/fixtures/garden_party.en.json": "84679bded58f1472c07089121bdeb74ca2c2babe04059e410a96351bc193e8f8",
+      "src/director/fixtures/garden_party.ru.json": "591615ab873c91ee46259646688f41ab6a36bab36199ec2d7a2819e9c6fd8bd0",
+      "src/director/fixtures/index.ts": "1871437a8d33f64798a0faa43b9eee4a69b6fbd278984511a562f14c1e81ea16",
+      "src/director/fixtures/pancake_morning.en.json": "9e198ed10e26dff7bf69752c37732865ce7a91176a1edd3103af53972b6b8c24",
+      "src/director/fixtures/pancake_morning.ru.json": "00e25d082af6ae9d6dac1923ddcbabcbc4667e11be89fece0b1226c7646fc3cc",
+      "src/director/offline/lexicon.en.ts": "b45f70eb661d2151626e408548246687e28f11032fcd7eb0cf70acfe7c7c5735",
+      "src/director/offline/lexicon.ru.ts": "50161bcec5f1cf0e6b6e476faa9a551399a6a8510cda9a2b3221fd6a1892537c",
+      "src/director/offline/parser.ts": "a3e1807338c4ac4022ac4ec7d0c1a8197921468db13166679bcff4ed221c8370",
+      "src/director/prompt.ts": "b43e7dae74d6df9804c78c841f2cad388b60d03db3a4ec0505cf3f3dca73262a",
+      "src/engine/api.ts": "a69b2ff8817f526ce1d728fb6c7fa196a5e06213e294170c6d5f8411f97de16f",
+      "src/engine/assets.ts": "e7d9d253431c0e3d19119139d4bb9f870191c88db98a6097a74c2b9f5c85fed7",
+      "src/engine/audio/ambience.ts": "a3cc4a125ddb6d5d47b9a4a4db19773f6073374839f93d6b5344e0586b4edc88",
+      "src/engine/audio/bus.ts": "956d334fecf3b3adb204d1549d9fc4b7634cdc727363a67fcfdb1ee0d7ff3a6a",
+      "src/engine/audio/foley.ts": "ddae44c4bf39617b3b716077c471f5c6983221c9b15d2edffc8385a158a71d3a",
+      "src/engine/audio/index.ts": "bcdf4f99ed17b1837abc0c35844df13cfe26a0bac5b097655efb7cacbcc0cd52",
+      "src/engine/audio/music.ts": "d6d873b4348d8ac691b1d9bb82b5966da95dc2c2c0ab7aef40c58dc75c25c692",
+      "src/engine/audio/recordedMusic.ts": "d1ea823b8885a92a04a65283395c3386253b09b65107b443ab9aff4dd2e9f3c0",
+      "src/engine/audio/recordedSpeech.ts": "0a4925cb5028daafa2f22a69d21bbc42a5e825bb08df93911bf9f392ac4ce33b",
+      "src/engine/audio/scheduler.ts": "f7c67bb7997bea7cfa6f1d82f15fa1c61559b717db8079de42c8fc1b2a97bdb8",
+      "src/engine/audio/sfx.ts": "a309e32cfb79f3a9198cba1bb82f48a9c9fb67828c2a758bae5ea956796fad92",
+      "src/engine/audio/synth.ts": "a03945254534482342aa964e1efce9c34ca47620f33fb2bbe6586d3537311429",
+      "src/engine/audio/tts.ts": "4232a9bbec7f4c03177b8d06557f05092dd6acb75985e9b5637367d5260498cb",
+      "src/engine/audio/vocals.ts": "1da73c0f059b2a0f01bd6abb8877b3404838e3b1f90cb88c62778b2b3d6f1c93",
+      "src/engine/cameraClearance.ts": "b66326b49406c5ab5186360084d47f8364461a53a64f35768eb82b6680cd5323",
+      "src/engine/characters/bear.ts": "eb06ea42a6a1dd9976ed0630603ffcc4d8eb141ced8cac84e439791273cebc14",
+      "src/engine/characters/carryContacts.ts": "762da665428f581a2a1a0a1abff45eaba942b94f190cf2bdbda5edd52e776df9",
+      "src/engine/characters/contactHands.ts": "a74d5ec7c84e34d762af1d14d2a54b0846852bb98a75a6df6c2b5da01504c447",
+      "src/engine/characters/face.ts": "6d7f994990ed3cc1b7b17dfef0deaa85cbf48cae64c6c64940ba8af68f5e0cd5",
+      "src/engine/characters/generated.ts": "abf41ac1f3ff5c4c336c1663382a6102d78f1168e5df2fe6315f321c5bceec41",
+      "src/engine/characters/generatedFace.ts": "96622f8917832264e7704301fc91e798d6d58db076ef869a9e4745c38e3e5bc3",
+      "src/engine/characters/hugContacts.ts": "53e95ebecd87284d6c7cd417af33949d344f895982b2a74ea58716d36a334879",
+      "src/engine/characters/masha.ts": "51d7f9a97f12605a54126b688899e87ef343a1267893f0446f6bbba99da74b41",
+      "src/engine/characters/mashaContacts.ts": "394a1e7bf1d885de17f8c49033c628bd0125b39abff6e5756183e02ca268ea49",
+      "src/engine/characters/mashaHands.ts": "3ca1754231262ce038c191e2e41c2db14cba208c4ccf22d8a26645452db4347d",
+      "src/engine/characters/mashaPerformance.ts": "7156cebe01cb1a9b512116707dc5694ff1383a0bb3e99f6f849980d169d659a3",
+      "src/engine/characters/rig.ts": "4ed67e396a98b29ddf47c1a25ea2d72290fd3452af877a3c0465fd681721c9cf",
+      "src/engine/characters/sourceContacts.ts": "8ad1f1344e65b5a0abf2033731a6bf84bfb2b4ea64ca84d64ee8c8a9fe49a717",
+      "src/engine/characters/squirrelBind.ts": "578dc1456d58985c9896cf426f0a7eaa4a2032fcccce1924a5701f346180c12b",
+      "src/engine/characters/wolf.ts": "0416b420f8d1e2f89d3a919c57f4e68710ea819382588012680d116690b49d3a",
+      "src/engine/fx/fx.ts": "3c882d3e31eb2faae8bf1e695761206f0e37611ddf0268b6ff06e2c99d224c59",
+      "src/engine/look.ts": "b037a19de810bc03f3ec61600d0f2c3bb9ed6402beb47502a66743133225e891",
+      "src/engine/motion/blend.ts": "63426e6dd367f7df4bd896032e41cb5f7dd112b2899d8b8d379b412493db5976",
+      "src/engine/motion/clips.generated.ts": "e36175d14425ee28b907b849590298f792f69f769e53fb4957bc15dec0b03a47",
+      "src/engine/motion/emotion.ts": "08ddff209616c5c262b0b1d2bd01755a2d5b325e08c80ada7426191f5ec21f7a",
+      "src/engine/motion/generatedProportions.ts": "df611c347e2010a48d7bdd3f75bb5ebb34e4736097deabd2a3e42a46c098ee08",
+      "src/engine/motion/library.ts": "34801d1869c64ad0c21f0cbde60704fd7934d0ec35f8f9806eea67883a914732",
+      "src/engine/motion/retarget.ts": "3c00b9725e26b2278206dca6646e1686cf4853cf1d7835a047c25576b37672a7",
+      "src/engine/motion/verbs/body.ts": "882fe7b79c88d5b0b0dc8e4c5f45a71d591d9b70fff9b46a3badee1c72f9945e",
+      "src/engine/motion/verbs/common.ts": "d1c302e84c06143cd9e832750f76d3bd442455d52794d22a414838b3c5143196",
+      "src/engine/motion/verbs/emotion.ts": "f99edb217d99ec35b5b05d2087e76e595f739500ea17baae639417113f6f97c5",
+      "src/engine/motion/verbs/gesture.ts": "768ee240a7fc3d6d8ff1e460b15d6b346f78cc9934d703ccf3d34751e28f2395",
+      "src/engine/motion/verbs/locomotion.ts": "afbf04a35a808e71505662e81a4bac68653c015c257b617bb5ffb23671f7780a",
+      "src/engine/motion/verbs/objects.ts": "4271011aa630f4adf234a84dff81f1603588b7a3b30724a76ad4a0ed7917bf3e",
+      "src/engine/pick.ts": "f6abb92251c9255644e1b0c890d09a5655c34cc18928a85f94173522a0ecb7d9",
+      "src/engine/player/evaluate.ts": "96e6b91f668bfc29360a5d01fa694f4aca6df1fb9cc45a87e4086abacc5089e3",
+      "src/engine/player/player.ts": "0d9c72db0c9b666ea04bc5402254cffa17387c5359055cd96308201824df5f78",
+      "src/engine/post/post.ts": "fe6d9828ec268eab80d8ff4603ba5ded8d04782852e44be15549b0d22e208f9f",
+      "src/engine/props/props.ts": "2b3a137285dabe06c2cdf599907db06f98648bac61964f7607cbf0f59be66dca",
+      "src/engine/sceneLighting.ts": "42c0e0ae4272336f25c12561ce9586edb54b1f102e19fe28c931ad98a83796d2",
+      "src/engine/set/bearsYard.ts": "693b6820afdf6abd177a5a420fb31c6e73434afbd742f9c8bf9cbf912064dcfc",
+      "src/engine/set/forestLocations.ts": "0d747eb7217d2a4c4f725330e7b7a682c4dc6032b7e67f591219389b64f7a281",
+      "src/engine/set/generatedYard.ts": "7486d3b72d273db6a4cf3bd046d72f27336c9d30bbc9e407dcca3b638270fde0",
+      "src/engine/set/houseInterior.ts": "85153dfc85cd9938994154777d8141dcbe1f9cc8608db90cf4286869ef7d1561",
+      "src/engine/set/interiorDecor.ts": "b4dbe35974042e4f0d0e1a88ba8eadc720e5eb40841e90d1356c97c74d79c239",
+      "src/engine/set/interiorShapes/architecture.ts": "3b1dbc577ef0bf97756eec08542497a3de8bf5a3eec3b3d9130cdf0047fedf81",
+      "src/engine/set/interiorShapes/kitchen.ts": "fb05e0a7df537600db6bdd94c99b0841a23784cc3ab1df87e9821d2aa8bf83ad",
+      "src/engine/set/interiorShapes/living.ts": "8666ceba45cdcf93bc621f66efe3d1be52fc657876a2e11a6d284a5acd9ca625",
+      "src/engine/set/nature.ts": "4cf50bf47f9080c12dc48172052f955bc064495d26faf4038c57a520f3762079",
+      "src/engine/set/textures.ts": "3e8e2baa8039e9031c699aee207e80fd37add797889149f2a020a68532be5b6d",
+      "src/engine/stage.ts": "1edb587d845db95dcd4d6e380ca877ab4d5379e11ae07ceae63308bf060284fb",
+      "src/shared/bible/characters.ts": "3d097f22b22ee4ecf24e7943bb2c5a60d98d4d42555d1ceac4d629c9537d55d0",
+      "src/shared/bible/props.ts": "0cc8b5f9d71c16493c598bfd63eebcf8bcded149cb8ef3e40593f66abf7256c5",
+      "src/shared/bible/set.ts": "3c238990fb16dc6f28c0e2b0281f57b0afde9895aefc3eb069c6638dda832dae",
+      "src/shared/carrySupport.ts": "1e21026e98f96267863a337e596c20d5a8176c372a12a296e264c0c9f7ce56dd",
+      "src/shared/characterReach.ts": "d40c4c2674ff76b1d59ed02f5ef932197cfe08d007aa1e5922a00e8b7a71daaa",
+      "src/shared/contactTiming.ts": "224dd27f912c75bb02c8bbaba089bbdb7ea751f351871bb0878f6978ac83545e",
+      "src/shared/cookingStation.ts": "270910300b7369fb9cc64cc791e73036e99b76ac6f8aa535ddd074b0205e950e",
+      "src/shared/forestLayout.ts": "aa6b82484266c232845cc8021a47ef5c170c805aca3ff6f0fa3014732786e496",
+      "src/shared/grammar.ts": "d6d8d188361654775d9985d6a3ad16738dfc850d3a31488e6528b3018f8bf234",
+      "src/shared/houseLayout.ts": "5adcd6a304ec368ce400cfc15c6aee09415e9addae2efb5f397615b01ca8d271",
+      "src/shared/physicalInteractions.ts": "0e07d87b7d0b7057322b7bf931a9452e513a750c7bf01256c19aca519bfbf562",
+      "src/shared/pond.ts": "e9939d242df2902c72cc0c38c3ed2e28c49ee8b665523afcd3e714f85768c120",
+      "src/shared/pricing.ts": "9b10568be144bb5dc7fddcca549c5ab3fe003b0d648681ed4f741e6f76018afd",
+      "src/shared/propContacts.ts": "0a0a50794d10bf1d54bd1cbf83caaa3f78414db4f843156e959127df17d54da6",
+      "src/shared/propPlacement.ts": "ce69b280901a4eec189a494d55c779a8cec2a4dda5a563749b643f2422b0b0ed",
+      "src/shared/recordedSpeech.json": "0d1fac3766b3354fc6e86567d33f14234fa2058c07e163292a99963b24aece42",
+      "src/shared/rules.ts": "7c6a30c0d4f58dff56ca129e3072757bfec5d4117fa07909e2505192ad0edf16",
+      "src/shared/schema.ts": "b172853f9c14480343251c94ea54e46205f04eaad875777bd587e8e1adbb220d",
+      "src/shared/speech.ts": "b16ad56f94bab3d4a198ca8f36698bdfb6c8583e3e7e218a0ed8d0733c345a63"
+    },
+    "fingerprint": "07692235346b8d123dc979e2559ab71d0793b0c74a51c00eab535a3dbf551e12"
+  },
+  "capturedAt": "2026-11-07T19:34:58.361Z",
+  "info": {
+    "mode": "baseline",
+    "physicsInitMs": 0,
+    "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+    "buffer": [
+      1280,
+      720
+    ],
+    "assets": [
+      {
+        "id": "wolf_a",
+        "source": "procedural",
+        "ok": true
+      },
+      {
+        "id": "wolf_b",
+        "source": "procedural",
+        "ok": true
+      },
+      {
+        "id": "hare",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "squirrel",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "rosie",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "masha",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "rival_bear",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "bear",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "lady_bear",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "robot_test",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "prop:carrot",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "set:beehive",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "set:house",
+        "source": "gltf",
+        "ok": true
+      }
+    ],
+    "durations": {
+      "obstacle": 9.274,
+      "drop": 12.6,
+      "regression": 68.082
+    }
+  },
+  "proofs": [
+    {
+      "id": "obstacle",
+      "t": 0.3,
+      "actor": {
+        "pos": [
+          2,
+          0,
+          4.383891959486496
+        ],
+        "verb": "walk_to",
+        "holding": null,
+        "box": {
+          "min": [
+            1.7852922473096322,
+            -0.01933211364022562,
+            4.084866127050648
+          ],
+          "max": [
+            2.19404726910554,
+            1.0195207173739183,
+            4.65121164471276
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "carry": null,
+        "hug": null
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": null,
+      "stats": {
+        "fps": 42.462844989121166,
+        "drawCalls": 145,
+        "triangles": 2042899
+      },
+      "camera": {
+        "pos": [
+          5,
+          2.7,
+          6.5
+        ],
+        "quat": [
+          -0.17116354904278896,
+          0.3935463576817858,
+          0.07483497542383775,
+          0.9001244526662913
+        ]
+      }
+    },
+    {
+      "id": "obstacle",
+      "t": 1,
+      "actor": {
+        "pos": [
+          2,
+          0,
+          3.2662667167166886
+        ],
+        "verb": "walk_to",
+        "holding": null,
+        "box": {
+          "min": [
+            1.7852922473096322,
+            -0.022047608318833053,
+            2.967240884280841
+          ],
+          "max": [
+            2.19404726910554,
+            1.0168052226953108,
+            3.533586401942953
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "carry": null,
+        "hug": null
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": null,
+      "stats": {
+        "fps": 17.97483523324478,
+        "drawCalls": 144,
+        "triangles": 2042437
+      },
+      "camera": {
+        "pos": [
+          5,
+          3.6089339984250515,
+          6.5
+        ],
+        "quat": [
+          -0.23180618358032895,
+          0.3875660486494517,
+          0.10134874012802184,
+          0.8864462104733914
+        ]
+      }
+    },
+    {
+      "id": "obstacle",
+      "t": 2,
+      "actor": {
+        "pos": [
+          2,
+          0,
+          3
+        ],
+        "verb": "idle",
+        "holding": null,
+        "box": {
+          "min": [
+            1.7851718878585492,
+            -0.02359344767333031,
+            2.7008977067875564
+          ],
+          "max": [
+            2.1941547148858405,
+            1.0152593833408134,
+            3.267404564606967
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "carry": null,
+        "hug": null
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": null,
+      "stats": {
+        "fps": 15.835312745932132,
+        "drawCalls": 144,
+        "triangles": 2042437
+      },
+      "camera": {
+        "pos": [
+          5,
+          3.196327563767605,
+          6.5
+        ],
+        "quat": [
+          -0.20536667973795555,
+          0.39040611909062045,
+          0.08978903812763944,
+          0.8929420572815022
+        ]
+      }
+    },
+    {
+      "id": "obstacle",
+      "t": 3.5,
+      "actor": {
+        "pos": [
+          2,
+          0,
+          3
+        ],
+        "verb": "walk_to",
+        "holding": null,
+        "box": {
+          "min": [
+            1.64487662110417,
+            -0.028441443757703338,
+            2.712245114180276
+          ],
+          "max": [
+            2.3179294048189685,
+            1.0104113872564404,
+            3.2947365507504154
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "carry": null,
+        "hug": null
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": null,
+      "stats": {
+        "fps": 14.894250817068176,
+        "drawCalls": 144,
+        "triangles": 2042437
+      },
+      "camera": {
+        "pos": [
+          5,
+          3.196327563767605,
+          6.5
+        ],
+        "quat": [
+          -0.20536667973795555,
+          0.39040611909062045,
+          0.08978903812763944,
+          0.8929420572815022
+        ]
+      }
+    },
+    {
+      "id": "obstacle",
+      "t": 4.5,
+      "actor": {
+        "pos": [
+          0.9583438662686288,
+          0,
+          3.0651035083582108
+        ],
+        "verb": "walk_to",
+        "holding": null,
+        "box": {
+          "min": [
+            0.6481878753552777,
+            -0.048390526002206294,
+            2.854978142049224
+          ],
+          "max": [
+            1.2381442207628561,
+            0.9904623050119375,
+            3.2978268987052566
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "carry": null,
+        "hug": null
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": null,
+      "stats": {
+        "fps": 14.137606032839459,
+        "drawCalls": 145,
+        "triangles": 2042899
+      },
+      "camera": {
+        "pos": [
+          5,
+          2.7,
+          6.5
+        ],
+        "quat": [
+          -0.17116354904278896,
+          0.3935463576817858,
+          0.07483497542383775,
+          0.9001244526662913
+        ]
+      }
+    },
+    {
+      "id": "obstacle",
+      "t": 5.5,
+      "actor": {
+        "pos": [
+          0.290140321952528,
+          0,
+          2.2485874951320914
+        ],
+        "verb": "walk_to",
+        "holding": null,
+        "box": {
+          "min": [
+            0.03938038304260605,
+            -0.05226343722073288,
+            1.9279916954342744
+          ],
+          "max": [
+            0.5163521724595516,
+            0.9865893937934109,
+            2.5403817895116414
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "carry": null,
+        "hug": null
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": null,
+      "stats": {
+        "fps": 13.80126182835549,
+        "drawCalls": 145,
+        "triangles": 2042899
+      },
+      "camera": {
+        "pos": [
+          5,
+          2.7,
+          6.5
+        ],
+        "quat": [
+          -0.17116354904278896,
+          0.3935463576817858,
+          0.07483497542383775,
+          0.9001244526662913
+        ]
+      }
+    },
+    {
+      "id": "obstacle",
+      "t": 8,
+      "actor": {
+        "pos": [
+          0,
+          0,
+          0
+        ],
+        "verb": "wave",
+        "holding": null,
+        "box": {
+          "min": [
+            -0.31618705466579683,
+            -0.014321732155327456,
+            -0.26731968522626426
+          ],
+          "max": [
+            0.2449352367760142,
+            1.0245310988588163,
+            0.2990258324358475
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "carry": null,
+        "hug": null
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": null,
+      "stats": {
+        "fps": 13.495276654256925,
+        "drawCalls": 145,
+        "triangles": 2042899
+      },
+      "camera": {
+        "pos": [
+          5,
+          2.7,
+          6.5
+        ],
+        "quat": [
+          -0.17116354904278896,
+          0.3935463576817858,
+          0.07483497542383775,
+          0.9001244526662913
+        ]
+      }
+    },
+    {
+      "id": "regression",
+      "t": 35.887,
+      "actor": {
+        "pos": [
+          -11.427,
+          0,
+          1.366
+        ],
+        "verb": "hug",
+        "holding": null,
+        "box": {
+          "min": [
+            -11.790478168413769,
+            -0.027070532929508253,
+            1.0529938203664209
+          ],
+          "max": [
+            -11.101320827362795,
+            1.0117822980846356,
+            1.6808422817870776
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "carry": null,
+        "hug": {
+          "partner": "bear",
+          "strength": 4.889633710047582e-29,
+          "touches": [
+            {
+              "side": 1,
+              "error": 0.24134527429204491,
+              "gap": 0.6143586976019682,
+              "point": [
+                -11.572859884402641,
+                0.3795273986368115,
+                1.4148357461012586
+              ],
+              "target": [
+                -11.730577071550993,
+                0.9700781052283289,
+                1.353096284316612
+              ]
+            },
+            {
+              "side": -1,
+              "error": 0.2372149597315066,
+              "gap": 0.6194703812627897,
+              "point": [
+                -11.435191465977065,
+                0.3748223156512928,
+                1.2022020297015443
+              ],
+              "target": [
+                -11.588584215942513,
+                0.9708715165137964,
+                1.131919971741674
+              ]
+            }
+          ]
+        }
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": null,
+      "stats": {
+        "fps": 60.03001500750375,
+        "drawCalls": 150,
+        "triangles": 2063550
+      },
+      "camera": {
+        "pos": [
+          -8.459696424819981,
+          2.34,
+          -3.1
+        ],
+        "quat": [
+          -0.035681368194295085,
+          0.9421009967323442,
+          0.1063778521835807,
+          0.3160004817789287
+        ]
+      }
+    },
+    {
+      "id": "regression",
+      "t": 36.5,
+      "actor": {
+        "pos": [
+          -11.427,
+          0,
+          1.366
+        ],
+        "verb": "hug",
+        "holding": null,
+        "box": {
+          "min": [
+            -11.790486310188719,
+            -0.020328986545875147,
+            1.0529570664175778
+          ],
+          "max": [
+            -11.101313097719892,
+            1.0185238444682687,
+            1.6808705316217138
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "carry": null,
+        "hug": {
+          "partner": "bear",
+          "strength": 1,
+          "touches": [
+            {
+              "side": 1,
+              "error": 4.593540023186291e-9,
+              "gap": 4.8400736973271075e-9,
+              "point": [
+                -11.53022855931356,
+                0.60319233540436,
+                1.379839016381796
+              ],
+              "target": [
+                -11.530228559474805,
+                0.6031923395272817,
+                1.3798390138516121
+              ]
+            },
+            {
+              "side": -1,
+              "error": 2.160049246708585e-8,
+              "gap": 2.227301369923603e-8,
+              "point": [
+                -11.475679798377916,
+                0.6353766129118033,
+                1.1629212943314673
+              ],
+              "target": [
+                -11.47567978659875,
+                0.6353765974366743,
+                1.1629213051877452
+              ]
+            }
+          ]
+        }
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": null,
+      "stats": {
+        "fps": 55.689623168115595,
+        "drawCalls": 148,
+        "triangles": 2062550
+      },
+      "camera": {
+        "pos": [
+          -8.508700155992628,
+          2.34,
+          -3.1
+        ],
+        "quat": [
+          -0.035479555775977716,
+          0.9431832664134737,
+          0.10706943611392347,
+          0.31254225783051476
+        ]
+      }
+    },
+    {
+      "id": "regression",
+      "t": 37.3,
+      "actor": {
+        "pos": [
+          -11.427,
+          0,
+          1.366
+        ],
+        "verb": "hug",
+        "holding": null,
+        "box": {
+          "min": [
+            -11.790486310188719,
+            -0.024065101630341677,
+            1.0529570664175778
+          ],
+          "max": [
+            -11.101313097719892,
+            1.0147877293838021,
+            1.6808705316217138
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "carry": null,
+        "hug": {
+          "partner": "bear",
+          "strength": 1,
+          "touches": [
+            {
+              "side": 1,
+              "error": 4.576213354477349e-9,
+              "gap": 4.8370117680477965e-9,
+              "point": [
+                -11.527507906584932,
+                0.6031444454922703,
+                1.3834810194527434
+              ],
+              "target": [
+                -11.527507906779523,
+                0.6031444495937519,
+                1.383481016896053
+              ]
+            },
+            {
+              "side": -1,
+              "error": 2.132751633764568e-8,
+              "gap": 2.2032340148089302e-8,
+              "point": [
+                -11.475560709742572,
+                0.6345474568836854,
+                1.1692924310306363
+              ],
+              "target": [
+                -11.475560698169097,
+                0.6345474408839082,
+                1.1692924408023213
+              ]
+            }
+          ]
+        }
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": null,
+      "stats": {
+        "fps": 52.46130978184703,
+        "drawCalls": 148,
+        "triangles": 2062550
+      },
+      "camera": {
+        "pos": [
+          -8.595197603744383,
+          2.34,
+          -3.1
+        ],
+        "quat": [
+          -0.03510174655183813,
+          0.9450917044185784,
+          0.10829393633914348,
+          0.3063363526915642
+        ]
+      }
+    },
+    {
+      "id": "regression",
+      "t": 39.8,
+      "actor": {
+        "pos": [
+          -11.427,
+          0,
+          1.366
+        ],
+        "verb": "idle",
+        "holding": null,
+        "box": {
+          "min": [
+            -11.701412582636683,
+            -0.04246522202290036,
+            1.0225145541641663
+          ],
+          "max": [
+            -11.163639614927066,
+            0.9963876089912435,
+            1.6732917408328014
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "carry": {
+          "progress": 0,
+          "legs": [],
+          "seat": [
+            -11.979095681453256,
+            1.4843103643599744,
+            1.0498770029603133
+          ],
+          "riderSeat": [
+            -11.418375202610534,
+            0.3679757499528157,
+            1.3515493611032419
+          ],
+          "supports": [
+            {
+              "side": 1,
+              "error": 0.22054529190249655,
+              "gap": 0.2205327159276571,
+              "point": [
+                -11.443151964010486,
+                0.7575441975135747,
+                1.2002769646456561
+              ],
+              "target": [
+                -11.385840673436418,
+                0.5586023312498608,
+                1.276252148848618
+              ]
+            },
+            {
+              "side": -1,
+              "error": 0.2323837342035907,
+              "gap": 0.232375669335787,
+              "point": [
+                -11.569710704476739,
+                0.7615137535489596,
+                1.3985178276880328
+              ],
+              "target": [
+                -11.456469894684735,
+                0.5586023312498608,
+                1.397130240767113
+              ]
+            }
+          ]
+        },
+        "hug": null
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": null,
+      "stats": {
+        "fps": 49.22471080578686,
+        "drawCalls": 143,
+        "triangles": 2062230
+      },
+      "camera": {
+        "pos": [
+          -9.085013148,
+          1.9937039728888888,
+          -3.1
+        ],
+        "quat": [
+          -0.023520140493649366,
+          0.9588703840503648,
+          0.08344191184082309,
+          0.2702810332424622
+        ]
+      }
+    },
+    {
+      "id": "regression",
+      "t": 41,
+      "actor": {
+        "pos": [
+          -11.940640052465,
+          2.2389801732757517,
+          1.0516542465953336
+        ],
+        "verb": "idle",
+        "holding": null,
+        "box": {
+          "min": [
+            -12.26631294752054,
+            2.1965149512528517,
+            0.7368348752206859
+          ],
+          "max": [
+            -11.57716849710238,
+            3.2353677822669953,
+            1.3646306226296239
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "carry": {
+          "progress": 0.7966197530864217,
+          "legs": [],
+          "seat": [
+            -12.093468937291256,
+            1.9622595053470397,
+            0.9713382577896394
+          ],
+          "riderSeat": [
+            -11.92755385173814,
+            2.3206139393772243,
+            1.0639916007053252
+          ],
+          "supports": [
+            {
+              "side": 1,
+              "error": 0.00004820299479064333,
+              "gap": 0.00003330838431901359,
+              "point": [
+                -11.744472203879628,
+                2.217946263850883,
+                0.9451102336540123
+              ],
+              "target": [
+                -11.74448580693898,
+                2.2179308757505836,
+                0.9450840113045491
+              ]
+            },
+            {
+              "side": -1,
+              "error": 0.00004281656878265554,
+              "gap": 0.00007288631200827883,
+              "point": [
+                -11.944524663656356,
+                2.21385061329219,
+                1.2866100263343403
+              ],
+              "target": [
+                -11.944589954745762,
+                2.2138630439437263,
+                1.2865801103348633
+              ]
+            }
+          ]
+        },
+        "hug": null
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": null,
+      "stats": {
+        "fps": 46.59832245952859,
+        "drawCalls": 143,
+        "triangles": 2062230
+      },
+      "camera": {
+        "pos": [
+          -9.286572452000001,
+          2.1212608271111115,
+          -3.1
+        ],
+        "quat": [
+          -0.025374559959641118,
+          0.9585765537555561,
+          0.09045700398575546,
+          0.2688952448945446
+        ]
+      }
+    },
+    {
+      "id": "regression",
+      "t": 42.6,
+      "actor": {
+        "pos": [
+          -12.069274179992366,
+          1.998006429220568,
+          0.9658248674069385
+        ],
+        "verb": "clap",
+        "holding": null,
+        "box": {
+          "min": [
+            -12.4344637782512,
+            1.8000918865143125,
+            0.6325887851964034
+          ],
+          "max": [
+            -11.74531932783304,
+            2.8389447175284563,
+            1.2603845326053413
+          ]
+        },
+        "contacts": {
+          "mode": "clap",
+          "strength": 0.8474832592592825,
+          "palmSeparation": 0.20563519603410618,
+          "targetSeparation": 0.18053575823088347,
+          "contactHold": false,
+          "targetSurfaceGap": 0.1804
+        },
+        "carry": {
+          "progress": 1,
+          "legs": [
+            {
+              "side": 1,
+              "error": 0.0000010541095921815307,
+              "surface": [
+                -11.882574107391346,
+                1.9024344893077503,
+                0.7781978225524943
+              ],
+              "target": [
+                -11.882574107391346,
+                1.9674344893077502,
+                0.7781978225524943
+              ],
+              "point": [
+                -11.882574582749704,
+                1.967435313060483,
+                0.7781982770994097
+              ]
+            },
+            {
+              "side": -1,
+              "error": 0.000007306687526532168,
+              "surface": [
+                -12.160227897547895,
+                1.9017502511548412,
+                1.2742453509503653
+              ],
+              "target": [
+                -12.160227897547895,
+                1.9667502511548411,
+                1.2742453509503653
+              ],
+              "point": [
+                -12.1602268893496,
+                1.9667550470716488,
+                1.2742399315038269
+              ]
+            }
+          ],
+          "seat": [
+            -12.095784850925789,
+            1.9903732611259626,
+            0.9598720000105897
+          ],
+          "riderSeat": [
+            -12.095784850925789,
+            1.9953732611259625,
+            0.9598720000105896
+          ],
+          "supports": [
+            {
+              "side": 1,
+              "error": 2.0688208923787187e-9,
+              "gap": 0.00005413457104308451,
+              "point": [
+                -11.869955102305097,
+                1.9674343380396504,
+                0.7565592480327472
+              ],
+              "target": [
+                -11.869962221812505,
+                1.967435313060483,
+                0.7566129035425356
+              ]
+            },
+            {
+              "side": -1,
+              "error": 4.715016107869155e-9,
+              "gap": 0.000016692733537887792,
+              "point": [
+                -12.172851369987825,
+                1.966753160124697,
+                1.295836627588299
+              ],
+              "target": [
+                -12.172839250286799,
+                1.9667550470716488,
+                1.295825305060701
+              ]
+            }
+          ]
+        },
+        "hug": null
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": null,
+      "stats": {
+        "fps": 43.98182084584576,
+        "drawCalls": 148,
+        "triangles": 2130974
+      },
+      "camera": {
+        "pos": [
+          -12.305793922145234,
+          2.368,
+          2.627993388940185
+        ],
+        "quat": [
+          -0.030000652406750598,
+          -0.09674890809482056,
+          -0.0029175490314970556,
+          0.9948522993617084
+        ]
+      }
+    },
+    {
+      "id": "regression",
+      "t": 47,
+      "actor": {
+        "pos": [
+          -6.458982590593749,
+          1.837920199450817,
+          0.6529054893992763
+        ],
+        "verb": "idle",
+        "holding": null,
+        "box": {
+          "min": [
+            -6.796732401176973,
+            1.6788037641069822,
+            0.24750470484959547
+          ],
+          "max": [
+            -6.110699778558233,
+            2.7242573421329426,
+            0.9262716783432169
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "carry": {
+          "progress": 1,
+          "legs": [
+            {
+              "side": 1,
+              "error": 3.648039005656887e-12,
+              "surface": [
+                -6.190168759625892,
+                1.5625550577893603,
+                0.42773064692499524
+              ],
+              "target": [
+                -6.190168759625892,
+                1.6275550577893603,
+                0.42773064692499524
+              ],
+              "point": [
+                -6.190168759623795,
+                1.6275550577868556,
+                0.4277306469233712
+              ]
+            },
+            {
+              "side": -1,
+              "error": 2.9161743784712947e-12,
+              "surface": [
+                -6.644560028095733,
+                1.6273851567016449,
+                0.8304040886794573
+              ],
+              "target": [
+                -6.644560028095733,
+                1.6923851567016448,
+                0.8304040886794573
+              ],
+              "point": [
+                -6.644560028097502,
+                1.6923851566994625,
+                0.8304040886802393
+              ]
+            }
+          ],
+          "seat": [
+            -6.461716244685576,
+            1.7275321565651307,
+            0.5989610621411213
+          ],
+          "riderSeat": [
+            -6.461716244685576,
+            1.7325321565651306,
+            0.5989610621411212
+          ],
+          "supports": [
+            {
+              "side": 1,
+              "error": 0.00003834833215589715,
+              "gap": 0.000027525561685001663,
+              "point": [
+                -6.172756220267943,
+                1.627536749844217,
+                0.4097736442799965
+              ],
+              "target": [
+                -6.1727538545774445,
+                1.6275550577868556,
+                0.4097940619020638
+              ]
+            },
+            {
+              "side": -1,
+              "error": 0.00004671579194858494,
+              "gap": 0.02611068737543086,
+              "point": [
+                -6.642965716895112,
+                1.6857209135090447,
+                0.8649540886281981
+              ],
+              "target": [
+                -6.661974933143853,
+                1.6923851566994625,
+                0.8483406737015468
+              ]
+            }
+          ]
+        },
+        "hug": null
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": null,
+      "stats": {
+        "fps": 40.73872895297568,
+        "drawCalls": 165,
+        "triangles": 2275200
+      },
+      "camera": {
+        "pos": [
+          -10.437516311562192,
+          2.5,
+          4.427429329590418
+        ],
+        "quat": [
+          -0.10332208377149561,
+          -0.3735737204566182,
+          -0.04191494445525467,
+          0.920874779663679
+        ]
+      }
+    }
+  ],
+  "benchmarks": [
+    {
+      "id": "obstacle",
+      "coldMs": 0.3999999761581421,
+      "frames": 361,
+      "seconds": 6,
+      "meanFps": 59.99700014999251,
+      "gapP50": 16.69999999999891,
+      "gapP95": 16.799999999999272,
+      "evalP50": 0.2999999523162842,
+      "evalP95": 0.40000009536743164,
+      "renderP50": 4.799999952316284,
+      "renderP95": 5.899999976158142,
+      "stats": {
+        "fps": 60.02400960240988,
+        "drawCalls": 145,
+        "triangles": 2042899
+      },
+      "physics": null
+    },
+    {
+      "id": "regression",
+      "coldMs": 1.2999999523162842,
+      "frames": 361,
+      "seconds": 6,
+      "meanFps": 59.99700014999247,
+      "gapP50": 16.700000000000728,
+      "gapP95": 16.799999999999272,
+      "evalP50": 0.3999999761581421,
+      "evalP95": 0.5,
+      "renderP50": 5.199999928474426,
+      "renderP95": 6.399999976158142,
+      "stats": {
+        "fps": 60.036021607238865,
+        "drawCalls": 148,
+        "triangles": 2224954
+      },
+      "physics": null
+    }
+  ],
+  "recordings": [
+    {
+      "id": "obstacle",
+      "from": 0,
+      "to": 9.274,
+      "filename": "obstacle.mp4",
+      "mime": "video/mp4;codecs=avc1.42e01e",
+      "duration": 9.274,
+      "frames": 557,
+      "gapP95": 16.799999999999272
+    },
+    {
+      "id": "regression",
+      "from": 34.8,
+      "to": 50.282,
+      "filename": "regression.mp4",
+      "mime": "video/mp4;codecs=avc1.42e01e",
+      "duration": 15.482,
+      "frames": 929,
+      "gapP95": 16.799999999995634
+    }
+  ],
+  "errors": [],
+  "failed": []
+}

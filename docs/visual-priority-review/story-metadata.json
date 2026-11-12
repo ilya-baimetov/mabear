@@ -1,0 +1,1794 @@
+{
+  "clips": [
+    {
+      "story": "garden_party",
+      "actor": "masha",
+      "verb": "wave",
+      "start": 1.4,
+      "dur": 1.992,
+      "emotion": "happy"
+    },
+    {
+      "story": "garden_party",
+      "actor": "bear",
+      "verb": "wave",
+      "start": 0,
+      "dur": 1.4,
+      "emotion": "happy"
+    },
+    {
+      "story": "garden_party",
+      "actor": "lady_bear",
+      "verb": "walk_to",
+      "start": 0,
+      "dur": 1.204,
+      "emotion": "happy"
+    },
+    {
+      "story": "garden_party",
+      "actor": "masha",
+      "verb": "wave",
+      "start": 13.207999999999998,
+      "dur": 1.915,
+      "emotion": "excited"
+    },
+    {
+      "story": "garden_party",
+      "actor": "hare",
+      "verb": "run_to",
+      "start": 3.992,
+      "dur": 0.8,
+      "emotion": "happy"
+    },
+    {
+      "story": "garden_party",
+      "actor": "hare",
+      "verb": "take",
+      "start": 4.792,
+      "dur": 1,
+      "emotion": "happy",
+      "item": "carrot"
+    },
+    {
+      "story": "garden_party",
+      "actor": "hare",
+      "verb": "eat",
+      "start": 5.792,
+      "dur": 2,
+      "emotion": "happy",
+      "item": "carrot"
+    },
+    {
+      "story": "garden_party",
+      "actor": "rosie",
+      "verb": "walk_to",
+      "start": 7.792,
+      "dur": 5.216,
+      "emotion": "happy"
+    },
+    {
+      "story": "garden_party",
+      "actor": "rosie",
+      "verb": "surprised",
+      "start": 13.008,
+      "dur": 1,
+      "emotion": "happy"
+    },
+    {
+      "story": "garden_party",
+      "actor": "masha",
+      "verb": "jump",
+      "start": 22.448999999999998,
+      "dur": 1,
+      "emotion": "happy"
+    },
+    {
+      "story": "garden_party",
+      "actor": "masha",
+      "verb": "wave",
+      "start": 23.448999999999998,
+      "dur": 1.531,
+      "emotion": "excited"
+    },
+    {
+      "story": "garden_party",
+      "actor": "bear",
+      "verb": "laugh",
+      "start": 22.448999999999998,
+      "dur": 1.6,
+      "emotion": "happy"
+    },
+    {
+      "story": "garden_party",
+      "actor": "lady_bear",
+      "verb": "clap",
+      "start": 22.448999999999998,
+      "dur": 1.2,
+      "emotion": "happy"
+    },
+    {
+      "story": "garden_party",
+      "actor": "squirrel",
+      "verb": "jump",
+      "start": 15.722999999999999,
+      "dur": 1,
+      "emotion": "happy"
+    },
+    {
+      "story": "garden_party",
+      "actor": "rival_bear",
+      "verb": "walk_to",
+      "start": 16.723,
+      "dur": 5.726,
+      "emotion": "happy"
+    },
+    {
+      "story": "garden_party",
+      "actor": "rival_bear",
+      "verb": "dance",
+      "start": 22.448999999999998,
+      "dur": 4,
+      "emotion": "happy"
+    },
+    {
+      "story": "pancake_morning",
+      "actor": "masha",
+      "verb": "run_to",
+      "start": 0,
+      "dur": 0.8,
+      "emotion": "excited"
+    },
+    {
+      "story": "pancake_morning",
+      "actor": "masha",
+      "verb": "wave",
+      "start": 1.6,
+      "dur": 2.8,
+      "emotion": "excited"
+    },
+    {
+      "story": "pancake_morning",
+      "actor": "masha",
+      "verb": "clap",
+      "start": 4.4,
+      "dur": 1.2,
+      "emotion": "happy"
+    },
+    {
+      "story": "pancake_morning",
+      "actor": "masha",
+      "verb": "spin",
+      "start": 7.1,
+      "dur": 1.4,
+      "emotion": "happy"
+    },
+    {
+      "story": "pancake_morning",
+      "actor": "bear",
+      "verb": "look_at",
+      "start": 0.6,
+      "dur": 1,
+      "emotion": "curious"
+    },
+    {
+      "story": "pancake_morning",
+      "actor": "bear",
+      "verb": "yawn_stretch",
+      "start": 2.1,
+      "dur": 2,
+      "emotion": "sleepy"
+    },
+    {
+      "story": "pancake_morning",
+      "actor": "bear",
+      "verb": "nod",
+      "start": 4.1,
+      "dur": 1,
+      "emotion": "happy"
+    },
+    {
+      "story": "pancake_morning",
+      "actor": "bear",
+      "verb": "walk_to",
+      "start": 5.6,
+      "dur": 5.531,
+      "emotion": "happy"
+    },
+    {
+      "story": "pancake_morning",
+      "actor": "masha",
+      "verb": "take",
+      "start": 11.731,
+      "dur": 1,
+      "emotion": "mischievous",
+      "item": "flour_bag"
+    },
+    {
+      "story": "pancake_morning",
+      "actor": "masha",
+      "verb": "look_at",
+      "start": 13.331,
+      "dur": 1,
+      "emotion": "proud",
+      "item": "flour_bag"
+    },
+    {
+      "story": "pancake_morning",
+      "actor": "masha",
+      "verb": "idle",
+      "start": 14.331,
+      "dur": 1.454,
+      "emotion": "proud",
+      "item": "flour_bag"
+    },
+    {
+      "story": "pancake_morning",
+      "actor": "masha",
+      "verb": "sneeze",
+      "start": 15.785,
+      "dur": 1.4,
+      "emotion": "surprised",
+      "item": "flour_bag"
+    },
+    {
+      "story": "pancake_morning",
+      "actor": "masha",
+      "verb": "throw",
+      "start": 17.185,
+      "dur": 1.2,
+      "emotion": "surprised",
+      "item": "flour_bag"
+    },
+    {
+      "story": "pancake_morning",
+      "actor": "masha",
+      "verb": "laugh",
+      "start": 19.185,
+      "dur": 1.6,
+      "emotion": "happy"
+    },
+    {
+      "story": "pancake_morning",
+      "actor": "bear",
+      "verb": "sit",
+      "start": 12.131,
+      "dur": 1.2,
+      "emotion": "happy"
+    },
+    {
+      "story": "pancake_morning",
+      "actor": "bear",
+      "verb": "surprised",
+      "start": 16.085,
+      "dur": 1,
+      "emotion": "surprised"
+    },
+    {
+      "story": "pancake_morning",
+      "actor": "bear",
+      "verb": "sneeze",
+      "start": 17.785,
+      "dur": 1.4,
+      "emotion": "surprised"
+    },
+    {
+      "story": "pancake_morning",
+      "actor": "bear",
+      "verb": "facepalm",
+      "start": 19.685,
+      "dur": 2,
+      "emotion": "annoyed"
+    },
+    {
+      "story": "pancake_morning",
+      "actor": "masha",
+      "verb": "take",
+      "start": 22.285,
+      "dur": 1,
+      "emotion": "proud",
+      "item": "frying_pan"
+    },
+    {
+      "story": "pancake_morning",
+      "actor": "masha",
+      "verb": "cook",
+      "start": 23.285,
+      "dur": 4,
+      "emotion": "happy",
+      "item": "frying_pan"
+    },
+    {
+      "story": "pancake_morning",
+      "actor": "masha",
+      "verb": "point_at",
+      "start": 27.285,
+      "dur": 1.2,
+      "emotion": "mischievous",
+      "item": "frying_pan"
+    },
+    {
+      "story": "pancake_morning",
+      "actor": "masha",
+      "verb": "idle",
+      "start": 28.485,
+      "dur": 0.408,
+      "emotion": "mischievous",
+      "item": "frying_pan"
+    },
+    {
+      "story": "pancake_morning",
+      "actor": "masha",
+      "verb": "laugh",
+      "start": 29.293,
+      "dur": 1.6,
+      "emotion": "happy",
+      "item": "frying_pan"
+    },
+    {
+      "story": "pancake_morning",
+      "actor": "bear",
+      "verb": "look_at",
+      "start": 24.285,
+      "dur": 1,
+      "emotion": "curious"
+    },
+    {
+      "story": "pancake_morning",
+      "actor": "bear",
+      "verb": "peek",
+      "start": 25.285,
+      "dur": 1.6,
+      "emotion": "curious"
+    },
+    {
+      "story": "pancake_morning",
+      "actor": "bear",
+      "verb": "sigh",
+      "start": 28.893,
+      "dur": 1.6,
+      "emotion": "sad"
+    },
+    {
+      "story": "pancake_morning",
+      "actor": "masha",
+      "verb": "wave",
+      "start": 31.493000000000002,
+      "dur": 1.4,
+      "emotion": "excited",
+      "item": "frying_pan"
+    },
+    {
+      "story": "pancake_morning",
+      "actor": "masha",
+      "verb": "point_at",
+      "start": 32.893,
+      "dur": 1.2,
+      "emotion": "proud",
+      "item": "frying_pan"
+    },
+    {
+      "story": "pancake_morning",
+      "actor": "masha",
+      "verb": "idle",
+      "start": 34.093,
+      "dur": 1.023,
+      "emotion": "proud",
+      "item": "frying_pan"
+    },
+    {
+      "story": "pancake_morning",
+      "actor": "masha",
+      "verb": "walk_to",
+      "start": 40.759,
+      "dur": 5.94,
+      "emotion": "happy",
+      "item": "frying_pan"
+    },
+    {
+      "story": "pancake_morning",
+      "actor": "masha",
+      "verb": "take",
+      "start": 46.699,
+      "dur": 0.8,
+      "emotion": "happy",
+      "putDown": "bench",
+      "item": "frying_pan"
+    },
+    {
+      "story": "pancake_morning",
+      "actor": "masha",
+      "verb": "clap",
+      "start": 47.499,
+      "dur": 1.2,
+      "emotion": "happy"
+    },
+    {
+      "story": "pancake_morning",
+      "actor": "masha",
+      "verb": "walk_to",
+      "start": 49.699,
+      "dur": 5.344,
+      "emotion": "happy"
+    },
+    {
+      "story": "pancake_morning",
+      "actor": "masha",
+      "verb": "hug",
+      "start": 55.043000000000006,
+      "dur": 2,
+      "emotion": "happy"
+    },
+    {
+      "story": "pancake_morning",
+      "actor": "bear",
+      "verb": "stand_up",
+      "start": 33.393,
+      "dur": 1,
+      "emotion": "excited"
+    },
+    {
+      "story": "pancake_morning",
+      "actor": "bear",
+      "verb": "walk_to",
+      "start": 34.393,
+      "dur": 4.366,
+      "emotion": "happy"
+    },
+    {
+      "story": "pancake_morning",
+      "actor": "bear",
+      "verb": "take",
+      "start": 38.759,
+      "dur": 1,
+      "emotion": "happy",
+      "item": "pancakes"
+    },
+    {
+      "story": "pancake_morning",
+      "actor": "bear",
+      "verb": "eat",
+      "start": 39.759,
+      "dur": 2,
+      "emotion": "happy",
+      "item": "pancakes"
+    },
+    {
+      "story": "pancake_morning",
+      "actor": "bear",
+      "verb": "nod",
+      "start": 48.699,
+      "dur": 1,
+      "emotion": "proud"
+    },
+    {
+      "story": "pancake_morning",
+      "actor": "bear",
+      "verb": "hug",
+      "start": 55.043000000000006,
+      "dur": 2,
+      "emotion": "happy"
+    },
+    {
+      "story": "bears_nap",
+      "actor": "masha",
+      "verb": "look_at",
+      "start": 3,
+      "dur": 1,
+      "emotion": "curious"
+    },
+    {
+      "story": "bears_nap",
+      "actor": "masha",
+      "verb": "run_to",
+      "start": 4,
+      "dur": 2.326,
+      "emotion": "mischievous"
+    },
+    {
+      "story": "bears_nap",
+      "actor": "masha",
+      "verb": "peek",
+      "start": 9.5,
+      "dur": 1.6,
+      "emotion": "mischievous"
+    },
+    {
+      "story": "bears_nap",
+      "actor": "masha",
+      "verb": "point_at",
+      "start": 11.1,
+      "dur": 1.2,
+      "emotion": "mischievous"
+    },
+    {
+      "story": "bears_nap",
+      "actor": "masha",
+      "verb": "idle",
+      "start": 12.3,
+      "dur": 1.485,
+      "emotion": "mischievous"
+    },
+    {
+      "story": "bears_nap",
+      "actor": "bear",
+      "verb": "yawn_stretch",
+      "start": 0,
+      "dur": 2,
+      "emotion": "sleepy"
+    },
+    {
+      "story": "bears_nap",
+      "actor": "bear",
+      "verb": "walk_to",
+      "start": 2,
+      "dur": 6,
+      "emotion": "sleepy"
+    },
+    {
+      "story": "bears_nap",
+      "actor": "bear",
+      "verb": "sleep",
+      "start": 8,
+      "dur": 4,
+      "emotion": "sleepy"
+    },
+    {
+      "story": "bears_nap",
+      "actor": "masha",
+      "verb": "tiptoe_to",
+      "start": 14.385,
+      "dur": 6,
+      "emotion": "mischievous"
+    },
+    {
+      "story": "bears_nap",
+      "actor": "masha",
+      "verb": "wave",
+      "start": 20.384999999999998,
+      "dur": 2.3,
+      "emotion": "excited"
+    },
+    {
+      "story": "bears_nap",
+      "actor": "masha",
+      "verb": "laugh",
+      "start": 23.085,
+      "dur": 1.6,
+      "emotion": "happy"
+    },
+    {
+      "story": "bears_nap",
+      "actor": "masha",
+      "verb": "jump",
+      "start": 26.185000000000002,
+      "dur": 1,
+      "emotion": "excited"
+    },
+    {
+      "story": "bears_nap",
+      "actor": "bear",
+      "verb": "sleep",
+      "start": 16.384999999999998,
+      "dur": 4,
+      "emotion": "sleepy"
+    },
+    {
+      "story": "bears_nap",
+      "actor": "bear",
+      "verb": "wake_up",
+      "start": 21.185,
+      "dur": 1.6,
+      "emotion": "surprised"
+    },
+    {
+      "story": "bears_nap",
+      "actor": "bear",
+      "verb": "fall_down",
+      "start": 22.785,
+      "dur": 1.6,
+      "emotion": "surprised"
+    },
+    {
+      "story": "bears_nap",
+      "actor": "bear",
+      "verb": "stand_up",
+      "start": 24.685000000000002,
+      "dur": 1,
+      "emotion": "annoyed"
+    },
+    {
+      "story": "bears_nap",
+      "actor": "bear",
+      "verb": "facepalm",
+      "start": 25.685000000000002,
+      "dur": 2,
+      "emotion": "annoyed"
+    },
+    {
+      "story": "bears_nap",
+      "actor": "masha",
+      "verb": "hug",
+      "start": 28.285,
+      "dur": 2,
+      "emotion": "excited"
+    },
+    {
+      "story": "bears_nap",
+      "actor": "masha",
+      "verb": "idle",
+      "start": 31.885,
+      "dur": 3,
+      "emotion": "happy"
+    },
+    {
+      "story": "bears_nap",
+      "actor": "masha",
+      "verb": "clap",
+      "start": 34.885,
+      "dur": 1.915,
+      "emotion": "excited"
+    },
+    {
+      "story": "bears_nap",
+      "actor": "masha",
+      "verb": "laugh",
+      "start": 37.3,
+      "dur": 1.6,
+      "emotion": "happy"
+    },
+    {
+      "story": "bears_nap",
+      "actor": "masha",
+      "verb": "clap",
+      "start": 43.8,
+      "dur": 1.2,
+      "emotion": "happy"
+    },
+    {
+      "story": "bears_nap",
+      "actor": "bear",
+      "verb": "hug",
+      "start": 28.285,
+      "dur": 2,
+      "emotion": "happy"
+    },
+    {
+      "story": "bears_nap",
+      "actor": "bear",
+      "verb": "sigh",
+      "start": 30.285,
+      "dur": 1.6,
+      "emotion": "annoyed"
+    },
+    {
+      "story": "bears_nap",
+      "actor": "bear",
+      "verb": "carry",
+      "start": 31.885,
+      "dur": 3,
+      "emotion": "happy"
+    },
+    {
+      "story": "bears_nap",
+      "actor": "bear",
+      "verb": "walk_to",
+      "start": 36.8,
+      "dur": 6,
+      "emotion": "proud"
+    },
+    {
+      "story": "bears_nap",
+      "actor": "bear",
+      "verb": "walk_to",
+      "start": 42.8,
+      "dur": 6,
+      "emotion": "happy"
+    },
+    {
+      "story": "bears_nap",
+      "actor": "masha",
+      "verb": "yawn_stretch",
+      "start": 50.9,
+      "dur": 2,
+      "emotion": "sleepy"
+    },
+    {
+      "story": "bears_nap",
+      "actor": "masha",
+      "verb": "look_at",
+      "start": 52.9,
+      "dur": 1,
+      "emotion": "sleepy"
+    },
+    {
+      "story": "bears_nap",
+      "actor": "masha",
+      "verb": "idle",
+      "start": 53.9,
+      "dur": 2.685,
+      "emotion": "sleepy"
+    },
+    {
+      "story": "bears_nap",
+      "actor": "bear",
+      "verb": "walk_to",
+      "start": 49.4,
+      "dur": 6,
+      "emotion": "happy"
+    },
+    {
+      "story": "bears_nap",
+      "actor": "bear",
+      "verb": "nod",
+      "start": 55.4,
+      "dur": 1,
+      "emotion": "happy"
+    },
+    {
+      "story": "bears_nap",
+      "actor": "bear",
+      "verb": "sigh",
+      "start": 56.4,
+      "dur": 1.6,
+      "emotion": "happy"
+    },
+    {
+      "story": "bears_nap",
+      "actor": "bear",
+      "verb": "yawn_stretch",
+      "start": 58,
+      "dur": 2,
+      "emotion": "sleepy"
+    },
+    {
+      "story": "fishing_trip",
+      "actor": "masha",
+      "verb": "take",
+      "start": 3,
+      "dur": 1,
+      "emotion": "excited",
+      "item": "ball"
+    },
+    {
+      "story": "fishing_trip",
+      "actor": "masha",
+      "verb": "wave",
+      "start": 4,
+      "dur": 1.685,
+      "emotion": "excited",
+      "item": "ball"
+    },
+    {
+      "story": "fishing_trip",
+      "actor": "masha",
+      "verb": "run_to",
+      "start": 5.685,
+      "dur": 0.9,
+      "emotion": "excited",
+      "item": "ball"
+    },
+    {
+      "story": "fishing_trip",
+      "actor": "bear",
+      "verb": "walk_to",
+      "start": 0,
+      "dur": 0.9,
+      "emotion": "happy"
+    },
+    {
+      "story": "fishing_trip",
+      "actor": "bear",
+      "verb": "take",
+      "start": 5.685,
+      "dur": 1,
+      "emotion": "happy",
+      "item": "fishing_rod"
+    },
+    {
+      "story": "fishing_trip",
+      "actor": "bear",
+      "verb": "sit",
+      "start": 6.685,
+      "dur": 1.2,
+      "emotion": "neutral",
+      "item": "fishing_rod"
+    },
+    {
+      "story": "fishing_trip",
+      "actor": "masha",
+      "verb": "wave",
+      "start": 8.485,
+      "dur": 1.5,
+      "emotion": "mischievous",
+      "item": "ball"
+    },
+    {
+      "story": "fishing_trip",
+      "actor": "masha",
+      "verb": "throw",
+      "start": 9.985,
+      "dur": 1.2,
+      "emotion": "mischievous",
+      "item": "ball"
+    },
+    {
+      "story": "fishing_trip",
+      "actor": "masha",
+      "verb": "shrug",
+      "start": 11.184999999999999,
+      "dur": 1,
+      "emotion": "mischievous"
+    },
+    {
+      "story": "fishing_trip",
+      "actor": "masha",
+      "verb": "laugh",
+      "start": 13.684999999999999,
+      "dur": 1.6,
+      "emotion": "happy"
+    },
+    {
+      "story": "fishing_trip",
+      "actor": "bear",
+      "verb": "surprised",
+      "start": 10.785,
+      "dur": 1,
+      "emotion": "surprised",
+      "item": "fishing_rod"
+    },
+    {
+      "story": "fishing_trip",
+      "actor": "bear",
+      "verb": "look_at",
+      "start": 12.184999999999999,
+      "dur": 1,
+      "emotion": "annoyed",
+      "item": "fishing_rod"
+    },
+    {
+      "story": "fishing_trip",
+      "actor": "bear",
+      "verb": "facepalm",
+      "start": 13.184999999999999,
+      "dur": 2,
+      "emotion": "annoyed",
+      "item": "fishing_rod"
+    },
+    {
+      "story": "fishing_trip",
+      "actor": "masha",
+      "verb": "jump",
+      "start": 21.785,
+      "dur": 1,
+      "emotion": "excited"
+    },
+    {
+      "story": "fishing_trip",
+      "actor": "masha",
+      "verb": "clap",
+      "start": 22.785,
+      "dur": 2.377,
+      "emotion": "excited"
+    },
+    {
+      "story": "fishing_trip",
+      "actor": "masha",
+      "verb": "run_to",
+      "start": 25.162,
+      "dur": 0.8,
+      "emotion": "happy"
+    },
+    {
+      "story": "fishing_trip",
+      "actor": "masha",
+      "verb": "hug",
+      "start": 25.962,
+      "dur": 2,
+      "emotion": "happy"
+    },
+    {
+      "story": "fishing_trip",
+      "actor": "bear",
+      "verb": "sigh",
+      "start": 15.885,
+      "dur": 1.6,
+      "emotion": "annoyed",
+      "item": "fishing_rod"
+    },
+    {
+      "story": "fishing_trip",
+      "actor": "bear",
+      "verb": "fish",
+      "start": 17.485,
+      "dur": 4,
+      "emotion": "curious",
+      "item": "fishing_rod"
+    },
+    {
+      "story": "fishing_trip",
+      "actor": "bear",
+      "verb": "laugh",
+      "start": 21.485,
+      "dur": 1.6,
+      "emotion": "proud",
+      "item": "fish"
+    },
+    {
+      "story": "fishing_trip",
+      "actor": "bear",
+      "verb": "nod",
+      "start": 26.462,
+      "dur": 1,
+      "emotion": "proud",
+      "item": "fish"
+    },
+    {
+      "story": "fishing_trip",
+      "actor": "masha",
+      "verb": "walk_to",
+      "start": 28.561999999999998,
+      "dur": 3.452,
+      "emotion": "happy"
+    },
+    {
+      "story": "fishing_trip",
+      "actor": "masha",
+      "verb": "sit",
+      "start": 32.013999999999996,
+      "dur": 1.2,
+      "emotion": "happy"
+    },
+    {
+      "story": "fishing_trip",
+      "actor": "masha",
+      "verb": "look_at",
+      "start": 33.214,
+      "dur": 1,
+      "emotion": "happy"
+    },
+    {
+      "story": "fishing_trip",
+      "actor": "masha",
+      "verb": "idle",
+      "start": 34.214,
+      "dur": 1.3,
+      "emotion": "happy"
+    },
+    {
+      "story": "fishing_trip",
+      "actor": "masha",
+      "verb": "yawn_stretch",
+      "start": 35.513999999999996,
+      "dur": 2,
+      "emotion": "sleepy"
+    },
+    {
+      "story": "fishing_trip",
+      "actor": "bear",
+      "verb": "look_at",
+      "start": 29.162,
+      "dur": 1,
+      "emotion": "happy",
+      "item": "fish"
+    },
+    {
+      "story": "fishing_trip",
+      "actor": "bear",
+      "verb": "nod",
+      "start": 34.214,
+      "dur": 1,
+      "emotion": "happy",
+      "item": "fish"
+    },
+    {
+      "story": "fishing_trip",
+      "actor": "bear",
+      "verb": "sigh",
+      "start": 37.513999999999996,
+      "dur": 1.6,
+      "emotion": "happy",
+      "item": "fish"
+    },
+    {
+      "story": "cozy_evening",
+      "actor": "masha",
+      "verb": "walk_to",
+      "start": 4.684,
+      "dur": 6,
+      "emotion": "happy"
+    },
+    {
+      "story": "cozy_evening",
+      "actor": "masha",
+      "verb": "sit",
+      "start": 10.684,
+      "dur": 1.2,
+      "emotion": "happy"
+    },
+    {
+      "story": "cozy_evening",
+      "actor": "masha",
+      "verb": "idle",
+      "start": 11.884,
+      "dur": 0.3,
+      "emotion": "happy"
+    },
+    {
+      "story": "cozy_evening",
+      "actor": "bear",
+      "verb": "walk_to",
+      "start": 0,
+      "dur": 3.684,
+      "emotion": "happy"
+    },
+    {
+      "story": "cozy_evening",
+      "actor": "bear",
+      "verb": "take",
+      "start": 3.684,
+      "dur": 1,
+      "emotion": "happy",
+      "item": "frying_pan"
+    },
+    {
+      "story": "cozy_evening",
+      "actor": "bear",
+      "verb": "walk_to",
+      "start": 4.684,
+      "dur": 6,
+      "emotion": "happy",
+      "item": "frying_pan"
+    },
+    {
+      "story": "cozy_evening",
+      "actor": "bear",
+      "verb": "cook",
+      "start": 10.684,
+      "dur": 4,
+      "emotion": "happy",
+      "item": "frying_pan"
+    },
+    {
+      "story": "cozy_evening",
+      "actor": "masha",
+      "verb": "take",
+      "start": 18.972,
+      "dur": 1.4,
+      "emotion": "happy",
+      "item": "pancakes"
+    },
+    {
+      "story": "cozy_evening",
+      "actor": "masha",
+      "verb": "eat",
+      "start": 20.372,
+      "dur": 2,
+      "emotion": "happy",
+      "item": "pancakes"
+    },
+    {
+      "story": "cozy_evening",
+      "actor": "bear",
+      "verb": "take",
+      "start": 15.284,
+      "dur": 1,
+      "emotion": "happy",
+      "item": "pancakes"
+    },
+    {
+      "story": "cozy_evening",
+      "actor": "bear",
+      "verb": "walk_to",
+      "start": 16.284,
+      "dur": 2.688,
+      "emotion": "happy",
+      "item": "pancakes"
+    },
+    {
+      "story": "cozy_evening",
+      "actor": "bear",
+      "verb": "give",
+      "start": 18.972,
+      "dur": 1.4,
+      "emotion": "happy",
+      "item": "pancakes"
+    },
+    {
+      "story": "cozy_evening",
+      "actor": "bear",
+      "verb": "nod",
+      "start": 22.372,
+      "dur": 1,
+      "emotion": "happy"
+    },
+    {
+      "story": "cozy_evening",
+      "actor": "masha",
+      "verb": "stand_up",
+      "start": 23.972,
+      "dur": 1,
+      "emotion": "happy"
+    },
+    {
+      "story": "cozy_evening",
+      "actor": "masha",
+      "verb": "walk_to",
+      "start": 24.972,
+      "dur": 6,
+      "emotion": "happy"
+    },
+    {
+      "story": "cozy_evening",
+      "actor": "masha",
+      "verb": "wave",
+      "start": 30.972,
+      "dur": 2.377,
+      "emotion": "happy"
+    },
+    {
+      "story": "cozy_evening",
+      "actor": "bear",
+      "verb": "walk_to",
+      "start": 24.972,
+      "dur": 6,
+      "emotion": "happy"
+    },
+    {
+      "story": "masha_contacts",
+      "actor": "masha",
+      "verb": "take",
+      "start": 0,
+      "dur": 1,
+      "emotion": "curious",
+      "item": "lollipop"
+    },
+    {
+      "story": "masha_contacts",
+      "actor": "masha",
+      "verb": "eat",
+      "start": 1,
+      "dur": 2,
+      "emotion": "happy",
+      "item": "lollipop"
+    },
+    {
+      "story": "masha_contacts",
+      "actor": "masha",
+      "verb": "surprised",
+      "start": 3,
+      "dur": 1,
+      "emotion": "surprised"
+    },
+    {
+      "story": "masha_contacts",
+      "actor": "masha",
+      "verb": "take",
+      "start": 4,
+      "dur": 1,
+      "emotion": "happy",
+      "item": "lollipop"
+    },
+    {
+      "story": "masha_contacts",
+      "actor": "masha",
+      "verb": "walk_to",
+      "start": 5,
+      "dur": 0.869,
+      "emotion": "happy",
+      "item": "lollipop"
+    },
+    {
+      "story": "masha_contacts",
+      "actor": "masha",
+      "verb": "give",
+      "start": 5.869,
+      "dur": 1.4,
+      "emotion": "happy",
+      "item": "lollipop"
+    },
+    {
+      "story": "masha_contacts",
+      "actor": "bear",
+      "verb": "take",
+      "start": 5.869,
+      "dur": 1.4,
+      "emotion": "happy",
+      "item": "lollipop"
+    },
+    {
+      "story": "masha_contacts",
+      "actor": "masha",
+      "verb": "clap",
+      "start": 7.869,
+      "dur": 1.2,
+      "emotion": "excited"
+    },
+    {
+      "story": "masha_contacts",
+      "actor": "masha",
+      "verb": "run_to",
+      "start": 9.068999999999999,
+      "dur": 1.596,
+      "emotion": "sad"
+    },
+    {
+      "story": "masha_contacts",
+      "actor": "masha",
+      "verb": "sit",
+      "start": 10.665,
+      "dur": 1.2,
+      "emotion": "sad"
+    },
+    {
+      "story": "masha_contacts",
+      "actor": "masha",
+      "verb": "stand_up",
+      "start": 11.865,
+      "dur": 1,
+      "emotion": "curious"
+    },
+    {
+      "story": "masha_contacts",
+      "actor": "masha",
+      "verb": "wave",
+      "start": 12.865,
+      "dur": 1.4,
+      "emotion": "happy"
+    },
+    {
+      "story": "wolves_reactions",
+      "actor": "wolf_a",
+      "verb": "walk_to",
+      "start": 0,
+      "dur": 1.003,
+      "emotion": "happy"
+    },
+    {
+      "story": "wolves_reactions",
+      "actor": "wolf_a",
+      "verb": "surprised",
+      "start": 1.003,
+      "dur": 1,
+      "emotion": "surprised"
+    },
+    {
+      "story": "wolves_reactions",
+      "actor": "wolf_a",
+      "verb": "clap",
+      "start": 3.603,
+      "dur": 1.2,
+      "emotion": "excited"
+    },
+    {
+      "story": "wolves_reactions",
+      "actor": "wolf_b",
+      "verb": "walk_to",
+      "start": 0,
+      "dur": 0.8,
+      "emotion": "happy"
+    },
+    {
+      "story": "wolves_reactions",
+      "actor": "wolf_b",
+      "verb": "laugh",
+      "start": 2.003,
+      "dur": 1.6,
+      "emotion": "happy"
+    },
+    {
+      "story": "wolves_reactions",
+      "actor": "wolf_b",
+      "verb": "clap",
+      "start": 3.603,
+      "dur": 1.2,
+      "emotion": "happy"
+    },
+    {
+      "story": "hare_release",
+      "actor": "hare",
+      "verb": "walk_to",
+      "start": 0,
+      "dur": 0.895,
+      "emotion": "happy"
+    },
+    {
+      "story": "hare_release",
+      "actor": "hare",
+      "verb": "take",
+      "start": 0.895,
+      "dur": 1,
+      "emotion": "happy",
+      "item": "flowers"
+    },
+    {
+      "story": "hare_release",
+      "actor": "hare",
+      "verb": "walk_to",
+      "start": 1.895,
+      "dur": 6,
+      "emotion": "excited",
+      "item": "flowers"
+    },
+    {
+      "story": "hare_release",
+      "actor": "hare",
+      "verb": "take",
+      "start": 7.895,
+      "dur": 0.8,
+      "emotion": "excited",
+      "putDown": "clearing",
+      "item": "flowers"
+    },
+    {
+      "story": "hare_release",
+      "actor": "hare",
+      "verb": "clap",
+      "start": 8.695,
+      "dur": 1.2,
+      "emotion": "excited"
+    },
+    {
+      "story": "squirrel_release",
+      "actor": "squirrel",
+      "verb": "walk_to",
+      "start": 0,
+      "dur": 6,
+      "emotion": "happy"
+    },
+    {
+      "story": "squirrel_release",
+      "actor": "squirrel",
+      "verb": "take",
+      "start": 6,
+      "dur": 1,
+      "emotion": "happy",
+      "item": "flowers"
+    },
+    {
+      "story": "squirrel_release",
+      "actor": "squirrel",
+      "verb": "walk_to",
+      "start": 7,
+      "dur": 6,
+      "emotion": "excited",
+      "item": "flowers"
+    },
+    {
+      "story": "squirrel_release",
+      "actor": "squirrel",
+      "verb": "take",
+      "start": 13,
+      "dur": 0.8,
+      "emotion": "excited",
+      "putDown": "clearing",
+      "item": "flowers"
+    },
+    {
+      "story": "squirrel_release",
+      "actor": "squirrel",
+      "verb": "clap",
+      "start": 13.8,
+      "dur": 1.2,
+      "emotion": "excited"
+    }
+  ],
+  "sections": [
+    {
+      "story": "masha_contacts",
+      "actor": "masha",
+      "verb": "eat",
+      "start": 1,
+      "dur": 2,
+      "emotion": "happy",
+      "item": "lollipop",
+      "time": 1.2,
+      "duration": 2,
+      "label": "masha_contacts · masha: eat"
+    },
+    {
+      "story": "masha_contacts",
+      "actor": "masha",
+      "verb": "surprised",
+      "start": 3,
+      "dur": 1,
+      "emotion": "surprised",
+      "time": 3.1,
+      "duration": 1,
+      "label": "masha_contacts · masha: surprised"
+    },
+    {
+      "story": "masha_contacts",
+      "actor": "masha",
+      "verb": "clap",
+      "start": 7.869,
+      "dur": 1.2,
+      "emotion": "excited",
+      "time": 7.669,
+      "duration": 1.6,
+      "label": "masha_contacts · masha: clap"
+    },
+    {
+      "story": "masha_contacts",
+      "actor": "masha",
+      "verb": "sit",
+      "start": 10.665,
+      "dur": 1.2,
+      "emotion": "sad",
+      "time": 10.784999999999998,
+      "duration": 1.2,
+      "label": "masha_contacts · masha: sit"
+    },
+    {
+      "story": "pancake_morning",
+      "actor": "masha",
+      "verb": "take",
+      "start": 46.699,
+      "dur": 0.8,
+      "emotion": "happy",
+      "putDown": "bench",
+      "item": "frying_pan",
+      "time": 40.659,
+      "duration": 8.339999999999996,
+      "label": "pancake_morning · Masha: approach, put down pan, clap"
+    },
+    {
+      "story": "garden_party",
+      "actor": "hare",
+      "verb": "eat",
+      "start": 5.792,
+      "dur": 2,
+      "emotion": "happy",
+      "item": "carrot",
+      "time": 5.992,
+      "duration": 2,
+      "label": "garden_party · hare: eat"
+    },
+    {
+      "story": "garden_party",
+      "actor": "rosie",
+      "verb": "surprised",
+      "start": 13.008,
+      "dur": 1,
+      "emotion": "happy",
+      "time": 13.107999999999999,
+      "duration": 1,
+      "label": "garden_party · rosie: surprised"
+    },
+    {
+      "story": "garden_party",
+      "actor": "lady_bear",
+      "verb": "clap",
+      "start": 22.448999999999998,
+      "dur": 1.2,
+      "emotion": "happy",
+      "time": 22.249,
+      "duration": 1.6,
+      "label": "garden_party · lady_bear: clap"
+    },
+    {
+      "story": "garden_party",
+      "actor": "squirrel",
+      "verb": "jump",
+      "start": 15.722999999999999,
+      "dur": 1,
+      "emotion": "happy",
+      "time": 15.822999999999999,
+      "duration": 1,
+      "label": "garden_party · squirrel: jump"
+    },
+    {
+      "story": "garden_party",
+      "actor": "rival_bear",
+      "verb": "dance",
+      "start": 22.448999999999998,
+      "dur": 4,
+      "emotion": "happy",
+      "time": 22.648999999999997,
+      "duration": 4,
+      "label": "garden_party · rival_bear: dance"
+    },
+    {
+      "story": "fishing_trip",
+      "actor": "bear",
+      "verb": "fish",
+      "start": 17.485,
+      "dur": 4,
+      "emotion": "curious",
+      "item": "fishing_rod",
+      "time": 17.285,
+      "duration": 4.4,
+      "label": "fishing_trip · bear: fish"
+    },
+    {
+      "story": "cozy_evening",
+      "actor": "masha",
+      "verb": "eat",
+      "start": 20.372,
+      "dur": 2,
+      "emotion": "happy",
+      "item": "pancakes",
+      "time": 20.572,
+      "duration": 2,
+      "label": "cozy_evening · masha: eat"
+    },
+    {
+      "story": "cozy_evening",
+      "actor": "masha",
+      "verb": "stand_up",
+      "start": 23.972,
+      "dur": 1,
+      "emotion": "happy",
+      "time": 24.072000000000003,
+      "duration": 1,
+      "label": "cozy_evening · masha: stand_up"
+    },
+    {
+      "story": "bears_nap",
+      "actor": "bear",
+      "verb": "carry",
+      "start": 31.885,
+      "dur": 3,
+      "emotion": "happy",
+      "time": 32.085,
+      "duration": 3,
+      "label": "bears_nap · bear: carry"
+    },
+    {
+      "story": "wolves_reactions",
+      "actor": "wolf_a",
+      "verb": "surprised",
+      "start": 1.003,
+      "dur": 1,
+      "emotion": "surprised",
+      "time": 1.103,
+      "duration": 1,
+      "label": "wolves_reactions · wolf_a: surprised"
+    },
+    {
+      "story": "wolves_reactions",
+      "actor": "wolf_b",
+      "verb": "clap",
+      "start": 3.603,
+      "dur": 1.2,
+      "emotion": "happy",
+      "time": 3.403,
+      "duration": 1.6,
+      "label": "wolves_reactions · wolf_b: clap"
+    },
+    {
+      "story": "hare_release",
+      "actor": "hare",
+      "verb": "take",
+      "start": 7.895,
+      "dur": 0.8,
+      "emotion": "excited",
+      "putDown": "clearing",
+      "item": "flowers",
+      "time": 7.595,
+      "duration": 2.6,
+      "label": "hare · actual story: put down flowers, clap"
+    },
+    {
+      "story": "squirrel_release",
+      "actor": "squirrel",
+      "verb": "take",
+      "start": 13,
+      "dur": 0.8,
+      "emotion": "excited",
+      "putDown": "clearing",
+      "item": "flowers",
+      "time": 12.7,
+      "duration": 2.6,
+      "label": "squirrel · actual story: put down flowers, clap"
+    }
+  ],
+  "stories": {
+    "garden_party": {
+      "duration": 27.049,
+      "segments": [
+        {
+          "offset": 0,
+          "duration": 3.992
+        },
+        {
+          "offset": 3.992,
+          "duration": 11.731
+        },
+        {
+          "offset": 15.722999999999999,
+          "duration": 11.326
+        }
+      ]
+    },
+    "pancake_morning": {
+      "duration": 57.643,
+      "segments": [
+        {
+          "offset": 0,
+          "duration": 11.731
+        },
+        {
+          "offset": 11.731,
+          "duration": 10.554
+        },
+        {
+          "offset": 22.285,
+          "duration": 9.208
+        },
+        {
+          "offset": 31.493000000000002,
+          "duration": 26.15
+        }
+      ]
+    },
+    "bears_nap": {
+      "duration": 60.599999999999994,
+      "segments": [
+        {
+          "offset": 0,
+          "duration": 14.385
+        },
+        {
+          "offset": 14.385,
+          "duration": 13.9
+        },
+        {
+          "offset": 28.285,
+          "duration": 21.115
+        },
+        {
+          "offset": 49.4,
+          "duration": 11.2
+        }
+      ]
+    },
+    "fishing_trip": {
+      "duration": 39.714,
+      "segments": [
+        {
+          "offset": 0,
+          "duration": 8.485
+        },
+        {
+          "offset": 8.485,
+          "duration": 7.4
+        },
+        {
+          "offset": 15.885,
+          "duration": 12.677
+        },
+        {
+          "offset": 28.561999999999998,
+          "duration": 11.152
+        }
+      ]
+    },
+    "cozy_evening": {
+      "duration": 33.949,
+      "segments": [
+        {
+          "offset": 0,
+          "duration": 15.284
+        },
+        {
+          "offset": 15.284,
+          "duration": 8.688
+        },
+        {
+          "offset": 23.972,
+          "duration": 9.977
+        }
+      ]
+    },
+    "masha_contacts": {
+      "duration": 14.865,
+      "segments": [
+        {
+          "offset": 0,
+          "duration": 7.869
+        },
+        {
+          "offset": 7.869,
+          "duration": 6.996
+        }
+      ]
+    },
+    "wolves_reactions": {
+      "duration": 5.403,
+      "segments": [
+        {
+          "offset": 0,
+          "duration": 5.403
+        }
+      ]
+    },
+    "hare_release": {
+      "duration": 10.495,
+      "segments": [
+        {
+          "offset": 0,
+          "duration": 10.495
+        }
+      ]
+    },
+    "squirrel_release": {
+      "duration": 15.6,
+      "segments": [
+        {
+          "offset": 0,
+          "duration": 15.6
+        }
+      ]
+    }
+  },
+  "assets": [
+    {
+      "id": "wolf_b",
+      "source": "procedural",
+      "ok": true
+    },
+    {
+      "id": "wolf_a",
+      "source": "procedural",
+      "ok": true
+    },
+    {
+      "id": "rosie",
+      "source": "gltf",
+      "ok": true
+    },
+    {
+      "id": "hare",
+      "source": "gltf",
+      "ok": true
+    },
+    {
+      "id": "squirrel",
+      "source": "gltf",
+      "ok": true
+    },
+    {
+      "id": "rival_bear",
+      "source": "gltf",
+      "ok": true
+    },
+    {
+      "id": "lady_bear",
+      "source": "gltf",
+      "ok": true
+    },
+    {
+      "id": "masha",
+      "source": "gltf",
+      "ok": true
+    },
+    {
+      "id": "bear",
+      "source": "gltf",
+      "ok": true
+    },
+    {
+      "id": "robot_test",
+      "source": "gltf",
+      "ok": true
+    },
+    {
+      "id": "prop:carrot",
+      "source": "gltf",
+      "ok": true
+    },
+    {
+      "id": "set:beehive",
+      "source": "gltf",
+      "ok": true
+    },
+    {
+      "id": "set:house",
+      "source": "gltf",
+      "ok": true
+    }
+  ],
+  "post": 3,
+  "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+  "errors": []
+}

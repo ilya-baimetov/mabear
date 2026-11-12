@@ -6,6 +6,8 @@
 import { isInsideHouse, MARKS, OBSTACLES, SET_BOUNDS, sceneLocationAt, type MarkDef } from "../shared/bible/set";
 import type { ActorId, CamKey, CameraCue, Shot, Vec2, Vec3 } from "../shared/schema";
 import { ACTOR_IDS } from "../shared/schema";
+import {forestCameraOccluders,type SceneryOccluder} from '../shared/forestLayout';
+import {houseWorld,HOUSE_LIVING_MARK} from '../shared/houseLayout';
 
 export const SHOT_MIN = 1.2;
 export const SHOT_MAX = 6;
@@ -35,6 +37,8 @@ export interface CameraPlanInput {
   posAt: (actor: ActorId, t: number) => Vec2;
   /** head height of an actor at time t (sitting / carried); defaults to HEAD_HEIGHT */
   headY?: (actor: ActorId, t: number) => number;
+  /** A physical rider is framed with its carrier, including later walk/dialogue clips. */
+  carriedByAt?: (actor: ActorId, t: number) => ActorId | null;
   /** Actual actor heading; guest close shots should show the face, not assume it faces a lead. */
   facingAt?: (actor: ActorId, t: number) => number;
   /** actor visible (not offstage) at time t */
@@ -59,6 +63,7 @@ export function mulberry32(seed: number): () => number {
 
 export const HEAD_HEIGHT: Record<ActorId, number> = { masha: 0.85, bear: 2.05, wolf_a: 1.65, wolf_b: 1.56, lady_bear: 1.85, hare: .58, rosie: .88, squirrel: .45, rival_bear: 2.2 };
 const CHEST: Record<ActorId, number> = { masha: 0.6, bear: 1.25, wolf_a: 1.2, wolf_b: 1.13, lady_bear: 1.2, hare: .38, rosie: .55, squirrel: .27, rival_bear: 1.5 };
+export const CAMERA_BODY_RADIUS:Record<ActorId,number>={masha:.23,bear:.76,wolf_a:.40,wolf_b:.42,lady_bear:.62,hare:.19,rosie:.31,squirrel:.16,rival_bear:.94};
 const isWolfId = (a: ActorId | null): boolean => a === "wolf_a" || a === "wolf_b";
 /** Default cast of a two-shot / wide: the leads. The Wolves join only when they act (they never steal framing idle). */
 const LEADS: ActorId[] = ["masha", "bear"];
@@ -99,7 +104,20 @@ function hintKind(s: Shot): Kind {
 }
 
 export function planCamera(input: CameraPlanInput): CameraCue[] {
-  const { duration, posAt, visibleAt } = input;
+  const {duration}=input;
+  // Candidate cameras reuse the same actor samples. Cache pure compiler queries
+  // within this plan instead of rescanning every clip for every candidate yaw.
+  const memo=<T>(fn:(actor:ActorId,time:number)=>T)=>{
+    const values=new Map<ActorId,Map<number,T>>();
+    return(actor:ActorId,time:number):T=>{
+      let byTime=values.get(actor);if(!byTime){byTime=new Map();values.set(actor,byTime);}
+      if(!byTime.has(time))byTime.set(time,fn(actor,time));
+      return byTime.get(time)!;
+    };
+  };
+  const posAt=memo(input.posAt),visibleAt=memo(input.visibleAt);
+  const headY=input.headY?memo(input.headY):undefined,facingAt=input.facingAt?memo(input.facingAt):undefined;
+  const carriedByAt=input.carriedByAt?memo(input.carriedByAt):undefined;
   const rnd = mulberry32((input.cameraSeed * 7919 + 17) | 0);
   const beats = [...input.beats].sort((a, b) => a.start - b.start);
   // reaction partner: Masha ↔ Bear; after a Wolf's slapstick, Masha's (or Bear's) reaction
@@ -132,11 +150,18 @@ export function planCamera(input: CameraPlanInput): CameraCue[] {
   const close6 = (t: number) => visibleAt("masha", t) && visibleAt("bear", t) && dist(posAt("masha", t), posAt("bear", t)) < 6;
   const parallel = (b: CameraBeatInfo) =>
     beats.some((o) => o.actor !== b.actor && o.start < b.start + b.dur - 0.3 && o.start + o.dur > b.start + 0.3);
+  const mounting=(b:CameraBeatInfo)=>b.verb==='sleep'&&dist(b.from,b.to)>.2;
   for (const b of beats) {
     const isLoco = LOCO.has(b.verb);
     const known = knownAt(b.start - 0.05);
     const star = b.actor === "masha";
-    if (!LEADS.includes(b.actor) && b.shot === "auto" && !b.hasLine) {
+    if(b.verb==='hug'||b.verb==='wake_up'||b.verb==='carry'||mounting(b)){
+      const t=b.start+b.dur*.5,p=posAt(b.actor,t),location=sceneLocationAt(...p);
+      const partner=ACTOR_IDS.filter(a=>a!==b.actor&&visibleAt(a,t)&&sceneLocationAt(...posAt(a,t))===location&&dist(posAt(a,t),p)<10)
+        .sort((a,c)=>dist(posAt(a,t),p)-dist(posAt(c,t),p))[0];
+      props.push({start:b.start,want:Math.max(SHOT_MIN,b.dur),prio:6.2,kind:b.shot==='wide'?'wide':'two',subject:null,
+        overridden:b.shot!=='auto',cast:partner?[b.actor,partner]:[b.actor]});
+    } else if (!LEADS.includes(b.actor) && b.shot === "auto" && !b.hasLine) {
       // Guest actors keep their own framing; only an active, nearby scene partner joins a two-shot.
       const companion=beats.find(o=>o.actor!==b.actor&&visibleAt(o.actor,b.start+.1)&&dist(posAt(b.actor,b.start+.1),posAt(o.actor,b.start+.1))<5&&o.start<b.start+b.dur-.3&&o.start+o.dur>b.start+.3);
       const cast = isWolfId(b.actor)?wolfCast(b):companion?[b.actor,companion.actor]:null;
@@ -294,7 +319,9 @@ export function planCamera(input: CameraPlanInput): CameraCue[] {
     // occlusion: try yaw nudges around the subject (staying on the 180° side) until no trunk / wall blocks the view
     const requestedCast = s.cast ?? LEADS;
     const action = beats.find(b => b.start <= s.start + .01 && b.start + b.dur > s.start && visibleAt(b.actor, s.start));
-    const primary = (s.subject && visibleAt(s.subject, s.start) ? s.subject : null)
+    const houseExitBeat=beats.find(b=>b.verb==='stand_up'&&b.start<s.end&&b.start+b.dur>s.start&&visibleAt(b.actor,s.start)&&sceneLocationAt(...posAt(b.actor,s.start))==='house');
+    const primary = houseExitBeat?.actor ?? (s.subject && visibleAt(s.subject, s.start) ? s.subject : null)
+      ?? s.cast?.find(a=>visibleAt(a,s.start))
       ?? action?.actor
       ?? requestedCast.find(a => visibleAt(a, s.start))
       ?? ACTOR_IDS.find(a => visibleAt(a, s.start))
@@ -302,53 +329,194 @@ export function planCamera(input: CameraPlanInput): CameraCue[] {
     const place=sceneLocationAt(...posAt(primary,s.start));
     const cast=requestedCast.filter(a=>visibleAt(a,s.start)&&sceneLocationAt(...posAt(a,s.start))===place);
     if(!cast.includes(primary))cast.push(primary);
-    const framedAt = (t: number): { head: Vec3; w: number }[] => {
-      const out: { head: Vec3; w: number }[] = [];
-      const guestSingle = !LEADS.includes(primary) && !isWolfId(primary) && !['wide','two','over_shoulder'].includes(s.kind);
-      const who = guestSingle ? [primary] : cast;
-      for (const a of who) {
-        if (!visibleAt(a, t)) continue;
-        const p = posAt(a, t);
-        const w = s.kind === "wide" || s.kind === "two" || a === primary ? 1 : 0.5;
-        out.push({ head: [p[0], input.headY ? input.headY(a, t) : HEAD_HEIGHT[a], p[1]], w });
+    const embrace=beats.some(b=>b.verb==='hug'&&b.start<s.end&&b.start+b.dur>s.start);
+    const mountBeat=beats.find(b=>mounting(b)&&b.start<s.end&&b.start+b.dur>s.start);
+    const liftBeat=beats.find(b=>b.verb==='carry'&&b.start<s.end&&b.start+b.dur>s.start);
+    const ridePairsAt=(t:number)=>{
+      const pairs=ACTOR_IDS.flatMap(rider=>{
+        const carrier=carriedByAt?.(rider,t);
+        return carrier&&visibleAt(rider,t)&&visibleAt(carrier,t)?[{rider,carrier}]:[];
+      });
+      if(liftBeat&&t>=liftBeat.start&&t<liftBeat.start+liftBeat.dur){
+        const rider=cast.find(actor=>actor!==liftBeat.actor&&visibleAt(actor,t));
+        if(rider&&!pairs.some(pair=>pair.rider===rider))pairs.push({rider,carrier:liftBeat.actor});
       }
-      return out;
+      return pairs;
     };
-    const h0 = framedAt(s.start + 0.01);
-    const h1 = framedAt(Math.max(s.start, s.end - 0.01));
-    let best = framing(s.kind, primary, cast, s.start, s.end, angle, side, posAt, visibleAt, rnd, input.headY, input.facingAt);
-    let bestCost = occlusionCost(best.from, h0) + occlusionCost(best.to, h1);
+    const rides=[s.start,(s.start+s.end)/2,s.end-.001].flatMap(ridePairsAt);
+    const houseFurnitureExit=!!houseExitBeat;
+    const followActor=houseFurnitureExit?primary:s.kind==='tracking'&&place!=='house'&&rides.some(pair=>pair.carrier===primary)?primary:undefined;
+    const viewHeading=(actor:ActorId,t:number)=>{
+      if(actor===followActor){const a=posAt(actor,Math.max(s.start,t-.05)),b=posAt(actor,Math.min(s.end,t+.05));if(dist(a,b)>.01)return Math.atan2(b[0]-a[0],b[1]-a[1]);}
+      return facingAt?.(actor,t)??0;
+    };
+    const physicalAction=!!liftBeat||rides.length>0||beats.some(b=>(b.verb==='wake_up'||b.verb==='hug'||b.verb==='fall_down'||b.verb==='stand_up'||mounting(b))&&b.start<s.end&&b.start+b.dur>s.start);
+    const targetCache=new Map<string,CameraTarget[]>(),actorCache=new Map<number,CameraActorVolume[]>();
+    const framedAt = (t: number,kind:Kind=s.kind,viewCast=cast): CameraTarget[] => {
+      const cacheKey=`${kind}/${viewCast.join(",")}/${t}`,cached=targetCache.get(cacheKey);if(cached)return cached;
+      const out: CameraTarget[] = [];
+      const who = new Set(kind==='wide'||kind==='two' ? viewCast : [primary]);
+      for(const {rider,carrier} of ridePairsAt(t))if(who.has(rider)||who.has(carrier)){who.add(rider);who.add(carrier);}
+      if(liftBeat&&t>=liftBeat.start&&t<liftBeat.start+liftBeat.dur)for(const actor of cast)who.add(actor);
+      for (const a of who) {
+        if (!visibleAt(a, t)||sceneLocationAt(...posAt(a,t))!==sceneLocationAt(...posAt(primary,t))) continue;
+        const p = posAt(a, t);
+        const hy=headY?headY(a,t):HEAD_HEIGHT[a];
+        out.push({actor:a,head:[p[0],hy,p[1]],w:1});
+        if(kind!=='close'){
+          const chest=Math.max(.25,hy-(HEAD_HEIGHT[a]-CHEST[a]));
+          out.push({actor:a,head:[p[0],chest,p[1]],w:.45});
+          if(physicalAction){
+            const yaw=facingAt?.(a,t)??0,r=CAMERA_BODY_RADIUS[a]*.7;
+            for(const sign of [-1,0,1])out.push({actor:a,head:[p[0]+Math.cos(yaw)*r*sign,Math.max(.3,hy-.22),p[1]-Math.sin(yaw)*r*sign],w:.5});
+            // A reclining actor occupies the length of the furniture, not a
+            // standing cylinder above its root. Retain both ends through the
+            // landing/recline, including the head beyond the root's footprint.
+            if(mountBeat?.actor===a){
+              const reach=HEAD_HEIGHT[a]*.72;
+              for(const sign of [-1,1])out.push({actor:a,head:[mountBeat.to[0]+Math.cos(yaw)*reach*sign,Math.max(.7,hy),mountBeat.to[1]-Math.sin(yaw)*reach*sign],w:.4,framingOnly:true});
+            }
+          }
+        }
+      }
+      targetCache.set(cacheKey,out);return out;
+    };
+    const actorsAt=(t:number):CameraActorVolume[]=>{
+      const cached=actorCache.get(t);if(cached)return cached;
+      const actors=ACTOR_IDS.filter(a=>visibleAt(a,t)).map(a=>({
+      actor:a,pos:posAt(a,t),headY:headY?headY(a,t):HEAD_HEIGHT[a],radius:CAMERA_BODY_RADIUS[a],
+    }));actorCache.set(t,actors);return actors;
+    };
+    const costAt=(key:CamKey,t:number,kind:Kind,viewCast=cast)=>{
+      key={...key,location:sceneLocationAt(...posAt(primary,t))};
+      if(followActor){
+        const p=posAt(followActor,t),dx=p[0]-key.look[0],dz=p[1]-key.look[2];
+        key={...key,pos:[key.pos[0]+dx,key.pos[1],key.pos[2]+dz],look:[p[0],key.look[1],p[1]]};
+      }
+      const targets=framedAt(t,kind,viewCast);
+      const sightTargets=targets.filter(target=>!target.framingOnly);
+      let cost=occlusionCost(key,sightTargets)+actorOcclusionCost(key,sightTargets,actorsAt(t),kind==='over_shoulder');
+      if(physicalAction){
+        const vx=key.look[0]-key.pos[0],vy=key.look[1]-key.pos[1],vz=key.look[2]-key.pos[2],flat=Math.hypot(vx,vz)||1,length=Math.hypot(vx,vy,vz)||1;
+        const forward=[vx/length,vy/length,vz/length],right=[-vz/flat,0,vx/flat],up=[-forward[1]*right[2],forward[0]*right[2]-forward[2]*right[0],forward[1]*right[0]],tanV=Math.tan(key.fov*Math.PI/360);
+        for(const target of targets){
+          const delta=target.head.map((v,i)=>v-key.pos[i]),dot=(v:number[])=>delta.reduce((sum,d,i)=>sum+d*v[i],0),depth=dot(forward);
+          if(depth<=.1){cost+=target.w*8;continue;}
+          cost+=target.w*4*(Math.max(0,Math.abs(dot(right)/(depth*tanV*16/9))-.76)+Math.max(0,Math.abs(dot(up)/(depth*tanV))-.82));
+        }
+        if(mountBeat&&t>=mountBeat.start&&facingAt){
+          const p=posAt(mountBeat.actor,t),direction=norm([key.pos[0]-p[0],key.pos[2]-p[1]]),yaw=facingAt(mountBeat.actor,t);
+          cost+=Math.max(0,-direction[0]*Math.sin(yaw)-direction[1]*Math.cos(yaw))*3;
+        }
+      }
+      if(facingAt&&!['wide','two','over_shoulder'].includes(kind)){
+        const p=posAt(primary,t),direction=norm([key.pos[0]-p[0],key.pos[2]-p[1]]),heading=viewHeading(primary,t);
+        // A back view is sometimes unavoidable, but must lose to an equally
+        // clear three-quarter view of the actual actor, not an assumed partner.
+        cost+=Math.max(0,.3-direction[0]*Math.sin(heading)-direction[1]*Math.cos(heading))*.7;
+      }
+      if(embrace&&facingAt&&(kind==='two'||kind==='wide'))for(const actor of viewCast){
+        const p=posAt(actor,t),direction=norm([key.pos[0]-p[0],key.pos[2]-p[1]]),heading=facingAt(actor,t);
+        // Opposing eyelines need a side view between the partners, where both
+        // profiles and the contact remain visible instead of one hood/back.
+        cost+=Math.max(0,-direction[0]*Math.sin(heading)-direction[1]*Math.cos(heading))*.8;
+      }
+      if(facingAt)for(const {rider,carrier} of ridePairsAt(t)){
+        if(!targets.some(target=>target.actor===rider))continue;
+        const p=posAt(carrier,t),direction=norm([key.pos[0]-p[0],key.pos[2]-p[1]]),yaw=viewHeading(carrier,t),front=direction[0]*Math.sin(yaw)+direction[1]*Math.cos(yaw);
+        // The rider sits behind a broad head. A front portrait hides that
+        // contact; a three-quarter view reveals both faces and the bent legs.
+        const sideView=direction[0]*Math.cos(yaw)-direction[1]*Math.sin(yaw);
+        cost+=Math.abs(front-.35)*1.4+Math.max(0,sideView)*1.2;
+      }
+      return cost;
+    };
+    const costOf=(fr:{from:CamKey;to:CamKey},kind:Kind,cutoff=Infinity)=>{
+      let total=0,worst=0;
+      // Endpoints alone miss a foreground actor crossing in mid-shot.
+      const sampleCount=Math.max(10,Math.ceil((s.end-s.start)/.35));
+      for(let i=0;i<=sampleCount;i++){
+        const u=i/sampleCount;
+        const t=Math.min(s.end-.001,s.start+(s.end-s.start)*u+.001),k=u*u*(3-2*u);
+        const lerp=(a:Vec3,b:Vec3):Vec3=>a.map((v,i)=>v+(b[i]-v)*k) as Vec3;
+        const key:CamKey={pos:lerp(fr.from.pos,fr.to.pos),look:lerp(fr.from.look,fr.to.look),fov:fr.from.fov+(fr.to.fov-fr.from.fov)*k};
+        const cost=costAt(key,t,kind);total+=cost;worst=Math.max(worst,cost);
+        if(worst>cutoff)return worst;
+      }
+      return worst+total/(sampleCount+1);
+    };
+    let best = framing(s.kind, primary, cast, s.start, s.end, angle, side, posAt, visibleAt, rnd, headY, facingAt, !!mountBeat||houseFurnitureExit);
+    let bestCost = costOf(best,s.kind);
     for (const dlt of [0.35, -0.35, 0.7, -0.7, 1.05, -1.05]) {
       if (bestCost === 0) break;
       const a = angle + dlt;
       if (Math.abs(a) > 1.3) continue;
-      const fr = framing(s.kind, primary, cast, s.start, s.end, a, side, posAt, visibleAt, rnd, input.headY, input.facingAt);
-      const cost = occlusionCost(fr.from, h0) + occlusionCost(fr.to, h1);
+      const fr = framing(s.kind, primary, cast, s.start, s.end, a, side, posAt, visibleAt, rnd, headY, facingAt, !!mountBeat||houseFurnitureExit);
+      const cost = costOf(fr,s.kind,bestCost);
       if (cost < bestCost - 1e-6) { best = fr; bestCost = cost; }
     }
     // still blocked (e.g. a trunk right beside the subject): swing further round, still on the 180° side
     for (const dlt of [1.45, -1.45, 1.6, -1.6]) {
       if (bestCost < 1) break;
       const a = Math.max(-1.6, Math.min(1.6, angle + dlt));
-      const fr = framing(s.kind, primary, cast, s.start, s.end, a, side, posAt, visibleAt, rnd, input.headY, input.facingAt);
-      const cost = occlusionCost(fr.from, h0) + occlusionCost(fr.to, h1);
+      const fr = framing(s.kind, primary, cast, s.start, s.end, a, side, posAt, visibleAt, rnd, headY, facingAt, !!mountBeat||houseFurnitureExit);
+      const cost = costOf(fr,s.kind,bestCost);
       if (cost < bestCost - 1e-6) { best = fr; bestCost = cost; }
+    }
+    // A dismount establishes a new action axis. Its clear exit side may be
+    // opposite the preceding conversation; do not hide the action to preserve
+    // an eyeline that no longer describes the movement.
+    if(physicalAction)for(const a of [0,.175,-.175,.525,-.525,.875,-.875,1.225,-1.225,2,-2,2.5,-2.5,Math.PI]){
+      const fr=framing(s.kind,primary,cast,s.start,s.end,a,side,posAt,visibleAt,rnd,headY,facingAt,!!mountBeat||houseFurnitureExit);
+      const cost=costOf(fr,s.kind,bestCost);
+      if(cost<bestCost-1e-6){best=fr;bestCost=cost;}
+    }
+    // Follow a moving action around an obstruction instead of accepting a
+    // blocked first frame merely because one fixed orbit suits the later pose.
+    if(bestCost>=1&&dist(posAt(primary,s.start),posAt(primary,s.end))>1){
+      const base=best;
+      for(const a of [-1.3,-.7,0,.7,1.3]){
+        const fr=framing(s.kind,primary,cast,s.start,s.end,a,side,posAt,visibleAt,rnd,headY,facingAt,!!mountBeat||houseFurnitureExit);
+        for(const candidate of [{from:fr.from,to:base.to},{from:base.from,to:fr.to}]){
+          const cost=costOf(candidate,s.kind,bestCost)+.10;
+          if(cost<bestCost-1e-6){best=candidate;bestCost=cost;}
+        }
+      }
+    }
+    // Vary distance as well as yaw: moving closer can leave a foreground body
+    // outside the shot, while a moderate retreat can fit a crowd. Penalize
+    // distance changes so clearance does not routinely become a tiny subject.
+    if(bestCost>.4&&place!=='house'){
+      const originalBest=best;
+      for(const scale of (s.kind==='wide'?[1.18]:s.kind==='two'?[1.18,1.4]:[.65,.82,1.18,1.4,1.6,2]))for(const dlt of [null,0,.7,-.7,1.3,-1.3,1.6,-1.6]){
+        const fr=dlt===null?{from:{...originalBest.from},to:{...originalBest.to}}:framing(s.kind,primary,cast,s.start,s.end,Math.max(-1.6,Math.min(1.6,angle+dlt)),side,posAt,visibleAt,rnd,headY,facingAt,!!mountBeat||houseFurnitureExit);
+        for(const key of [fr.from,fr.to])key.pos=clampCam(key.pos.map((v,i)=>key.look[i]+(v-key.look[i])*scale) as Vec3);
+        const cost=costOf(fr,s.kind,bestCost)+Math.abs(Math.log(scale))*.6;
+        if(cost<bestCost-1e-6){best=fr;bestCost=cost;}
+      }
     }
     // still blocked (camera boxed in by trunks): fall back to a static medium, then a wide, from the clearest yaw
     let kind = s.kind;
     if (bestCost >= 1 && !s.overridden) {
-      for (const alt of ["medium", "wide"] as Kind[]) {
+      for (const alt of (physicalAction?["two","wide"]:["medium", "two", "wide"]) as Kind[]) {
         if (alt === s.kind) continue;
         for (const dlt of [0, 0.35, -0.35, 0.7, -0.7, 1.05, -1.05]) {
-          const fr = framing(alt, primary, cast, s.start, s.end, Math.max(-1.3, Math.min(1.3, angle + dlt)), side, posAt, visibleAt, rnd, input.headY, input.facingAt);
-          const cost = occlusionCost(fr.from, h0) + occlusionCost(fr.to, h1);
+          const fr = framing(alt, primary, cast, s.start, s.end, Math.max(-1.3, Math.min(1.3, angle + dlt)), side, posAt, visibleAt, rnd, headY, facingAt, !!mountBeat||houseFurnitureExit);
+          const cost = costOf(fr,alt,bestCost)+(alt==='wide'?.7:.15);
           if (cost < bestCost - 1e-6) { best = fr; bestCost = cost; kind = alt; }
           if (bestCost < 1) break;
         }
         if (bestCost < 1) break;
       }
     }
+    if(followActor&&dist(posAt(primary,s.start),MARKS.hammock.pos)<3.2&&dist(posAt(primary,s.start),posAt(primary,s.end))>3){
+      // Keep the carried departure on the open side of the hammock instead of
+      // orbiting through its pines and the house limb as the route bends.
+      const yaw=MARKS.hammock.facing,openSide:Vec2=[-Math.cos(yaw),Math.sin(yaw)];
+      best={from:key(posAt(primary,s.start),openSide,5.5,2.5,1.25,45),to:key(posAt(primary,s.end),openSide,5.5,2.5,1.25,45)};
+    }
     const { from, to } = best;
+    if(followActor){from.followActor=followActor;to.followActor=followActor;}
     from.location=sceneLocationAt(...posAt(primary,s.start+.001));
     to.location=sceneLocationAt(...posAt(primary,Math.max(s.start,s.end-.001)));
     let cutAt:number|undefined;
@@ -357,12 +525,20 @@ export function planCamera(input: CameraPlanInput): CameraCue[] {
       // composition. Framing both endpoints together otherwise chooses an
       // exterior orbit for its indoor half, looking through a retained wall.
       if(from.location==='house'){
-        const origin=framing(s.kind,primary,cast,s.start,s.start,angle,side,posAt,visibleAt,rnd,input.headY,input.facingAt).from;
+        const origin=framing(s.kind,primary,cast,s.start,s.start,angle,side,posAt,visibleAt,rnd,headY,facingAt,!!mountBeat||houseFurnitureExit).from;
         Object.assign(from,origin,{location:from.location});
       }
       const endTime=Math.max(s.start,s.end-.001),destinationCast=requestedCast.filter(a=>sceneLocationAt(...posAt(a,endTime))===to.location);
       if(!destinationCast.includes(primary))destinationCast.push(primary);
-      const destination=framing(s.kind,primary,destinationCast,endTime,endTime,angle,side,posAt,visibleAt,rnd,input.headY,input.facingAt).from;
+      let destination=framing(kind,primary,destinationCast,endTime,endTime,angle,side,posAt,visibleAt,rnd,headY,facingAt,!!mountBeat||houseFurnitureExit).from;
+      let destinationCost=costAt(destination,endTime,kind,destinationCast);
+      // The destination is a different scenic set. Rebuilding its camera must
+      // not bypass the obstruction checks used for ordinary shots.
+      for(const dlt of [.35,-.35,.7,-.7,1.05,-1.05,1.45,-1.45]){
+        const candidate=framing(kind,primary,destinationCast,endTime,endTime,Math.max(-1.6,Math.min(1.6,angle+dlt)),side,posAt,visibleAt,rnd,headY,facingAt,!!mountBeat||houseFurnitureExit).from;
+        const cost=costAt(candidate,endTime,kind,destinationCast);
+        if(cost<destinationCost-1e-6){destination=candidate;destinationCost=cost;}
+      }
       Object.assign(to,destination,{location:to.location});
       let lo=s.start,hi=s.end;
       for(let i=0;i<20;i++){const mid=(lo+hi)*.5;if(sceneLocationAt(...posAt(primary,mid))===from.location)lo=mid;else hi=mid;}
@@ -402,14 +578,73 @@ function lineSide(m: Vec2, b: Vec2): Vec2 {
 }
 
 /** Tall static occluders: set obstacle circles (trunks, bush) plus trees the set dresses (hammock pines, swing oak). */
-export const OCCLUDERS: { c: Vec2; r: number; h: number }[] = [
+export const OCCLUDERS: SceneryOccluder[] = [
   ...OBSTACLES.circles.filter((c) => c.id !== "pond" && c.id !== "table").map((c) => ({ c: c.c, r: c.r, h: c.id === "bush" ? 1.3 : 12 })),
   // hammock pines: hammock at (-11, 2.2) rotated 0.8 rad (set element), pines at local x = ±2.1
   { c: [-9.54, 0.69], r: 0.45, h: 12 },
   { c: [-12.46, 3.71], r: 0.45, h: 12 },
   { c: [8.6, -0.6], r: 0.6, h: 12 }, // swing oak
+  { c: [2,1.5],r:.75,y:.71,h:.07 }, // tabletop, not an opaque cylinder down to the floor
+  { c: [2.22,1.28],r:.22,y:.78,h:.76 }, // fixed samovar and teapot silhouette
 ];
-const OCC_BOXES = OBSTACLES.boxes.map((b) => ({ id:b.id,min: b.min, max: b.max, h: b.id === "house" ? 7.5 : 2.6 }));
+const REMOTE_OCCLUDERS={pond:forestCameraOccluders('pond'),wolves:forestCameraOccluders('wolves')};
+const OCC_BOXES:{id:string;min:Vec2;max:Vec2;h:number;y?:number}[] = [
+  ...OBSTACLES.boxes.map((b) => ({ id:b.id,min: b.min, max: b.max, h: b.id === "house" ? 7.5 : b.id === "cooking_helper" ? .48 : 2.6 })),
+  // Low woody branch bands measured from Pine_3/Pine_1 Bark_NormalTree vertices,
+  // normalized to 8.5/9.4 m and transformed by the hammock's actual rotations.
+  {id:'hammock-west-branches',min:[-13.54,2.459],max:[-11.174,4.214],y:1.6,h:.60},
+  {id:'hammock-east-branches',min:[-10.270,1.028],max:[-8.911,3.008],y:1.6,h:.60},
+  {id:'hammock-west-upper-branches',min:[-13.886,2.529],max:[-12.368,3.836],y:2.2,h:.60},
+  {id:'hammock-east-upper-branches',min:[-10.641,-.927],max:[-8.86,2.817],y:2.2,h:.60},
+];
+
+export interface CameraTarget {head:Vec3;w:number;actor?:ActorId;framingOnly?:boolean}
+export interface CameraActorVolume {actor:ActorId;pos:Vec2;headY:number;radius:number}
+
+/** Dynamic cast is scenery for another actor's shot, even when its centre is
+ * outside the exact face ray. Keep a deliberate shoulder at the edge; reject a
+ * near body filling the frame or covering the subject's face/acting chest. */
+export function actorOcclusionCost(key:CamKey,targets:CameraTarget[],actors:CameraActorVolume[],overShoulder=false):number {
+  const location=key.location??sceneLocationAt(key.look[0],key.look[2]);
+  const dx=key.look[0]-key.pos[0],dy=key.look[1]-key.pos[1],dz=key.look[2]-key.pos[2];
+  const focusDistance=Math.hypot(dx,dy,dz)||1,flatDistance=Math.hypot(dx,dz)||1;
+  const forward=[dx/focusDistance,dy/focusDistance,dz/focusDistance];
+  const right=[-dz/flatDistance,0,dx/flatDistance];
+  const up=[-forward[1]*right[2],forward[0]*right[2]-forward[2]*right[0],forward[1]*right[0]];
+  const tanV=Math.tan(key.fov*Math.PI/360),tanH=tanV*16/9;
+  const framed=new Set(targets.map(t=>t.actor));
+  let cost=0;
+  for(const a of actors){
+    if(sceneLocationAt(...a.pos)!==location)continue;
+    const floor=Math.max(0,a.headY-HEAD_HEIGHT[a.actor]),top=a.headY+.15;
+    const cameraDistance=Math.hypot(a.pos[0]-key.pos[0],a.pos[1]-key.pos[2]);
+    if(cameraDistance<a.radius+.20&&key.pos[1]<top+.15&&key.pos[1]>floor-.1)cost+=4;
+    for(const target of targets){
+      if(target.actor===a.actor)continue;
+      const vx=target.head[0]-key.pos[0],vz=target.head[2]-key.pos[2],length2=vx*vx+vz*vz;
+      if(length2<.01)continue;
+      const t=((a.pos[0]-key.pos[0])*vx+(a.pos[1]-key.pos[2])*vz)/length2;
+      if(t<=.01||t>=.97)continue;
+      const y=key.pos[1]+(target.head[1]-key.pos[1])*t;
+      if(y>floor&&y<top&&Math.hypot(key.pos[0]+vx*t-a.pos[0],key.pos[2]+vz*t-a.pos[1])<a.radius+.045)cost+=target.w*1.6;
+    }
+    if(framed.has(a.actor))continue;
+    const rel=[a.pos[0]-key.pos[0],(floor+top)/2-key.pos[1],a.pos[1]-key.pos[2]];
+    const dot=(v:number[])=>rel[0]*v[0]+rel[1]*v[1]+rel[2]*v[2];
+    const depth=dot(forward);
+    if(depth<=.05||depth>=focusDistance-.25)continue;
+    const x=dot(right)/(depth*tanH),y=dot(up)/(depth*tanV);
+    const rx=a.radius/(depth*tanH),ry=(top-floor)*.5/(depth*tanV);
+    const width=Math.max(0,Math.min(1,x+rx)-Math.max(-1,x-rx));
+    const height=Math.max(0,Math.min(1,y+ry)-Math.max(-1,y-ry));
+    const area=width*height/4;
+    cost+=Math.max(0,area-(overShoulder?.30:.14))*8;
+    // A large clipped head/body at an edge is still a failed composition even
+    // when it misses the subject ray. Deliberate shoulders may remain cropped.
+    if(!overShoulder&&width>.12&&(y+ry>1.08||y-ry<-.98))cost+=width*Math.min(2,ry)*1.6;
+  }
+  return cost;
+}
 
 /** How badly static set pieces block a camera key: line of sight to each framed head (weighted), plus big trunks
  *  standing in frame in front of the subject. 0 = clear. */
@@ -418,7 +653,7 @@ export function occlusionCost(key: CamKey, heads: { head: Vec3; w: number }[]): 
   const location=key.location??sceneLocationAt(key.look[0],key.look[2]);
   // Each scenic location hides the others. Their absent trunks and walls must
   // not push this scene's camera away from an otherwise clear composition.
-  const circles=location==='yard'?OCCLUDERS:[];
+  const circles=location==='yard'?OCCLUDERS:location==='pond'||location==='wolves'?REMOTE_OCCLUDERS[location]:[];
   const boxes=OCC_BOXES.filter(b=>b.id==='van'?location==='wolves':location==='yard');
   let cost = 0;
   for (const { head, w } of heads) {
@@ -431,7 +666,7 @@ export function occlusionCost(key: CamKey, heads: { head: Vec3; w: number }[]): 
       const px = cam[0] + dx * t;
       const pz = cam[2] + dz * t;
       const y = cam[1] + (head[1] - cam[1]) * t;
-      if (Math.hypot(px - o.c[0], pz - o.c[1]) < o.r + 0.25 && y < o.h) cost += w;
+      if (Math.hypot(px - o.c[0], pz - o.c[1]) < o.r + 0.12 && y < (o.y??0)+o.h && y > (o.y??0)-.03) cost += w;
     }
     const n = Math.max(4, Math.ceil(Math.sqrt(L2) / 0.25));
     for (const b of boxes) {
@@ -441,7 +676,7 @@ export function occlusionCost(key: CamKey, heads: { head: Vec3; w: number }[]): 
         const x = cam[0] + dx * t;
         const z = cam[2] + dz * t;
         const y = cam[1] + (head[1] - cam[1]) * t;
-        if (x > b.min[0] - 0.1 && x < b.max[0] + 0.1 && z > b.min[1] - 0.1 && z < b.max[1] + 0.1 && y < b.h) { cost += w; break; }
+        if (x > b.min[0] - 0.1 && x < b.max[0] + 0.1 && z > b.min[1] - 0.1 && z < b.max[1] + 0.1 && y < (b.y??0)+b.h && y>(b.y??0)-.03) { cost += w; break; }
       }
     }
   }
@@ -453,6 +688,7 @@ export function occlusionCost(key: CamKey, heads: { head: Vec3; w: number }[]): 
     if (o.h < 3) continue;
     const v: Vec2 = [o.c[0] - cam[0], o.c[1] - cam[2]];
     const d = Math.hypot(v[0], v[1]);
+    if(d<o.r+.16&&cam[1]<(o.y??0)+o.h){cost+=2;continue;}
     if (d < 0.3 || d > subjDist - 0.3) continue;
     const ang = Math.acos(Math.max(-1, Math.min(1, (v[0] * f[0] + v[1] * f[1]) / d)));
     const wAng = Math.atan(o.r / d);
@@ -485,6 +721,7 @@ function framing(
   posAt: CameraPlanInput["posAt"], visibleAt: CameraPlanInput["visibleAt"], rnd: () => number,
   headY?: CameraPlanInput["headY"],
   facingAt?: CameraPlanInput["facingAt"],
+  furnitureAction=false,
 ): { from: CamKey; to: CamKey } {
   const c0 = castSpread(cast, t0, posAt, visibleAt);
   const mid: Vec2 = c0.mid ?? [0, 0];
@@ -498,15 +735,46 @@ function framing(
   const hy0 = headY ? headY(subj, t0) : HEAD_HEIGHT[subj];
   const hy1 = headY ? headY(subj, t1) : HEAD_HEIGHT[subj];
   if(isInsideHouse(sp[0],sp[1])&&isInsideHouse(sp1[0],sp1[1])){
-    // The authored room is a south-facing cutaway. Keep all indoor story shots
-    // on that open side instead of orbiting behind the retained north wall.
-    const wide=kind==='wide'||kind==='two',portrait=kind==='close';
+    // The connected kitchen and reading area are a single stage. Compose from
+    // its open south side, using the actual participants rather than the old
+    // rectangular room's fixed centre. A small orbit clears foreground actors
+    // while retaining the fireplace/return as the scene's geographic anchor.
+    const wide=kind==='wide'||kind==='two',establishing=kind==='wide',portrait=kind==='close';
     const indoorKey=(p:Vec2,h:number,t:number):CamKey=>{
-      const occupants=cast.filter(a=>visibleAt(a,t)&&isInsideHouse(...posAt(a,t))).map(a=>posAt(a,t));
-      const x=wide&&occupants.length?occupants.reduce((sum,p)=>sum+p[0],0)/occupants.length:p[0];
-      const z=wide?-6.1:p[1],lookY=portrait?h*.88:wide?1.05:h*.65;
-      const d=wide?5.6:portrait?Math.max(1.7,h*1.65):Math.max(3.1,h*2.1);
-      return {pos:[r3(x+.2),r3(lookY+(wide?1.25:.35)),r3(z+d)],look:[r3(x),r3(lookY),r3(z)],fov:wide?46:portrait?35:40};
+      if(furnitureAction){
+        // The actor leaves the cushion during the stand-up. Keep the complete
+        // exit visible and follow the evaluated root, not the now-empty chair.
+        return {pos:[r3(p[0]-.65),2.35,r3(p[1]+4.4)],look:[r3(p[0]),.90,r3(p[1])],fov:44,location:'house'};
+      }
+      const readingCast=ACTOR_IDS.filter(a=>visibleAt(a,t)&&dist(posAt(a,t),HOUSE_LIVING_MARK)<2.1);
+      if(!establishing&&dist(p,HOUSE_LIVING_MARK)<2.1&&readingCast.length>=2&&readingCast.some(a=>dist(posAt(a,t),HOUSE_LIVING_MARK)<.25)){
+        // Verified against the actual seated child and broad serving Bear:
+        // their root midpoint with this west/front view exposes both faces and
+        // the plate. A near-side close-up otherwise looks into Masha's hood.
+        const points=readingCast.map(a=>posAt(a,t)),x=points.reduce((sum,p)=>sum+p[0],0)/points.length,z=points.reduce((sum,p)=>sum+p[1],0)/points.length;
+        return {pos:[r3(x-3),2.4,r3(z+1.7)],look:[r3(x),1.1,r3(z)],fov:42,location:'house'};
+      }
+      const occupants=cast.filter(a=>visibleAt(a,t)&&isInsideHouse(...posAt(a,t))).map(a=>({
+        p:posAt(a,t),height:headY?headY(a,t):HEAD_HEIGHT[a],radius:CAMERA_BODY_RADIUS[a],
+      }));
+      const minX=wide&&occupants.length?Math.min(...occupants.map(a=>a.p[0]-a.radius)):p[0]-.4;
+      const maxX=wide&&occupants.length?Math.max(...occupants.map(a=>a.p[0]+a.radius)):p[0]+.4;
+      const roomCentre=houseWorld([-1.55,.35]);
+      const x=establishing?roomCentre[0]:(minX+maxX)/2;
+      const z=establishing?roomCentre[1]:wide&&occupants.length?(Math.min(...occupants.map(a=>a.p[1]))+Math.max(...occupants.map(a=>a.p[1])))/2:p[1];
+      const tallest=wide&&occupants.length?Math.max(...occupants.map(a=>a.height)):h;
+      const lookY=portrait?h*.88:wide?Math.max(.9,tallest*.52):h*.65;
+      const fov=wide?49:portrait?35:42;
+      const span=maxX-minX;
+      const depthSpan=wide&&occupants.length?Math.max(...occupants.map(a=>Math.abs(a.p[1]-z))):0;
+      const d=establishing?7.0:wide?Math.max(4.4,span/(2*Math.tan(fov*Math.PI/360)*16/9)*1.28+depthSpan):portrait?Math.max(1.8,h*1.65):Math.max(3.1,h*2.1);
+      const heading=facingAt?facingAt(subj,t):0;
+      const westFacing=Math.sin(heading)<-.45;
+      const northFacing=Math.cos(heading)<-.45;
+      const baseOrbit=establishing?-.23:westFacing?-1.25:northFacing?-1.10:-.15;
+      const orbit=Math.max(-1.40,Math.min(1.40,baseOrbit+Math.max(wide?-.55:-1.3,Math.min(wide?.55:1.3,angle))*(wide?.35:.9)));
+      const eyeY=Math.min(3.05,lookY+(establishing?1.8:wide?1.45:westFacing?1.65:portrait?.35:.7));
+      return {pos:[r3(x+Math.sin(orbit)*d+.2),r3(eyeY),r3(z+Math.cos(orbit)*d)],look:[r3(x),r3(lookY),r3(z)],fov,location:'house'};
     };
     return {from:indoorKey(sp,hy0,t0),to:indoorKey(sp1,hy1,t1)};
   }
@@ -517,19 +785,31 @@ function framing(
   // that open side: the usual south view stacks the pair and hides one wolf.
   const sceneSide:Vec2=sceneLocationAt(sp[0],sp[1])==='wolves'&&(kind==='wide'||kind==='two')?norm([-.9,.44]):side;
   const dir = rot(sceneSide, angle);
-  const guestHeading = facingAt && !LEADS.includes(subj) && !isWolfId(subj) ? facingAt(subj,t0+.01) : null;
-  const portraitDir = guestHeading === null ? faceDir(sp,op,dir,side) : rot([Math.sin(guestHeading),Math.cos(guestHeading)],angle);
+  const heading=facingAt?facingAt(subj,t0+.01):null;
+  let portraitDir=heading===null?faceDir(sp,op,dir,side):rot([Math.sin(heading),Math.cos(heading)],angle);
+  const nearbyCast=ACTOR_IDS.filter(a=>visibleAt(a,t0)&&sceneLocationAt(...posAt(a,t0))===sceneLocationAt(...sp)&&dist(sp,posAt(a,t0))<6);
+  if(heading!==null&&visibleAt(partner,t0)&&dist(sp,op)<8&&nearbyCast.length<=2){
+    const otherDirection=norm([op[0]-sp[0],op[1]-sp[1]]);
+    const towardPartner=Math.sin(heading)*otherDirection[0]+Math.cos(heading)*otherDirection[1];
+    // Preserve the established side for exchanges. A solo action facing water,
+    // furniture or its own prop has a different axis from the lead-pair eyeline.
+    if(towardPartner>.45&&portraitDir[0]*side[0]+portraitDir[1]*side[1]<.20){
+      const along=portraitDir[0]*otherDirection[0]+portraitDir[1]*otherDirection[1];
+      portraitDir=norm([otherDirection[0]*Math.max(.3,along)+side[0]*.32,otherDirection[1]*Math.max(.3,along)+side[1]*.32]);
+    }
+  }
 
   let from: CamKey;
   let to: CamKey;
   switch (kind) {
     case "wide": {
-      const span = c0.span;
+      const c1=castSpread(cast,t1,posAt,visibleAt),mid1=c1.mid??mid;
+      const span = Math.max(c0.span,c1.span);
       // Establish the place at character height; avoid a distant, lawn-heavy aerial view.
       const d = 7.4 + Math.min(14, span * 0.8);
       const eyeY = 3.2 + Math.min(2.8, span * 0.08);
       from = key(mid, dir, d, eyeY, 1.0, 44);
-      to = key(mid, dir, d * 0.94, eyeY - 0.1, 1.0, 44);
+      to = key(dist(mid,mid1)>.5?mid1:mid, dir, d * 0.94, eyeY - 0.1, 1.0, 44);
       break;
     }
     case "two": {
@@ -537,9 +817,11 @@ function framing(
       const c1 = castSpread(cast, t1, posAt, visibleAt);
       const mid1: Vec2 = c1.mid ?? mid;
       const span = Math.max(c0.span, c1.span);
-      const d = Math.max(5.5, span * 1.3 + 3.5);
-      from = key(mid, dir, d, 2.2, 1.0, 45);
-      to = key(dist(mid, mid1) > 1 ? mid1 : mid, dir, d * 0.95, 2.1, 1.0, 45);
+      const highAt=(t:number)=>Math.max(.85,...cast.filter(a=>visibleAt(a,t)).map(a=>headY?headY(a,t):HEAD_HEIGHT[a]));
+      const high0=highAt(t0),high1=highAt(t1);
+      const d = Math.max(3.2,Math.max(high0,high1)*2.25,span*(furnitureAction?.9:1.3)+2.8);
+      from = key(mid, dir, d, high0*.97, high0*.54, 45);
+      to = key(dist(mid, mid1) > .2 ? mid1 : mid, dir, d * 0.95, high1*.97, high1*.54, 45);
       break;
     }
     case "medium": {
@@ -560,7 +842,7 @@ function framing(
     }
     case "low_angle": {
       const d = subj === "bear" ? 4.2 : 3.0;
-      const dd = faceDir(sp, op, dir, side);
+      const dd = portraitDir;
       from = key(sp, dd, d, 0.35, hy0, 50);
       to = key(sp1, dd, d * 0.92, 0.4, hy1, 50);
       break;
@@ -569,10 +851,10 @@ function framing(
       const back = norm([op[0] - sp[0], op[1] - sp[1]]);
       const o: ActorId = partner;
       // lateral offset varies with the (occlusion-nudged) angle but never crosses the 180° line
-      const lat = Math.max(0.25, 0.6 + angle * 0.9);
+      const lat = Math.max(.45, .85 + angle * 1.35);
       const pos: Vec2 = [op[0] + back[0] * (1.2 + Math.abs(angle) * 0.4) + side[0] * lat, op[1] + back[1] * (1.2 + Math.abs(angle) * 0.4) + side[1] * lat];
-      const h = HEAD_HEIGHT[o] * 0.95;
-      from = { pos: clampCam([pos[0], h, pos[1]]), look: [sp[0], HEAD_HEIGHT[subj] * 0.9, sp[1]], fov: 40 };
+      const h = headY?headY(o,t0):HEAD_HEIGHT[o];
+      from = { pos: clampCam([pos[0], h, pos[1]]), look: [sp[0], hy0 * 0.94, sp[1]], fov: 40 };
       to = { pos: clampCam([pos[0] - back[0] * 0.15, h, pos[1] - back[1] * 0.15]), look: from.look, fov: 40 };
       break;
     }
@@ -581,7 +863,7 @@ function framing(
       const mvDir = norm([p1[0] - sp[0], p1[1] - sp[1]]);
       let perp: Vec2 = [-mvDir[1], mvDir[0]];
       if (perp[0] * side[0] + perp[1] * side[1] < 0) perp = [-perp[0], -perp[1]];
-      const dd = norm([perp[0] * 0.85 - mvDir[0] * 0.35, perp[1] * 0.85 - mvDir[1] * 0.35]);
+      const dd = rot(norm([perp[0] * 0.85 - mvDir[0] * 0.35, perp[1] * 0.85 - mvDir[1] * 0.35]),angle);
       const d = subj === "bear" ? 7 : 5.5;
       from = key(sp, dd, d, 2.4, CHEST[subj], 45);
       to = key(p1, dd, d, 2.4, CHEST[subj], 45);
@@ -641,7 +923,7 @@ export function clampCam(p: Vec3): Vec3 {
   y = Math.max(0.3, Math.min(14, y));
   for (const b of OBSTACLES.boxes) {
     const m = 0.6;
-    if (x > b.min[0] - m && x < b.max[0] + m && z > b.min[1] - m && z < b.max[1] + m && y < 7.5) {
+    if (x > b.min[0] - m && x < b.max[0] + m && z > b.min[1] - m && z < b.max[1] + m && y < (b.id === "cooking_helper" ? .48 : 7.5)) {
       const opts: [number, number, number][] = [
         [x - (b.min[0] - m), b.min[0] - m, z],
         [b.max[0] + m - x, b.max[0] + m, z],
@@ -673,7 +955,7 @@ export function cameraAt(cues: CameraCue[], t: number): CamKey | null {
   const k0 = Math.max(0, Math.min(1, (t - c.start) / Math.max(1e-6, c.dur)));
   const k = k0 * k0 * (3 - 2 * k0);
   const lerp = (a: Vec3, b: Vec3): Vec3 => [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k, a[2] + (b[2] - a[2]) * k];
-  return { pos: lerp(c.from.pos, c.to.pos), look: lerp(c.from.look, c.to.look), fov: c.from.fov + (c.to.fov - c.from.fov) * k,location:c.from.location??c.to.location };
+  return { pos: lerp(c.from.pos, c.to.pos), look: lerp(c.from.look, c.to.look), fov: c.from.fov + (c.to.fov - c.from.fov) * k,location:c.from.location??c.to.location,followActor:c.from.followActor??c.to.followActor };
 }
 
 /** Stereo pan estimate (-1..1) of a ground point relative to the planned camera at time t. */

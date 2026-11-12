@@ -1,0 +1,38 @@
+{
+  "client": "curl",
+  "checks": [
+    {
+      "path": "/api/health",
+      "status": 200,
+      "location": null,
+      "cacheControl": "private, no-store",
+      "body": {
+        "ok": true,
+        "service": "mabear-storybook",
+        "edition": "codex"
+      }
+    },
+    {
+      "path": "/",
+      "status": 302,
+      "location": "/login",
+      "cacheControl": "private, no-store",
+      "body": null
+    },
+    {
+      "path": "/physics/",
+      "status": 302,
+      "location": "/login",
+      "cacheControl": "private, no-store",
+      "body": null
+    },
+    {
+      "path": "/?physics=rapier",
+      "status": 302,
+      "location": "/login",
+      "cacheControl": "private, no-store",
+      "body": null
+    }
+  ],
+  "note": "Python urllib was rejected by edge user-agent filtering (1010); curl and authenticated Chrome passed."
+}
