@@ -16,7 +16,8 @@ export { STYLES, SEAT_HEIGHT } from "./verbs/common";
 
 /** Every verb in VERBS has an implementation (unit-tested). */
 export const VERB_IMPLS: Record<Verb, VerbImpl> = {
-  open:gesture.point_at, close:gesture.point_at,
+  open:(t,p,c)=>p.target==='cupboard'?objects.cupboard(t,p,c):gesture.point_at(t,p,c),
+  close:(t,p,c)=>p.target==='cupboard'?objects.cupboard(t,p,c):gesture.point_at(t,p,c),
   walk_to: loco.walk_to, run_to: loco.run_to, tiptoe_to: loco.tiptoe_to, chase: loco.chase, enter: loco.enter, exit: loco.exit,
   idle: body.idle, jump: body.jump, spin: body.spin, dance: body.dance, sit: body.sit, stand_up: body.stand_up,
   fall_down: body.fall_down, sleep: body.sleep, wake_up: body.wake_up, yawn_stretch: body.yawn_stretch, hide: body.hide, peek: body.peek,

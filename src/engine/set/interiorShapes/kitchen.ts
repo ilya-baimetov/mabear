@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import {RoundedBoxGeometry} from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
+import {KITCHEN_CUPBOARD} from '../../../shared/interactiveObjects';
 
 export interface KitchenShapes {
   kitchen: THREE.Group;
@@ -76,20 +77,25 @@ export function buildKitchenShapes(materials: Record<string, THREE.MeshStandardM
 
   // Pantry: thick frame, a cupboard above a genuinely open middle bay, and a
   // shorter enclosed base. The bay is deliberately empty at this shapes stage.
-  const pantry = group(kitchen, 'Cupboard and open pantry bay', -6.03, -.15, Math.PI / 2);
+  const pantry = group(kitchen, 'Cupboard and open pantry bay', ...KITCHEN_CUPBOARD.local, Math.PI / 2);
   box(pantry, 'Pantry back', 0, 1.58, -.26, 1.91, 2.88, .07);
   for (const side of [-1, 1]) {
     box(pantry, 'Pantry side', side * .935, 1.58, .015, .095, 2.88, .62);
     box(pantry, 'Pantry front stile', side * .91, 1.58, .345, .12, 2.88, .075);
     for (const z of [-.20, .25]) box(pantry, 'Pantry foot', side * .86, .09, z, .13, .18, .15, wood, .014);
   }
-  for (const y of [.18, 1.03, 2.27, 3.00]) box(pantry, 'Pantry shelf and lintel', 0, y, .035, 1.91, .085, .65);
+  for (const y of [.18, 1.03, KITCHEN_CUPBOARD.shelfY-.0425, 3.00]) box(pantry, 'Pantry shelf and lintel', 0, y, .035, 1.91, .085, .65);
   box(pantry, 'Pantry crown', 0, 3.055, .035, 2.02, .085, .69, wood, .01);
   box(pantry, 'Pantry lower plinth', 0, .21, .065, 1.96, .12, .66);
   for (const side of [-1, 1]) {
     panelDoor(pantry, 'Pantry base door', side * .445, .62, .355, .86, .73, -side);
-    panelDoor(pantry, 'Pantry upper door', side * .445, 2.635, .355, .86, .64, -side);
+    if(side===1)panelDoor(pantry, 'Pantry upper door', side * .445, 2.54, .355, .86, .84, -side);
   }
+  // Keep the left upper leaf as a distinct group through static mesh batching.
+  const leaf=group(pantry,'object:kitchen_cupboard',KITCHEN_CUPBOARD.hingeX,KITCHEN_CUPBOARD.frontZ);
+  panelDoor(leaf,'Interactive pantry door',.43,2.54,0,.86,.84,1);
+  leaf.getObjectByName('Interactive pantry door knob')!.position.set(.79,2.24,.065);
+  leaf.userData.open=0;
   box(pantry, 'Open bay intermediate shelf', 0, 1.58, -.035, 1.79, .055, .51);
 
   // Rounded refrigerator shoulder and lower corners are in the actual profile,

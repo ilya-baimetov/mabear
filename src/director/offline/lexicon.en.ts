@@ -104,6 +104,7 @@ export const LEXICON_EN: Lexicon = {
     { re: W("clearing|yard|meadow|lawn|middle of the yard"), id: "clearing" },
     { re: W("porch|steps|stairs"), id: "porch" },
     { re: W("door"), id: "door" },
+    { re: W('cupboard|cabinet|pantry'),id:'cupboard'},
     { re: W("garden|vegetable patch|vegetables|cabbages?|garden beds?"), id: "garden" },
     { re: W("beehives?|hives?|bees"), id: "beehive" },
     { re: W("(?:the|a|on the|to the) swing"), id: "swing" },

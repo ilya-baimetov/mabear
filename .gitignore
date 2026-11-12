@@ -89,3 +89,13 @@ docs/staging-interactions/before/*.png
 docs/staging-interactions/carry-revision/*.png
 docs/visual-priority-review/interaction-checks/*.png
 docs/visual-priority-review/story-renders/*.png
+
+# Cupboard iteration frames and machine-specific baseline location. Retain final
+# videos, editor/regression evidence, reports and reproducible capture scripts.
+docs/cupboard/iteration-*/
+docs/cupboard/baseline-path.txt
+docs/cupboard/before/*.png
+docs/cupboard/after/*.png
+docs/cupboard/inspect.log
+docs/cupboard/initial-tests.log
+docs/cupboard/media-setup.log

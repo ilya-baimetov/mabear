@@ -139,6 +139,7 @@ export function parseParagraph(text: string, lang: Lang, startState: WorldState,
   let tod: TimeOfDay | null = null;
   let lastActor: ActorId | null = null;
   let lastProp: PropId | null = null;
+  let lastOpenable:'door'|'cupboard'|null=null;
 
   // --- 1. lines: screenplay "NAME: text" and RU dash dialogue become explicit sentences ---
   const sentences: { text: string; speaker?: ActorId; line?: string }[] = [];
@@ -293,7 +294,9 @@ export function parseParagraph(text: string, lang: Lang, startState: WorldState,
       }
 
       // --- targets ---
-      const mark = firstMatch(clause, lex.marks.map((x) => ({ re: x.re, v: x.id })))?.value ?? null;
+      const cupboardMention=/\b(?:cupboard|cabinet|pantry)\b|шкаф|буфет/iu.test(clause);
+      const mark = cupboardMention?'cupboard':firstMatch(clause, lex.marks.map((x) => ({ re: x.re, v: x.id })))?.value ?? null;
+      if(mark==='cupboard'||mark==='door')lastOpenable=mark;
       let prop = firstMatch(clause, lex.props.map((x) => ({ re: x.re, v: x.id })))?.value ?? null;
       if (!prop && lex.itPronoun.test(clause) && lastProp) prop = lastProp;
       if (prop) lastProp = prop;
@@ -310,7 +313,9 @@ export function parseParagraph(text: string, lang: Lang, startState: WorldState,
 
       switch (verb) {
         case 'open': case 'close':
-          if(mark==='door'||lex.itPronoun.test(clause)&&beats.some(b=>b.target==='door'))mkBeat(a,verb,{target:'door'});
+          {const previous:'door'|'cupboard'|null=lastOpenable??(startState.actors[a].mark==='cupboard'?'cupboard':startState.actors[a].mark==='door'?'door':null);
+          const target:'door'|'cupboard'|null=mark==='door'||mark==='cupboard'?mark:lex.itPronoun.test(clause)?previous:null;
+          if(target){mkBeat(a,verb,{target});lastOpenable=target;}}
           break;
         case "walk_to": case "run_to": case "tiptoe_to": {
           // the Wolves go for the food first ("sneak up to steal Bear's honey" → the honey pot)
@@ -360,7 +365,9 @@ export function parseParagraph(text: string, lang: Lang, startState: WorldState,
           else mkBeat(a, "swing");
           break;
         case "take": {
-          const p: PropId | null = prop ?? (mark === "garden" ? "carrot" : mark === "beehive" ? "honey_pot" : null);
+          const fromCupboard=mark==='cupboard'||!mark&&(lastOpenable==='cupboard'||startState.actors[a].mark==='cupboard');
+          const pantryItem:boolean=fromCupboard&&(!prop||prop==='honey_pot'||/honey|м[её]д/iu.test(clause));
+          const p: PropId | null = pantryItem?'pantry_honey':prop ?? (mark === "garden" ? "carrot" : mark === "beehive" ? "honey_pot" : null);
           if (p) { mkBeat(a, "take", { target: p, item: p }); holding[a] = p; lastProp = p; }
           else mkBeat(a, "peek", { target: mark ?? null });
           break;

@@ -4,7 +4,7 @@
 // (BufferGeometryUtils.mergeGeometries) to stay far below the ~150 draw-call budget; the anchors stay in the graph.
 import * as THREE from "three";
 import {buildHouseDoor,updateHouseDoor} from './houseDoor';
-import {entranceSupportAt} from '../../shared/interactiveObjects';
+import {entranceSupportAt,KITCHEN_CUPBOARD} from '../../shared/interactiveObjects';
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
 import { Reflector } from "three/examples/jsm/objects/Reflector.js";
 import { mergeVertices, mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
@@ -1792,6 +1792,7 @@ const BUILDERS: Record<SetElementId, (c: BuildCtx) => void> = {
 // ---------------------------------------------------------------------------------------------------------------
 
 export interface SetHandle {
+  setCupboard(open:number):void;
   setDoor(open:number):void;
   root: THREE.Group;
   /** Authored vegetation models and their textures have settled. */
@@ -1872,6 +1873,7 @@ export function buildBearsYard(mats: LookMaterials, opts: BuildSetOptions = {}):
 
   const interior = buildHouseInterior(mats);
   root.add(interior);
+  const cupboardPanel=interior.getObjectByName('object:kitchen_cupboard');
   const outsideDoor=buildHouseDoor(),insideDoor=buildHouseDoor(true);
   root.add(outsideDoor);interior.add(insideDoor);
   insideDoor.position.sub(interior.position);
@@ -1882,6 +1884,7 @@ export function buildBearsYard(mats: LookMaterials, opts: BuildSetOptions = {}):
   const beesMat = extra.bees?.material as THREE.ShaderMaterial | undefined;
   const handle: SetHandle = {
     setDoor(open){updateHouseDoor(outsideDoor,open);updateHouseDoor(insideDoor,open);},
+    setCupboard(open){if(cupboardPanel){cupboardPanel.rotation.y=KITCHEN_CUPBOARD.angle*open;cupboardPanel.userData.open=open;}},
     root,
     assetsReady: Promise.all([...extra.nature.jobs,interior.userData.assetsReady]).then(() => undefined),
     updateView(x,z,location=sceneLocationAt(x,z),cameraPosition) {

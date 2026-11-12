@@ -115,6 +115,7 @@ export const LEXICON_RU: Lexicon = {
     { re: R("полян|двор$|двора$|дворе$|двору$|лужайк"), id: "clearing" },
     { re: R("крыльц|ступеньк"), id: "porch" },
     { re: R("двер"), id: "door" },
+    { re:R('шкаф|буфет'),id:'cupboard'},
     { re: R("огород|грядк|капуст"), id: "garden" },
     { re: R("ул(?:ей|ья|ью|ье)$|пасек|пчёл|пчел"), id: "beehive" },
     { re: R("качел"), id: "swing" },

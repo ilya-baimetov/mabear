@@ -3,6 +3,7 @@ import type { MarkId, Surface, Vec2 } from "../schema";
 import {COOKING_STATION} from '../cookingStation';
 import {pondWaterAt,pondPierAt} from '../pond';
 import {HOUSE_KITCHEN_MARK,HOUSE_KITCHEN_FACING,HOUSE_LIVING_MARK,HOUSE_LIVING_SEAT_HEIGHT,isHousePoint} from '../houseLayout';
+import {KITCHEN_CUPBOARD} from '../interactiveObjects';
 
 export interface MarkDef {
   id: MarkId;
@@ -15,6 +16,7 @@ export interface MarkDef {
 }
 
 export const MARKS: Record<MarkId, MarkDef> = {
+  cupboard:{id:'cupboard',pos:[...KITCHEN_CUPBOARD.approach],facing:-Math.PI/2,cluster:'interior',description:'Bear’s upper kitchen cupboard. Bear can open/close it and take the single pantry_honey jar from its shelf.'},
   clearing: { id: "clearing", pos: [0, 0], facing: 0, cluster: "yard", description: "Open grass in front of the house" },
   porch: { id: "porch", pos: [-6, -2.6], facing: 0, cluster: "house", description: "Wooden porch with three steps in front of Bear's house" },
   door: { id: "door", pos: [-6.63, -4.35], facing: Math.PI, cluster: "house", description: "Front door of Bear's house. Open/close it here; walk_to house_living enters and continues inside." },
@@ -39,7 +41,7 @@ export const MARKS: Record<MarkId, MarkDef> = {
 /** Water contact shared by fishing animation, its float, and the cast splash. */
 export const FISHING_WATER_TARGET: readonly [number, number, number] = [-8, .035, 10];
 
-export const isInteriorMark = (mark: string | null | undefined): mark is "house_kitchen" | "house_living" => mark === "house_kitchen" || mark === "house_living";
+export const isInteriorMark = (mark: string | null | undefined): mark is "house_kitchen" | "house_living" | 'cupboard' => mark === "house_kitchen" || mark === "house_living" || mark==='cupboard';
 /** Floor footprint; shared by semantic routing and physical interior rendering. */
 export const isInsideHouse = isHousePoint;
 

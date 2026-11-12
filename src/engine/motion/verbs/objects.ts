@@ -14,6 +14,10 @@ function armsOver(ctx: VerbCtx, bones: Pose, w: number, idleAmount = 0.4) {
   return mask(idleBase(ctx, idleAmount), { bones, hipsOffset: [0, 0, 0] }, ARMS.filter((b) => b in bones), w);
 }
 
+/** The contact solver operates the leaf with the free paw. The other arm keeps
+ * the jar steady through closing rather than pointing it toward the cupboard. */
+export const cupboard:VerbImpl=(_lt,p,ctx)=>p.item?armsOver(ctx,holdArm(),1):idleBase(ctx,.25);
+
 export const take: VerbImpl = (lt, _p, ctx) => {
   const u = lt / ctx.dur;
   if(_p.putDown){
@@ -32,7 +36,7 @@ export const take: VerbImpl = (lt, _p, ctx) => {
   const L = armsOver(ctx, reachArm, reach);
   const H = armsOver(ctx, holdArm(), hold);
   const out = blendLayers(L, H, hold);
-  if (_p.pickUpAt === 'house_kitchen') {
+  if (_p.pickUpAt === 'house_kitchen'||_p.pickUpAt==='cupboard') {
     // The worktop is near hand height (Masha stands on the helper). A floor
     // pickup's crouch put faces into the food and paws through the apron.
     // Keep the body upright; the contact rig reaches the actual table edge.

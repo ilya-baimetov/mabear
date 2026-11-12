@@ -1,0 +1,30 @@
+[
+  {
+    "file": "before-after.mp4",
+    "bytes": 4817523,
+    "sha256": "b4bb833fefe050c6bcb2a8ea783fe4c7f1333619ff9641d025d8dd87085fca80",
+    "fullDecode": true,
+    "tailDecode": true
+  },
+  {
+    "file": "cupboard-action.mp4",
+    "bytes": 2205523,
+    "sha256": "f732e18c496188d05a9738ad6a81ab6ec60493e53f98ca590e40902f6bff60c2",
+    "fullDecode": true,
+    "tailDecode": true
+  },
+  {
+    "file": "before/cupboard.mp4",
+    "bytes": 20159751,
+    "sha256": "068c9abd1474b340cc1e6f76bcfb71ba0112557cd5319f40fff97e84e7ad7467",
+    "fullDecode": true,
+    "tailDecode": true
+  },
+  {
+    "file": "after/cupboard.mp4",
+    "bytes": 26430982,
+    "sha256": "c9cec56e97333fcacb249ca03eed42e6ffc58ba71b9713c73a08519833f8a286",
+    "fullDecode": true,
+    "tailDecode": true
+  }
+]

@@ -10,6 +10,7 @@ export interface PropDef {
 }
 
 export const PROPS: Record<PropId, PropDef> = {
+  pantry_honey:{id:'pantry_honey',name:{en:'cupboard honey jar',ru:'банка мёда в шкафу'},edible:true,home:'cupboard',description:'One lidded honey jar in Bear’s upper kitchen cupboard. Open the cupboard before taking it; the shelf stays empty afterwards. Separate from the outdoor honey_pot.'},
   jam_jar: { id: "jam_jar", name: { en: "jam jar", ru: "банка варенья" }, edible: true, home: "table", description: "A jar of raspberry jam (Masha's favourite)" },
   honey_pot: { id: "honey_pot", name: { en: "honey pot", ru: "горшок мёда" }, edible: true, home: "beehive", description: "A clay pot of honey from Bear's hives" },
   pancakes: { id: "pancakes", name: { en: "pancakes", ru: "блины" }, edible: true, home: "hidden", description: "A stack of pancakes (appear after cooking)" },

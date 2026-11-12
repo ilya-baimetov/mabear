@@ -1,12 +1,15 @@
 import {MARKS} from './bible/set';
 import {PROP_IDS,type MarkId,type PropId,type Vec3} from './schema';
 import {HOUSE_PREP_TABLE,HOUSE_READING_TABLE,houseWorld,houseWorkPropZ} from './houseLayout';
+import {CUPBOARD_JAR_POSITION,KITCHEN_CUPBOARD} from './interactiveObjects';
 
 /** Semantic resting heights shared by compiler choreography and the evaluator. */
 export const PROP_REST_HEIGHT:Partial<Record<MarkId,number>>={
+ cupboard:KITCHEN_CUPBOARD.shelfY,
  table:.78,bench:.47,porch:.32,pier:.28,hammock:.66,beehive:.62,woodpile:.55,swing:.47,house_kitchen:HOUSE_PREP_TABLE.height,house_living:HOUSE_READING_TABLE.height,
 };
 export function propRestPosition(prop:PropId,mark:MarkId):Vec3{
+ if(mark==='cupboard')return [...CUPBOARD_JAR_POSITION];
  if(mark==='house_kitchen'){const p=houseWorld([prop==='frying_pan'?-3.47:-3.40,houseWorkPropZ(prop)]);return[p[0],HOUSE_PREP_TABLE.height+(prop==='flour_bag'?.027:0),p[1]];}
  const angle=PROP_IDS.indexOf(prop)*2.399963,radius=mark==='table'?.32:.4,p=mark==='house_living'?HOUSE_READING_TABLE.position:MARKS[mark].pos;
  // The bench seat is narrow: spread along its width, never off its front edge.
@@ -15,6 +18,7 @@ export function propRestPosition(prop:PropId,mark:MarkId):Vec3{
 
 /** Physical prop slots, also used by rendering. Keep choreography on the same surface. */
 export const PROP_SLOTS:Partial<Record<PropId,{mark:MarkId;pos:Vec3;rot?:Vec3}>>={
+ pantry_honey:{mark:'cupboard',pos:[...CUPBOARD_JAR_POSITION]},
  jam_jar:{mark:'table',pos:[1.62,.78,1.74]},frying_pan:{mark:'table',pos:[1.6,.78,1.2],rot:[0,.8,0]},
  flour_bag:{mark:'table',pos:[2.42,.78,1.8]},teapot:{mark:'table',pos:[2.22,1.25,1.28]},
  pancakes:{mark:'table',pos:[1.92,.78,1.88]},cake:{mark:'table',pos:[1.9,.78,1.6]},
@@ -33,7 +37,7 @@ export function propPlacementAtMark(item:PropId,mark:MarkId):{pos:Vec3;rot:Vec3}
  if(slot?.mark===mark)return {pos:[...slot.pos],rot:[...(slot.rot??rot)]};
  if(mark==='house_kitchen')return {pos:propRestPosition(item,mark),rot:item==='frying_pan'?[0,-Math.PI/2,0]:[...rot]};
  const pos=propRestPosition(item,mark);
- if(!['table','bench','house_living'].includes(mark))pos[1]=0;
+ if(!['table','bench','house_living','cupboard'].includes(mark))pos[1]=0;
  return{pos,rot:[...rot]};
 }
 

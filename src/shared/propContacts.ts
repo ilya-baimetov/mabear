@@ -3,6 +3,7 @@ import type {PropId} from './schema';
 export type PropGrip={point:[number,number,number];radius:number;rotation?:[number,number,number];support?:boolean};
 /** Authored contact points in the actual prop meshes, independent of actor size. */
 export const PROP_CONTACTS:Record<PropId,PropGrip>={
+ pantry_honey:{point:[0,.13,0],radius:.105},
  lollipop:{point:[0,.07,0],radius:.006},flowers:{point:[0,.1,0],radius:.028},carrot:{point:[0,.04,0],radius:.035},
  fishing_rod:{point:[0,.12,0],radius:.015,rotation:[.9,0,0]},frying_pan:{point:[0,.03,-.24],radius:.013},
  watering_can:{point:[0,.23,-.02],radius:.012},bucket:{point:[0,.315,0],radius:.006},broom:{point:[0,.5,0],radius:.018,rotation:[.25,0,0]},

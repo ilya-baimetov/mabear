@@ -49,6 +49,7 @@ export interface ActorFrame {
   putDown?: {item:PropId;position:Vec3;rotation:Vec3;release:number};
   /** Surface pickup uses the same contact pose at its attachment instant. */
   pickup?: {item:PropId;position:Vec3;rotation:Vec3;release:number};
+  objectContact?:{position:Vec3;side:1|-1;strength:number};
   /** secondary-motion drivers 0..1 (hem sway, belly jiggle, ear wiggle) */
   secondary: { sway: number; jiggle: number; breathe: number };
 }
@@ -71,7 +72,7 @@ export interface FxFrame {
 }
 
 export interface FrameState {
-  objects?:{house_door:number};
+  objects?:{house_door:number;kitchen_cupboard?:number};
   t: number;
   segmentIndex: number;
   /** segment-local time */

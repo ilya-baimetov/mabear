@@ -32,8 +32,9 @@ describe('interactive house stories',()=>{
   const f=evaluate(tl,tl.duration);expect(sceneLocationAt(f.actors.bear.pos[0],f.actors.bear.pos[2])).toBe('house');
   expect(f.actors.bear.opacity).toBe(1);
  });
- it('does not pretend that a cupboard is the supported door',()=>{
-  const tl=textStory(['Bear opens the cupboard.']);expect(evaluate(tl,tl.duration).objects!.house_door).toBe(0);
+ it('operates the cupboard independently of the entrance door',()=>{
+  const tl=textStory(['Bear enters the house. Bear closes the door.','Bear opens the cupboard.']);
+  expect(evaluate(tl,tl.duration).objects).toEqual({house_door:0,kitchen_cupboard:1});
  });
  it('persists open/closed state, supports repeated requests and is independent of seek order',()=>{
   const tl=textStory(['Bear opens the door.','Bear opens the door.','Bear closes the door.']);

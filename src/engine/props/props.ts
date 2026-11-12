@@ -27,6 +27,14 @@ const sph = (r: number, ws = 12, hs = 8) => new THREE.SphereGeometry(r, ws, hs);
 const lathe = (pts: [number, number][], seg = 16) => new THREE.LatheGeometry(pts.map(([x, y]) => new THREE.Vector2(x, y)), seg);
 
 export const PROP_VISUALS: Record<PropId, PropVisual> = {
+  pantry_honey:{
+    build(b){
+      b.add('paint',lathe([[0,0],[.08,0],[.105,.035],[.105,.23],[.083,.26],[.083,.28],[0,.28]],24),0xc48a36);
+      b.add('paint',cyl(.091,.091,.035,24),0x40594b,xf([0,.292,0]));
+      b.add('paint',cyl(.106,.106,.085,24),0xf0dfac,xf([0,.135,0]));
+      b.add('paint',sph(.025,12,8),0xb58b37,xf([.106,.14,0],[0,0,0],[.15,1,.75]));
+    },grip:{pos:[0,-.13,.10],rot:[0,0,0]},
+  },
   jam_jar: {
     build(b) {
       b.add("paint", lathe([[0, 0], [0.055, 0], [0.062, 0.02], [0.062, 0.1], [0.05, 0.115], [0.05, 0.125], [0, 0.125]]), 0xb51f3c, undefined, {
@@ -228,6 +236,8 @@ const PLAYER_REST_Y=PROP_REST_HEIGHT;
 
 /** If (pos) is a prop resting at a mark (as placed by the player), return that mark. Pure. */
 export function restingMark(pos: Vec3): MarkId | null {
+  const cupboard=PROP_SLOTS.pantry_honey!;
+  if(Math.hypot(pos[0]-cupboard.pos[0],pos[1]-cupboard.pos[1],pos[2]-cupboard.pos[2])<.01)return 'cupboard';
   let best: MarkId | null = null;
   let bestD = 0.6;
   for (const id of Object.keys(MARKS) as MarkId[]) {

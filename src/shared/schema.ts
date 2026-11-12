@@ -9,11 +9,11 @@ export const ACTOR_IDS = ["masha", "bear", "wolf_a", "wolf_b", "lady_bear", "har
 export const WOLF_IDS = ["wolf_a", "wolf_b"] as const;
 export const MARK_IDS = [
   "clearing", "porch", "door", "garden", "beehive", "swing", "pond_shore", "pier", "table",
-  "bench", "woodpile", "path_entry", "big_tree", "bush", "hammock", "creek", "van", "house_kitchen", "house_living",
+  "bench", "woodpile", "path_entry", "big_tree", "bush", "hammock", "creek", "van", "house_kitchen", "house_living", "cupboard",
 ] as const;
 export const PROP_IDS = [
   "jam_jar", "honey_pot", "pancakes", "frying_pan", "ball", "fishing_rod", "fish", "lollipop",
-  "flowers", "carrot", "broom", "book", "pillow", "bucket", "watering_can", "flour_bag", "cake", "teapot",
+  "flowers", "carrot", "broom", "book", "pillow", "bucket", "watering_can", "flour_bag", "cake", "teapot", "pantry_honey",
 ] as const;
 export const EMOTIONS = [
   "neutral", "happy", "excited", "mischievous", "curious", "surprised", "sad", "angry", "scared",
@@ -193,11 +193,12 @@ const wolfStateDefault = (id: "wolf_a" | "wolf_b") =>
   ActorStateSchema.default(() => JSON.parse(JSON.stringify(WOLF_START[id])) as ActorState);
 
 export const WorldStateSchema = z.object({
-  objects:z.object({house_door:z.number().min(0).max(1)}).optional(),
+  objects:z.object({house_door:z.number().min(0).max(1),kitchen_cupboard:z.number().min(0).max(1).optional()}).optional(),
   timeOfDay: TimeOfDaySchema,
   // wolf_a / wolf_b default in (additive): world states saved before the Wolves still parse.
   actors: z.object({ masha: ActorStateSchema, bear: ActorStateSchema, wolf_a: wolfStateDefault("wolf_a"), wolf_b: wolfStateDefault("wolf_b"), lady_bear: extraStateDefault("lady_bear"), hare: extraStateDefault("hare"), rosie: extraStateDefault("rosie"), squirrel: extraStateDefault("squirrel"), rival_bear: extraStateDefault("rival_bear") }),
-  props: z.record(PropIdSchema, z.object({ at: PropLocationSchema })),
+  props: z.preprocess(value => value && typeof value==='object' && !('pantry_honey' in value)
+    ? {...value,pantry_honey:{at:'cupboard'}} : value, z.record(PropIdSchema, z.object({ at: PropLocationSchema }))),
 });
 export type WorldState = z.infer<typeof WorldStateSchema>;
 
@@ -219,6 +220,8 @@ export const ActorClipSchema = z.object({
     sceneCut: z.boolean().optional(), // short offscreen travel between separate outdoor locations
     portal:z.boolean().optional(), // visible doorway match cut, never a fade/offstage exit
     arrivalYaw:z.number().optional(),
+    objectFrom:z.number().optional(),
+    objectTo:z.number().optional(),
     putDown: MarkIdSchema.optional(), // compiler-authored reverse take, releases the held prop halfway through
     pickUpAt: MarkIdSchema.optional(), // explicit surface contact before an indoor prop attaches to the hand
     catchesFish: z.boolean().optional(), // ownership at the catch, independent of a later put-down in the same scene
@@ -281,7 +284,7 @@ export const FxCueSchema = z.object({ start: z.number(), dur: z.number(), id: Fx
 export type FxCue = z.infer<typeof FxCueSchema>;
 
 export const SegmentSchema = z.object({
-  objectCues:z.array(z.object({object:z.literal('house_door'),start:z.number(),dur:z.number(),from:z.number(),to:z.number()})).optional(),
+  objectCues:z.array(z.object({object:z.enum(['house_door','kitchen_cupboard']),start:z.number(),dur:z.number(),from:z.number(),to:z.number()})).optional(),
   paragraphId: z.string(),
   version: z.number(),
   duration: z.number(),

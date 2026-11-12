@@ -28,6 +28,9 @@ export function prepTableLift(frame:ActorFrame,item:string,origin:THREE.Vector3,
  * the hand move underneath for the normal carry; reaching through the table
  * to a bottom-center support point is not a valid acquisition pose. */
 export function kitchenSurfaceGrasp(frame:ActorFrame,data:NonNullable<ActorFrame['pickup']>){
+ if(data.item==='pantry_honey'&&data.position[1]>2){
+  return{offset:new THREE.Vector3(0,.13,0),normal:new THREE.Vector3(-1,0,0),long:new THREE.Vector3(0,1,0),outward:new THREE.Vector3(1,0,0)};
+ }
  const table=HOUSE_PREP_TABLE;
  if(Math.abs(data.position[0]-table.position[0])>table.width/2+.05||Math.abs(data.position[2]-table.position[1])>table.depth/2+.05)return null;
  const outward=new THREE.Vector3(frame.pos[0]-data.position[0],0,frame.pos[2]-data.position[2]).normalize();

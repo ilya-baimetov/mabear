@@ -1,0 +1,49 @@
+
+> mabear@0.1.0 build
+> vite build
+
+vite v8.3.5 building client environment for production...
+transforming...
+✓ 2315 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/voice/index.html                               0.55 kB │ gzip:     0.33 kB
+dist/index.html                                     1.20 kB │ gzip:     0.47 kB
+dist/physics/index.html                             3.57 kB │ gzip:     1.52 kB
+dist/assets/voice-uiHD2ipp.css                      4.19 kB │ gzip:     1.61 kB
+dist/assets/studio-hh5Z75mC.css                    65.88 kB │ gzip:    14.35 kB
+dist/assets/rolldown-runtime-4tVxZq34.js            0.23 kB │ gzip:     0.19 kB
+dist/assets/emotion-BbJd7NAs.js                     0.45 kB │ gzip:     0.30 kB
+dist/assets/pick-CDJR9fZN.js                        0.46 kB │ gzip:     0.32 kB
+dist/assets/cookingStation-CNkxmpCY.js              1.77 kB │ gzip:     0.89 kB
+dist/assets/physics-CPETBcps.js                     3.36 kB │ gzip:     1.61 kB
+dist/assets/player-C1c9fpCx.js                      3.52 kB │ gzip:     1.18 kB
+dist/assets/BufferGeometryUtils-DGi_wMKb.js         6.42 kB │ gzip:     1.93 kB
+dist/assets/bus-C0YitvGm.js                         6.59 kB │ gzip:     3.00 kB
+dist/assets/characters-BpTjwKz1.js                  6.80 kB │ gzip:     2.65 kB
+dist/assets/set-DbcRoKji.js                         7.27 kB │ gzip:     2.92 kB
+dist/assets/bear-CvVDyknC.js                        7.74 kB │ gzip:     3.72 kB
+dist/assets/masha-Ba0X13et.js                      10.37 kB │ gzip:     4.84 kB
+dist/assets/voice-6uAmc0bY.js                      11.52 kB │ gzip:     7.09 kB
+dist/assets/sourceContacts-BRFMUfc4.js             13.87 kB │ gzip:     4.43 kB
+dist/assets/wolf-D27plgTF.js                       13.98 kB │ gzip:     6.32 kB
+dist/assets/face-PXV4q0pr.js                       22.93 kB │ gzip:     8.93 kB
+dist/assets/meshopt_decoder.module-DXTYc6wn.js     26.48 kB │ gzip:     7.26 kB
+dist/assets/audio-0Dap-E3t.js                      40.17 kB │ gzip:    14.24 kB
+dist/assets/generated-D3sHH4zL.js                  45.22 kB │ gzip:    17.25 kB
+dist/assets/evaluate-aljGqixb.js                   47.35 kB │ gzip:    16.81 kB
+dist/assets/schema-CRHwtg-K.js                     99.76 kB │ gzip:    29.21 kB
+dist/assets/common-6eT45bnr.js                    116.80 kB │ gzip:    33.82 kB
+dist/assets/stage-G766643X.js                     158.00 kB │ gzip:    69.97 kB
+dist/assets/preload-helper-CYTxDxzI.js            182.37 kB │ gzip:    52.84 kB
+dist/assets/three.core-Dw9ZaBbX.js                267.66 kB │ gzip:    72.19 kB
+dist/assets/studio-D5mwvzj8.js                    415.24 kB │ gzip:   151.94 kB
+dist/assets/bearsYard-zC6b3RjN.js                 512.04 kB │ gzip:   141.05 kB
+dist/assets/stageReplay-IOosJoHp.js             4,342.70 kB │ gzip: 1,673.11 kB
+
+[plugin builtin:vite-reporter]
+(!) Some chunks are larger than 2000 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 533ms

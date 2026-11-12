@@ -1,0 +1,2656 @@
+{
+  "mode": "before",
+  "sourceRoot": "/var/folders/qw/n12_tfk9375b7dzqn6_75mw80000gn/T/mabear-cupboard-before.z3rd4gcm",
+  "source": "b49f81f61a2162540bdb07d1b25231a4ac3741c0c39f110e765bf788209fbe59",
+  "stable": true,
+  "capturedAt": "2026-11-12T00:33:48.188Z",
+  "info": {
+    "mode": "baseline",
+    "physicsInitMs": 0,
+    "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36",
+    "buffer": [
+      1280,
+      720
+    ],
+    "assets": [
+      {
+        "id": "wolf_a",
+        "source": "procedural",
+        "ok": true
+      },
+      {
+        "id": "wolf_b",
+        "source": "procedural",
+        "ok": true
+      },
+      {
+        "id": "hare",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "rosie",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "masha",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "squirrel",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "lady_bear",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "rival_bear",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "bear",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "robot_test",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "prop:carrot",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "set:beehive",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "set:house",
+        "source": "gltf",
+        "ok": true
+      }
+    ],
+    "durations": {
+      "cupboard": 31.049,
+      "russian": 31.049,
+      "implicit": 6.733,
+      "empty": 34.649,
+      "cozy": 71.685,
+      "regression": 68.166
+    }
+  },
+  "recordings": [
+    {
+      "id": "cupboard",
+      "filename": "cupboard.mp4",
+      "mime": "video/mp4;codecs=avc1.42e01e",
+      "duration": 31.049,
+      "frames": 1835,
+      "gapP95": 17.39999999999418
+    }
+  ],
+  "frames": [
+    {
+      "id": "cupboard",
+      "t": 3.3000000000000003,
+      "objects": {
+        "house_door": 0
+      },
+      "props": {
+        "jam_jar": {
+          "visible": true,
+          "pos": [
+            2.32,
+            0.78,
+            1.5
+          ],
+          "attachedTo": null
+        },
+        "honey_pot": {
+          "visible": true,
+          "pos": [
+            9.70505251084047,
+            0.62,
+            -7.729803814537494
+          ],
+          "attachedTo": null
+        },
+        "pancakes": {
+          "visible": false,
+          "pos": [
+            0,
+            -10,
+            0
+          ],
+          "attachedTo": null
+        },
+        "frying_pan": {
+          "visible": true,
+          "pos": [
+            2.194700610533508,
+            0.78,
+            1.7539521062284762
+          ],
+          "attachedTo": null
+        },
+        "ball": {
+          "visible": true,
+          "pos": [
+            -0.39388545814934095,
+            0.03,
+            -0.06967241820465114
+          ],
+          "attachedTo": null
+        },
+        "fishing_rod": {
+          "visible": true,
+          "pos": [
+            -5.162498128678889,
+            0.28,
+            9.285308391280077
+          ],
+          "attachedTo": null
+        },
+        "fish": {
+          "visible": false,
+          "pos": [
+            0,
+            -10,
+            0
+          ],
+          "attachedTo": null
+        },
+        "lollipop": {
+          "visible": false,
+          "pos": [
+            0,
+            -10,
+            0
+          ],
+          "attachedTo": null
+        },
+        "flowers": {
+          "visible": true,
+          "pos": [
+            5.375728770707581,
+            0.03,
+            -4.862785238175443
+          ],
+          "attachedTo": null
+        },
+        "carrot": {
+          "visible": true,
+          "pos": [
+            4.630262093101651,
+            0.03,
+            -4.847376672155177
+          ],
+          "attachedTo": null
+        },
+        "broom": {
+          "visible": true,
+          "pos": [
+            -5.830462434273741,
+            0.32,
+            -2.962294098499568
+          ],
+          "attachedTo": null
+        },
+        "book": {
+          "visible": true,
+          "pos": [
+            2.119714510252455,
+            0.47,
+            3
+          ],
+          "attachedTo": null
+        },
+        "pillow": {
+          "visible": true,
+          "pos": [
+            -11.34608503680088,
+            0.66,
+            1.799437921574058
+          ],
+          "attachedTo": null
+        },
+        "bucket": {
+          "visible": true,
+          "pos": [
+            -5.109329947051939,
+            0.28,
+            9.41411106165775
+          ],
+          "attachedTo": null
+        },
+        "watering_can": {
+          "visible": true,
+          "pos": [
+            4.769949280766624,
+            0.03,
+            -4.672774288020935
+          ],
+          "attachedTo": null
+        },
+        "flour_bag": {
+          "visible": true,
+          "pos": [
+            1.9588754857104644,
+            0.78,
+            1.1826535421271418
+          ],
+          "attachedTo": null
+        },
+        "cake": {
+          "visible": false,
+          "pos": [
+            0,
+            -10,
+            0
+          ],
+          "attachedTo": null
+        },
+        "teapot": {
+          "visible": true,
+          "pos": [
+            1.6802733143559816,
+            0.78,
+            1.5132229530397356
+          ],
+          "attachedTo": null
+        }
+      },
+      "actor": {
+        "pos": [
+          -4.180456705997909,
+          0,
+          -2.3333077298376357
+        ],
+        "verb": "walk_to",
+        "holding": null,
+        "box": {
+          "min": [
+            -5.477531023374963,
+            -0.17765992944131148,
+            -3.550458387876442
+          ],
+          "max": [
+            -3.061592527551179,
+            2.444940002610544,
+            -1.1314371335690556
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "carry": null,
+        "hug": null
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": null,
+      "stats": {
+        "fps": 67.65899865500566,
+        "drawCalls": 160,
+        "triangles": 2119200
+      },
+      "camera": {
+        "pos": [
+          -1,
+          5.246810469670827,
+          3.7
+        ],
+        "quat": [
+          -0.17966414506579734,
+          0.28754074291890214,
+          0.05500760689155409,
+          0.9391566851827687
+        ]
+      }
+    },
+    {
+      "id": "cupboard",
+      "t": 6.2497,
+      "objects": {
+        "house_door": 0
+      },
+      "props": {
+        "jam_jar": {
+          "visible": true,
+          "pos": [
+            2.32,
+            0.78,
+            1.5
+          ],
+          "attachedTo": null
+        },
+        "honey_pot": {
+          "visible": true,
+          "pos": [
+            9.70505251084047,
+            0.62,
+            -7.729803814537494
+          ],
+          "attachedTo": null
+        },
+        "pancakes": {
+          "visible": false,
+          "pos": [
+            0,
+            -10,
+            0
+          ],
+          "attachedTo": null
+        },
+        "frying_pan": {
+          "visible": true,
+          "pos": [
+            2.194700610533508,
+            0.78,
+            1.7539521062284762
+          ],
+          "attachedTo": null
+        },
+        "ball": {
+          "visible": true,
+          "pos": [
+            -0.39388545814934095,
+            0.03,
+            -0.06967241820465114
+          ],
+          "attachedTo": null
+        },
+        "fishing_rod": {
+          "visible": true,
+          "pos": [
+            -5.162498128678889,
+            0.28,
+            9.285308391280077
+          ],
+          "attachedTo": null
+        },
+        "fish": {
+          "visible": false,
+          "pos": [
+            0,
+            -10,
+            0
+          ],
+          "attachedTo": null
+        },
+        "lollipop": {
+          "visible": false,
+          "pos": [
+            0,
+            -10,
+            0
+          ],
+          "attachedTo": null
+        },
+        "flowers": {
+          "visible": true,
+          "pos": [
+            5.375728770707581,
+            0.03,
+            -4.862785238175443
+          ],
+          "attachedTo": null
+        },
+        "carrot": {
+          "visible": true,
+          "pos": [
+            4.630262093101651,
+            0.03,
+            -4.847376672155177
+          ],
+          "attachedTo": null
+        },
+        "broom": {
+          "visible": true,
+          "pos": [
+            -5.830462434273741,
+            0.32,
+            -2.962294098499568
+          ],
+          "attachedTo": null
+        },
+        "book": {
+          "visible": true,
+          "pos": [
+            2.119714510252455,
+            0.47,
+            3
+          ],
+          "attachedTo": null
+        },
+        "pillow": {
+          "visible": true,
+          "pos": [
+            -11.34608503680088,
+            0.66,
+            1.799437921574058
+          ],
+          "attachedTo": null
+        },
+        "bucket": {
+          "visible": true,
+          "pos": [
+            -5.109329947051939,
+            0.28,
+            9.41411106165775
+          ],
+          "attachedTo": null
+        },
+        "watering_can": {
+          "visible": true,
+          "pos": [
+            4.769949280766624,
+            0.03,
+            -4.672774288020935
+          ],
+          "attachedTo": null
+        },
+        "flour_bag": {
+          "visible": true,
+          "pos": [
+            1.9588754857104644,
+            0.78,
+            1.1826535421271418
+          ],
+          "attachedTo": null
+        },
+        "cake": {
+          "visible": false,
+          "pos": [
+            0,
+            -10,
+            0
+          ],
+          "attachedTo": null
+        },
+        "teapot": {
+          "visible": true,
+          "pos": [
+            1.6802733143559816,
+            0.78,
+            1.5132229530397356
+          ],
+          "attachedTo": null
+        }
+      },
+      "actor": {
+        "pos": [
+          -6.63,
+          0,
+          -4.35
+        ],
+        "verb": "look_at",
+        "holding": null,
+        "box": {
+          "min": [
+            -7.698089981443538,
+            0.031759727464219456,
+            -5.4145601077911465
+          ],
+          "max": [
+            -5.688624014640141,
+            2.654359659516075,
+            -3.411677355355783
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "carry": null,
+        "hug": null
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": null,
+      "stats": {
+        "fps": 34.32494279234723,
+        "drawCalls": 160,
+        "triangles": 2119200
+      },
+      "camera": {
+        "pos": [
+          -1,
+          3.5,
+          3.7
+        ],
+        "quat": [
+          -0.09492866485221568,
+          0.29130874794197553,
+          0.02906422245250113,
+          0.9514636267010346
+        ]
+      }
+    },
+    {
+      "id": "cupboard",
+      "t": 7.224,
+      "objects": {
+        "house_door": 0.4628439154258726
+      },
+      "props": {
+        "jam_jar": {
+          "visible": true,
+          "pos": [
+            2.32,
+            0.78,
+            1.5
+          ],
+          "attachedTo": null
+        },
+        "honey_pot": {
+          "visible": true,
+          "pos": [
+            9.70505251084047,
+            0.62,
+            -7.729803814537494
+          ],
+          "attachedTo": null
+        },
+        "pancakes": {
+          "visible": false,
+          "pos": [
+            0,
+            -10,
+            0
+          ],
+          "attachedTo": null
+        },
+        "frying_pan": {
+          "visible": true,
+          "pos": [
+            2.194700610533508,
+            0.78,
+            1.7539521062284762
+          ],
+          "attachedTo": null
+        },
+        "ball": {
+          "visible": true,
+          "pos": [
+            -0.39388545814934095,
+            0.03,
+            -0.06967241820465114
+          ],
+          "attachedTo": null
+        },
+        "fishing_rod": {
+          "visible": true,
+          "pos": [
+            -5.162498128678889,
+            0.28,
+            9.285308391280077
+          ],
+          "attachedTo": null
+        },
+        "fish": {
+          "visible": false,
+          "pos": [
+            0,
+            -10,
+            0
+          ],
+          "attachedTo": null
+        },
+        "lollipop": {
+          "visible": false,
+          "pos": [
+            0,
+            -10,
+            0
+          ],
+          "attachedTo": null
+        },
+        "flowers": {
+          "visible": true,
+          "pos": [
+            5.375728770707581,
+            0.03,
+            -4.862785238175443
+          ],
+          "attachedTo": null
+        },
+        "carrot": {
+          "visible": true,
+          "pos": [
+            4.630262093101651,
+            0.03,
+            -4.847376672155177
+          ],
+          "attachedTo": null
+        },
+        "broom": {
+          "visible": true,
+          "pos": [
+            -5.830462434273741,
+            0.32,
+            -2.962294098499568
+          ],
+          "attachedTo": null
+        },
+        "book": {
+          "visible": true,
+          "pos": [
+            2.119714510252455,
+            0.47,
+            3
+          ],
+          "attachedTo": null
+        },
+        "pillow": {
+          "visible": true,
+          "pos": [
+            -11.34608503680088,
+            0.66,
+            1.799437921574058
+          ],
+          "attachedTo": null
+        },
+        "bucket": {
+          "visible": true,
+          "pos": [
+            -5.109329947051939,
+            0.28,
+            9.41411106165775
+          ],
+          "attachedTo": null
+        },
+        "watering_can": {
+          "visible": true,
+          "pos": [
+            4.769949280766624,
+            0.03,
+            -4.672774288020935
+          ],
+          "attachedTo": null
+        },
+        "flour_bag": {
+          "visible": true,
+          "pos": [
+            1.9588754857104644,
+            0.78,
+            1.1826535421271418
+          ],
+          "attachedTo": null
+        },
+        "cake": {
+          "visible": false,
+          "pos": [
+            0,
+            -10,
+            0
+          ],
+          "attachedTo": null
+        },
+        "teapot": {
+          "visible": true,
+          "pos": [
+            1.6802733143559816,
+            0.78,
+            1.5132229530397356
+          ],
+          "attachedTo": null
+        }
+      },
+      "actor": {
+        "pos": [
+          -6.63,
+          0,
+          -4.35
+        ],
+        "verb": "open",
+        "holding": null,
+        "box": {
+          "min": [
+            -7.5437305567331725,
+            0.02027997031173906,
+            -5.282247639367913
+          ],
+          "max": [
+            -5.817743043608059,
+            2.6428799023635947,
+            -3.565046088737039
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "carry": null,
+        "hug": null
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": null,
+      "stats": {
+        "fps": 27.526543452937617,
+        "drawCalls": 160,
+        "triangles": 2119200
+      },
+      "camera": {
+        "pos": [
+          -1,
+          3.5,
+          3.7
+        ],
+        "quat": [
+          -0.09492866485221568,
+          0.29130874794197553,
+          0.02906422245250113,
+          0.9514636267010346
+        ]
+      }
+    },
+    {
+      "id": "cupboard",
+      "t": 8.4865,
+      "objects": {
+        "house_door": 1
+      },
+      "props": {
+        "jam_jar": {
+          "visible": true,
+          "pos": [
+            2.32,
+            0.78,
+            1.5
+          ],
+          "attachedTo": null
+        },
+        "honey_pot": {
+          "visible": true,
+          "pos": [
+            9.70505251084047,
+            0.62,
+            -7.729803814537494
+          ],
+          "attachedTo": null
+        },
+        "pancakes": {
+          "visible": false,
+          "pos": [
+            0,
+            -10,
+            0
+          ],
+          "attachedTo": null
+        },
+        "frying_pan": {
+          "visible": true,
+          "pos": [
+            2.194700610533508,
+            0.78,
+            1.7539521062284762
+          ],
+          "attachedTo": null
+        },
+        "ball": {
+          "visible": true,
+          "pos": [
+            -0.39388545814934095,
+            0.03,
+            -0.06967241820465114
+          ],
+          "attachedTo": null
+        },
+        "fishing_rod": {
+          "visible": true,
+          "pos": [
+            -5.162498128678889,
+            0.28,
+            9.285308391280077
+          ],
+          "attachedTo": null
+        },
+        "fish": {
+          "visible": false,
+          "pos": [
+            0,
+            -10,
+            0
+          ],
+          "attachedTo": null
+        },
+        "lollipop": {
+          "visible": false,
+          "pos": [
+            0,
+            -10,
+            0
+          ],
+          "attachedTo": null
+        },
+        "flowers": {
+          "visible": true,
+          "pos": [
+            5.375728770707581,
+            0.03,
+            -4.862785238175443
+          ],
+          "attachedTo": null
+        },
+        "carrot": {
+          "visible": true,
+          "pos": [
+            4.630262093101651,
+            0.03,
+            -4.847376672155177
+          ],
+          "attachedTo": null
+        },
+        "broom": {
+          "visible": true,
+          "pos": [
+            -5.830462434273741,
+            0.32,
+            -2.962294098499568
+          ],
+          "attachedTo": null
+        },
+        "book": {
+          "visible": true,
+          "pos": [
+            2.119714510252455,
+            0.47,
+            3
+          ],
+          "attachedTo": null
+        },
+        "pillow": {
+          "visible": true,
+          "pos": [
+            -11.34608503680088,
+            0.66,
+            1.799437921574058
+          ],
+          "attachedTo": null
+        },
+        "bucket": {
+          "visible": true,
+          "pos": [
+            -5.109329947051939,
+            0.28,
+            9.41411106165775
+          ],
+          "attachedTo": null
+        },
+        "watering_can": {
+          "visible": true,
+          "pos": [
+            4.769949280766624,
+            0.03,
+            -4.672774288020935
+          ],
+          "attachedTo": null
+        },
+        "flour_bag": {
+          "visible": true,
+          "pos": [
+            1.9588754857104644,
+            0.78,
+            1.1826535421271418
+          ],
+          "attachedTo": null
+        },
+        "cake": {
+          "visible": false,
+          "pos": [
+            0,
+            -10,
+            0
+          ],
+          "attachedTo": null
+        },
+        "teapot": {
+          "visible": true,
+          "pos": [
+            1.6802733143559816,
+            0.78,
+            1.5132229530397356
+          ],
+          "attachedTo": null
+        }
+      },
+      "actor": {
+        "pos": [
+          -6.63,
+          0,
+          -5.001666666666666
+        ],
+        "verb": "walk_to",
+        "holding": null,
+        "box": {
+          "min": [
+            -7.5437305567331725,
+            0.27649514297348077,
+            -5.933914306034579
+          ],
+          "max": [
+            -5.817743043608059,
+            2.899095075025336,
+            -4.216712755403705
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "carry": null,
+        "hug": null
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": null,
+      "stats": {
+        "fps": 23.930601256569904,
+        "drawCalls": 160,
+        "triangles": 2119200
+      },
+      "camera": {
+        "pos": [
+          -1,
+          3.5,
+          3.7
+        ],
+        "quat": [
+          -0.09492866485221568,
+          0.29130874794197553,
+          0.02906422245250113,
+          0.9514636267010346
+        ]
+      }
+    },
+    {
+      "id": "cupboard",
+      "t": 9.059,
+      "objects": {
+        "house_door": 1
+      },
+      "props": {
+        "jam_jar": {
+          "visible": true,
+          "pos": [
+            2.32,
+            0.78,
+            1.5
+          ],
+          "attachedTo": null
+        },
+        "honey_pot": {
+          "visible": true,
+          "pos": [
+            9.70505251084047,
+            0.62,
+            -7.729803814537494
+          ],
+          "attachedTo": null
+        },
+        "pancakes": {
+          "visible": false,
+          "pos": [
+            0,
+            -10,
+            0
+          ],
+          "attachedTo": null
+        },
+        "frying_pan": {
+          "visible": true,
+          "pos": [
+            2.194700610533508,
+            0.78,
+            1.7539521062284762
+          ],
+          "attachedTo": null
+        },
+        "ball": {
+          "visible": true,
+          "pos": [
+            -0.39388545814934095,
+            0.03,
+            -0.06967241820465114
+          ],
+          "attachedTo": null
+        },
+        "fishing_rod": {
+          "visible": true,
+          "pos": [
+            -5.162498128678889,
+            0.28,
+            9.285308391280077
+          ],
+          "attachedTo": null
+        },
+        "fish": {
+          "visible": false,
+          "pos": [
+            0,
+            -10,
+            0
+          ],
+          "attachedTo": null
+        },
+        "lollipop": {
+          "visible": false,
+          "pos": [
+            0,
+            -10,
+            0
+          ],
+          "attachedTo": null
+        },
+        "flowers": {
+          "visible": true,
+          "pos": [
+            5.375728770707581,
+            0.03,
+            -4.862785238175443
+          ],
+          "attachedTo": null
+        },
+        "carrot": {
+          "visible": true,
+          "pos": [
+            4.630262093101651,
+            0.03,
+            -4.847376672155177
+          ],
+          "attachedTo": null
+        },
+        "broom": {
+          "visible": true,
+          "pos": [
+            -5.830462434273741,
+            0.32,
+            -2.962294098499568
+          ],
+          "attachedTo": null
+        },
+        "book": {
+          "visible": true,
+          "pos": [
+            2.119714510252455,
+            0.47,
+            3
+          ],
+          "attachedTo": null
+        },
+        "pillow": {
+          "visible": true,
+          "pos": [
+            -11.34608503680088,
+            0.66,
+            1.799437921574058
+          ],
+          "attachedTo": null
+        },
+        "bucket": {
+          "visible": true,
+          "pos": [
+            -5.109329947051939,
+            0.28,
+            9.41411106165775
+          ],
+          "attachedTo": null
+        },
+        "watering_can": {
+          "visible": true,
+          "pos": [
+            4.769949280766624,
+            0.03,
+            -4.672774288020935
+          ],
+          "attachedTo": null
+        },
+        "flour_bag": {
+          "visible": true,
+          "pos": [
+            1.9588754857104644,
+            0.78,
+            1.1826535421271418
+          ],
+          "attachedTo": null
+        },
+        "cake": {
+          "visible": false,
+          "pos": [
+            0,
+            -10,
+            0
+          ],
+          "attachedTo": null
+        },
+        "teapot": {
+          "visible": true,
+          "pos": [
+            1.6802733143559816,
+            0.78,
+            1.5132229530397356
+          ],
+          "attachedTo": null
+        }
+      },
+      "actor": {
+        "pos": [
+          -4.785,
+          0,
+          -10.521
+        ],
+        "verb": "walk_to",
+        "holding": null,
+        "box": {
+          "min": [
+            -6.047210918522214,
+            0.2713539894664223,
+            -11.690035475062318
+          ],
+          "max": [
+            -3.701162959078606,
+            2.893953921518278,
+            -9.338732227521323
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "carry": null,
+        "hug": null
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": null,
+      "stats": {
+        "fps": 23.930601256569904,
+        "drawCalls": 341,
+        "triangles": 1202952
+      },
+      "camera": {
+        "pos": [
+          -9.6,
+          2.7,
+          -8.9
+        ],
+        "quat": [
+          -0.09750575709720073,
+          -0.5139159494137925,
+          -0.05893596052632143,
+          0.8502408934107215
+        ]
+      }
+    },
+    {
+      "id": "cupboard",
+      "t": 10.16,
+      "objects": {
+        "house_door": 1
+      },
+      "props": {
+        "jam_jar": {
+          "visible": true,
+          "pos": [
+            2.32,
+            0.78,
+            1.5
+          ],
+          "attachedTo": null
+        },
+        "honey_pot": {
+          "visible": true,
+          "pos": [
+            9.70505251084047,
+            0.62,
+            -7.729803814537494
+          ],
+          "attachedTo": null
+        },
+        "pancakes": {
+          "visible": false,
+          "pos": [
+            0,
+            -10,
+            0
+          ],
+          "attachedTo": null
+        },
+        "frying_pan": {
+          "visible": true,
+          "pos": [
+            2.194700610533508,
+            0.78,
+            1.7539521062284762
+          ],
+          "attachedTo": null
+        },
+        "ball": {
+          "visible": true,
+          "pos": [
+            -0.39388545814934095,
+            0.03,
+            -0.06967241820465114
+          ],
+          "attachedTo": null
+        },
+        "fishing_rod": {
+          "visible": true,
+          "pos": [
+            -5.162498128678889,
+            0.28,
+            9.285308391280077
+          ],
+          "attachedTo": null
+        },
+        "fish": {
+          "visible": false,
+          "pos": [
+            0,
+            -10,
+            0
+          ],
+          "attachedTo": null
+        },
+        "lollipop": {
+          "visible": false,
+          "pos": [
+            0,
+            -10,
+            0
+          ],
+          "attachedTo": null
+        },
+        "flowers": {
+          "visible": true,
+          "pos": [
+            5.375728770707581,
+            0.03,
+            -4.862785238175443
+          ],
+          "attachedTo": null
+        },
+        "carrot": {
+          "visible": true,
+          "pos": [
+            4.630262093101651,
+            0.03,
+            -4.847376672155177
+          ],
+          "attachedTo": null
+        },
+        "broom": {
+          "visible": true,
+          "pos": [
+            -5.830462434273741,
+            0.32,
+            -2.962294098499568
+          ],
+          "attachedTo": null
+        },
+        "book": {
+          "visible": true,
+          "pos": [
+            2.119714510252455,
+            0.47,
+            3
+          ],
+          "attachedTo": null
+        },
+        "pillow": {
+          "visible": true,
+          "pos": [
+            -11.34608503680088,
+            0.66,
+            1.799437921574058
+          ],
+          "attachedTo": null
+        },
+        "bucket": {
+          "visible": true,
+          "pos": [
+            -5.109329947051939,
+            0.28,
+            9.41411106165775
+          ],
+          "attachedTo": null
+        },
+        "watering_can": {
+          "visible": true,
+          "pos": [
+            4.769949280766624,
+            0.03,
+            -4.672774288020935
+          ],
+          "attachedTo": null
+        },
+        "flour_bag": {
+          "visible": true,
+          "pos": [
+            1.9588754857104644,
+            0.78,
+            1.1826535421271418
+          ],
+          "attachedTo": null
+        },
+        "cake": {
+          "visible": false,
+          "pos": [
+            0,
+            -10,
+            0
+          ],
+          "attachedTo": null
+        },
+        "teapot": {
+          "visible": true,
+          "pos": [
+            1.6802733143559816,
+            0.78,
+            1.5132229530397356
+          ],
+          "attachedTo": null
+        }
+      },
+      "actor": {
+        "pos": [
+          -5.715380891719747,
+          0,
+          -11.064750955414015
+        ],
+        "verb": "walk_to",
+        "holding": null,
+        "box": {
+          "min": [
+            -6.977494178391703,
+            0.1312891420526372,
+            -12.233665669652524
+          ],
+          "max": [
+            -4.631637443731617,
+            2.753889074104493,
+            -9.88254961055776
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "carry": null,
+        "hug": null
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": null,
+      "stats": {
+        "fps": 22.388059701492537,
+        "drawCalls": 341,
+        "triangles": 1202952
+      },
+      "camera": {
+        "pos": [
+          -9.6,
+          2.7,
+          -8.9
+        ],
+        "quat": [
+          -0.09750575709720073,
+          -0.5139159494137925,
+          -0.05893596052632143,
+          0.8502408934107215
+        ]
+      }
+    },
+    {
+      "id": "cupboard",
+      "t": 13.85375,
+      "objects": {
+        "house_door": 1
+      },
+      "props": {
+        "jam_jar": {
+          "visible": true,
+          "pos": [
+            2.32,
+            0.78,
+            1.5
+          ],
+          "attachedTo": null
+        },
+        "honey_pot": {
+          "visible": true,
+          "pos": [
+            9.70505251084047,
+            0.62,
+            -7.729803814537494
+          ],
+          "attachedTo": null
+        },
+        "pancakes": {
+          "visible": false,
+          "pos": [
+            0,
+            -10,
+            0
+          ],
+          "attachedTo": null
+        },
+        "frying_pan": {
+          "visible": true,
+          "pos": [
+            2.194700610533508,
+            0.78,
+            1.7539521062284762
+          ],
+          "attachedTo": null
+        },
+        "ball": {
+          "visible": true,
+          "pos": [
+            -0.39388545814934095,
+            0.03,
+            -0.06967241820465114
+          ],
+          "attachedTo": null
+        },
+        "fishing_rod": {
+          "visible": true,
+          "pos": [
+            -5.162498128678889,
+            0.28,
+            9.285308391280077
+          ],
+          "attachedTo": null
+        },
+        "fish": {
+          "visible": false,
+          "pos": [
+            0,
+            -10,
+            0
+          ],
+          "attachedTo": null
+        },
+        "lollipop": {
+          "visible": false,
+          "pos": [
+            0,
+            -10,
+            0
+          ],
+          "attachedTo": null
+        },
+        "flowers": {
+          "visible": true,
+          "pos": [
+            5.375728770707581,
+            0.03,
+            -4.862785238175443
+          ],
+          "attachedTo": null
+        },
+        "carrot": {
+          "visible": true,
+          "pos": [
+            4.630262093101651,
+            0.03,
+            -4.847376672155177
+          ],
+          "attachedTo": null
+        },
+        "broom": {
+          "visible": true,
+          "pos": [
+            -5.830462434273741,
+            0.32,
+            -2.962294098499568
+          ],
+          "attachedTo": null
+        },
+        "book": {
+          "visible": true,
+          "pos": [
+            2.119714510252455,
+            0.47,
+            3
+          ],
+          "attachedTo": null
+        },
+        "pillow": {
+          "visible": true,
+          "pos": [
+            -11.34608503680088,
+            0.66,
+            1.799437921574058
+          ],
+          "attachedTo": null
+        },
+        "bucket": {
+          "visible": true,
+          "pos": [
+            -5.109329947051939,
+            0.28,
+            9.41411106165775
+          ],
+          "attachedTo": null
+        },
+        "watering_can": {
+          "visible": true,
+          "pos": [
+            4.769949280766624,
+            0.03,
+            -4.672774288020935
+          ],
+          "attachedTo": null
+        },
+        "flour_bag": {
+          "visible": true,
+          "pos": [
+            1.9588754857104644,
+            0.78,
+            1.1826535421271418
+          ],
+          "attachedTo": null
+        },
+        "cake": {
+          "visible": false,
+          "pos": [
+            0,
+            -10,
+            0
+          ],
+          "attachedTo": null
+        },
+        "teapot": {
+          "visible": true,
+          "pos": [
+            1.6802733143559816,
+            0.78,
+            1.5132229530397356
+          ],
+          "attachedTo": null
+        }
+      },
+      "actor": {
+        "pos": [
+          -9.172364933244939,
+          0,
+          -11.945258362230607
+        ],
+        "verb": "walk_to",
+        "holding": null,
+        "box": {
+          "min": [
+            -10.237891313661958,
+            -0.23568469462739824,
+            -12.89667944021415
+          ],
+          "max": [
+            -8.268820198319242,
+            2.386915237424457,
+            -10.917980310743033
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "carry": null,
+        "hug": null
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": null,
+      "stats": {
+        "fps": 21.44082332734177,
+        "drawCalls": 357,
+        "triangles": 1234564
+      },
+      "camera": {
+        "pos": [
+          -13.014588189386057,
+          2.983,
+          -11.6114936264308
+        ],
+        "quat": [
+          -0.14567335351737712,
+          -0.629371788724217,
+          -0.12166442789725408,
+          0.7535702970642586
+        ]
+      }
+    },
+    {
+      "id": "cupboard",
+      "t": 22.763,
+      "objects": {
+        "house_door": 1
+      },
+      "props": {
+        "jam_jar": {
+          "visible": true,
+          "pos": [
+            1.892527356336603,
+            0.44999999999999996,
+            0.513153245968961
+          ],
+          "attachedTo": "masha"
+        },
+        "honey_pot": {
+          "visible": true,
+          "pos": [
+            9.70505251084047,
+            0.62,
+            -7.729803814537494
+          ],
+          "attachedTo": null
+        },
+        "pancakes": {
+          "visible": false,
+          "pos": [
+            0,
+            -10,
+            0
+          ],
+          "attachedTo": null
+        },
+        "frying_pan": {
+          "visible": true,
+          "pos": [
+            2.194700610533508,
+            0.78,
+            1.7539521062284762
+          ],
+          "attachedTo": null
+        },
+        "ball": {
+          "visible": true,
+          "pos": [
+            -0.39388545814934095,
+            0.03,
+            -0.06967241820465114
+          ],
+          "attachedTo": null
+        },
+        "fishing_rod": {
+          "visible": true,
+          "pos": [
+            -5.162498128678889,
+            0.28,
+            9.285308391280077
+          ],
+          "attachedTo": null
+        },
+        "fish": {
+          "visible": false,
+          "pos": [
+            0,
+            -10,
+            0
+          ],
+          "attachedTo": null
+        },
+        "lollipop": {
+          "visible": false,
+          "pos": [
+            0,
+            -10,
+            0
+          ],
+          "attachedTo": null
+        },
+        "flowers": {
+          "visible": true,
+          "pos": [
+            5.375728770707581,
+            0.03,
+            -4.862785238175443
+          ],
+          "attachedTo": null
+        },
+        "carrot": {
+          "visible": true,
+          "pos": [
+            4.630262093101651,
+            0.03,
+            -4.847376672155177
+          ],
+          "attachedTo": null
+        },
+        "broom": {
+          "visible": true,
+          "pos": [
+            -5.830462434273741,
+            0.32,
+            -2.962294098499568
+          ],
+          "attachedTo": null
+        },
+        "book": {
+          "visible": true,
+          "pos": [
+            2.119714510252455,
+            0.47,
+            3
+          ],
+          "attachedTo": null
+        },
+        "pillow": {
+          "visible": true,
+          "pos": [
+            -11.34608503680088,
+            0.66,
+            1.799437921574058
+          ],
+          "attachedTo": null
+        },
+        "bucket": {
+          "visible": true,
+          "pos": [
+            -5.109329947051939,
+            0.28,
+            9.41411106165775
+          ],
+          "attachedTo": null
+        },
+        "watering_can": {
+          "visible": true,
+          "pos": [
+            4.769949280766624,
+            0.03,
+            -4.672774288020935
+          ],
+          "attachedTo": null
+        },
+        "flour_bag": {
+          "visible": true,
+          "pos": [
+            1.9588754857104644,
+            0.78,
+            1.1826535421271418
+          ],
+          "attachedTo": null
+        },
+        "cake": {
+          "visible": false,
+          "pos": [
+            0,
+            -10,
+            0
+          ],
+          "attachedTo": null
+        },
+        "teapot": {
+          "visible": true,
+          "pos": [
+            1.6802733143559816,
+            0.78,
+            1.5132229530397356
+          ],
+          "attachedTo": null
+        }
+      },
+      "actor": {
+        "pos": [
+          -11.05,
+          0,
+          -13.15
+        ],
+        "verb": "facepalm",
+        "holding": null,
+        "box": {
+          "min": [
+            -12.13149554252181,
+            -0.20814002608693927,
+            -14.108189993979678
+          ],
+          "max": [
+            -10.091175471230256,
+            2.4144599059649163,
+            -12.06164028492395
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "carry": null,
+        "hug": null
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": null,
+      "stats": {
+        "fps": 21.44082332734177,
+        "drawCalls": 391,
+        "triangles": 1311866
+      },
+      "camera": {
+        "pos": [
+          -14.891,
+          2.983,
+          -11.666
+        ],
+        "quat": [
+          -0.15621180079630914,
+          -0.5552745390332917,
+          -0.10711184785064973,
+          0.8098117754412806
+        ]
+      }
+    },
+    {
+      "id": "cupboard",
+      "t": 26.895300000000002,
+      "objects": {
+        "house_door": 1
+      },
+      "props": {
+        "jam_jar": {
+          "visible": true,
+          "pos": [
+            1.892527356336603,
+            0.44999999999999996,
+            0.513153245968961
+          ],
+          "attachedTo": "masha"
+        },
+        "honey_pot": {
+          "visible": true,
+          "pos": [
+            9.70505251084047,
+            0.62,
+            -7.729803814537494
+          ],
+          "attachedTo": null
+        },
+        "pancakes": {
+          "visible": false,
+          "pos": [
+            0,
+            -10,
+            0
+          ],
+          "attachedTo": null
+        },
+        "frying_pan": {
+          "visible": true,
+          "pos": [
+            2.194700610533508,
+            0.78,
+            1.7539521062284762
+          ],
+          "attachedTo": null
+        },
+        "ball": {
+          "visible": true,
+          "pos": [
+            -0.39388545814934095,
+            0.03,
+            -0.06967241820465114
+          ],
+          "attachedTo": null
+        },
+        "fishing_rod": {
+          "visible": true,
+          "pos": [
+            -5.162498128678889,
+            0.28,
+            9.285308391280077
+          ],
+          "attachedTo": null
+        },
+        "fish": {
+          "visible": false,
+          "pos": [
+            0,
+            -10,
+            0
+          ],
+          "attachedTo": null
+        },
+        "lollipop": {
+          "visible": false,
+          "pos": [
+            0,
+            -10,
+            0
+          ],
+          "attachedTo": null
+        },
+        "flowers": {
+          "visible": true,
+          "pos": [
+            5.375728770707581,
+            0.03,
+            -4.862785238175443
+          ],
+          "attachedTo": null
+        },
+        "carrot": {
+          "visible": true,
+          "pos": [
+            4.630262093101651,
+            0.03,
+            -4.847376672155177
+          ],
+          "attachedTo": null
+        },
+        "broom": {
+          "visible": true,
+          "pos": [
+            -5.830462434273741,
+            0.32,
+            -2.962294098499568
+          ],
+          "attachedTo": null
+        },
+        "book": {
+          "visible": true,
+          "pos": [
+            2.119714510252455,
+            0.47,
+            3
+          ],
+          "attachedTo": null
+        },
+        "pillow": {
+          "visible": true,
+          "pos": [
+            -11.34608503680088,
+            0.66,
+            1.799437921574058
+          ],
+          "attachedTo": null
+        },
+        "bucket": {
+          "visible": true,
+          "pos": [
+            -5.109329947051939,
+            0.28,
+            9.41411106165775
+          ],
+          "attachedTo": null
+        },
+        "watering_can": {
+          "visible": true,
+          "pos": [
+            4.769949280766624,
+            0.03,
+            -4.672774288020935
+          ],
+          "attachedTo": null
+        },
+        "flour_bag": {
+          "visible": true,
+          "pos": [
+            1.9588754857104644,
+            0.78,
+            1.1826535421271418
+          ],
+          "attachedTo": null
+        },
+        "cake": {
+          "visible": false,
+          "pos": [
+            0,
+            -10,
+            0
+          ],
+          "attachedTo": null
+        },
+        "teapot": {
+          "visible": true,
+          "pos": [
+            1.6802733143559816,
+            0.78,
+            1.5132229530397356
+          ],
+          "attachedTo": null
+        }
+      },
+      "actor": {
+        "pos": [
+          -9.131185926392929,
+          0,
+          -12.115
+        ],
+        "verb": "walk_to",
+        "holding": null,
+        "box": {
+          "min": [
+            -9.916139837655889,
+            -0.22933198449022638,
+            -13.028730556733171
+          ],
+          "max": [
+            -8.198938287025015,
+            2.393267947561629,
+            -11.302743043608057
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "carry": null,
+        "hug": null
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": null,
+      "stats": {
+        "fps": 21.182360869916206,
+        "drawCalls": 322,
+        "triangles": 1251948
+      },
+      "camera": {
+        "pos": [
+          -8.539499999999999,
+          2.032,
+          -8.652625
+        ],
+        "quat": [
+          -0.0801597948402621,
+          0.03571224514367651,
+          0.0028737849903759426,
+          0.9961379343232514
+        ]
+      }
+    },
+    {
+      "id": "cupboard",
+      "t": 29.819,
+      "objects": {
+        "house_door": 1
+      },
+      "props": {
+        "jam_jar": {
+          "visible": true,
+          "pos": [
+            1.892527356336603,
+            0.44999999999999996,
+            0.513153245968961
+          ],
+          "attachedTo": "masha"
+        },
+        "honey_pot": {
+          "visible": true,
+          "pos": [
+            9.70505251084047,
+            0.62,
+            -7.729803814537494
+          ],
+          "attachedTo": null
+        },
+        "pancakes": {
+          "visible": false,
+          "pos": [
+            0,
+            -10,
+            0
+          ],
+          "attachedTo": null
+        },
+        "frying_pan": {
+          "visible": true,
+          "pos": [
+            2.194700610533508,
+            0.78,
+            1.7539521062284762
+          ],
+          "attachedTo": null
+        },
+        "ball": {
+          "visible": true,
+          "pos": [
+            -0.39388545814934095,
+            0.03,
+            -0.06967241820465114
+          ],
+          "attachedTo": null
+        },
+        "fishing_rod": {
+          "visible": true,
+          "pos": [
+            -5.162498128678889,
+            0.28,
+            9.285308391280077
+          ],
+          "attachedTo": null
+        },
+        "fish": {
+          "visible": false,
+          "pos": [
+            0,
+            -10,
+            0
+          ],
+          "attachedTo": null
+        },
+        "lollipop": {
+          "visible": false,
+          "pos": [
+            0,
+            -10,
+            0
+          ],
+          "attachedTo": null
+        },
+        "flowers": {
+          "visible": true,
+          "pos": [
+            5.375728770707581,
+            0.03,
+            -4.862785238175443
+          ],
+          "attachedTo": null
+        },
+        "carrot": {
+          "visible": true,
+          "pos": [
+            4.630262093101651,
+            0.03,
+            -4.847376672155177
+          ],
+          "attachedTo": null
+        },
+        "broom": {
+          "visible": true,
+          "pos": [
+            -5.830462434273741,
+            0.32,
+            -2.962294098499568
+          ],
+          "attachedTo": null
+        },
+        "book": {
+          "visible": true,
+          "pos": [
+            2.119714510252455,
+            0.47,
+            3
+          ],
+          "attachedTo": null
+        },
+        "pillow": {
+          "visible": true,
+          "pos": [
+            -11.34608503680088,
+            0.66,
+            1.799437921574058
+          ],
+          "attachedTo": null
+        },
+        "bucket": {
+          "visible": true,
+          "pos": [
+            -5.109329947051939,
+            0.28,
+            9.41411106165775
+          ],
+          "attachedTo": null
+        },
+        "watering_can": {
+          "visible": true,
+          "pos": [
+            4.769949280766624,
+            0.03,
+            -4.672774288020935
+          ],
+          "attachedTo": null
+        },
+        "flour_bag": {
+          "visible": true,
+          "pos": [
+            1.9588754857104644,
+            0.78,
+            1.1826535421271418
+          ],
+          "attachedTo": null
+        },
+        "cake": {
+          "visible": false,
+          "pos": [
+            0,
+            -10,
+            0
+          ],
+          "attachedTo": null
+        },
+        "teapot": {
+          "visible": true,
+          "pos": [
+            1.6802733143559816,
+            0.78,
+            1.5132229530397356
+          ],
+          "attachedTo": null
+        }
+      },
+      "actor": {
+        "pos": [
+          -7.35,
+          0,
+          -12.825
+        ],
+        "verb": "wave",
+        "holding": null,
+        "box": {
+          "min": [
+            -8.471868044450872,
+            -0.20105574576523583,
+            -14.027173974588978
+          ],
+          "max": [
+            -6.050374854049924,
+            2.42154418628662,
+            -11.60295779016303
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "carry": null,
+        "hug": null
+      },
+      "ball": {
+        "visible": true,
+        "pos": [
+          -0.39388545814934095,
+          0.03,
+          -0.06967241820465114
+        ],
+        "attachedTo": null,
+        "worldPos": [
+          1.3,
+          0,
+          0.9
+        ],
+        "worldRotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "centre": [
+          1.3,
+          0.15,
+          0.9
+        ],
+        "box": {
+          "min": [
+            1.1499999940395356,
+            -5.9604645663569045e-9,
+            0.7499999940395355
+          ],
+          "max": [
+            1.4500000059604645,
+            0.30000001192092896,
+            1.0500000059604644
+          ]
+        }
+      },
+      "physics": null,
+      "stats": {
+        "fps": 20.993701889104795,
+        "drawCalls": 352,
+        "triangles": 1224002
+      },
+      "camera": {
+        "pos": [
+          -9.039,
+          2.032,
+          -8.957
+        ],
+        "quat": [
+          -0.080239016124897,
+          -0.203713880351692,
+          -0.016754734720705843,
+          0.9755929653845419
+        ]
+      }
+    }
+  ],
+  "benchmarks": [
+    {
+      "id": "cupboard",
+      "coldMs": 0.29999999701976776,
+      "frames": 241,
+      "seconds": 4,
+      "meanFps": 59.99700014999244,
+      "gapP50": 16.69999999999709,
+      "gapP95": 17.39999999999418,
+      "evalP50": 0.29999999701976776,
+      "evalP95": 0.4000000059604645,
+      "renderP50": 4.5999999940395355,
+      "renderP95": 5.700000002980232,
+      "stats": {
+        "fps": 59.97001499250375,
+        "drawCalls": 161,
+        "triangles": 2119776
+      },
+      "physics": null
+    }
+  ],
+  "errors": []
+}

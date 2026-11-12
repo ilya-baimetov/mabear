@@ -1,7 +1,7 @@
 // evaluate(timeline, t) → FrameState (spec §7.4). PURE and deterministic: no Date, no Math.random, no
 // globals mutated; blinks and fidgets are functions of t. The renderer applies the result each frame.
 import type { ActorFrame, FaceParams, FrameState, FxFrame, PropFrame } from "../api";
-import {doorOpenAt} from '../../shared/interactiveObjects';
+import {doorOpenAt,objectOpenAt,cupboardHandleAt} from '../../shared/interactiveObjects';
 import {
   ACTOR_IDS, MARK_IDS, PROP_IDS, ADDED_ACTOR_START,
   type ActorClip, type ActorId, type CamKey, type Emotion, type MarkId, type Posture, type PropId, type PropLocation,
@@ -632,6 +632,7 @@ function evalActor(actor: ActorId, inp: ActorCtxIn, bear: ActorFrame | null, car
     ...(inClip&&r&&verb==='hug'&&isActor(r.clip.params.target)?{interaction:{kind:'hug' as const,partner:r.clip.params.target}}:{}),
     ...(release?{putDown:{item:release.item,position:release.pos,rotation:release.rot,release:.5}}:{}),
     ...(pickup?{pickup:{item:pickup.item,position:pickup.pos,rotation:pickup.rot,release:.5}}:{}),
+    ...(inClip&&r?.clip.params.target==='cupboard'&&(verb==='open'||verb==='close')?{objectContact:{position:cupboardHandleAt(objectOpenAt(seg,lt,'kitchen_cupboard')),side:1 as const,strength:Math.min(smooth(clipLt/.3),smooth((r.clip.dur-clipLt)/.3))}}:{}),
     ...(carried&&carry?{riding:{carrier:'bear' as const,progress:easeInOut(carry.k)}}:{}),
     secondary: { sway, jiggle, breathe: ev.breathe },
   };
@@ -914,7 +915,7 @@ export function evaluate(timeline: Timeline, t: number): FrameState {
   return {
     t,
     segmentIndex,
-    objects:{house_door:doorOpenAt(seg,ltc)},
+    objects:{house_door:doorOpenAt(seg,ltc),kitchen_cupboard:objectOpenAt(seg,ltc,'kitchen_cupboard')},
     localT: segs.length === 0 ? t : ltc,
     actors,
     ...(segs.length?{cast:seg.cast??ACTOR_IDS.filter(a=>segs.slice(0,segmentIndex+1).some(s=>clipsOf(s.segment,a).some(c=>!c.params.ambient)))}:{}),

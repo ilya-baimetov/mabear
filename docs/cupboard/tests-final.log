@@ -1,0 +1,25 @@
+
+ RUN  v5.1.0 /Users/ilya.baimetov/Projects/mabear/codex
+
+(node:21873) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:21877) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:21878) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:21879) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:21882) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:21892) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:21904) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+ Test Files  67 passed (67)
+      Tests  810 passed (810)
+   Start at  17:04:52
+   Duration  18.75s (tests 86%, import 13%, transform 1%)
+
+    Isolate  67 workers spawned · ~161ms startup each (spawn + environment, per file)
+             at least ~2.54s faster with isolate: false — reuses workers across files instead of one per file

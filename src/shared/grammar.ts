@@ -37,8 +37,8 @@ const ALL: ActorId[] = [...ACTOR_IDS];
 const STEPS: FoleyRule[] = [{ id: "footstep", when: "contacts" }];
 
 const defs: VerbDef[] = [
-  {id:'open',group:'objects',actors:ALL,target:'mark',needsItem:false,baseDuration:1.4,loopable:false,foley:[],effortVocal:null,description:'Open the house door. Target door. Does not enter; use walk_to house_living afterwards.'},
-  {id:'close',group:'objects',actors:ALL,target:'mark',needsItem:false,baseDuration:1.4,loopable:false,foley:[],effortVocal:null,description:'Close the house door from the current side. Target door.'},
+  {id:'open',group:'objects',actors:ALL,target:'mark',needsItem:false,baseDuration:1.4,loopable:false,foley:[],effortVocal:null,description:'Open the house door (target door) or Bear’s kitchen cupboard (target cupboard; Bear only). Does not enter; use walk_to house_living afterwards.'},
+  {id:'close',group:'objects',actors:ALL,target:'mark',needsItem:false,baseDuration:1.4,loopable:false,foley:[],effortVocal:null,description:'Close the house door (target door), or the kitchen cupboard (target cupboard; Bear only).'},
   // Locomotion
   { id: "walk_to", group: "locomotion", actors: ALL, target: "mark_or_actor", needsItem: false, baseDuration: 1.5, loopable: true, foley: STEPS, effortVocal: null, description: "Walk to a mark or up to another character." },
   { id: "run_to", group: "locomotion", actors: ALL, target: "mark_or_actor", needsItem: false, baseDuration: 1.0, loopable: true, foley: [...STEPS, { id: "cloth_rustle", when: "start" }], effortVocal: null, description: "Run to a mark or a character (Masha's default way of moving)." },

@@ -31,6 +31,7 @@ import { clearForeground } from './cameraClearance';
 import { applySceneLightIntensities } from './sceneLighting';
 import {applyHugContacts} from './characters/hugContacts';
 import {applyCarryContacts} from './characters/carryContacts';
+import {applyObjectContacts} from './characters/objectContacts';
 import { loadGeneratedYard } from './set/generatedYard';
 import { assetUrl, loadEnvTextures } from "./set/textures";
 
@@ -266,6 +267,7 @@ export async function createStage(canvas: HTMLCanvasElement, opts: StageOptions 
       set.update(frame.t, lp.windowGlow, pointScale);
       renderer.localClippingEnabled=true;
       set.setDoor(frame.objects?.house_door??0);
+      set.setCupboard(frame.objects?.kitchen_cupboard??0);
       // actors (stand on the porch / pier / bridges)
       let swing = 0;
       for (const id of ACTOR_IDS) {
@@ -294,6 +296,7 @@ export async function createStage(canvas: HTMLCanvasElement, opts: StageOptions 
       set.setSwing(swing);
       applyCarryContacts(rigs,frame);
       applyHugContacts(rigs,frame);
+      applyObjectContacts(rigs,frame);
       props.apply(frame.props, sockets, yaws, frame.actors);
       for(const id of PROP_IDS) {
         const p=frame.props[id],holder=p.attachedTo?frame.actors[p.attachedTo]:null;

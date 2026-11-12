@@ -123,7 +123,7 @@ export function Stage({ exploring = false }: { exploring?: boolean }) {
       ro = new ResizeObserver(fit);
       if (wrap.current) ro.observe(wrap.current);
       window.__mabear = {
-        objects:()=>({state:player.frame?.objects,panels:['outside','inside'].map(side=>{const o=stage.set.root.getObjectByName(`object:house_door:${side}`);return {side,open:o?.userData.open};})}),
+        objects:()=>({state:player.frame?.objects,cupboard:stage.set.root.getObjectByName('object:kitchen_cupboard')?.userData.open,pantryJar:{...player.frame?.props.pantry_honey,worldPosition:stage.props.objects.pantry_honey.position.toArray()},panels:['outside','inside'].map(side=>{const o=stage.set.root.getObjectByName(`object:house_door:${side}`);return {side,open:o?.userData.open};})}),
         physics:()=>evaluator?.inspect(store.getState().timeline,player.time)??null,
         assets:()=>stage.assets(),
         rigs:()=>Object.fromEntries(ACTOR_IDS.map(id=>[id,{name:stage.rigs[id].root.name,asset:stage.rigs[id].root.userData.asset,generated:stage.rigs[id].root.userData.generated}])),

@@ -1,0 +1,151 @@
+{
+  "checkedAt": "2026-11-12T01:08:36.003Z",
+  "url": "http://127.0.0.1:8805/",
+  "entryVia": "Full story editor; offline generation with API network blocked",
+  "taken": {
+    "t": 29.90686084941517,
+    "objects": {
+      "state": {
+        "house_door": 1,
+        "kitchen_cupboard": 1
+      },
+      "cupboard": 1,
+      "pantryJar": {
+        "visible": true,
+        "pos": [
+          -14.827912002224553,
+          1.08,
+          -11.792107530491272
+        ],
+        "attachedTo": "bear",
+        "worldPosition": [
+          -14.752918928284913,
+          1.4937302607481555,
+          -11.671565887251061
+        ]
+      },
+      "panels": [
+        {
+          "side": "outside",
+          "open": 1
+        },
+        {
+          "side": "inside",
+          "open": 1
+        }
+      ]
+    },
+    "physics": {
+      "t": 29.90686084941517,
+      "root": null,
+      "grounded": false,
+      "stride": 1,
+      "ball": null,
+      "sleeping": false,
+      "reason": "authored choreography: wave",
+      "steps": 0,
+      "computeMs": 0,
+      "samples": 1,
+      "caches": 1,
+      "revision": 4
+    }
+  },
+  "closed": {
+    "t": 32.756636826116384,
+    "objects": {
+      "state": {
+        "house_door": 1,
+        "kitchen_cupboard": 0
+      },
+      "cupboard": 0,
+      "pantryJar": {
+        "visible": true,
+        "pos": [
+          -14.827912002224553,
+          1.08,
+          -11.792107530491272
+        ],
+        "attachedTo": "bear",
+        "worldPosition": [
+          -14.759937226316683,
+          1.4499904518464353,
+          -11.690083351246745
+        ]
+      },
+      "panels": [
+        {
+          "side": "outside",
+          "open": 1
+        },
+        {
+          "side": "inside",
+          "open": 1
+        }
+      ]
+    },
+    "physics": {
+      "t": 32.756636826116384,
+      "root": null,
+      "grounded": false,
+      "stride": 1,
+      "ball": null,
+      "sleeping": false,
+      "reason": "authored choreography: wave",
+      "steps": 0,
+      "computeMs": 0,
+      "samples": 1,
+      "caches": 1,
+      "revision": 4
+    }
+  },
+  "reset": {
+    "t": 0,
+    "objects": {
+      "state": {
+        "house_door": 0,
+        "kitchen_cupboard": 0
+      },
+      "cupboard": 0,
+      "pantryJar": {
+        "visible": true,
+        "pos": [
+          -15.05,
+          2.1,
+          -11.4
+        ],
+        "attachedTo": null,
+        "worldPosition": [
+          -15.05,
+          2.1,
+          -11.4
+        ]
+      },
+      "panels": [
+        {
+          "side": "outside",
+          "open": 0
+        },
+        {
+          "side": "inside",
+          "open": 0
+        }
+      ]
+    },
+    "physics": {
+      "t": 0,
+      "root": null,
+      "grounded": false,
+      "stride": 1,
+      "ball": null,
+      "sleeping": false,
+      "reason": "authored choreography: wave",
+      "steps": 0,
+      "computeMs": 0,
+      "samples": 1,
+      "caches": 1,
+      "revision": 4
+    }
+  },
+  "defaultPhysicsLoaded": true,
+  "assetErrors": []
+}

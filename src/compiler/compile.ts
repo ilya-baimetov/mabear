@@ -18,7 +18,7 @@ import {armchairMountMotion,avoidHammock,hammockExitPoint,hammockTiming,hammockT
 import {carryLiftHeadHeight} from '../shared/carrySupport';
 import {COOKING_STATION,cookingSupportHeightAt} from '../shared/cookingStation';
 import {HOUSE_COOKING_HELPER,HOUSE_CHILD_COOK_POSITION,HOUSE_STOVE,housePickupPosition,houseLocal,houseWorld} from '../shared/houseLayout';
-import {HOUSE_DOOR,INTERIOR_THRESHOLD,INTERIOR_APPROACH} from '../shared/interactiveObjects';
+import {HOUSE_DOOR,INTERIOR_THRESHOLD,INTERIOR_APPROACH,KITCHEN_CUPBOARD,CUPBOARD_JAR_POSITION} from '../shared/interactiveObjects';
 import type {
   ActorClip, ActorId, Beat, BeatScript, Emotion, FxCue, FxId, LightingCue, MarkId, Posture, PropId, SfxId,
   Vec2, Vec3, Verb, WorldState, Segment, CameraCue, CamKey,
@@ -123,6 +123,8 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
   const timings: BeatTiming[] = [];
   const preparationCameras:CameraBeatInfo[]=[];
   const objectCues:NonNullable<Segment['objectCues']>=[];
+  let cupboardFree=0;
+  let lastCupboardShot:CameraCue|undefined;
   const doorShots:CameraCue[]=[];
   let doorFree=0;
   const events: AudioBeatEvent[] = [];
@@ -237,6 +239,7 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
   }
   /** Where to stand to reach a target. */
   function approachPoint(a: ActorId, id: string, t: number, gap = 0.9): Vec2 | null {
+    if(id==='cupboard'||isProp(id)&&ws.props[id]?.at==='cupboard')return [...KITCHEN_CUPBOARD.approach];
     if(id==='house_living'&&(a==='masha'||a==='bear')&&ws.actors[a].posture!=='sit')return armchairApproach(a);
     if (isMark(id)) return spread(a, standPos(id), t);
     if (isActor(id)) {
@@ -381,7 +384,25 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
       objectCues.push({object:'house_door',start:t+.2,dur:dur-.2,from,to});
       extraSfx.push({t:t+.25,id:'door_creak',pos:centre});
     }
-    ws.objects={house_door:to};if(!inside)st.mark='door';record(a,t+dur);doorFree=t+dur;doorShot(start,t+dur,inside);
+    ws.objects={...ws.objects,house_door:to};if(!inside)st.mark='door';record(a,t+dur);doorFree=t+dur;doorShot(start,t+dur,inside);
+    return t+dur;
+  }
+  function cupboardShot(start:number,end:number):void {
+    if(end<=start)return;
+    const key:CamKey={pos:[-13.2,3.7,-14.1],look:[-14.6,1.9,-11.4],fov:46,location:'house'};
+    lastCupboardShot={start,dur:end-start,shot:'medium',from:key,to:key,overridden:true};
+    doorShots.push(lastCupboardShot);
+  }
+  function cupboardAction(a:ActorId,t:number,to:number,emotion:Emotion):number {
+    t=Math.max(t,cupboardFree);
+    const st=ws.actors[a];
+    if(dist(st.pos,KITCHEN_CUPBOARD.approach)>.04)t=locomote(a,t,'walk_to',[...KITCHEN_CUPBOARD.approach],emotion,'cupboard');
+    const start=t;
+    t=facePartner(a,t,[st.pos[0]-1,st.pos[1]],emotion);
+    const from=ws.objects?.kitchen_cupboard??0,changed=Math.abs(to-from)>.001,dur=changed?KITCHEN_CUPBOARD.duration:.5;
+    addClip(a,t,dur,changed?(to?'open':'close'):'idle',emotion,{from:v2(st.pos),facing:st.facing,posture:'stand',item:st.holding??undefined,target:'cupboard',lookAt:CUPBOARD_JAR_POSITION,objectFrom:from,objectTo:to});
+    if(changed){objectCues.push({object:'kitchen_cupboard',start:t+.35,dur:dur-.7,from,to});extraSfx.push({t:t+.35,id:'door_creak',pos:KITCHEN_CUPBOARD.center});}
+    ws.objects={house_door:0,...ws.objects,kitchen_cupboard:to};st.mark='cupboard';record(a,t+dur);cupboardFree=t+dur;cupboardShot(start,t+dur);
     return t+dur;
   }
   function throughDoor(a:ActorId,t:number,dest:Vec2,emotion:Emotion,target:string|null,finalFacing?:number):number {
@@ -571,6 +592,15 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
       }
     }
     const heldBy = b.verb === "take" && b.item ? ws.props[b.item]?.at : undefined;
+    if(b.verb==='take'&&b.item==='pantry_honey'&&heldBy===a){
+      repairs.push('The single cupboard jar is already held; no second jar appears.');b.verb='look_at';b.target='cupboard';b.item=null;
+    }
+    if(b.verb==='take'&&b.item==='pantry_honey'&&heldBy==='hidden'){
+      repairs.push('The cupboard jar is no longer available; the cupboard does not refill.');b.verb='look_at';b.target='cupboard';b.item=null;
+    }
+    if(a!=='bear'&&b.verb==='take'&&heldBy==='cupboard'){
+      errors.push('Only Bear can reach the upper cupboard in this release.');b.verb='point_at';b.target='cupboard';b.item=null;
+    }
     if (b.verb === "take" && b.item && isActor(heldBy) && heldBy !== a) {
       errors.push(`${a} can't take the ${b.item}: ${heldBy} is holding it`);
       b.verb = "point_at"; b.target = heldBy; b.item = null;
@@ -581,7 +611,7 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
     const anchor = prevTiming ? (b.with_previous ? prevTiming.start : prevTiming.end) : 0;
     // The doorway shot has exclusive staging until its traveller clears the
     // steps; do not perform another actor's cooking/hug unseen behind that cut.
-    let t = Math.max(anchor + b.delay_s, tracks[a].free, doorFree);
+    let t = Math.max(anchor + b.delay_s, tracks[a].free, doorFree, cupboardFree);
     const interacts = (b.verb === "hug" || b.verb === "carry" || b.verb === "give") && isActor(b.target);
     if (interacts && isActor(b.target)) t = Math.max(t, tracks[b.target].free);
     const beatStart = t;
@@ -615,7 +645,7 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
     }
     if(b.target==='house_living'&&(a==='masha'||a==='bear')&&st.posture!=='sit'&&(b.verb==='sit'||LOCOMOTION_VERBS.includes(b.verb)))t=clearChairEntry(a,t,b.emotion);
     if(b.verb==='take'&&b.item&&st.holding&&st.holding!==b.item&&isInteriorMark(ws.props[b.item]?.at)){
-      t=putAsideBeforeInteriorPickup(a,t,ws.props[b.item].at as MarkId,b.emotion);
+      t=putAsideBeforeInteriorPickup(a,t,ws.props[b.item].at==='cupboard'?'house_kitchen':ws.props[b.item].at as MarkId,b.emotion);
     }
 
     // --- auto-walk to where the verb happens ---
@@ -674,6 +704,12 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
       const start=t;t=Math.max(facePartner(a,start,ws.actors[b.target].pos,b.emotion),facePartner(b.target,start,st.pos,b.emotion));
     }
 
+    if(b.verb==='take'&&b.item&&ws.props[b.item]?.at==='cupboard'){
+      if((ws.objects?.kitchen_cupboard??0)<.999){repairs.push('Opened the cupboard before reaching inside.');t=cupboardAction(a,t,1,b.emotion);}
+      t=facePartner(a,t,[st.pos[0]-1,st.pos[1]],b.emotion);
+      st.mark='cupboard';
+    }
+
     // Free both hands before applause. A visible reverse pickup preserves the
     // prop in world state, so it can be picked up again in a later paragraph.
     if(b.verb==='clap'&&st.holding&&st.posture!=='carried'){
@@ -721,7 +757,7 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
     const baseParams = (): ActorClip["params"] => ({ from: v2(st.pos), facing: st.facing, posture: st.posture, item: st.holding ?? undefined, target: b.target ?? undefined });
 
     if(b.verb==='open'||b.verb==='close'){
-      t=doorAction(a,t,b.verb==='open'?1:0,b.emotion);
+      t=b.target==='cupboard'?cupboardAction(a,t,b.verb==='open'?1:0,b.emotion):doorAction(a,t,b.verb==='open'?1:0,b.emotion);
       mainDur=t-mainStart;
     } else if (isLoco) {
       let dest: Vec2;
@@ -793,7 +829,8 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
           break;
         case "take":
           item = b.item ?? undefined;
-          if(b.item&&isInteriorMark(ws.props[b.item]?.at))facing=facingTo(b.item);
+          if(b.item&&ws.props[b.item]?.at==='cupboard'){facing=-Math.PI/2;mainDur=3.0;}
+          else if(b.item&&isInteriorMark(ws.props[b.item]?.at))facing=facingTo(b.item);
           break;
         case "cook": case "fish": case "water_plants":
           item = (VERB_IMPLIED_PROP[b.verb] as PropId | undefined) ?? item;
@@ -826,6 +863,7 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
       if(mount){st.pos=v2(mount.to);st.mark=mount.target;}
       st.facing = r3(facing);
       t = mainStart + mainDur;
+      if(pickUpAt==='cupboard'){cupboardFree=t;cupboardShot(mainStart,t);}
 
       // --- world-state effects ---
       switch (b.verb) {
@@ -966,6 +1004,9 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
   for (const a of ACTORS) for (const c of tracks[a].clips) end = Math.max(end, c.start + c.dur);
   for (const d of dialogue) end = Math.max(end, d.start + d.dur);
   const duration = r3(Math.max(1.5, end + SEGMENT_TAIL));
+  // Let the audience see the closed door and retained jar during the final
+  // pause; the generic tail camera can otherwise cut behind the refrigerator.
+  if(lastCupboardShot&&Math.abs(cupboardFree-end)<.002)lastCupboardShot.dur=duration-lastCupboardShot.start;
 
   // ---------- ambient life ----------
   const actorClips = Object.fromEntries(ACTOR_IDS.map(id => [id, fillAmbient(id)])) as Record<ActorId, ActorClip[]>;

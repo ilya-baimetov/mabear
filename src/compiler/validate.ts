@@ -63,6 +63,7 @@ const NEW_CAST_ALIASES: Record<string, ActorId> = {
 };
 const TARGET_SYNONYMS: Record<string, string> = {
   house_door:'door',front_door:'door',
+  kitchen_cupboard:'cupboard',pantry:'cupboard',cabinet:'cupboard',honey_jar:'pantry_honey',
   ...NEW_CAST_ALIASES,
   house: "house_living", home: "house_living", cabin: "house_living", hut: "house_living", inside: "house_living", steps: "porch", stairs: "porch",
   yard: "clearing", lawn: "clearing", meadow: "clearing", grass: "clearing", middle: "clearing", center: "clearing",
@@ -270,8 +271,11 @@ export function validateBeatScript(bs: BeatScript, startState: WorldState, lang:
     if (GRAMMAR[b.verb].target === "none") b.target = null;
     if (b.verb === "cook" && b.target === "house_living") b.target = "house_kitchen";
     if (b.verb === "cook" && b.target !== "house_kitchen" && b.target !== "table") b.target = null;
-    if((b.verb==='open'||b.verb==='close')&&b.target!=='door'){
-      errors.push(`${tag}: only the house door supports ${b.verb}`);b.verb='idle';b.target=null;
+    if((b.verb==='open'||b.verb==='close')&&b.target!=='door'&&b.target!=='cupboard'){
+      errors.push(`${tag}: only the house door and cupboard support ${b.verb}`);b.verb='idle';b.target=null;
+    }
+    if((b.verb==='open'||b.verb==='close')&&b.target==='cupboard'&&actor!=='bear'){
+      errors.push(`${tag}: only Bear can reach the upper cupboard`);b.verb='look_at';
     }
 
     // ---- items ----

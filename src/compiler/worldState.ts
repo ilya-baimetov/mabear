@@ -31,7 +31,7 @@ export function worldStateDigest(ws: WorldState): string {
   };
   const props = Object.keys(ws.props).sort().map((k) => `${k}@${ws.props[k as PropId]?.at}`).join(";");
   // masha/bear first (unchanged layout); wolves appended so pre-wolf digests stay comparable in shape
-  return `${ws.timeOfDay}|${ACTOR_IDS.map((id) => a(id)).join("|")}|${props}|door:${ws.objects?.house_door??0}`;
+  return `${ws.timeOfDay}|${ACTOR_IDS.map((id) => a(id)).join("|")}|${props}|door:${ws.objects?.house_door??0}|cupboard:${ws.objects?.kitchen_cupboard??0}`;
 }
 
 export function cloneWorldState(ws: WorldState): WorldState {
@@ -40,6 +40,7 @@ export function cloneWorldState(ws: WorldState): WorldState {
 
 /** Fill in actors missing from an older world state (saved before the Wolves joined) with their start state. */
 export function withAllActors(ws: WorldState): WorldState {
+  ws.props.pantry_honey??={at:'cupboard'};
   const actors = ws.actors as Partial<WorldState["actors"]>;
   for (const [id, value] of Object.entries(ADDED_ACTOR_START)) {
     if (!actors[id as ActorId]) actors[id as ActorId] = structuredClone(value);

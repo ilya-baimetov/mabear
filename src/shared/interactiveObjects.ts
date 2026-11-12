@@ -1,5 +1,27 @@
-import type {Vec2, Segment} from './schema';
-import {houseWorld} from './houseLayout';
+import type {Vec2, Vec3, Segment} from './schema';
+import {houseWorld,HOUSE_KITCHEN_OFFSET} from './houseLayout';
+
+/** Left upper pantry compartment. One panel and one independently owned jar.
+ * Coordinates are shared by the fixture mesh, staging, contacts and prop slot. */
+export const KITCHEN_CUPBOARD = {
+  id:'kitchen_cupboard' as const,
+  local:[-6.03,-.15] as Vec2,
+  center:houseWorld([-6.03+HOUSE_KITCHEN_OFFSET[0],-.15+HOUSE_KITCHEN_OFFSET[1]]),
+  approach:houseWorld([-6.30,1.64]),
+  shelfY:2.10,
+  duration:2.2,
+  angle:-1.75,
+  hingeX:-.875,
+  frontZ:.355,
+};
+export function cupboardPoint(x:number,y:number,z:number):Vec3 {
+  const [cx,cz]=KITCHEN_CUPBOARD.center;return[cx+z,y,cz-x];
+}
+export const CUPBOARD_JAR_POSITION=cupboardPoint(-.35,KITCHEN_CUPBOARD.shelfY,.23);
+export function cupboardHandleAt(open:number):Vec3 {
+  const a=KITCHEN_CUPBOARD.angle*open,x=.79,z=.065;
+  return cupboardPoint(KITCHEN_CUPBOARD.hingeX+x*Math.cos(a)+z*Math.sin(a),2.24,KITCHEN_CUPBOARD.frontZ-x*Math.sin(a)+z*Math.cos(a));
+}
 
 /** One logical entrance, represented on two separately staged sets. Animation
  * owns the panel; opening and passage are reconstructed from story timestamps. */
@@ -23,12 +45,13 @@ export function entranceSupportAt(x:number,z:number):number {
   if(Math.abs(lateral)>1.05||depth<-.25||depth>1.96)return 0;
   return .16*(smooth((1.92-depth)/.35)+smooth((1.50-depth)/.3)+smooth((1.05-depth)/.25));
 }
-export function doorOpenAt(segment:Segment,t:number):number {
-  let value=segment.startState.objects?.house_door??0;
+export function objectOpenAt(segment:Segment,t:number,id:'house_door'|'kitchen_cupboard'):number {
+  let value=segment.startState.objects?.[id]??0;
   for(const cue of segment.objectCues??[]){
-    if(t<cue.start)break;
+    if(cue.object!==id||t<cue.start)continue;
     const u=Math.max(0,Math.min(1,(t-cue.start)/cue.dur)),k=u*u*(3-2*u);
     value=cue.from+(cue.to-cue.from)*k;
   }
   return value;
 }
+export const doorOpenAt=(segment:Segment,t:number)=>objectOpenAt(segment,t,'house_door');
