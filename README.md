@@ -37,6 +37,8 @@ The browser suite uses installed Google Chrome with SwiftShader and its own loca
 
 Deployment is a separate, explicitly requested step. Implement and validate locally; publish only when the user says to deploy.
 
+Every deployment includes a GitHub check-in: validate, commit and push the release to the private `ilya-baimetov/mabear` repository, then deploy. Record the deployed version, source commit and verification results, and commit/push that record afterward. A commit or push alone never authorizes deployment. See [project instructions](AGENTS.md).
+
 ```sh
 npm run build
 npm run deploy
