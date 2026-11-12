@@ -1,0 +1,12 @@
+{
+  "checkedAt": "2026-11-12T01:10:23.760306+00:00",
+  "releaseCommit": "f5ad600ccb1cc8def99d24c171bddc1730f49283",
+  "sourceFingerprint": "72324214eb4c98e1e6d64a1255b12fc04428b5a0610898c90849ff0152e00c77",
+  "tests": {
+    "suite": "810 passed across 67 files",
+    "typecheck": "passed",
+    "productionBuild": "passed",
+    "packagedApp": "text entry, retrieval, closing, backward seek and default physics passed"
+  },
+  "paidGenerationCalls": 0
+}

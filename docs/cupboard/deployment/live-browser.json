@@ -1,0 +1,17 @@
+{
+  "checkedAt": "2026-11-12T01:12:00.321989+00:00",
+  "url": "https://mabear-storybook.ilya-baimetov.workers.dev/",
+  "authenticated": true,
+  "studioFinishedLoading": true,
+  "renderedYardAndCharacters": true,
+  "cupboardLocationVisible": "\u0448\u043a\u0430\u0444",
+  "loadedScript": "https://mabear-storybook.ilya-baimetov.workers.dev/assets/studio-D5mwvzj8.js",
+  "scriptMatchesReleaseBuild": true,
+  "canvas": {
+    "width": 1978,
+    "height": 1047
+  },
+  "existingStoryEdited": false,
+  "storyGenerated": false,
+  "method": "Existing Chrome session via browser UI; observed loading completion, location drawer and DOM script URL; drawer closed afterward."
+}

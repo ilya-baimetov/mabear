@@ -24,7 +24,7 @@ Self-review of the implemented cupboard feature, using actual text stories, the 
 - Actual main-app pause/resume, reverse/forward seek, replay, edits, deletion and persistence checked.
 - Complete cupboard scene rendered at 30 samples per story second; geometric grip and attachment continuity checked against the live loaded rig.
 - Cozy evening and Bear's nap regression samples compare exact actor states, props, contacts and cameras against the baseline.
-- Final source remains local. Deployment was not requested for this task and was not performed.
+- The review finished locally before deployment. The user subsequently requested deployment; see `deployment/deployment.json` for the released source commit and verification.
 
 ## Accepted limitations
 

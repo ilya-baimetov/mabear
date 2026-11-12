@@ -2,7 +2,7 @@
 
 Live: https://mabear-storybook.ilya-baimetov.workers.dev — same demo password as the original.
 
-Current release: **9 November 2026**, Worker version `ec664a01-3b2a-4ccc-833a-82b144469522`. Supported yard physics is enabled by default, with animation fallback for unsupported stories, hugs and shoulder rides. The house door can open/close, and Bear visibly crosses into the revised interior. See the [current implementation, before/after recordings and validation](docs/interactive-objects/README.md), [deployment record](docs/interactive-objects/deployment/deployment.json), and [repository contents](docs/REPOSITORY.md).
+Current release: **11 November 2026**, Worker version `47cf2f59-4418-4594-a5e3-91c95117a5fe`. Supported yard physics remains enabled by default, with animation fallback for unsupported stories, hugs and shoulder rides. Bear can enter the revised house and now open the kitchen cupboard, retrieve its honey jar and close it with his free paw. See the [cupboard recordings and validation](docs/cupboard/README.md), [deployment record](docs/cupboard/deployment/deployment.json), and [repository contents](docs/REPOSITORY.md).
 
 A private, live 3D story playground based on the prototype in `../claude`. Write a short scene, press Play, and watch nine actors perform it: Masha, Bear, the Wolves, Lady Bear, Hare, Rosie, Squirrel, and Rival Bear. EN/RU, editable examples, paragraph versions, local camera/light/music remixes, character reactions, and the pitch inspector are preserved. Start with **Examples → Garden visitors** to see the expanded cast.
 

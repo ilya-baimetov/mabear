@@ -1,0 +1,50 @@
+{
+  "checkedAt": "2026-11-12T01:12:00.321347+00:00",
+  "checks": [
+    {
+      "path": "/api/health",
+      "status": 200,
+      "location": null,
+      "cache-control": "private, no-store",
+      "content-type": "application/json",
+      "x-robots-tag": "noindex, nofollow",
+      "body": {
+        "ok": true,
+        "service": "mabear-storybook",
+        "edition": "codex"
+      }
+    },
+    {
+      "path": "/",
+      "status": 302,
+      "location": "/login",
+      "cache-control": "private, no-store",
+      "content-type": null,
+      "x-robots-tag": "noindex, nofollow"
+    },
+    {
+      "path": "/physics/",
+      "status": 302,
+      "location": "/login",
+      "cache-control": "private, no-store",
+      "content-type": null,
+      "x-robots-tag": "noindex, nofollow"
+    },
+    {
+      "path": "/assets/studio-D5mwvzj8.js",
+      "status": 302,
+      "location": "/login",
+      "cache-control": "private, no-store",
+      "content-type": null,
+      "x-robots-tag": "noindex, nofollow"
+    },
+    {
+      "path": "/api/direct",
+      "status": 401,
+      "location": null,
+      "cache-control": "private, no-store",
+      "content-type": "application/json",
+      "x-robots-tag": "noindex, nofollow"
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+
+> mabear@0.1.0 deploy
+> wrangler deploy
+
+
+ ⛅️ wrangler 4.157.0 (update available 4.160.1)
+───────────────────────────────────────────────
+🌀 Building list of assets...
+✨ Read 202 files from the assets directory /Users/ilya.baimetov/Projects/mabear/codex/dist
+🌀 Starting asset upload...
+🌀 Found 21 new or modified static assets to upload. Proceeding with upload...
++ /assets/emotion-BbJd7NAs.js
++ /assets/player-C1c9fpCx.js
++ /assets/bear-CvVDyknC.js
++ /assets/wolf-D27plgTF.js
++ /assets/generated-D3sHH4zL.js
++ /assets/common-6eT45bnr.js
++ /assets/studio-D5mwvzj8.js
++ /index.html
++ /physics/index.html
++ /assets/masha-Ba0X13et.js
++ /assets/face-PXV4q0pr.js
++ /assets/evaluate-aljGqixb.js
++ /assets/stage-G766643X.js
++ /assets/bearsYard-zC6b3RjN.js
++ /assets/physics-CPETBcps.js
++ /assets/set-DbcRoKji.js
++ /assets/sourceContacts-BRFMUfc4.js
++ /assets/audio-0Dap-E3t.js
++ /assets/schema-CRHwtg-K.js
++ /assets/preload-helper-CYTxDxzI.js
++ /assets/stageReplay-IOosJoHp.js
+Asset upload failed. Retrying... 1 of 5 attempts.
+
+Uploaded 7 of 21 assets
+Uploaded 14 of 21 assets
+Uploaded 21 of 21 assets
+✨ Success! Uploaded 21 files (166 already uploaded) (3.19 sec)
+
+Total Upload: 2177.59 KiB / gzip: 368.58 KiB
+Worker Startup Time: 49 ms
+Your Worker has access to the following bindings:
+Binding                              Resource
+env.MASHA_SPEECH (MashaSpeech)       Durable Object
+env.STORY_SERVICE (mabear)           Worker
+env.ASSETS                           Assets
+
+Uploaded mabear-storybook (10.69 sec)
+Deployed mabear-storybook triggers (0.43 sec)
+  https://mabear-storybook.ilya-baimetov.workers.dev
+Current Version ID: 47cf2f59-4418-4594-a5e3-91c95117a5fe

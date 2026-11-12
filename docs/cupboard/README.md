@@ -1,6 +1,6 @@
 # Bear retrieves a jar from the cupboard
 
-**Implemented locally, 11 November 2026. Not deployed. No external-service credits spent.**
+**Deployed 11 November 2026 after the user's explicit request. No external-service credits spent.** [Live game](https://mabear-storybook.ilya-baimetov.workers.dev) · [Deployment record](deployment/deployment.json). Release source: `f5ad600ccb1cc8def99d24c171bddc1730f49283`; Worker version: `47cf2f59-4418-4594-a5e3-91c95117a5fe`.
 
 [Open the video comparison](index.html) · [Before/after scene](before-after.mp4) · [Eight-second action](cupboard-action.mp4) · [Full after story](after/cupboard.mp4)
 

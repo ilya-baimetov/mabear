@@ -1,0 +1,36 @@
+{
+  "deployedAt": "2026-11-12T01:10:14.194Z",
+  "recordedAt": "2026-11-12T01:12:51.465406+00:00",
+  "version": "47cf2f59-4418-4594-a5e3-91c95117a5fe",
+  "previousVersion": "ec664a01-3b2a-4ccc-833a-82b144469522",
+  "trafficPercent": 100,
+  "url": "https://mabear-storybook.ilya-baimetov.workers.dev",
+  "releaseSourceCommit": "f5ad600ccb1cc8def99d24c171bddc1730f49283",
+  "repository": "https://github.com/ilya-baimetov/mabear",
+  "pushedBranches": [
+    "main",
+    "codex/storybook-upgrade"
+  ],
+  "sourceFingerprint": "72324214eb4c98e1e6d64a1255b12fc04428b5a0610898c90849ff0152e00c77",
+  "interactiveObjects": [
+    "house_door",
+    "kitchen_cupboard",
+    "pantry_honey"
+  ],
+  "defaultPhysicsEnabled": true,
+  "animationFallback": "Unsupported stories, hugs, shoulder rides and authored cupboard/Bear interaction",
+  "validation": {
+    "tests": 810,
+    "testFiles": 67,
+    "typecheck": "passed",
+    "freshProductionBuild": "passed",
+    "sourceMatchesReviewedRecordings": true,
+    "productionBuildStoryCheck": "Actual full-story text entry, open/take/close, retained jar, backward seek and default physics passed; API network blocked",
+    "liveHealth": "200; ok true",
+    "liveAuthentication": "Existing Chrome session loads the studio; anonymous app/assets protected and director returns 401",
+    "liveBrowser": "Yard and characters render, cupboard location is available, loaded studio script matches release manifest",
+    "liveCupboardStoryPlayback": "Not rerun on the live server; tested in the production build locally without paid API calls"
+  },
+  "paidGenerationCalls": 0,
+  "authChanged": false
+}

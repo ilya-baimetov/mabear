@@ -5,10 +5,10 @@
 ## State
 
 - Local feature implemented in `/Users/ilya.baimetov/Projects/mabear/codex` on branch `codex/storybook-upgrade`.
-- Starting repository commit: `002d705c5a9a53c5f2a33473113a6633f254e4e1` (deployment/GitHub rules). Feature source, tests, scripts and review documents remain uncommitted local changes.
+- Starting repository commit: `002d705c5a9a53c5f2a33473113a6633f254e4e1` (deployment/GitHub rules). Feature source, tests, scripts and review documents were committed and pushed as `f5ad600ccb1cc8def99d24c171bddc1730f49283` before deployment.
 - Private remote: `https://github.com/ilya-baimetov/mabear`.
-- Current user rule: deploy only on explicit request; every deployment must first commit/push release code and then commit/push the deployment record. No deployment or remote change in this task.
-- Last deployed version remains `ec664a01-3b2a-4ccc-833a-82b144469522`; this feature is not on that URL.
+- Current user rule: deploy only on explicit request; every deployment must first commit/push release code and then commit/push the deployment record. The user subsequently requested deployment; the release and deployment record are checked in.
+- Current deployed version is `47cf2f59-4418-4594-a5e3-91c95117a5fe`; the cupboard feature is live. See `deployment/deployment.json`.
 
 Final captured source fingerprint: `72324214eb4c98e1e6d64a1255b12fc04428b5a0610898c90849ff0152e00c77`. Capture remained stable and reported no page errors. All four packaged videos passed full/tail decoding and native browser play/seek/end checks.
 
@@ -41,4 +41,4 @@ Commands are documented in `README.md`. Packaging uses a temporary Python enviro
 
 One cupboard and one honey jar; only Bear reaches the upper compartment. No arbitrary contents, restocking, other cupboard doors, physical hinges or all-body collision. Existing general traversal cameras still have occasional furniture/rack foreground occlusion outside the dedicated action. No texture or animal-face rebuild.
 
-Deployment is now explicitly authorized; release verification and GitHub check-in are in progress. See the deployment record once complete. Do not expand the feature scope.
+Deployment is complete. The signed-in live studio loaded the release and showed the cupboard location; live health/authentication checks passed. Next action is user feedback. Do not expand or deploy another version without a new request.
