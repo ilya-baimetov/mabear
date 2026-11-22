@@ -13,7 +13,7 @@ export const MARK_IDS = [
 ] as const;
 export const PROP_IDS = [
   "jam_jar", "honey_pot", "pancakes", "frying_pan", "ball", "fishing_rod", "fish", "lollipop",
-  "flowers", "carrot", "broom", "book", "pillow", "bucket", "watering_can", "flour_bag", "cake", "teapot", "pantry_honey",
+  "flowers", "carrot", "broom", "book", "pillow", "bucket", "watering_can", "flour_bag", "cake", "teapot", "pantry_honey", "carrot_2", "carrot_3", "carrot_4", "carrot_5", "carrot_6", "carrot_7", "carrot_8", "carrot_9",
 ] as const;
 export const EMOTIONS = [
   "neutral", "happy", "excited", "mischievous", "curious", "surprised", "sad", "angry", "scared",
@@ -55,7 +55,7 @@ export const VERBS = [
   // Emotion
   "laugh", "cry", "sulk", "surprised", "scared", "angry_stomp", "sneeze", "sigh",
   // Objects
-  "take", "give", "eat", "throw", "cook", "fish", "swing", "carry", "water_plants", "drop", "open", "close",
+  "take", "give", "eat", "throw", "cook", "fish", "swing", "carry", "water_plants", "drop", "open", "close", "put_down",
 ] as const;
 export const VISEMES = ["rest", "open_small", "open_wide", "o", "e", "frown", "grin"] as const;
 export const FOLEY_IDS = [
@@ -102,6 +102,10 @@ export type FoleyId = z.infer<typeof FoleyIdSchema>;
 export type Surface = z.infer<typeof SurfaceSchema>;
 export type FxId = z.infer<typeof FxIdSchema>;
 export type Lang = z.infer<typeof LangSchema>;
+
+export const CARROT_IDS = ["carrot", "carrot_2", "carrot_3", "carrot_4", "carrot_5", "carrot_6", "carrot_7", "carrot_8", "carrot_9"] as const;
+export type CarrotId = typeof CARROT_IDS[number];
+export const isCarrot = (id: unknown): id is CarrotId => typeof id === "string" && (CARROT_IDS as readonly string[]).includes(id);
 
 // ---------- 6.3 BeatScript (director output, the LLM contract) ----------
 export const BeatSchema = z.object({
@@ -197,8 +201,15 @@ export const WorldStateSchema = z.object({
   timeOfDay: TimeOfDaySchema,
   // wolf_a / wolf_b default in (additive): world states saved before the Wolves still parse.
   actors: z.object({ masha: ActorStateSchema, bear: ActorStateSchema, wolf_a: wolfStateDefault("wolf_a"), wolf_b: wolfStateDefault("wolf_b"), lady_bear: extraStateDefault("lady_bear"), hare: extraStateDefault("hare"), rosie: extraStateDefault("rosie"), squirrel: extraStateDefault("squirrel"), rival_bear: extraStateDefault("rival_bear") }),
-  props: z.preprocess(value => value && typeof value==='object' && !('pantry_honey' in value)
-    ? {...value,pantry_honey:{at:'cupboard'}} : value, z.record(PropIdSchema, z.object({ at: PropLocationSchema }))),
+  props: z.preprocess(value => {
+    if(!value || typeof value!=='object')return value;
+    const props={...value} as Record<string,unknown>;
+    props.pantry_honey??={at:'cupboard'};
+    const oldCarrot=props.carrot as {at?:string;planted?:boolean}|undefined;
+    if(CARROT_IDS.slice(1).every(id=>!(id in props))&&oldCarrot?.at==='garden'&&oldCarrot.planted===undefined)props.carrot={...oldCarrot,planted:true};
+    for(const id of CARROT_IDS)props[id]??={at:'garden',planted:true};
+    return props;
+  }, z.record(PropIdSchema, z.object({ at: PropLocationSchema, planted:z.boolean().optional() }))),
 });
 export type WorldState = z.infer<typeof WorldStateSchema>;
 
@@ -224,6 +235,10 @@ export const ActorClipSchema = z.object({
     objectTo:z.number().optional(),
     putDown: MarkIdSchema.optional(), // compiler-authored reverse take, releases the held prop halfway through
     pickUpAt: MarkIdSchema.optional(), // explicit surface contact before an indoor prop attaches to the hand
+    pickUpPosition: Vec3Schema.optional(), // exact object origin; authored or reconciled by physics
+    pickUpRotation: Vec3Schema.optional(),
+    putDownPosition: Vec3Schema.optional(),
+    putDownRotation: Vec3Schema.optional(),
     catchesFish: z.boolean().optional(), // ownership at the catch, independent of a later put-down in the same scene
     dropAt: MarkIdSchema.optional(), // semantic fallback at release, independent of later ball ownership
   }),

@@ -1,0 +1,26 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Before and after</title><style>body{margin:0;background:#f9f3df}canvas{width:100vw}video{display:none}</style></head><body><canvas width="1920" height="624"></canvas><script type="module">
+const canvas=document.querySelector('canvas'),ctx=canvas.getContext('2d');
+const proofs=await Promise.all(['before','after'].map(async mode=>[mode,await(await fetch(`/docs/parallel-interactions/${mode}/proof.json`)).json()]));
+const records=Object.fromEntries(proofs),videos={};
+const wait=(v,event)=>new Promise((ok,fail)=>{v.addEventListener(event,ok,{once:true});v.addEventListener('error',()=>fail(v.error),{once:true});});
+async function video(mode,id){const v=document.createElement('video');v.muted=true;v.playsInline=true;v.preload='auto';v.src=`/docs/parallel-interactions/${mode}/${id}.mp4`;document.body.append(v);await wait(v,'loadeddata');return v;}
+async function seek(v,t){v.pause();if(Math.abs(v.currentTime-t)<.005)return;v.currentTime=Math.max(0,Math.min(t,Number.isFinite(v.duration)?v.duration-.035:t));await wait(v,'seeked');}
+function draw(a,b,id,scene){ctx.fillStyle='#fff5da';ctx.fillRect(0,0,1920,624);ctx.fillStyle='#243d2e';ctx.font='bold 24px system-ui';ctx.fillText(id==='continuity'?'Follow the ball where it lands':'Pick, place and retrieve the same carrot',20,32);ctx.font='18px system-ui';ctx.fillText(`Scene ${scene+1} · Same authored story · 1× playback; shorter side holds at scene end`,930,31);ctx.drawImage(a,0,48,960,576);ctx.drawImage(b,960,48,960,576);}
+async function comparison(id){
+ const [a,b]=await Promise.all([video('before',id),video('after',id)]),ar=records.before.recordings.find(r=>r.id===id),br=records.after.recordings.find(r=>r.id===id);
+ const phases=ar.timeline.segments.map((s,i)=>({before:s,after:br.timeline.segments[i]}));
+ const mime=['video/mp4;codecs=avc1.42E01E','video/mp4'].find(m=>MediaRecorder.isTypeSupported(m)),stream=canvas.captureStream(30),chunks=[],rec=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:6_000_000});
+ rec.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};const done=new Promise((ok,fail)=>{rec.onstop=()=>ok(new Blob(chunks,{type:mime}));rec.onerror=fail;});
+ const takes=br.timeline.segments.flatMap(e=>e.segment.actorClips.masha.filter(c=>c.verb==='take').map(c=>e.offset+c.start+c.dur*.55));const posterAt=id==='continuity'?takes.at(-1):takes[0];
+ let frames=0,duration=0,poster='';draw(a,b,id,0);rec.start();
+ try{
+  for(const [i,phase]of phases.entries()){
+   await Promise.all([seek(a,phase.before.offset),seek(b,phase.after.offset)]);draw(a,b,id,i);await Promise.all([a.play(),b.play()]);
+   const span=Math.max(phase.before.segment.duration,phase.after.segment.duration);duration+=span;const start=performance.now();
+   await new Promise(resolve=>{function tick(now){const elapsed=(now-start)/1000;if(elapsed>=phase.before.segment.duration-.045)a.pause();if(elapsed>=phase.after.segment.duration-.045)b.pause();draw(a,b,id,i);frames++;if(b.currentTime>=posterAt&&!poster)poster=canvas.toDataURL();if(elapsed>=span)resolve();else requestAnimationFrame(tick);}requestAnimationFrame(tick);});a.pause();b.pause();
+  }
+  rec.stop();const blob=await done;return{blob,poster,duration,frames,sourceErrors:[a.error,b.error],sourceDimensions:[[a.videoWidth,a.videoHeight],[b.videoWidth,b.videoHeight]]};
+ }finally{if(rec.state!=='inactive')rec.stop();stream.getTracks().forEach(t=>t.stop());a.remove();b.remove();}
+}
+window.__package={comparison};
+</script></body></html>

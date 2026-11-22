@@ -614,7 +614,8 @@ function buildGarden(c: BuildCtx): void {
     b.add("soil", box(L - 0.07, 0.12, Wd - 0.07), 0x493b2a, xf([0, 0.07, z]), { jitter: 0.25, seed: bi });
     if (bi === 1) {
       for (let k = 0; k < 6; k++) addCabbage(b, -1.75 + k * 0.7, 0.13, z, 100 + k);
-    } else {
+    } else if(bi!==0) {
+      // The front bed is rendered by the nine addressable prop objects.
       for (let k = 0; k < 9; k++) addCarrotTop(b, -1.7 + k * 0.42, 0.13, z + (k % 2 ? 0.1 : -0.1), bi * 20 + k);
     }
   });

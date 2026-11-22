@@ -11,7 +11,7 @@ async function replay(tl:Timeline,release:[number,number,number]=[2,.9,3]){
 }
 afterEach(()=>{active.splice(0).forEach(r=>r.dispose());});
 describe('bounded Rapier behavior (real WASM)',()=>{
- it('keeps a drop followed by pickup on animation until pickup retargeting exists',async()=>{
+ it('keeps an unreachable bench-top pickup on animation for the whole story',async()=>{
   const tl=structuredClone(stories.drop),last=tl.segments[0].segment;
   last.actorClips.masha.push({start:last.duration,dur:1,verb:'take',emotion:'neutral',params:{item:'ball',target:'ball'}});last.duration+=1;tl.duration+=1;
   const r=await replay(tl);

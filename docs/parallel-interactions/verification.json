@@ -1,0 +1,85 @@
+{
+  "verifiedAt": "2026-11-22T05:44:55.807Z",
+  "source": "3d10dddc3e0be55fb5ea1c5262e70e6bb962606867671021f34bdfac35cd3a08",
+  "baselineSource": "72324214eb4c98e1e6d64a1255b12fc04428b5a0610898c90849ff0152e00c77",
+  "proofFiles": [
+    "after/proof.json",
+    "render-check/proof.json",
+    "regression/proof.json",
+    "probes/proof.json",
+    "ui/combined-proof.json",
+    "ui/rapier-parsed-proof.json",
+    "performance.json"
+  ],
+  "allProofsStable": true,
+  "tests": {
+    "passed": 851,
+    "files": 71,
+    "typecheck": "passed",
+    "build": "passed"
+  },
+  "legacyRegressionSamples": 324,
+  "fullStoryPerformance": [
+    {
+      "mode": "before",
+      "id": "continuity",
+      "duration": 24.823,
+      "meanFps": 59.998389304985096,
+      "coldReplayCacheMs": 3.0999999046325684
+    },
+    {
+      "mode": "before",
+      "id": "carrots",
+      "duration": 22.214,
+      "meanFps": 59.727154475935855,
+      "coldReplayCacheMs": 2.399999976158142
+    },
+    {
+      "mode": "after",
+      "id": "continuity",
+      "duration": 28.551000000000002,
+      "meanFps": 59.295320818156355,
+      "coldReplayCacheMs": 337
+    },
+    {
+      "mode": "after",
+      "id": "carrots",
+      "duration": 28.408,
+      "meanFps": 59.82081905257897,
+      "coldReplayCacheMs": 3.299999952316284
+    }
+  ],
+  "media": [
+    {
+      "id": "continuity",
+      "sha256": "cbf19fafe65fb54bb9d7fa5ce00db036201084d78751d7ca5b135b6ed2e32563",
+      "bytes": 22569690,
+      "playback": {
+        "id": "continuity",
+        "duration": 28.6294,
+        "width": 1920,
+        "height": 624,
+        "t": 28.6294,
+        "error": null,
+        "decoded": 859
+      }
+    },
+    {
+      "id": "carrots",
+      "sha256": "7aff37fe66c2763b31ca6ebde3052f72f9dcb91445a77ce7cf724824638a5e43",
+      "bytes": 23261189,
+      "playback": {
+        "id": "carrots",
+        "duration": 28.698967,
+        "width": 1920,
+        "height": 624,
+        "t": 28.698967,
+        "error": null,
+        "decoded": 856
+      }
+    }
+  ],
+  "rootVisualReview": "Inspected final decoded contact sheets and comparison frame; opening pickup, landed-ball retrieval and selected carrot action visible.",
+  "deployed": false,
+  "externalServiceCreditsSpent": 0
+}

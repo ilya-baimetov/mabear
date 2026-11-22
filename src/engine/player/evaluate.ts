@@ -3,7 +3,7 @@
 import type { ActorFrame, FaceParams, FrameState, FxFrame, PropFrame } from "../api";
 import {doorOpenAt,objectOpenAt,cupboardHandleAt} from '../../shared/interactiveObjects';
 import {
-  ACTOR_IDS, MARK_IDS, PROP_IDS, ADDED_ACTOR_START,
+  ACTOR_IDS, MARK_IDS, PROP_IDS, ADDED_ACTOR_START, CARROT_IDS, isCarrot,
   type ActorClip, type ActorId, type CamKey, type Emotion, type MarkId, type Posture, type PropId, type PropLocation,
   type Segment, type TimeOfDay, type Timeline, type Vec2, type Vec3, type Viseme, type WorldState,
 } from "../../shared/schema";
@@ -15,7 +15,7 @@ import { SEAT_HEIGHT, STYLES, evaluatePose, type VerbCtx } from "../motion/libra
 import { hash1 } from "../motion/verbs/common";
 import { swingAngle } from "../motion/verbs/objects";
 import {emotionWeights,emotionBlendSeconds,type EmotionWeights} from '../motion/emotion';
-import {propRestPosition as restPos,propPlacementAtMark} from '../../shared/propPlacement';
+import {propRestPosition as restPos,propPlacementAtMark,propPlacementInState} from '../../shared/propPlacement';
 import {carrySeatRoot,carryLiftRootHeight} from '../../shared/carrySupport';
 import {armchairMountMotion,hammockTiming,hammockTravelProgress} from '../../shared/physicalInteractions';
 import {cookingSupportHeightAt} from '../../shared/cookingStation';
@@ -617,6 +617,8 @@ function evalActor(actor: ActorId, inp: ActorCtxIn, bear: ActorFrame | null, car
   jiggle = clamp01(jiggle);
   const release=inClip&&r?.clip.params.putDown&&r.clip.params.item?{item:r.clip.params.item,...propPlacementAtMark(r.clip.params.item,r.clip.params.putDown)}:null;
   const pickup=inClip&&r?.clip.params.pickUpAt&&r.clip.params.item?{item:r.clip.params.item,...propPlacementAtMark(r.clip.params.item,r.clip.params.pickUpAt)}:null;
+  if(pickup&&r?.clip.params.pickUpPosition){pickup.pos=[...r.clip.params.pickUpPosition];pickup.rot=[...(r.clip.params.pickUpRotation??pickup.rot)];}
+  if(release&&r?.clip.params.putDownPosition){release.pos=[...r.clip.params.putDownPosition];release.rot=[...(r.clip.params.putDownRotation??release.rot)];}
   const frame: ActorFrame = {
     pos: pos3,
     yaw: finalYaw,
@@ -911,6 +913,15 @@ export function evaluate(timeline: Timeline, t: number): FrameState {
   const { at, flights } = segs.length === 0 ? { at: Object.fromEntries(PROP_IDS.map((id) => [id, seg.startState.props[id]?.at ?? "hidden"])) as Record<PropId, PropLocation>, flights: new Map() } : propLocationsAt(seg, Math.min(lt, seg.duration + 1e-6));
   for(const actor of ACTOR_IDS)actors[actor].holding=PROP_IDS.find(id=>at[id]===actor)??actors[actor].holding;
   const props = propsFrame(at, flights, actors, ltc);
+  for(const id of CARROT_IDS){
+    const loc=at[id];if(!isMark(loc)||flights.has(id))continue;
+    const picked=ACTOR_IDS.some(a=>clipsOf(seg,a).some(c=>c.params.item===id&&c.verb==='take'&&!c.params.putDown&&ltc>=c.start+c.dur*.5));
+    const planted=loc==='garden'&&!!seg.startState.props[id]?.planted&&!picked;
+    const placement=propPlacementInState(id,{at:loc,planted}),[x,y,z]=placement.rot;
+    // Quaternion in the renderer's YXZ order, independent of the generic resting-mark snap.
+    const cx=Math.cos(x/2),sx=Math.sin(x/2),cy=Math.cos(y/2),sy=Math.sin(y/2),cz=Math.cos(z/2),sz=Math.sin(z/2);
+    props[id]={visible:true,pos:placement.pos,attachedTo:null,rotation:[sx*cy*cz+cx*sy*sz,cx*sy*cz-sx*cy*sz,cx*cy*sz-sx*sy*cz,cx*cy*cz+sx*sy*sz]};
+  }
 
   return {
     t,

@@ -958,6 +958,16 @@ export function cameraAt(cues: CameraCue[], t: number): CamKey | null {
   return { pos: lerp(c.from.pos, c.to.pos), look: lerp(c.from.look, c.to.look), fov: c.from.fov + (c.to.fov - c.from.fov) * k,location:c.from.location??c.to.location,followActor:c.from.followActor??c.to.followActor };
 }
 
+/** Split a long camera cue without replaying its entire move in every chunk. */
+export function splitCameraCue(cue:CameraCue,maxSeconds=6):CameraCue[]{
+  if(cue.dur<=maxSeconds+.000001)return[cue];
+  const n=Math.ceil(cue.dur/maxSeconds),dur=cue.dur/n;
+  return Array.from({length:n},(_,i)=>({
+    ...cue,start:cue.start+i*dur,dur,
+    from:cameraAt([cue],cue.start+i*dur)!,to:cameraAt([cue],cue.start+(i+1)*dur)!,
+  }));
+}
+
 /** Stereo pan estimate (-1..1) of a ground point relative to the planned camera at time t. */
 export function panFor(cues: CameraCue[], p: Vec2, t: number): number {
   const cam = cameraAt(cues, t);

@@ -1,5 +1,6 @@
 // Deterministic post-validator (spec §9): hard canon/safety rules + structural clamps. Pure and idempotent
 // (validating an already-validated script yields no new hits and no errors).
+import {isCarrot} from "../shared/schema";
 import { CHARACTERS } from "../shared/bible/characters";
 import { MARKS } from "../shared/bible/set";
 import { GRAMMAR, VERB_IMPLIED_PROP, isWolf } from "../shared/grammar";
@@ -291,15 +292,15 @@ export function validateBeatScript(bs: BeatScript, startState: WorldState, lang:
     } else if (b.item != null && VERB_IMPLIED_PROP[b.verb] !== b.item) {
       b.item = null;
     }
-    // The bounded drop cue only supports Masha's ball.
-    if (b.verb === "drop" && b.item !== "ball") {
-      errors.push(`${tag}: drop supports only the ball → shrug`);
+    // Ball is simulated; the compiler normalizes carrots to an authored placement.
+    if (b.verb === "drop" && b.item !== "ball" && !isCarrot(b.item)) {
+      errors.push(`${tag}: drop supports only the ball or a garden carrot → shrug`);
       b.verb = "shrug"; b.item = null;
     }
     // simulate holding
     if (b.verb === "take" && b.item) holding[actor] = b.item;
     if (b.verb === "give" && b.item && isActor(b.target)) { holding[actor] = null; holding[b.target] = b.item; }
-    if (b.verb === "throw" || b.verb === "drop") holding[actor] = null;
+    if (b.verb === "throw" || b.verb === "drop" || b.verb === "put_down") holding[actor] = null;
 
     // ---- emote / line (bear_silent) ----
     let emote = allowedEmote(actor, b.emote ?? null);

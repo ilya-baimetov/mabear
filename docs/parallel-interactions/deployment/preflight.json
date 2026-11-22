@@ -1,0 +1,18 @@
+{
+  "checkedAt": "2026-11-22T06:16:31.538Z",
+  "sourceFingerprint": "3d10dddc3e0be55fb5ea1c5262e70e6bb962606867671021f34bdfac35cd3a08",
+  "reviewRecord": "../verification.json",
+  "reviewedTests": 851,
+  "reviewedTestFiles": 71,
+  "sourceMatchesReviewedVersion": true,
+  "freshProductionBuild": "passed",
+  "packagedStories": "ball continuity, individual carrot2, cupboard regression",
+  "packagedProof": "packaged-app.json",
+  "packagedSource": "3d10dddc3e0be55fb5ea1c5262e70e6bb962606867671021f34bdfac35cd3a08",
+  "assetManifest": "asset-hashes.json",
+  "repository": "https://github.com/ilya-baimetov/mabear",
+  "targetBranch": "main",
+  "targetWorker": "mabear-storybook",
+  "previousVersion": "47cf2f59-4418-4594-a5e3-91c95117a5fe",
+  "paidGenerationCalls": 0
+}

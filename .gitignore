@@ -99,3 +99,12 @@ docs/cupboard/after/*.png
 docs/cupboard/inspect.log
 docs/cupboard/initial-tests.log
 docs/cupboard/media-setup.log
+
+# Parallel interaction trial: retain final media and proof, omit temporary paths
+# and dense frame sweeps. Deployment remains a separate manual action.
+docs/parallel-interactions/baseline-path.txt
+docs/parallel-interactions/before/*.png
+docs/parallel-interactions/after/*.png
+docs/parallel-interactions/iteration-*/
+docs/parallel-interactions/ui/carrots-proof.json
+docs/parallel-interactions/ui/rapier-proof.json

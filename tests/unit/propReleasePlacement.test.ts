@@ -1,6 +1,6 @@
 import {describe,expect,it} from 'vitest';
 import * as THREE from 'three';
-import {PROP_IDS,type MarkId} from '../../src/shared/schema';
+import {PROP_IDS,isCarrot,type MarkId} from '../../src/shared/schema';
 import {propGripWorld,propPlacementAtMark,propRestPosition} from '../../src/shared/propPlacement';
 import {restPlacement} from '../../src/engine/props/props';
 import {PROP_CONTACTS} from '../../src/shared/propContacts';
@@ -15,6 +15,6 @@ describe('shared physical release placement',()=>{
   }
  });
  it('non-home bench placements remain on its narrow seat',()=>{
-  for(const id of PROP_IDS){const p=restPlacement(id,propRestPosition(id,'bench')).pos;expect(Math.abs(p[0]-2)).toBeLessThan(.8);expect(Math.abs(p[2]-3)).toBeLessThan(.2);expect(p[1]).toBe(.47);}
+  for(const id of PROP_IDS){const p=restPlacement(id,propRestPosition(id,'bench')).pos;expect(Math.abs(p[0]-2)).toBeLessThan(.8);expect(Math.abs(p[2]-3)).toBeLessThan(.2);expect(p[1]-(isCarrot(id)?.136:0)).toBeCloseTo(.47,6);}
  });
 });

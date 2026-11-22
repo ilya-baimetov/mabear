@@ -1,5 +1,7 @@
 # Bounded Rapier trial — deployed opt-in
 
+21 November follow-up: [Rapier continuity](../rapier-continuity/IMPLEMENTATION.md) now reconciles an eligible ball retrieval with its simulated landing and a clear approach route. It is implemented locally alongside [individual carrots](../interactive-carrots/README.md); [current evidence and checkpoint](../parallel-interactions/CHECKPOINT.md) govern this new work. **The follow-up is not deployed.**
+
 Follow-up: [default physics and interactive door](../interactive-objects/README.md) was implemented and deployed on 9 November after explicit authorization. Release `ec664a01-3b2a-4ccc-833a-82b144469522` enables supported physics by default; see `../interactive-objects/deployment/deployment.json`. The record below describes the original trial and its separate opt-in release.
 
 Completed 7 November 2026. The original intake is preserved in [INTAKE.md](INTAKE.md).

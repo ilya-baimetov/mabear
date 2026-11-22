@@ -3,7 +3,7 @@
 // Each prop is ONE vertex-coloured mesh (one draw call), origin at its base so it sits on surfaces.
 import * as THREE from "three";
 import { FISHING_WATER_TARGET, MARKS } from "../../shared/bible/set";
-import { PROP_IDS, type ActorId, type MarkId, type PropId, type Vec3 } from "../../shared/schema";
+import { PROP_IDS, CARROT_IDS, isCarrot, type ActorId, type MarkId, type PropId, type Vec3 } from "../../shared/schema";
 import type { ActorFrame, PropFrame } from "../api";
 import { GeoBag, bagToSingle, rng, xf, type LookMaterials } from "../look";
 import { restHeightAt } from "../set/bearsYard";
@@ -25,6 +25,20 @@ const box = (w: number, h: number, d: number) => new THREE.BoxGeometry(w, h, d);
 const cyl = (rt: number, rb: number, h: number, seg = 12) => new THREE.CylinderGeometry(rt, rb, h, seg);
 const sph = (r: number, ws = 12, hs = 8) => new THREE.SphereGeometry(r, ws, hs);
 const lathe = (pts: [number, number][], seg = 16) => new THREE.LatheGeometry(pts.map(([x, y]) => new THREE.Vector2(x, y)), seg);
+
+const CARROT_VISUAL:PropVisual = {
+    build(b) {
+      b.add("paint", new THREE.ConeGeometry(0.05, 0.30, 10), 0xf07f2a, xf([0, 0.15, 0], [Math.PI, 0, 0]), {
+        colorFn: (p, _n, o) => { if (Math.abs(((p.y + 1) % 0.04) - 0.02) < 0.003) o.multiplyScalar(0.8); },
+      });
+      for (let i = 0; i < 4; i++) {
+        const a = (i / 4) * Math.PI * 2;
+        b.add("foliage", new THREE.ConeGeometry(0.02, 0.14, 5), 0x4f9e3a, xf([Math.cos(a) * 0.012, 0.38, Math.sin(a) * 0.012], [Math.sin(a) * 0.3, 0, -Math.cos(a) * 0.3]));
+      }
+    },
+    grip: { pos: [0, -.39, .05], rot: [0, 0, 0] },
+    restRot: [Math.PI / 2, 0, 0.4],
+  };
 
 export const PROP_VISUALS: Record<PropId, PropVisual> = {
   pantry_honey:{
@@ -130,19 +144,15 @@ export const PROP_VISUALS: Record<PropId, PropVisual> = {
     grip: { pos: [0, -0.06, 0.04], rot: [0, 0, 0] },
     restRot: [Math.PI / 2.2, 0, 0],
   },
-  carrot: {
-    build(b) {
-      b.add("paint", new THREE.ConeGeometry(0.04, 0.2, 10), 0xf07f2a, xf([0, 0.1, 0], [Math.PI, 0, 0]), {
-        colorFn: (p, _n, o) => { if (Math.abs(((p.y + 1) % 0.04) - 0.02) < 0.003) o.multiplyScalar(0.8); },
-      });
-      for (let i = 0; i < 4; i++) {
-        const a = (i / 4) * Math.PI * 2;
-        b.add("foliage", new THREE.ConeGeometry(0.02, 0.14, 5), 0x4f9e3a, xf([Math.cos(a) * 0.012, 0.27, Math.sin(a) * 0.012], [Math.sin(a) * 0.3, 0, -Math.cos(a) * 0.3]));
-      }
-    },
-    grip: { pos: [0, -0.1, 0.05], rot: [0, 0, 0] },
-    restRot: [Math.PI / 2, 0, 0.4],
-  },
+  carrot:CARROT_VISUAL,
+  carrot_2:CARROT_VISUAL,
+  carrot_3:CARROT_VISUAL,
+  carrot_4:CARROT_VISUAL,
+  carrot_5:CARROT_VISUAL,
+  carrot_6:CARROT_VISUAL,
+  carrot_7:CARROT_VISUAL,
+  carrot_8:CARROT_VISUAL,
+  carrot_9:CARROT_VISUAL,
   broom: {
     build(b) {
       b.add("wood", cyl(0.016, 0.018, 1.05, 6), 0xb98a52, xf([0, 0.62, 0]));
@@ -255,6 +265,7 @@ export function restingMark(pos: Vec3): MarkId | null {
 /** Final resting transform for a prop given the player's position. Pure. */
 export function restPlacement(id: PropId, pos: Vec3): { pos: Vec3; rot: R3 } {
   const mark = restingMark(pos);
+  if(isCarrot(id)&&mark)return propPlacementAtMark(id,mark);
   const slot = PROP_SLOTS[id];
   const vis = PROP_VISUALS[id];
   if (mark && slot && slot.mark === mark) return { pos: [...slot.pos] as Vec3, rot: slot.rot ?? vis.restRot ?? [0, 0, 0] };
@@ -277,7 +288,7 @@ export interface PropsHandle {
   dispose(): void;
 }
 
-const SMALL_PROPS = new Set<PropId>(["jam_jar", "teapot", "lollipop", "book", "carrot", "fish", "pancakes", "honey_pot", "flowers", "frying_pan"]);
+const SMALL_PROPS = new Set<PropId>([...CARROT_IDS,"jam_jar", "teapot", "lollipop", "book", "carrot", "fish", "pancakes", "honey_pot", "flowers", "frying_pan"]);
 
 export function buildPropMesh(id: PropId, mats: LookMaterials): THREE.Mesh {
   const bag = new GeoBag();

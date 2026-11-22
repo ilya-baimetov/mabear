@@ -3,6 +3,7 @@
 import { addLayer, blendLayers, qmul, smooth, window01 } from "../blend";
 import { ARMS, arm, byPersona, idleBase, layer, leg, mask, pose, rx, ry, rz, type VerbCtx, type VerbImpl } from "./common";
 import type { Pose } from "../blend";
+import {isCarrot} from '../../../shared/schema';
 import {CHARACTER_REACH} from '../../../shared/characterReach';
 
 /** Right arm holding something in front of the chest (used between object verbs). */
@@ -20,13 +21,14 @@ export const cupboard:VerbImpl=(_lt,p,ctx)=>p.item?armsOver(ctx,holdArm(),1):idl
 
 export const take: VerbImpl = (lt, _p, ctx) => {
   const u = lt / ctx.dur;
-  if(_p.putDown){
+  if(_p.putDown||_p.pickUpPosition){
     // A ground placement needs a real crouch, while a high bench must not make
     // a short actor bend away from the target. The contact rig solves the arm;
     // bent legs and a level ankle keep the body physically supported here.
-    const reach=CHARACTER_REACH[ctx.actor],targetY=_p.lookAt?.[1]??reach.shoulder[1],k=window01(u,0,1,.3);
+    const reach=CHARACTER_REACH[ctx.actor],targetY=_p.lookAt?.[1]??_p.pickUpPosition?.[1]??reach.shoulder[1],k=window01(u,0,1,.3);
     const crouch=Math.max(0,Math.min(1,(reach.shoulder[1]-targetY-reach.length*.65)/Math.max(.01,ctx.style.hipHeight*.62)));
-    const hip=1.45*crouch*k,knee=2.65*crouch*k,bend=(.06+.72*crouch)*k;
+    const plantedLean=_p.pickUpAt==='garden'&&isCarrot(_p.item)&&(_p.pickUpPosition?.[1]??0)<0?(reach.shoulder[1]<.45?.65:.25):0;
+    const hip=1.45*crouch*k,knee=2.65*crouch*k,bend=(.06+.72*crouch+plantedLean)*k;
     return addLayer(armsOver(ctx,holdArm(),1),pose({Spine:rx(bend),Spine1:rx(bend*.25),Neck:rx(-.2*crouch*k),Head:rx(-.7*crouch*k)},leg('Left',hip,knee,.06*crouch*k,hip-knee),leg('Right',hip,knee,.06*crouch*k,hip-knee)));
   }
   // reach down/forward, grab at 0.5 (prop_pickup), bring it up to the chest

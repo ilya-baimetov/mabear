@@ -1,3 +1,4 @@
+import {isCarrot} from '../../shared/schema';
 import * as THREE from 'three';
 import type {ActorFrame,CharacterRig} from '../api';
 import {PROP_CONTACTS} from '../../shared/propContacts';
@@ -114,7 +115,7 @@ export function addSourceContacts(rig:CharacterRig):boolean{
    Object.assign(metrics,{mode:'clap',targetGap:gap,surfaceGap:left.clone().sub(right).dot(axis),reachError:Math.max(...errors),strength,palmNormalDot:normals[0].dot(normals[1]),padOverlap,planeNormal:axis.toArray()});
   }
   const reverseSurface=frame.putDown?kitchenSurfaceGrasp(frame,frame.putDown):null;
-  if(frame.pickup||reverseSurface){
+  if(frame.pickup||reverseSurface||frame.putDown&&isCarrot(frame.putDown.item)){
    const data=(frame.pickup??frame.putDown)!,h=hands[1],grip=PROP_CONTACTS[data.item],duration=frame.action?.duration??1,attach=duration*data.release,pickupTime=frame.pickup?time:duration-time;
    const after=THREE.MathUtils.clamp((pickupTime-attach)/Math.max(.001,duration-attach),0,1),carry=THREE.MathUtils.clamp((after-.06)/.64,0,1),gripCarry=smooth((after-.18)/.52),strength=pickupTime<attach?smooth(pickupTime/Math.max(.001,attach-.035)):1;
    const surfaceGrasp=kitchenSurfaceGrasp(frame,data);
@@ -138,7 +139,7 @@ export function addSourceContacts(rig:CharacterRig):boolean{
    if(!surfaceGrasp&&!grip.support&&data.position[1]+new THREE.Vector3(...grip.point).applyQuaternion(restQ).y<frame.pos[1]+restShoulderY-height*.08)long.negate();
    const direction=normal.clone().lerp(heldDirection,surfaceGrasp?gripCarry:carry);
    if(surfaceGrasp&&normal.dot(heldDirection)<-.99)direction.addScaledVector(surfaceGrasp.outward,-Math.sin(gripCarry*Math.PI));direction.normalize();
-   const gripOffset=new THREE.Vector3(...grip.point).applyQuaternion(objectQ);
+   const gripOffset=data.item==='ball'?new THREE.Vector3(0,.15,0).applyQuaternion(objectQ).sub(new THREE.Vector3(0,.15,0)):new THREE.Vector3(...grip.point).applyQuaternion(objectQ);
    if(surfaceGrasp)gripOffset.copy(surfaceGrasp.offset).applyQuaternion(objectDelta).lerp(new THREE.Vector3(...grip.point).applyQuaternion(objectQ),gripCarry);
    const carryQ=data.item==='pantry_honey'&&rig.id==='bear'?orient(h,new THREE.Vector3(0,1,0),heldDirection):baseQ;
    const handQ=orient(h,long,normal).slerp(carryQ,surfaceGrasp?gripCarry:carry),target=origin.clone().add(gripOffset).addScaledVector(direction,-grip.radius-.0005);

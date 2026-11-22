@@ -73,6 +73,8 @@ export const LEXICON_EN: Lexicon = {
     { re: W("gives?|gave|hands?|handed|offers?|offered|brings?|brought|shares?|shared"), verb: "give" },
     { re: W("eats?|ate|eating|munch(?:es|ed)?|tastes?|tasted|licks?|licked|drinks?|drank|gobbles?|gobbled"), verb: "eat" },
     { re: W("throws?|threw|thrown|tosses?|tossed|kicks?|kicked"), verb: "throw" },
+    { re: W("puts?(?: down)?|put down|places?|placed|sets? down|set down"), verb: "put_down" },
+    { re: W("waits?|waited|waiting"), verb: "idle" },
     { re: W("drops?|dropped"), verb: "drop" },
     { re: W("swings?|swung|swinging"), verb: "swing" },
     { re: W("takes?|took|picks?(?: up)?|picked(?: up)?|grabs?|grabbed|steals?|stole|finds?|found|gets?|got"), verb: "take" },
@@ -208,7 +210,7 @@ export const LEXICON_EN: Lexicon = {
   ],
   verbLabels: {
     open:'opens the door',close:'closes the door',
-    drop: "drops",
+    put_down: "puts down", drop: "drops",
     walk_to: "walks", run_to: "runs", tiptoe_to: "tiptoes", chase: "chases", enter: "arrives", exit: "leaves",
     idle: "waits", jump: "jumps", spin: "spins", dance: "dances", sit: "sits down", stand_up: "stands up",
     fall_down: "falls down", sleep: "sleeps", wake_up: "wakes up", yawn_stretch: "yawns", hide: "hides", peek: "peeks",

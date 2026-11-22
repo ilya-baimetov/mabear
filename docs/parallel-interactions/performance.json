@@ -1,0 +1,698 @@
+{
+  "source": "3d10dddc3e0be55fb5ea1c5262e70e6bb962606867671021f34bdfac35cd3a08",
+  "stable": true,
+  "capturedAt": "2026-11-22T05:42:05.090Z",
+  "resolution": [
+    1280,
+    720
+  ],
+  "singleBrowserProcess": true,
+  "notes": "One headed Chrome process; cold direct seek after dropping trajectory cache, followed by the full compiled story at warmed 1x playback, including final retrieval.",
+  "results": [
+    {
+      "mode": "before",
+      "id": "continuity",
+      "info": {
+        "mode": "before",
+        "physicsInitMs": 70.70000004768372,
+        "carrotResources": {
+          "instances": 1,
+          "materials": 1,
+          "geometries": 1,
+          "textures": 1
+        },
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36",
+        "buffer": [
+          1280,
+          720
+        ],
+        "assets": [
+          {
+            "id": "wolf_a",
+            "source": "procedural",
+            "ok": true
+          },
+          {
+            "id": "wolf_b",
+            "source": "procedural",
+            "ok": true
+          },
+          {
+            "id": "hare",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "rosie",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "lady_bear",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "masha",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "rival_bear",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "bear",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "squirrel",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "robot_test",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "prop:carrot",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "set:beehive",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "set:house",
+            "source": "gltf",
+            "ok": true
+          }
+        ],
+        "durations": {
+          "fishing": 43.517,
+          "continuity": 24.823,
+          "continuityWide": 24.823,
+          "parsedContinuity": 15.047,
+          "carrots": 22.214,
+          "carrotsRu": 22.214,
+          "cupboard": 40.857,
+          "entry": 18.53,
+          "regression": 68.166,
+          "cozy": 71.685
+        }
+      },
+      "from": 0,
+      "coldMs": 3.0999999046325684,
+      "frames": 1491,
+      "seconds": 24.823,
+      "meanFps": 59.998389304985096,
+      "gapP50": 16.69999999999891,
+      "gapP95": 17.5,
+      "evalP50": 0.3999999761581421,
+      "evalP95": 0.5999999046325684,
+      "renderP50": 4.900000095367432,
+      "renderP95": 6,
+      "stats": {
+        "fps": 60.018005398757744,
+        "drawCalls": 157,
+        "triangles": 2033636
+      },
+      "physics": {
+        "t": 24.823,
+        "root": null,
+        "grounded": false,
+        "stride": 1,
+        "ball": null,
+        "sleeping": false,
+        "reason": "authored choreography: take",
+        "steps": 0,
+        "computeMs": 0,
+        "samples": 1,
+        "caches": 1,
+        "revision": 1
+      }
+    },
+    {
+      "mode": "before",
+      "id": "carrots",
+      "info": {
+        "mode": "before",
+        "physicsInitMs": 70.70000004768372,
+        "carrotResources": {
+          "instances": 1,
+          "materials": 1,
+          "geometries": 1,
+          "textures": 1
+        },
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36",
+        "buffer": [
+          1280,
+          720
+        ],
+        "assets": [
+          {
+            "id": "wolf_a",
+            "source": "procedural",
+            "ok": true
+          },
+          {
+            "id": "wolf_b",
+            "source": "procedural",
+            "ok": true
+          },
+          {
+            "id": "hare",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "rosie",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "lady_bear",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "masha",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "rival_bear",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "bear",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "squirrel",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "robot_test",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "prop:carrot",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "set:beehive",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "set:house",
+            "source": "gltf",
+            "ok": true
+          }
+        ],
+        "durations": {
+          "fishing": 43.517,
+          "continuity": 24.823,
+          "continuityWide": 24.823,
+          "parsedContinuity": 15.047,
+          "carrots": 22.214,
+          "carrotsRu": 22.214,
+          "cupboard": 40.857,
+          "entry": 18.53,
+          "regression": 68.166,
+          "cozy": 71.685
+        }
+      },
+      "from": 0,
+      "coldMs": 2.399999976158142,
+      "frames": 1328,
+      "seconds": 22.214,
+      "meanFps": 59.727154475935855,
+      "gapP50": 16.69999999999709,
+      "gapP95": 17.400000000001455,
+      "evalP50": 0.3999999761581421,
+      "evalP95": 0.5,
+      "renderP50": 5.100000023841858,
+      "renderP95": 6.200000047683716,
+      "stats": {
+        "fps": 59.9760095975909,
+        "drawCalls": 182,
+        "triangles": 2234836
+      },
+      "physics": {
+        "t": 22.214,
+        "root": null,
+        "grounded": false,
+        "stride": 1,
+        "ball": null,
+        "sleeping": false,
+        "reason": "travel outside the trial yard",
+        "steps": 0,
+        "computeMs": 0,
+        "samples": 1,
+        "caches": 1,
+        "revision": 2
+      }
+    },
+    {
+      "mode": "after",
+      "id": "continuity",
+      "info": {
+        "mode": "after",
+        "physicsInitMs": 74.79999995231628,
+        "carrotResources": {
+          "instances": 9,
+          "materials": 1,
+          "geometries": 1,
+          "textures": 1
+        },
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36",
+        "buffer": [
+          1280,
+          720
+        ],
+        "assets": [
+          {
+            "id": "wolf_b",
+            "source": "procedural",
+            "ok": true
+          },
+          {
+            "id": "wolf_a",
+            "source": "procedural",
+            "ok": true
+          },
+          {
+            "id": "rosie",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "hare",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "squirrel",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "masha",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "rival_bear",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "lady_bear",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "bear",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "robot_test",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "prop:carrot",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "prop:carrot_2",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "prop:carrot_3",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "prop:carrot_4",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "prop:carrot_5",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "prop:carrot_6",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "prop:carrot_7",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "prop:carrot_8",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "prop:carrot_9",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "set:beehive",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "set:house",
+            "source": "gltf",
+            "ok": true
+          }
+        ],
+        "durations": {
+          "fishing": 46.296,
+          "continuity": 28.551000000000002,
+          "continuityWide": 28.551000000000002,
+          "parsedContinuity": 22.551000000000002,
+          "carrots": 28.408,
+          "carrotsRu": 28.408,
+          "cupboard": 40.857,
+          "entry": 18.53,
+          "regression": 68.166,
+          "cozy": 71.685
+        }
+      },
+      "from": 0,
+      "coldMs": 337,
+      "frames": 1694,
+      "seconds": 28.551000000000002,
+      "meanFps": 59.295320818156355,
+      "gapP50": 16.69999999999891,
+      "gapP95": 17.5,
+      "evalP50": 0.5,
+      "evalP95": 0.6000000238418579,
+      "renderP50": 5.100000023841858,
+      "renderP95": 6.200000047683716,
+      "stats": {
+        "fps": 60.04202942345945,
+        "drawCalls": 179,
+        "triangles": 2118407
+      },
+      "physics": {
+        "t": 28.551000000000002,
+        "root": [
+          2.0663795471191406,
+          -9.536743172944284e-9,
+          3.536288261413574
+        ],
+        "grounded": true,
+        "stride": 0.9819999999999779,
+        "ball": null,
+        "sleeping": false,
+        "reason": null,
+        "steps": 1731,
+        "computeMs": 336.89999997615814,
+        "samples": 1732,
+        "caches": 1,
+        "revision": 1,
+        "continuity": true,
+        "routes": [
+          {
+            "start": 0,
+            "path": [
+              [
+                0.25,
+                0.5
+              ],
+              [
+                0.3126,
+                1.1821
+              ]
+            ],
+            "target": "ball"
+          },
+          {
+            "start": 3.779,
+            "path": [
+              [
+                0.3125999867916107,
+                1.1821000576019287
+              ],
+              [
+                0.8149999999999998,
+                3.525
+              ],
+              [
+                2,
+                3.5
+              ]
+            ],
+            "target": "bench"
+          },
+          {
+            "start": 16.515,
+            "path": [
+              [
+                2,
+                3.499999523162842
+              ],
+              [
+                0.8149999999999998,
+                3.525
+              ],
+              [
+                0,
+                0
+              ]
+            ],
+            "target": "clearing"
+          },
+          {
+            "start": 22.05132964466165,
+            "path": [
+              [
+                0,
+                0
+              ],
+              [
+                0.8149999999999998,
+                3.525
+              ],
+              [
+                2.0663782880115287,
+                3.536288790171486
+              ]
+            ],
+            "target": "ball"
+          }
+        ],
+        "pickups": [
+          {
+            "start": 24.351000000000003,
+            "attach": 25.451000000000004,
+            "position": [
+              2.284609493173504,
+              -0.00006879266191983646,
+              3.463660014849841
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "mode": "after",
+      "id": "carrots",
+      "info": {
+        "mode": "after",
+        "physicsInitMs": 74.79999995231628,
+        "carrotResources": {
+          "instances": 9,
+          "materials": 1,
+          "geometries": 1,
+          "textures": 1
+        },
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36",
+        "buffer": [
+          1280,
+          720
+        ],
+        "assets": [
+          {
+            "id": "wolf_b",
+            "source": "procedural",
+            "ok": true
+          },
+          {
+            "id": "wolf_a",
+            "source": "procedural",
+            "ok": true
+          },
+          {
+            "id": "rosie",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "hare",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "squirrel",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "masha",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "rival_bear",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "lady_bear",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "bear",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "robot_test",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "prop:carrot",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "prop:carrot_2",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "prop:carrot_3",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "prop:carrot_4",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "prop:carrot_5",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "prop:carrot_6",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "prop:carrot_7",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "prop:carrot_8",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "prop:carrot_9",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "set:beehive",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "set:house",
+            "source": "gltf",
+            "ok": true
+          }
+        ],
+        "durations": {
+          "fishing": 46.296,
+          "continuity": 28.551000000000002,
+          "continuityWide": 28.551000000000002,
+          "parsedContinuity": 22.551000000000002,
+          "carrots": 28.408,
+          "carrotsRu": 28.408,
+          "cupboard": 40.857,
+          "entry": 18.53,
+          "regression": 68.166,
+          "cozy": 71.685
+        }
+      },
+      "from": 0,
+      "coldMs": 3.299999952316284,
+      "frames": 1701,
+      "seconds": 28.408,
+      "meanFps": 59.82081905257897,
+      "gapP50": 16.69999999999709,
+      "gapP95": 17.60000000000582,
+      "evalP50": 0.5,
+      "evalP95": 0.6000000238418579,
+      "renderP50": 5.399999976158142,
+      "renderP95": 6.399999976158142,
+      "stats": {
+        "fps": 59.96402158561897,
+        "drawCalls": 199,
+        "triangles": 2312393
+      },
+      "physics": {
+        "t": 28.408,
+        "root": null,
+        "grounded": false,
+        "stride": 1,
+        "ball": null,
+        "sleeping": false,
+        "reason": "travel outside the trial yard",
+        "steps": 0,
+        "computeMs": 0,
+        "samples": 1,
+        "caches": 1,
+        "revision": 2,
+        "continuity": false,
+        "routes": [],
+        "pickups": []
+      }
+    }
+  ]
+}

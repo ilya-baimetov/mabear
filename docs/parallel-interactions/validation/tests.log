@@ -1,0 +1,56 @@
+
+> mabear@0.1.0 test
+> vitest run --maxWorkers=4 --reporter=dot
+
+
+ RUN  v5.1.0 /Users/ilya.baimetov/Projects/mabear/codex
+
+·············································································(node:34164) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+············································(node:34168) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+················································(node:34170) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+······································································································································(node:34173) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:34172) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+·····························································································································································(node:34197) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+···························································································(node:34200) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+·············stdout | tests/unit/characters.test.ts > masha rig > stays within the draw-call and triangle budgets (merged per material, ≤ ~25k triangles)
+masha: 8 meshes, 12 draw calls incl. shadow, 31797 triangles
+
+stdout | tests/unit/characters.test.ts > bear rig > stays within the draw-call and triangle budgets (merged per material, ≤ ~25k triangles)
+bear: 4 meshes, 5 draw calls incl. shadow, 29670 triangles
+
+·······················stdout | tests/unit/characters.test.ts > wolf_a rig > stays within the draw-call and triangle budgets (merged per material, ≤ ~25k triangles)
+wolf_a: 4 meshes, 6 draw calls incl. shadow, 31622 triangles
+
+stdout | tests/unit/characters.test.ts > wolf_b rig > stays within the draw-call and triangle budgets (merged per material, ≤ ~25k triangles)
+wolf_b: 4 meshes, 6 draw calls incl. shadow, 31622 triangles
+
+stdout | tests/unit/characters.test.ts > cast budget > all four characters together stay well inside the scene's 150 draw calls
+cast: 29 draw calls incl. shadows
+
+····································································(node:34333) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+···············stderr | tests/unit/speechRuntime.test.ts > Masha speech on the deployed JavaScript runtime > rejects submit-redirect without following or accepting its payload
+Masha speech submission rejected { status: 307 }
+
+stderr | tests/unit/speechRuntime.test.ts > Masha speech on the deployed JavaScript runtime > rejects submit-redirect without following or accepting its payload
+Masha speech submission held { error: 'Error' }
+
+···············································································stderr | tests/unit/speechWorker.test.ts > paid Masha speech coordinator > never resubmits an ambiguous paid request, including after object recreation
+Masha speech submission held { error: 'Error' }
+
+······································································································
+
+ Test Files  71 passed (71)
+      Tests  851 passed (851)
+   Start at  21:36:49
+   Duration  22.59s (tests 89%, import 10%, transform 1%)
+
+    Isolate  71 workers spawned · ~155ms startup each (spawn + environment, per file)
+             at least ~2.59s faster with isolate: false — reuses workers across files instead of one per file

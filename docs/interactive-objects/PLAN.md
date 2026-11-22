@@ -1,6 +1,6 @@
 # Interactive objects after the Rapier trial
 
-**Status: stages 1 and 2 deployed after separate explicit requests.** Stage 1 was deployed on 9 November 2026 after a separate explicit request; see [results and evidence](README.md) and [deployment record](deployment/deployment.json). The 11 November cupboard implementation was reviewed locally, then deployed after the user requested it. See [cupboard results and recordings](../cupboard/README.md) and the [deployment record](../cupboard/deployment/deployment.json). Stages 3–4 remain future proposals.
+**Status: stages 1 and 2 deployed; stage 3 implemented locally, not deployed.** Stage 1 was deployed on 9 November 2026 after a separate explicit request; see [results and evidence](README.md) and [deployment record](deployment/deployment.json). The 11 November cupboard implementation was reviewed locally, then deployed after the user requested it. See [cupboard results and recordings](../cupboard/README.md) and the [deployment record](../cupboard/deployment/deployment.json). The 21 November request authorized individual carrots alongside Rapier continuity; see [carrot behavior and boundaries](../interactive-carrots/README.md) and [shared evidence](../parallel-interactions/). Stage 4 remains a future proposal.
 
 This phase builds on the [Rapier trial results](../rapier-trial/README.md) and [ownership/replay design](../rapier-trial/ARCHITECTURE.md). The original [trial checkpoint](../rapier-trial/CHECKPOINT.md) records its separate completion. The 9 November instruction authorizes stage 1 implementation; further objects and paid services remain separate. Deployment was subsequently authorized and completed.
 
@@ -66,7 +66,7 @@ Prioritize objects by the stories they enable. Addressability means an object ha
 | 3 | Individual carrots in one garden bed | Planted, picked, held, placed; stable identity per carrot | Picking one carrot changes that carrot only; no duplicates or unexplained replacement |
 | 4 | Additional useful furniture and tools | Small, explicitly supported action sets per object | Each addition enables a tested story and preserves existing interactions |
 
-Stage 2 now covers Bear, the kitchen's upper cupboard and one honey jar. Stages 3–4 remain proposals, not an instruction to implement them together. Background decoration can remain grouped until a story needs to act on it.
+Stage 2 covers Bear, the kitchen's upper cupboard and one honey jar. Stage 3 covers nine identities in one garden bed, with authored harvest/placement/retrieval and a single carrot slot on the bench. Stage 4 remains a proposal. Background decoration can remain grouped until a story needs to act on it.
 
 ## Design boundaries
 
@@ -83,4 +83,4 @@ Stage 2 now covers Bear, the kitchen's upper cupboard and one honey jar. Stages 
 3. Behavioral regression evidence and actual before/after recordings, including timeline controls and an edited scene.
 4. Adversarial findings, applied fixes, remaining limitations, and a recommendation for the next object family.
 
-**Next action: user feedback on the cupboard release.** Deployment remains a separate user-requested step.
+**Next action: review the local carrot and Rapier continuity recordings.** Deployment remains a separate user-requested step; this implementation does not authorize publishing.

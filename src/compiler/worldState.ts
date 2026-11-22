@@ -1,12 +1,12 @@
 // World state helpers (spec §6.4).
 import { MARKS } from "../shared/bible/set";
 import { PROPS } from "../shared/bible/props";
-import { ACTOR_IDS, PROP_IDS, WOLF_START, EXTRA_START, ADDED_ACTOR_START, type ActorId, type PropId, type WorldState } from "../shared/schema";
+import { ACTOR_IDS, PROP_IDS, CARROT_IDS, isCarrot, WOLF_START, EXTRA_START, ADDED_ACTOR_START, type ActorId, type PropId, type WorldState } from "../shared/schema";
 
 /** The set's initial state (paragraph 0 starts here). */
 export function initialWorldState(): WorldState {
   const props = {} as WorldState["props"];
-  for (const id of PROP_IDS) props[id as PropId] = { at: PROPS[id as PropId].home };
+  for (const id of PROP_IDS) props[id as PropId] = { at: PROPS[id as PropId].home, ...(isCarrot(id)?{planted:true}:{}) };
   return {
     timeOfDay: "day",
     actors: {
@@ -29,7 +29,7 @@ export function worldStateDigest(ws: WorldState): string {
     if (!s) return `${id}:-`;
     return `${id}:${r(s.pos[0])},${r(s.pos[1])},${s.mark ?? "-"},${s.holding ?? "-"},${s.posture}`;
   };
-  const props = Object.keys(ws.props).sort().map((k) => `${k}@${ws.props[k as PropId]?.at}`).join(";");
+  const props = Object.keys(ws.props).sort().map((k) => `${k}@${ws.props[k as PropId]?.at}${isCarrot(k)?`:planted=${ws.props[k]?.planted??false}`:""}`).join(";");
   // masha/bear first (unchanged layout); wolves appended so pre-wolf digests stay comparable in shape
   return `${ws.timeOfDay}|${ACTOR_IDS.map((id) => a(id)).join("|")}|${props}|door:${ws.objects?.house_door??0}|cupboard:${ws.objects?.kitchen_cupboard??0}`;
 }
@@ -41,6 +41,8 @@ export function cloneWorldState(ws: WorldState): WorldState {
 /** Fill in actors missing from an older world state (saved before the Wolves joined) with their start state. */
 export function withAllActors(ws: WorldState): WorldState {
   ws.props.pantry_honey??={at:'cupboard'};
+  if(CARROT_IDS.slice(1).every(id=>!(id in ws.props))&&ws.props.carrot?.at==='garden'&&ws.props.carrot.planted===undefined)ws.props.carrot.planted=true;
+  for(const id of CARROT_IDS)ws.props[id]??={at:'garden',planted:true};
   const actors = ws.actors as Partial<WorldState["actors"]>;
   for (const [id, value] of Object.entries(ADDED_ACTOR_START)) {
     if (!actors[id as ActorId]) actors[id as ActorId] = structuredClone(value);
