@@ -30,7 +30,13 @@ function mergeGroupByMaterial(group:THREE.Group):void {
   }
 }
 
-/** Two representations of one logical object. No joints or runtime simulation. */
+/**
+ * Two representations of one logical object. No joints or runtime simulation.
+ * Handle parity with `doorHandleAt(open, inside)` in `src/shared/interactiveObjects.ts`:
+ * - `root` sits at `(d.center[0], d.base, d.center[1])` with `rotation.y = d.yaw`
+ * - `pivot` sits at `x = -d.width / 2` and rotates by `(inside ? -1 : 1) * clamp01(open) * Math.PI * .53`
+ * - the accessible (`+Z` local) drop-ring torus handle centre is `(d.width - .18, 1.155, +.088)` in `pivot` space
+ */
 export function buildHouseDoor(inside=false):THREE.Group {
   const d=inside?HOUSE_DOOR.interior:HOUSE_DOOR.exterior;
   const root=new THREE.Group();root.name=`object:house_door:${inside?'inside':'outside'}`;

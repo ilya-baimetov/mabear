@@ -1,10 +1,10 @@
 // Motion library (spec §7.4): Verb → implementation (clip | procedural | clip + additive procedural),
 // posture holding (sit / sleep / carried), per-character style (Bear's weight, Masha's bounce) and breathing.
 // Pure: evaluatePose(verb, localT, params, ctx) depends only on its arguments.
-import type { Verb } from "../../shared/schema";
+import type { PropId, Verb } from "../../shared/schema";
 import { LOCOMOTION_VERBS } from "../../shared/grammar";
-import { addLayer, breathingPose, clamp01, qmul, qrot, type Pose, type PoseLayer } from "./blend";
-import { UPPER, lowestFoot, mask, rx, styleLegs, rz, type ClipParams, type VerbCtx, type VerbImpl, type VerbKind } from "./verbs/common";
+import { addLayer, breathingPose, clamp, clamp01, qmul, qrot, smooth, type Pose, type PoseLayer } from "./blend";
+import { UPPER, byPersona, lowestFoot, mask, rx, ry, styleLegs, rz, type ClipParams, type VerbCtx, type VerbImpl, type VerbKind } from "./verbs/common";
 import * as loco from "./verbs/locomotion";
 import * as body from "./verbs/body";
 import * as gesture from "./verbs/gesture";
@@ -16,8 +16,8 @@ export { STYLES, SEAT_HEIGHT } from "./verbs/common";
 
 /** Every verb in VERBS has an implementation (unit-tested). */
 export const VERB_IMPLS: Record<Verb, VerbImpl> = {
-  open:(t,p,c)=>p.target==='cupboard'?objects.cupboard(t,p,c):gesture.point_at(t,p,c),
-  close:(t,p,c)=>p.target==='cupboard'?objects.cupboard(t,p,c):gesture.point_at(t,p,c),
+  open:(t,p,c)=>p.target==='cupboard'||p.target==='door'||p.target==='house_door'?objects.cupboard(t,p,c):gesture.point_at(t,p,c),
+  close:(t,p,c)=>p.target==='cupboard'||p.target==='door'||p.target==='house_door'?objects.cupboard(t,p,c):gesture.point_at(t,p,c),
   walk_to: loco.walk_to, run_to: loco.run_to, tiptoe_to: loco.tiptoe_to, chase: loco.chase, enter: loco.enter, exit: loco.exit,
   idle: body.idle, jump: body.jump, spin: body.spin, dance: body.dance, sit: body.sit, stand_up: body.stand_up,
   fall_down: body.fall_down, sleep: body.sleep, wake_up: body.wake_up, yawn_stretch: body.yawn_stretch, hide: body.hide, peek: body.peek,
@@ -75,17 +75,33 @@ function applyStyle(L: PoseLayer, ctx: VerbCtx, standing: boolean): PoseLayer {
   return { ...L, bones };
 }
 
+/** Approximate mass (kg) of heavy held props for torso counter-lean balance. */
+const HEAVY_PROP_MASS: Partial<Record<PropId, number>> = {
+  honey_pot: 4.5,
+  pantry_honey: 4.5,
+  bucket: 5.5,
+  flour_bag: 5.0,
+  cake: 3.5,
+};
+
 /** Small alternating steps while turning on the spot, so feet re-plant instead of skating round. */
 function shuffle(L: PoseLayer, ctx: VerbCtx): PoseLayer {
   const rate = Math.abs(ctx.turnRate ?? 0);
   if (rate < 0.15) return L;
   const w = clamp01((rate - 0.15) / 1.2);
-  const stepAngle = ctx.actor === "bear" ? 0.9 : 0.75;
+  const stepAngle = byPersona(ctx.actor, 0.75, 0.9, 0.75, 0.8);
   const p = (ctx.turned ?? 0) / stepAngle;
   const i = Math.floor(p);
   const lift = Math.sin((p - i) * Math.PI) * w;
   const side = i % 2 === 0 ? "Left" : "Right";
-  return addLayer(L, { [`${side}UpLeg`]: rx(-0.25 * lift), [`${side}Leg`]: rx(0.5 * lift), [`${side}Foot`]: rx(0.15 * lift) });
+  const lead = clamp((ctx.turnRate ?? 0) * 0.1, -0.25, 0.25) * w;
+  return addLayer(L, {
+    [`${side}UpLeg`]: rx(-0.25 * lift),
+    [`${side}Leg`]: rx(0.5 * lift),
+    [`${side}Foot`]: rx(0.15 * lift),
+    Neck: ry(lead * 0.4),
+    Head: ry(lead * 0.6),
+  });
 }
 
 /**
@@ -125,7 +141,20 @@ export function evaluatePose(verb: Verb, localT: number, params: ClipParams, ctx
     L={...L,bones:{...L.bones,Spine:qmul(rx(-.45),L.bones.Spine??[0,0,0,1]),Spine1:qmul(rx(-.12),L.bones.Spine1??[0,0,0,1]),Head:qmul(rx(.50),L.bones.Head??[0,0,0,1])}};
   }
   L = applyStyle(L, ctx, standing);
-  if (standing && !LOCOMOTION_VERBS.includes(verb)) L = shuffle(L, ctx);
+  if (standing && (!LOCOMOTION_VERBS.includes(verb) || (ctx.dist <= 0.002 && Math.abs(ctx.turnRate ?? 0) > 0.15))) L = shuffle(L, ctx);
+  // Heavy prop carry counter-lean (balances RightHand load back and toward actor's +X left)
+  const propMass = ctx.holding ? HEAVY_PROP_MASS[ctx.holding] : undefined;
+  if (propMass && standing && !params.putDown && verb !== "hug" && verb !== "carry" && verb !== "fall_down" && verb !== "sleep") {
+    const takeFade = verb === "take" ? smooth((localT / Math.max(ctx.dur, 1e-3) - 0.5) / 0.3) : 1;
+    const load = clamp((propMass / (ctx.style.mass + propMass)) * 1.15, 0.02, 0.22) * takeFade;
+    if (load > 1e-4) {
+      L = addLayer(L, {
+        Spine: qmul(rx(-0.55 * load), rz(-0.28 * load)),
+        Spine1: qmul(rx(-0.25 * load), rz(-0.15 * load)),
+        Head: rx(0.35 * load),
+      });
+    }
+  }
   const br = breathingPose(ctx.t, ctx.style.breathRate, ctx.style.breathDepth);
   L = addLayer(L, br.pose);
   // ground contact: pin the lowest sole to the floor (or only keep it from sinking during run flight phases)

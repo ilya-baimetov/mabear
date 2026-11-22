@@ -49,9 +49,30 @@ export interface ActorFrame {
   putDown?: {item:PropId;position:Vec3;rotation:Vec3;release:number};
   /** Surface pickup uses the same contact pose at its attachment instant. */
   pickup?: {item:PropId;position:Vec3;rotation:Vec3;release:number};
-  objectContact?:{position:Vec3;side:1|-1;strength:number};
+  objectContact?:ObjectContact;
+  objectContacts?:ObjectContact[];
   /** secondary-motion drivers 0..1 (hem sway, belly jiggle, ear wiggle) */
   secondary: { sway: number; jiggle: number; breathe: number };
+  /** Continuous deterministic spring-damper kinematic state for rigid bodies and rig overlap. */
+  spring?: ActorSpringState;
+}
+export interface ObjectContact {
+  position: Vec3;
+  side: 1 | -1;
+  strength: number;
+  pole?: Vec3;
+}
+export interface ActorSpringState {
+  /** local-space lateral spring deflection (-1..1) */
+  swayX: number;
+  /** local-space fore-aft spring deflection (-1..1) */
+  swayZ: number;
+  /** vertical impact/bounce damped oscillation (-1..1) */
+  bounceY: number;
+  /** root angular velocity yaw rate (rad/s) */
+  yawVel: number;
+  /** monotonic story time (s) for continuous secondary wave phasing */
+  time: number;
 }
 
 export interface PropFrame {

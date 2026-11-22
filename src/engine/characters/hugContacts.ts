@@ -38,18 +38,21 @@ export function applyHugContacts(rigs:Record<ActorId,CharacterRig>,frame:FrameSt
   const time=actor.action?.time??0,duration=actor.action?.duration??0,strength=Math.min(smooth(time/Math.max(.001,duration*.22)),smooth((duration-time)/Math.max(.001,duration*.22)));
   if(strength<=0)continue;
   const center=at(partner.root),toward=at(rig.root).sub(center);toward.y=0;toward.normalize();
-  const lateral=new THREE.Vector3(Math.cos(actor.yaw),0,-Math.sin(actor.yaw)),tall=rig.height>partner.height*1.4;
+  const lateral=new THREE.Vector3(Math.cos(actor.yaw),0,-Math.sin(actor.yaw)),tall=rig.height>partner.height*1.4,up=new THREE.Vector3(0,1,0);
   const shoulderY=tall?(at(partner.bones.LeftArm).y+at(partner.bones.RightArm).y)*.5-.015:(at(rig.bones.LeftArm).y+at(rig.bones.RightArm).y)*.5+.025;
   const touches=[];
   for(const hand of hands){
-   const desired=center.clone().addScaledVector(toward,interactionRadius(interaction.partner)*.92).addScaledVector(lateral,hand.side*Math.min(interactionRadius(interaction.partner)*.72,rig.height*.115));desired.y=shoulderY;
+   const partnerR=interactionRadius(interaction.partner);
+   const desired=center.clone().addScaledVector(toward,partnerR*(tall?.78:.88)).addScaledVector(lateral,hand.side*Math.min(partnerR*(tall?.84:.78),rig.height*(tall?.135:.125)));desired.y=shoulderY;
    const arm=at(rig.bones[hand.side>0?'LeftArm':'RightArm']),elbow=at(rig.bones[hand.side>0?'LeftForeArm':'RightForeArm']),wrist=at(rig.bones[hand.side>0?'LeftHand':'RightHand']),reach=arm.distanceTo(elbow)+elbow.distanceTo(wrist);
    let best=Infinity,target:THREE.Vector3|undefined;
    for(const sample of surface){const p=sample.mesh.getVertexPosition(sample.index,new THREE.Vector3()).applyMatrix4(sample.mesh.matrixWorld),heightError=p.y-desired.y,miss=Math.max(0,p.distanceTo(arm)-reach),d=p.distanceToSquared(desired)+heightError*heightError*3+miss*miss*100;if(d<best){best=d;target=p;}}
    if(!target)continue;
-   const outward=toward.clone().addScaledVector(lateral,hand.side*(tall?.6:.16)).normalize(),normal=outward.clone().negate(),long=new THREE.Vector3(0,tall?-1:1,0);
+   const outward=toward.clone().addScaledVector(lateral,hand.side*(tall?.72:.26)).normalize(),normal=outward.clone().negate();
+   const long=new THREE.Vector3(0,tall?-1:1,0).addScaledVector(lateral,-hand.side*(tall?.25:.18)).addScaledVector(toward,-.14).normalize();
+   const pole=arm.clone().addScaledVector(lateral,hand.side*rig.height*(tall?.28:.24)).addScaledVector(toward,rig.height*.05).addScaledVector(up,-rig.height*(tall?.12:.14));
    target.addScaledVector(outward,.004);
-   const result=hand.place(target,long,normal,strength);
+   const result=hand.place(target,long,normal,strength,pole);
    touches.push({side:hand.side,error:result.error,gap:result.point.distanceTo(target),point:result.point.toArray(),target:target.toArray()});
   }
   rig.root.userData.hugContacts={partner:interaction.partner,strength,touches};

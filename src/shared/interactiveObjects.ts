@@ -55,3 +55,16 @@ export function objectOpenAt(segment:Segment,t:number,id:'house_door'|'kitchen_c
   return value;
 }
 export const doorOpenAt=(segment:Segment,t:number)=>objectOpenAt(segment,t,'house_door');
+/** Exact world-space position of the accessible (+Z local) drop-ring handle on `buildHouseDoor(inside)`. */
+export function doorHandleAt(open:number,inside:boolean):Vec3 {
+  const d=inside?HOUSE_DOOR.interior:HOUSE_DOOR.exterior;
+  const a=(inside?-1:1)*Math.max(0,Math.min(1,open))*Math.PI*.53;
+  const hx=d.width-.18,hy=1.155,hz=.088;
+  const rx=-d.width/2+hx*Math.cos(a)+hz*Math.sin(a);
+  const rz=-hx*Math.sin(a)+hz*Math.cos(a);
+  return [
+    d.center[0]+rx*Math.cos(d.yaw)+rz*Math.sin(d.yaw),
+    d.base+hy,
+    d.center[1]-rx*Math.sin(d.yaw)+rz*Math.cos(d.yaw),
+  ];
+}

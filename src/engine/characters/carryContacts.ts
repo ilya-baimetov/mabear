@@ -52,7 +52,8 @@ export function applyCarryContacts(rigs:Record<ActorId,CharacterRig>,frame:Frame
   const strength=b.verb==='carry'?smooth((b.action?.time??0)/.35):1;
   const joints=['Arm','ForeArm','Hand'].map(n=>carrier.bones[side+n]),base=joints.map(j=>j.quaternion.clone());
   for(const name of ['Arm','ForeArm'])carrier.bones[side+name].quaternion.copy(carrier.rest[side+name]);carrier.root.updateMatrixWorld(true);
-  const pole=at(carrier.bones[side+'Arm']).addScaledVector(right,hand.side*.06).addScaledVector(forward,.12).addScaledVector(up,-.8);
+  const overhead=smooth((k-.35)/.4);
+  const pole=at(carrier.bones[side+'Arm']).addScaledVector(right,hand.side*.34).addScaledVector(forward,THREE.MathUtils.lerp(-.14,.16,overhead)).addScaledVector(up,-.55);
   const long=up.clone().addScaledVector(forward,-.9*smooth((k-.55)/.35)).normalize();
   const result=hand.place(target,long, right.clone().multiplyScalar(-hand.side),1,pole);
   if(strength<1)joints.forEach((j,i)=>{const solved=j.quaternion.clone();j.quaternion.copy(base[i]).slerp(solved,strength);});carrier.root.updateMatrixWorld(true);
@@ -61,8 +62,10 @@ export function applyCarryContacts(rigs:Record<ActorId,CharacterRig>,frame:Frame
  // Clapping and other authored hand actions remain free. Quiet riding rests
  // the palms against the rear sides of the head instead of hanging in space.
  if(k>=.99&&!a.holding&&['idle','laugh','nod','sigh'].includes(a.verb))for(const hand of contactHands.get(rider.root)??[]){
+  const side=hand.side>0?'Left':'Right';
   const target=nearestSurface(carrier,['Neck','Head'],neck.clone().addScaledVector(right,hand.side*.16).addScaledVector(forward,-.18).addScaledVector(up,.08));
-  const normal=neck.clone().sub(target);normal.y=0;normal.normalize();hand.place(target,new THREE.Vector3(0,-1,0),normal,1);
+  const pole=at(rider.bones[side+'Arm']).addScaledVector(right,hand.side*.22).addScaledVector(forward,-.06).addScaledVector(up,-.18);
+  const normal=neck.clone().sub(target);normal.y=0;normal.normalize();hand.place(target,new THREE.Vector3(0,-1,0),normal,1,pole);
  }
  rider.root.userData.carryContacts={progress:k,legs,seat:seat.toArray(),riderSeat:at(rider.bones.LeftUpLeg).lerp(at(rider.bones.RightUpLeg),.5).addScaledVector(up,-.02).toArray(),supports};
 }

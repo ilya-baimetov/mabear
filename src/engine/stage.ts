@@ -3,7 +3,10 @@
 import * as THREE from "three";
 import { sceneLocationAt } from "../shared/bible/set";
 import { ACTOR_IDS, PROP_IDS, type ActorId } from "../shared/schema";
-import type { CharacterRig, FrameState, StageHandle, StageStats } from "./api";
+import { hammockClothHeight } from "../shared/physicalInteractions";
+import type { ActorFrame, CharacterRig, FrameState, ObjectContact, StageHandle, StageStats } from "./api";
+import { STYLES } from "./motion/verbs/common";
+import { SWING_ROPE, swingAngleAt as clipSwingAngleAt } from "./motion/verbs/objects";
 import { assetStatus, disposeGenerated, gltfSetElements, loadCharacter, loadPropOverrides, loadSetOverrides, TEST_GLTF_ID, type AssetStatus } from "./assets";
 import { createAtmosphere } from "./fx/atmosphere";
 import { createFx, type FxHandle } from "./fx/fx";
@@ -234,7 +237,10 @@ export async function createStage(canvas: HTMLCanvasElement, opts: StageOptions 
   const loadedRigs = await Promise.all(ACTOR_IDS.map((id) => loadCharacter(id)));
   mark("characters");
   const rigs = Object.fromEntries(ACTOR_IDS.map((id, i) => [id, loadedRigs[i]])) as Record<ActorId, CharacterRig>;
-  for (const id of ACTOR_IDS) scene.add(rigs[id].root);
+  for (const id of ACTOR_IDS) {
+    rigs[id].root.userData.supportHeightAt = walkHeightAt;
+    scene.add(rigs[id].root);
+  }
 
   const props = createProps(look.materials);
   scene.add(props.root);
@@ -427,6 +433,8 @@ export async function createStage(canvas: HTMLCanvasElement, opts: StageOptions 
       set.setCupboard(frame.objects?.kitchen_cupboard??0);
       // actors (stand on the porch / pier / bridges)
       let swing = 0;
+      let swingerId: ActorId | null = null;
+      let swingerYaw = 0;
       for (const id of ACTOR_IDS) {
         const a = frame.actors?.[id];
         const rig = rigs[id];
@@ -445,22 +453,90 @@ export async function createStage(canvas: HTMLCanvasElement, opts: StageOptions 
         if (lift !== 0) rig.root.position.y += lift; // world matrices refresh in renderer.render / getWorldPosition
         sockets[id] = rig.handSocket;
         yaws[id] = a.yaw;
-        if (a.verb === "swing") {
-          // the seat follows the swinger's fore/aft displacement around the pivot (pivot at (8, 3.42, 2))
-          const dz = a.pos[2] + a.hipsOffset[2] - 2;
-          swing = Math.atan2(dz, 3.0);
+        if (a.verb === "swing" && a.opacity > 0.001 && a.posture !== "offstage" && sceneLocationAt(a.pos[0], a.pos[2]) === location) {
+          // Set convention (+X rotation): +angle moves the seat toward -Z, so negate actor-local +Z displacement.
+          const aRad =
+            a.action && a.action.duration > 0
+              ? clipSwingAngleAt(a.action.time, a.action.duration) * Math.cos(a.yaw)
+              : Math.asin(Math.max(-0.95, Math.min(0.95, (a.pos[2] + a.hipsOffset[2] - 2) / SWING_ROPE)));
+          swing = -aRad;
+          swingerId = id;
+          swingerYaw = a.yaw;
         }
       }
       set.setSwing(swing);
+      let hammockWeight = 0;
+      let hammockSway = 0;
+      if (location === "yard") {
+        for (const id of ACTOR_IDS) {
+          const a = frame.actors?.[id];
+          if (!a || a.opacity <= 0.001 || a.posture === "offstage") continue;
+          if (hammockClothHeight([a.pos[0], a.pos[2]]) === null) continue;
+          if (a.posture !== "sleep" && a.verb !== "sleep" && a.verb !== "wake_up") continue;
+          let ramp = 1;
+          if (a.verb === "sleep" && a.action && a.action.duration > 0) {
+            ramp = Math.min(1, Math.max(0, a.action.time / 0.55));
+          } else if (a.verb === "wake_up" && a.action && a.action.duration > 0) {
+            ramp = 1 - Math.min(1, Math.max(0, (a.action.time - 0.08) / 0.55));
+          }
+          const actorWeight = Math.min(1.15, Math.sqrt((STYLES[id]?.mass ?? 60) / 280));
+          hammockWeight = Math.min(1.25, hammockWeight + actorWeight * ramp);
+          hammockSway += ((a.spring?.swayX ?? 0) * 0.45 + 0.35 * actorWeight) * ramp;
+        }
+      }
+      set.setHammock(hammockWeight, hammockSway, frame.t);
       applyCarryContacts(rigs,frame);
       applyHugContacts(rigs,frame);
-      applyObjectContacts(rigs,frame);
+      let objectFrame = frame;
+      if (swingerId) {
+        const sa = frame.actors[swingerId];
+        if (sa && !sa.objectContacts?.length && !sa.objectContact) {
+          const st =
+            sa.action && sa.action.duration > 0
+              ? Math.min(1, sa.action.time / 0.35, (sa.action.duration - sa.action.time) / 0.35)
+              : 1;
+          const strength = Math.max(0, Math.min(1, st));
+          if (strength > 0) {
+            const [gripPosX, gripNegX] = set.swingRopeGrips(swing);
+            const facing = Math.cos(swingerYaw) >= 0 ? 1 : -1;
+            const leftGrip = facing >= 0 ? gripPosX : gripNegX;
+            const rightGrip = facing >= 0 ? gripNegX : gripPosX;
+            const swingContacts: ObjectContact[] = [
+              {
+                position: leftGrip,
+                side: 1,
+                strength,
+                pole: [leftGrip[0] + 0.14 * facing, leftGrip[1] - 0.18, leftGrip[2] - 0.16 * facing],
+              },
+              {
+                position: rightGrip,
+                side: -1,
+                strength,
+                pole: [rightGrip[0] - 0.14 * facing, rightGrip[1] - 0.18, rightGrip[2] - 0.16 * facing],
+              },
+            ];
+            objectFrame = {
+              ...frame,
+              actors: { ...frame.actors, [swingerId]: { ...sa, objectContacts: swingContacts } as ActorFrame },
+            };
+          }
+        }
+      }
+      applyObjectContacts(rigs,objectFrame);
       contactShadows.update(rigs, frame, location, lp.stars, lifts);
       props.apply(frame.props, sockets, yaws, frame.actors);
       for(const id of PROP_IDS) {
         const p=frame.props[id],holder=p.attachedTo?frame.actors[p.attachedTo]:null;
         const pos=holder?.pos??p.pos;
         props.objects[id].visible=props.objects[id].visible&&(!p.attachedTo||!frame.cast||frame.cast.includes(p.attachedTo))&&sceneLocationAt(pos[0],pos[2])===location;
+      }
+      const rodData = props.objects.fishing_rod?.userData;
+      const bobberWorld = rodData?.bobberWorld as [number, number, number] | undefined;
+      const bobberPulse = typeof rodData?.bobberPulse === "number" ? rodData.bobberPulse : 0;
+      if (location === "pond" && props.objects.fishing_rod?.visible && bobberWorld && bobberPulse > 0.001) {
+        set.setPondRipple(bobberWorld[0], bobberWorld[2], bobberPulse);
+      } else {
+        set.setPondRipple(0, 0, 0);
       }
       fx.apply(frame.fx?.filter(f=>sceneLocationAt(f.at[0],f.at[2])===location) ?? NO_FX, pointScale, { sunColor: lp.sunColor, skyHorizon: lp.skyHorizon, stars: lp.stars });
       atmosphere.update(frame.t, location, lp.windowGlow, pointScale);

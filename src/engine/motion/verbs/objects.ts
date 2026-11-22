@@ -1,6 +1,6 @@
 // Object verbs: procedural arm work layered on the Mixamo idle (the libraries have no prop clips).
 // The held prop rides on the RightHand socket; timings match the grammar's foley rules.
-import { addLayer, blendLayers, qmul, smooth, window01 } from "../blend";
+import { addLayer, blendLayers, clamp, clamp01, qmul, smooth, window01 } from "../blend";
 import { ARMS, arm, byPersona, idleBase, layer, leg, mask, pose, rx, ry, rz, type VerbCtx, type VerbImpl } from "./common";
 import type { Pose } from "../blend";
 import {CHARACTER_REACH} from '../../../shared/characterReach';
@@ -42,17 +42,17 @@ export const take: VerbImpl = (lt, _p, ctx) => {
     // Keep the body upright; the contact rig reaches the actual table edge.
     return addLayer(out, pose({ Spine: rx(.06 * reach), Spine1: rx(.02 * reach) }));
   }
-  const bend = reach * byPersona(ctx.actor, 0.35, 0.6, 0.5);
+  const bend = reach * byPersona(ctx.actor, 0.35, 0.6, 0.5, 0.38);
   return addLayer(out, pose({ Spine: rx(bend), Spine1: rx(bend * 0.4) }, leg("Left", 0.3 * reach, 0.5 * reach), leg("Right", 0.3 * reach, 0.5 * reach)), 1, [0, -0.08 * ctx.style.hipHeight * reach, 0]);
 };
 
 export const give: VerbImpl = (lt, _p, ctx) => {
   const u = lt / ctx.dur;
   const ext = window01(u, 0, 0.95, 0.35);
-  // Bear offers low (to Masha), Masha offers up (to Bear)
-  const down = byPersona(ctx.actor, -0.1, 0.6, 0.3);
+  // Bear offers low (to Masha), small characters offer up (to Bear)
+  const down = byPersona(ctx.actor, -0.1, 0.6, 0.3, -0.05);
   const L = armsOver(ctx, arm("Right", down, 1.35, 0.25 + 0.6 * (1 - ext), -0.3), 1);
-  const out = addLayer(L, { Spine: rx(byPersona(ctx.actor, -0.05, 0.25, 0.15) * ext), Head: rz(0.15 * ext) });
+  const out = addLayer(L, { Spine: rx(byPersona(ctx.actor, -0.05, 0.25, 0.15, 0.0) * ext), Head: rz(0.15 * ext) });
   return { ...out, face: { emotion: ctx.emotion === "neutral" ? "happy" : ctx.emotion, browRaise: 0.3 * ext } };
 };
 
@@ -67,7 +67,7 @@ export const drop: VerbImpl = (lt, _p, ctx) => {
 
 export const eat: VerbImpl = (lt, _p, ctx) => {
   const k = window01(lt, 0, ctx.dur, 0.3);
-  const period = byPersona(ctx.actor, 0.9, 1.2, 0.75); // the hungry Wolves gobble
+  const period = byPersona(ctx.actor, 0.9, 1.2, 0.75, 0.95); // the hungry Wolves gobble
   const toMouth = 0.5 - 0.5 * Math.cos((lt / period) * Math.PI * 2);
   const L = armsOver(ctx, arm("Right", 0.7 - 0.5 * toMouth, 1.1, 1.5 + 0.8 * toMouth, -1.2), k);
   const chew = Math.abs(Math.sin(lt * 9));
@@ -79,13 +79,28 @@ export const eat: VerbImpl = (lt, _p, ctx) => {
 
 export const throw_: VerbImpl = (lt, _p, ctx) => {
   const u = lt / ctx.dur;
-  // wind up 0–0.35, release at 0.4, follow-through
+  // wind up 0–0.35, release whip at 0.4, damped torso/shoulder follow-through recovery
   const wind = smooth(u / 0.3) * (1 - smooth((u - 0.32) / 0.1));
   const follow = window01(u, 0.34, 1, 0.12);
+  const tau = clamp01((u - 0.4) / 0.6) * ctx.dur;
+  const whip = u > 0.4 ? Math.exp(-5.5 * tau) * Math.sin(10 * tau) * window01(u, 0.4, 1, 0.08) : 0;
   const side = ctx.targetLocal ? Math.atan2(ctx.targetLocal[0], ctx.targetLocal[2]) * 0.4 : 0;
   const armPose = arm("Right", -0.9 * wind + 0.4 * follow, -0.4 * wind + 1.3 * follow, 1.6 * wind + 0.2 * follow, -1.2);
   const L = armsOver(ctx, armPose, Math.max(wind, follow, 0.001), 0.2);
-  return addLayer(L, pose({ Spine: qmul(ry(-0.4 * wind + 0.35 * follow + side), rx(-0.1 * wind + 0.25 * follow)) }, leg("Left", 0.35 * follow, 0.2)), 1, [0, 0, 0.04 * follow]);
+  return addLayer(
+    L,
+    pose(
+      {
+        Spine: qmul(ry(-0.4 * wind + 0.35 * follow + side), rx(-0.1 * wind + 0.25 * follow + 0.08 * whip)),
+        Spine1: rx(0.1 * whip),
+        RightShoulder: rz(-0.18 * follow - 0.08 * whip),
+        Head: rx(-0.08 * follow - 0.05 * whip),
+      },
+      leg("Left", 0.35 * follow, 0.2),
+    ),
+    1,
+    [0, 0, 0.04 * follow],
+  );
 };
 
 export const cook: VerbImpl = (lt, _p, ctx) => {
@@ -114,22 +129,42 @@ export const fish: VerbImpl = (lt, _p, ctx) => {
 /** Rope swing geometry (matches the set: pivot 3.42 m up, 2.97 m ropes, seat at 0.45 m). */
 export const SWING_ROPE = 2.97;
 export const SWING_SEAT = 0.45;
-export const SWING_PERIOD = 2.4; // s — rope_creak every 1.2 s
+export const SWING_PERIOD = 2.4; // s — rope_creak every 1.2 s (bottom zero-crossings)
 
-/** Pendulum angle (rad, + = toward the swinger's front) at clip-local time lt of a swing clip lasting dur. */
-export function swingAngle(lt: number, dur: number): number {
-  const k = smooth(lt / 0.8) * smooth((dur - lt) / 0.8 + 1e-4);
-  return Math.sin((lt / SWING_PERIOD) * Math.PI * 2) * 0.38 * k;
+/**
+ * Pendulum angle (rad) at clip-local time `lt` of a swing clip lasting `dur`.
+ * Sign convention:
+ * - `+angle` moves the swinger FORWARD toward actor-local `+Z` (`hipsOffset[2] = -0.05*h + sin(a)*SWING_ROPE`),
+ *   rising vertically by `(1 - cos(a))*SWING_ROPE`.
+ * - Note on `bearsYard.ts` `+X` right-hand rule: `pivot.rotation.x = +θ` rotates `(0, -L, 0)` to
+ *   `(0, -L*cos θ, -L*sin θ)` (toward `-Z`), so `evaluate.ts:swingAngleAt(timeline, t)` returns
+ *   `-swingAngleAt(...) * cos(yaw)` to keep the seat mesh aligned with `+Z` actor displacement.
+ */
+export function swingAngleAt(lt: number, dur: number, maxAngle = 0.40): number {
+  const k = smooth(lt / 0.85) * smooth((dur - lt) / 0.85 + 1e-4);
+  const phase = (lt / SWING_PERIOD) * Math.PI * 2;
+  // Weak 3rd harmonic widens apex hang-time like a finite-amplitude pendulum while keeping exact 1.2s zero-crossings.
+  return (Math.sin(phase) - 0.04 * Math.sin(phase * 3)) * maxAngle * k;
 }
 
+/** Backwards-compatible alias for `swingAngleAt`. */
+export const swingAngle = swingAngleAt;
+
 export const swing: VerbImpl = (lt, _p, ctx) => {
-  // seated on the rope swing, riding the pendulum and pumping the legs
-  const a = swingAngle(lt, ctx.dur);
+  // Seated on the rope swing, riding the circular pendulum arc with angular-velocity phase-lagged pumping
+  const a = swingAngleAt(lt, ctx.dur);
+  const k = smooth(lt / 0.85) * smooth((ctx.dur - lt) / 0.85 + 1e-4);
+  const phase = (lt / SWING_PERIOD) * Math.PI * 2;
+  // Angular-velocity pumping (lagged ~0.1s behind da/dt): extend knees & lean torso back when surging forward,
+  // tuck knees & lean torso forward when swinging back.
+  const pump = Math.cos(phase - 0.26) * k;
   const h = ctx.style.hipHeight;
+  const knee = clamp(1.15 - 0.62 * pump, 0.35, 2.05);
+  const hip = 1.45 + 0.18 * pump;
   const bones = pose(
-    leg("Left", 1.4 - a * 0.8, 1.2 + a * 1.1, 0.05), leg("Right", 1.4 - a * 0.8, 1.2 + a * 1.1, 0.05),
-    arm("Left", -0.9, 0.5, 1.4, -1.2), arm("Right", -0.9, 0.5, 1.4, -1.2),
-    { Hips: rx(-a * 0.8), Spine: rx(a * 0.3), Head: rx(-a * 0.2) },
+    leg("Left", hip, knee, 0.05), leg("Right", hip, knee, 0.05),
+    arm("Left", -0.88, 0.52, 1.38 - a * 0.25, -1.2), arm("Right", -0.88, 0.52, 1.38 - a * 0.25, -1.2),
+    { Hips: rx(-a * 0.78), Spine: rx(-0.20 * pump + a * 0.15), Head: rx(-a * 0.22 + 0.10 * pump) },
   );
   const z = Math.sin(a) * SWING_ROPE;
   const y = (1 - Math.cos(a)) * SWING_ROPE;

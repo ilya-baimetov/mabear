@@ -3,7 +3,7 @@ import type {ActorFrame,CharacterRig} from '../api';
 import {PROP_CONTACTS} from '../../shared/propContacts';
 import {clapOpen} from '../../shared/contactTiming';
 import {kitchenSurfaceGrasp,prepTableLift,solveArm} from './mashaContacts';
-import {contactHands} from './contactHands';
+import {contactHands,toolWristDelta,torsoElbowPole} from './contactHands';
 
 type Sample={mesh:THREE.SkinnedMesh;index:number;local:THREE.Vector3;u:number};
 type Hand={side:number;arm:THREE.Bone;elbow:THREE.Bone;wrist:THREE.Bone;restQ:THREE.Quaternion;basis:THREE.Quaternion;scale:THREE.Vector3;samples:Sample[];palm:Sample[];length:number;normal:THREE.Vector3};
@@ -61,7 +61,8 @@ export function addSourceContacts(rig:CharacterRig):boolean{
  const hands=measured as Hand[],torso=rig.bones.Spine2??rig.bones.Spine,restTorso=torso.getWorldQuaternion(new THREE.Quaternion()).invert(),height=rig.height,restShoulderY=rig.root.worldToLocal(at((measured as Hand[])[1].arm)).y;
  const baseApply=rig.apply.bind(rig),metrics:Record<string,unknown>={},socketPosition=rig.handSocket.position.clone(),socketRotation=rig.handSocket.quaternion.clone();rig.root.userData.contacts=metrics;
  const place=(h:Hand,local:THREE.Vector3,target:THREE.Vector3,q:THREE.Quaternion,poleOverride?:THREE.Vector3)=>{
-  const wristTarget=target.clone().sub(local.clone().multiply(h.scale).applyQuaternion(q)),pole=poleOverride??at(h.arm).add(new THREE.Vector3(h.side*height*.2,-height*.2,0).applyQuaternion(rig.root.quaternion));
+  const wristTarget=target.clone().sub(local.clone().multiply(h.scale).applyQuaternion(q));
+  const pole=poleOverride??torsoElbowPole(at(h.arm),h.side as 1|-1,height,torso.getWorldQuaternion(new THREE.Quaternion()).multiply(restTorso));
   const error=solveArm(h.arm,h.elbow,h.wrist,wristTarget,pole);setWorldRotation(h.wrist,q);return error;
  };
  contactHands.set(rig.root,hands.map(h=>({side:h.side as 1|-1,place(target,long,normal,strength,pole){
@@ -93,12 +94,14 @@ export function addSourceContacts(rig:CharacterRig):boolean{
    // hare paws and Rosie's wide shoulders cannot use Bear's chest coordinates.
    for(let i=0;i<12;i++)for(const plan of plans){const d=center.clone().sub(plan.ball);if(d.length()>plan.reach)center.copy(plan.ball).add(d.setLength(plan.reach));}
    for(const {h,base,q,local} of plans){
-    const target=center.clone().addScaledVector(vec(1,0,0),h.side*gap*.5);let error=place(h,local,target,q);
+    const target=center.clone().addScaledVector(vec(1,0,0),h.side*gap*.5),inward=vec(-h.side,0,0),adjTarget=target.clone();
+    let error=place(h,local,adjTarget,q);
     // Mixed wrist/forearm skin weights move the real surface differently from
-    // a rigid socket. Refit to the evaluated surface instead of trusting it.
-    for(let i=0;i<2;i++){
-      const contact=surface(h,vec(-h.side,0,0)),actual=h.wrist.worldToLocal(contact.clone());
-      error=place(h,actual,target,q);
+    // a rigid socket. Refit along the contact normal so the extreme surface sits on target.
+    for(let i=0;i<4;i++){
+      const overshoot=surface(h,inward).sub(target).dot(inward);
+      adjTarget.addScaledVector(inward,-overshoot);
+      error=place(h,local,adjTarget,q);
     }
     errors.push(error);
     // Restore the exact authored entrance pose and blend toward the IK result.
@@ -177,7 +180,7 @@ export function addSourceContacts(rig:CharacterRig):boolean{
    rig.handSocket.position.copy(h.wrist.worldToLocal(origin.clone()));rig.handSocket.quaternion.copy(h.wrist.getWorldQuaternion(new THREE.Quaternion()).invert().multiply(objectQ));rig.handSocket.userData.preciseGrip=true;rig.handSocket.updateWorldMatrix(false,true);
    Object.assign(metrics,{mode:'putDown',prop:drop.item,strength,reachError:error,releaseGap:origin.distanceTo(restingOrigin),contactPoint:touch.toArray(),targetPoint:target.toArray(),radius:grip.radius});
   }else if(frame.holding){
-   const h=hands[1],grip=PROP_CONTACTS[frame.holding],fishing=frame.holding==='fishing_rod'&&frame.verb==='fish',yaw=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),frame.yaw),rot=new THREE.Quaternion().setFromEuler(new THREE.Euler(...(grip.rotation??[0,0,0]),'YXZ')),q=yaw.multiply(rot),defaultDirection=grip.support?new THREE.Vector3(0,1,0):new THREE.Vector3(0,0,1).applyQuaternion(q),fishingDirection=vec(1,0,0);
+   const h=hands[1],grip=PROP_CONTACTS[frame.holding],fishing=frame.holding==='fishing_rod'&&frame.verb==='fish',yaw=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),frame.yaw),rot=new THREE.Quaternion().setFromEuler(new THREE.Euler(...(grip.rotation??[0,0,0]),'YXZ')),toolDelta=toolWristDelta(frame),q=toolDelta?yaw.multiply(toolDelta).multiply(rot):yaw.multiply(rot),defaultDirection=grip.support?new THREE.Vector3(0,1,0):new THREE.Vector3(0,0,1).applyQuaternion(q),fishingDirection=vec(1,0,0);
    // The caught fish replaces the rod before the authored clip ends. Ease both
    // arms back before that handoff, as well as easing into the initial grip.
    const contactEnd=frame.action?.contactEnd??frame.action?.duration;

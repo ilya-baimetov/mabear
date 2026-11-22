@@ -2,9 +2,9 @@
 // the rest is procedural on top of the Mixamo idle.
 import type { Quat } from "../../api";
 import {armchairMountMotion,hammockTiming} from "../../../shared/physicalInteractions";
-import { addLayer, blendLayers, clamp01, easeInOut, qmul, smooth, window01, type PoseLayer } from "../blend";
+import { addLayer, blendLayers, clamp, clamp01, easeInOut, qmul, smooth, window01, type PoseLayer } from "../blend";
 import {
-  UPPER, UPPER_NO_HEAD, arm, byPersona, idleBase, raiseArms, layer, leg, lowestFoot, mask, noise1, pose, poseClip, rx, ry, rz,
+  UPPER, UPPER_NO_HEAD, arm, byPersona, idleBase, persona, raiseArms, layer, leg, lowestFoot, mask, noise1, pose, poseClip, rx, ry, rz,
   sampleClip, type VerbCtx, type VerbImpl,
 } from "./common";
 
@@ -21,7 +21,7 @@ export function sitPose(ctx: VerbCtx): PoseLayer {
   const { style, t } = ctx;
   const h = style.hipHeight;
   const breathe = Math.sin(t * style.breathRate * Math.PI * 2) * 0.015;
-  const swing = ctx.actor === "masha" ? Math.sin(t * 3.1) * 0.25 : 0; // Masha swings her dangling feet
+  const swing = persona(ctx.actor) === "masha" ? Math.sin(t * (ctx.actor === "masha" ? 3.1 : 3.5)) * 0.25 : 0; // light visitors swing their dangling feet
   if (ctx.seat > 0.15) {
     // Bear's broad seated mesh needs its knees in front of the armchair edge;
     // the ordinary bench bend otherwise folds his shins through the cushion.
@@ -92,20 +92,35 @@ export const idle: VerbImpl = (_lt, _p, ctx) => idleBase(ctx);
 
 export const jump: VerbImpl = (lt, _p, ctx) => jumpPose(lt, ctx);
 function jumpPose(lt: number, ctx: VerbCtx): PoseLayer {
-  const u = lt / ctx.dur;
-  const h = ctx.style.hipHeight;
-  const peak = byPersona(ctx.actor, 0.28, 0.2, 0.3);
-  const crouch = window01(u, 0, 0.36, 0.12) + window01(u, 0.7, 1, 0.12);
-  const air = u > 0.32 && u < 0.76 ? Math.sin(((u - 0.32) / 0.44) * Math.PI) : 0;
-  const base = mask(idleBase(ctx, 0.3), { bones: raiseArms(air, 0.8, 0.4), hipsOffset: [0, 0, 0] }, ["LeftArm", "LeftForeArm", "RightArm", "RightForeArm"], smooth(Math.min(1, u * 8)));
+  const dur = Math.max(0.2, ctx.dur);
+  const h = byPersona(ctx.actor, 0.28 * clamp(ctx.style.bounce, 0.9, 1.25), 0.19, 0.30, 0.24);
+  // Real-seconds constant-gravity airborne duration (no moon-gravity slow-mo when clip dur is long)
+  const T_air = Math.min(Math.sqrt((8 * h) / 9.81), dur * 0.54);
+  const massFactor = clamp(0.75 + 0.35 * Math.sqrt(ctx.style.mass / 60), 0.7, 1.45);
+  const T_pre = Math.min(0.24 * massFactor, (dur - T_air) * 0.52);
+  const tLand = T_pre + T_air;
+  const T_comp = Math.min(0.30 * massFactor, Math.max(0.06, dur - tLand));
+
+  const preU = clamp01(lt / Math.max(1e-3, T_pre));
+  const crouchPre = lt < T_pre ? smooth(preU / 0.65) * (1 - smooth((preU - 0.65) / 0.35)) : 0;
+
+  const s = lt >= T_pre && lt <= tLand ? clamp01((lt - T_pre) / Math.max(1e-3, T_air)) : 0;
+  const air = lt >= T_pre && lt <= tLand ? 4 * s * (1 - s) : 0;
+
+  const postU = lt > tLand ? clamp01((lt - tLand) / Math.max(1e-3, T_comp)) : 0;
+  const pPow = Math.pow(postU, 0.55);
+  const crouchLand = lt > tLand && postU < 1 ? 4 * pPow * (1 - pPow) * clamp(0.8 + 0.2 * massFactor, 0.8, 1.35) : 0;
+
+  const crouch = crouchPre + crouchLand;
+  const armWeight = smooth(Math.min(1, (lt / Math.max(1e-3, T_pre + T_air * 0.4)) * 2.5)) * (1 - smooth((lt - tLand) / Math.max(0.12, T_comp)));
+  const base = mask(idleBase(ctx, 0.3), { bones: raiseArms(air, 0.8, 0.4), hipsOffset: [0, 0, 0] }, ["LeftArm", "LeftForeArm", "RightArm", "RightForeArm"], armWeight);
   const tuck = air * 0.6;
   const L0 = addLayer(base, pose(
     leg("Left", 0.6 * crouch + tuck, 1.2 * crouch + tuck * 1.2), leg("Right", 0.6 * crouch + tuck, 1.2 * crouch + tuck * 1.2),
     { Spine: rx(0.25 * crouch - 0.1 * air), LeftArm: rz(-0.3 * crouch), RightArm: rz(0.3 * crouch) },
   ));
-  // crouch and landing are ground-locked (knees bent lower the hips); the flight is a lift on top
-  void h;
-  return { ...L0, ground: "lock", lift: peak * air };
+  // crouch and landing are ground-locked (knees bent lower the hips); flight follows exact 4*h*s*(1-s)
+  return { ...L0, ground: "lock", lift: h * air };
 }
 
 export const spin: VerbImpl = (lt, _p, ctx) => {
@@ -122,9 +137,9 @@ export const spin: VerbImpl = (lt, _p, ctx) => {
 };
 
 export const dance: VerbImpl = (lt, _p, ctx) => {
-  const rate = byPersona(ctx.actor, 1.1, 0.75, 1.0);
+  const rate = byPersona(ctx.actor, 1.1, 0.75, 1.0, 1.05);
   const top = sampleClip("robot_dance", lt * rate, ctx.style, true);
-  const beat = byPersona(ctx.actor, 2.2, 1.4, 2.0); // knee bounces per second
+  const beat = byPersona(ctx.actor, 2.2, 1.4, 2.0, 2.1); // knee bounces per second
   const b = Math.abs(Math.sin(lt * beat * Math.PI));
   const sway = Math.sin(lt * beat * Math.PI * 0.5) * 0.12;
   const legs = layer(pose(
@@ -133,22 +148,24 @@ export const dance: VerbImpl = (lt, _p, ctx) => {
   ), [Math.sin(lt * beat * Math.PI * 0.5) * 0.04 * ctx.style.hipHeight, -0.07 * ctx.style.hipHeight * b, 0]);
   const L = mask(legs, top, UPPER_NO_HEAD);
   L.bones.Head = qmul(rz(Math.sin(lt * beat * Math.PI) * 0.18), rx(0.08 * b));
-  if (ctx.actor === "bear") L.yawOffset = Math.sin(lt * 0.8) * 0.5; // the old circus routine: slow turns
+  if (persona(ctx.actor) === "bear") L.yawOffset = Math.sin(lt * 0.8) * 0.5; // circus routine: slow turns
   return L;
 };
 
 export const sit: VerbImpl = (lt, _p, ctx) => {
   const seated = ctx.fromPosture === "sit";
   if(!seated&&ctx.seatProfile==='armchair'&&_p.to){
-    const motion=armchairMountMotion(ctx.actor==='masha',lt/ctx.dur);
+    const motion=armchairMountMotion(ctx.style.height<1.3,lt/ctx.dur);
     const pose=blendLayers(standPose(ctx),sitPose(ctx),motion.pose);
     const anticipatory=motion.crouch?addLayer(pose,{...leg('Left',.3*motion.crouch,.6*motion.crouch),...leg('Right',.3*motion.crouch,.6*motion.crouch)},1,[0,-.045*motion.crouch,0]):pose;
     return{...anticipatory,ground:'lock',groundW:motion.ground,lift:motion.lift};
   }
   const from = seated ? sitPose(ctx) : standPose(ctx);
-  const k = lt / Math.min(0.9, ctx.dur);
+  const k = clamp01(lt / Math.min(0.9, ctx.dur));
+  const lean = seated ? 0 : window01(k, 0.05, 0.9, 0.25);
   const wolfOnGround = (ctx.actor === "wolf_a" || ctx.actor === "wolf_b") && ctx.seat <= .15;
-  return { ...transition(from, sitPose(ctx), k), ...(wolfOnGround
+  const L = addLayer(transition(from, sitPose(ctx), k), { Spine: rx(0.24 * lean), Head: rx(-0.1 * lean) });
+  return { ...L, ...(wolfOnGround
     ? { ground: "floor" as const, groundW: 1 }
     : { groundW: seated ? 0 : 1 - easeInOut(k) }) };
 };
@@ -156,13 +173,19 @@ export const sit: VerbImpl = (lt, _p, ctx) => {
 export const stand_up: VerbImpl = (lt, _p, ctx) => {
   if(_p.target==='hammock'&&_p.to&&(ctx.fromPosture==='sit'||ctx.fromPosture==='sleep'))return hammockDismount(lt,_p,ctx);
   if (ctx.fromPosture === "stand" || ctx.fromPosture === "offstage") return idleBase(ctx); // already up
+  const u = clamp01(lt / Math.max(1e-3, ctx.dur));
   const from = ctx.fromPosture === "sleep" ? liePose(ctx) : ctx.fromPosture === "sit" ? sitPose(ctx) : sitPose({ ...ctx, seat: 0 });
-  const L = transition(from, standPose(ctx), lt / ctx.dur);
-  // a push-up effort lean forward halfway
-  const wolfOnGround = (ctx.actor === "wolf_a" || ctx.actor === "wolf_b") && ctx.seat <= .15 && ctx.fromPosture === "sit";
-  return { ...addLayer(L, { Spine: rx(0.35 * window01(lt / ctx.dur, 0, 1, 0.4)) }), ...(wolfOnGround
+  const fromSit = ctx.fromPosture === "sit";
+  // Shift COM forward over planted feet before full vertical rise; keep u≈0 exact at seat height.
+  const riseK = fromSit ? easeInOut(clamp01((u - 0.16) / 0.78)) : easeInOut(u);
+  const L = blendLayers(from, standPose(ctx), riseK);
+  const shift = window01(u, 0.02, 0.88, 0.26);
+  const comFwd = fromSit ? 0.09 * ctx.style.hipHeight * shift : 0;
+  const wolfOnGround = (ctx.actor === "wolf_a" || ctx.actor === "wolf_b") && ctx.seat <= .15 && fromSit;
+  const out = addLayer(L, { Spine: rx(0.40 * shift), Head: rx(-0.16 * shift) }, 1, [0, 0, comFwd]);
+  return { ...out, ...(wolfOnGround
     ? { ground: "floor" as const, groundW: 1 }
-    : { groundW: easeInOut(lt / ctx.dur) }) };
+    : { groundW: easeInOut(clamp01((u - 0.03) / 0.80)) }) };
 };
 
 export const fall_down: VerbImpl = (lt, _p, ctx) => {
@@ -170,18 +193,30 @@ export const fall_down: VerbImpl = (lt, _p, ctx) => {
   const h = ctx.style.hipHeight;
   const stand = idleBase(ctx, 0.2);
   const down = sitPose({ ...ctx, seat: 0 });
-  // 0–0.4: slip with flailing arms; 0.4: bump; 0.4–0.75 dazed; then get up unless the posture stays sit
-  const flail = window01(u, 0, 0.5, 0.1);
+  // 0–0.4: slip with flailing arms and u² gravity acceleration into impact at u=0.4 (matches body_fall foley)
+  const flail = window01(u, 0, 0.48, 0.1);
   const slip = addLayer(stand, pose(
     { Spine: rx(-0.4 * flail), LeftArm: rz(1.4 * flail + Math.sin(lt * 18) * 0.4 * flail), RightArm: rz(-1.4 * flail - Math.sin(lt * 18) * 0.4 * flail) },
     leg("Left", 0.9 * flail, 0.2), leg("Right", 0.5 * flail, 0.3),
   ), 1, [0, 0.03 * flail, 0]);
-  const fallK = smooth((u - 0.15) / 0.25);
+  const qFall = clamp01((u - 0.15) / 0.25);
+  const fallK = qFall * qFall;
   const getUp = ctx.posture === "sit" ? 0 : smooth((u - 0.75) / 0.25);
   let L = blendLayers(slip, down, fallK);
-  // dazed head wobble
+  // Mass-scaled exponentially decaying restitution bounce A * exp(-λ * τ) * |sin(ω * τ)| after impact
+  const tau = lt - 0.4 * ctx.dur;
+  const mNorm = clamp(ctx.style.mass / 60, 0.1, 5.5);
+  const amp = clamp(0.068 / Math.pow(mNorm, 0.35), 0.025, 0.12) * h;
+  const lambda = clamp(3.5 + 1.8 * Math.sqrt(mNorm), 4.0, 9.0);
+  const omega = clamp(18 / Math.pow(mNorm, 0.22), 11, 24);
+  const bounceFade = smooth((0.85 - u) / 0.1) * (1 - getUp);
+  const bounce = tau > 0 ? amp * Math.exp(-lambda * tau) * Math.abs(Math.sin(omega * tau)) * bounceFade : 0;
+  const recoil = tau > 0 ? Math.exp(-lambda * 1.1 * tau) * Math.sin(omega * 0.6 * tau) * bounceFade : 0;
   const daze = window01(u, 0.4, 0.85, 0.08);
-  L = addLayer(L, { Head: qmul(rz(Math.sin(lt * 9) * 0.2 * daze), rx(0.1 * daze)) }, 1, [0, Math.max(0, Math.sin((u - 0.4) * 30)) * 0.03 * h * daze, 0]);
+  L = addLayer(L, {
+    Spine: rx(-0.14 * recoil),
+    Head: qmul(rz(Math.sin(lt * 9) * 0.2 * daze), rx(0.1 * daze - 0.1 * recoil)),
+  }, 1, [0, bounce, 0]);
   if (getUp > 0) L = blendLayers(L, stand, getUp);
   return { ...L, groundW: (1 - fallK) * (1 - getUp) + getUp, face: { browRaise: 0.6 * daze } };
 };
@@ -256,7 +291,7 @@ export const yawn_stretch: VerbImpl = (lt, _p, ctx) => {
   const s = easeInOut(clamp01((u - 0.05) / 0.35)) * (1 - easeInOut(clamp01((u - 0.72) / 0.26)));
   const take = smooth(u / 0.06) * smooth((1 - u) / 0.04);
   const base = mask(idleBase(ctx, 0.3), { bones: raiseArms(s, 1, 1.0), hipsOffset: [0, 0, 0] }, ["LeftArm", "LeftForeArm", "RightArm", "RightForeArm"], take);
-  const arch = s * (ctx.actor === "bear" ? 1.1 : 1);
+  const arch = s * (persona(ctx.actor) === "bear" ? 1.1 : 1);
   const L = addLayer(base, {
     Spine: rx(-0.14 * arch), Spine1: rx(-0.12 * arch), Spine2: rx(-0.08 * arch), Neck: rx(-0.1 * arch), Head: rx(-0.25 * arch),
     LeftShoulder: rz(0.15 * s), RightShoulder: rz(-0.15 * s),

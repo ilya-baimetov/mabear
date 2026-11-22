@@ -845,6 +845,7 @@ const IDENTITY_Q = new THREE.Quaternion();
 
 /** Deterministic oscillator phase from the frame itself (rendering must not depend on wall-clock). */
 export function secondaryPhase(frame: ActorFrame): number {
+  if (frame.spring) return frame.spring.time * 2.2;
   const [x, , z] = frame.pos;
   return (x * 1.9 + z * 2.3) * Math.PI + frame.hipsOffset[1] * 40 + frame.secondary.breathe * Math.PI * 2;
 }

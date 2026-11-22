@@ -247,3 +247,46 @@ export function applyLookAt(base: PoseLayer, look: Pose): PoseLayer {
   for (const n of Object.keys(look)) bones[n] = qmul(look[n], bones[n] ?? IDENTITY);
   return { ...base, bones };
 }
+
+// ---------- causal 2nd-order spring-damper convolution (stateless, seek-invariant) ----------
+
+export const SPRING_WINDOW_S = 0.8;
+export const SPRING_TAPS = 16;
+
+const kernelMemo = new Map<string, Float64Array>();
+
+/**
+ * Normalized 16-tap causal 2nd-order spring-damper impulse response over [t - 0.8s, t]
+ * at midpoint offsets τ_k = (k + 0.5) * (0.8 / 16):
+ * h(τ) = (ω_n / √(1 - ζ²)) * exp(-ζ ω_n τ) * sin(ω_d τ), normalized to unit DC gain.
+ */
+export function springKernel(freq: number, damping: number): Float64Array {
+  const key = `${freq.toFixed(3)}|${damping.toFixed(3)}`;
+  const cached = kernelMemo.get(key);
+  if (cached) return cached;
+  const dt = SPRING_WINDOW_S / SPRING_TAPS;
+  const wn = Math.max(0.5, freq) * Math.PI * 2;
+  const zeta = clamp(damping, 0.05, 0.95);
+  const root = Math.sqrt(1 - zeta * zeta);
+  const wd = wn * root;
+  const weights = new Float64Array(SPRING_TAPS);
+  let integral = 0;
+  for (let k = 0; k < SPRING_TAPS; k++) {
+    const tau = (k + 0.5) * dt;
+    const h = (wn / root) * Math.exp(-zeta * wn * tau) * Math.sin(wd * tau);
+    weights[k] = h;
+    integral += h * dt;
+  }
+  const scale = integral > 1e-6 ? dt / integral : 1 / SPRING_TAPS;
+  for (let k = 0; k < SPRING_TAPS; k++) weights[k] *= scale;
+  kernelMemo.set(key, weights);
+  return weights;
+}
+
+/** Convolve `samples[0..N-1]` (ordered newest-to-oldest at τ_k) with `kernel`, clamping to [-limit, limit]. */
+export function convolveSpring(samples: ArrayLike<number>, kernel: Float64Array, gain = 1, limit = 1): number {
+  let acc = 0;
+  const n = Math.min(samples.length, kernel.length);
+  for (let k = 0; k < n; k++) acc += samples[k] * kernel[k];
+  return clamp(acc * gain, -limit, limit);
+}

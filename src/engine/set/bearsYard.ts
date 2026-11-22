@@ -9,7 +9,7 @@ import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeom
 import { Reflector } from "three/examples/jsm/objects/Reflector.js";
 import { mergeVertices, mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { MARKS, sceneLocationAt, type SceneLocation } from "../../shared/bible/set";
-import type { MarkId, Vec2 } from "../../shared/schema";
+import type { MarkId, Vec2, Vec3 } from "../../shared/schema";
 import { GeoBag, lumpy, paint, rng, TOD_PRESETS, xf, type LightingParams, type LookMaterials, type MatKey } from "../look";
 import { DETAIL_MEAN_SRGB, type EnvTextures } from "./textures";
 import { buildForestLocation } from "./forestLocations";
@@ -344,6 +344,17 @@ interface WaterUniforms {
   uDayFade: { value: number };
 }
 
+interface PondRippleUniforms {
+  uRippleCenter: { value: THREE.Vector2 };
+  uRippleStrength: { value: number };
+}
+
+interface HammockUniforms {
+  uHammockWeight: { value: number };
+  uHammockSway: { value: number };
+  uHammockTime: { value: number };
+}
+
 interface SetExtras {
   nature: NatureAssets;
   swingPivot?: THREE.Object3D;
@@ -355,6 +366,8 @@ interface SetExtras {
   /** wind & lighting uniforms of the grass tufts + flowers (vertex sway & tip glow) */
   grassUniforms: GrassUniforms;
   waterUniforms: WaterUniforms;
+  pondRippleUniforms: PondRippleUniforms;
+  hammockUniforms: HammockUniforms;
   horizonUniforms?: HorizonUniforms;
   /** detail-texture uniforms of the ground shader (CC0 grass / dirt swap in when loaded) */
   groundUniforms?: GroundDetailUniforms;
@@ -818,6 +831,11 @@ function makeBees(at: THREE.Vector3): THREE.Points {
   return pts;
 }
 
+const SWING_PIVOT_LOCAL: Vec3 = [-0.6, 3.42, 2.6];
+const SWING_ROPE_HALF_SPAN = 0.3;
+const SWING_ROPE_LENGTH = 2.97;
+const SWING_GRIP_LOCAL_Y = -2.72; // 0.25 m above seat center (-2.97), y = 0.70 m at rest
+
 function buildOakSwing(c: BuildCtx): void {
   const b = c.bag;
   const barkC = 0x6f4b2f;
@@ -841,10 +859,10 @@ function buildOakSwing(c: BuildCtx): void {
   // swing: pivot under the branch; ropes + seat move as one object
   const pivot = new THREE.Group();
   pivot.name = "set:swing_pivot";
-  pivot.position.set(-0.6, 3.42, 2.6);
+  pivot.position.set(SWING_PIVOT_LOCAL[0], SWING_PIVOT_LOCAL[1], SWING_PIVOT_LOCAL[2]);
   const sb = new GeoBag();
-  const ropeL = 2.97;
-  for (const s of [-1, 1]) sb.add("wood", cyl(0.02, 0.02, ropeL, 5), 0xd2bc8e, xf([s * 0.3, -ropeL / 2, 0]));
+  const ropeL = SWING_ROPE_LENGTH;
+  for (const s of [-1, 1]) sb.add("wood", cyl(0.02, 0.02, ropeL, 5), 0xd2bc8e, xf([s * SWING_ROPE_HALF_SPAN, -ropeL / 2, 0]));
   sb.add("wood", new RoundedBoxGeometry(0.78, 0.06, 0.3, 2, 0.02), 0xa8703e, xf([0, -ropeL, 0]));
   const seatGrp = sb.build(c.mats, "set:swing_seat");
   sb.dispose();
@@ -860,7 +878,7 @@ function buildHammock(c: BuildCtx): void {
   const trees = new THREE.Group(); trees.name = "set:hammock:trees"; c.dyn.push(trees);
   queueNature(c, trees, "Pine_3", [{ x: -2.1, z: 0, height: 8.5, yaw: .8 }], true);
   queueNature(c, trees, "Pine_1", [{ x: 2.1, z: 0, height: 9.4, yaw: 2.1 }], true);
-  // fabric: sagging striped grid
+  // fabric: sagging striped grid (dynamic cloth mesh replaces static fabric batch 1:1)
   const U = 24, Vn = 6, L = 3.6, Wd = 1.1;
   const pos: number[] = [], col: number[] = [], uv: number[] = [], idx: number[] = [];
   const stripes = [0xf3e6c8, 0xd0483a, 0xf3e6c8, 0x3d7fc1, 0xf3e6c8, 0xd0483a];
@@ -889,7 +907,6 @@ function buildHammock(c: BuildCtx): void {
   g.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2));
   g.setIndex(idx);
   g.computeVertexNormals();
-  b.addPainted("fabric", g);
   // underside (flipped winding + normals) instead of a DoubleSide material
   const under = g.clone();
   const ui = under.index!.array as Uint16Array | Uint32Array;
@@ -897,7 +914,87 @@ function buildHammock(c: BuildCtx): void {
   const un = under.attributes.normal;
   for (let i = 0; i < un.count; i++) un.setXYZ(i, -un.getX(i), -un.getY(i), -un.getZ(i));
   under.translate(0, -0.006, 0);
-  b.addPainted("fabric", under);
+  const clothGeo = mergeGeometries([g, under], false) ?? g.clone();
+  g.dispose();
+  under.dispose();
+
+  const clothMat = c.mats.fabric.clone();
+  clothMat.name = "set:hammock:cloth";
+  const hu = c.extra.hammockUniforms;
+  const prevCompile = clothMat.onBeforeCompile;
+  const prevKeyFn = clothMat.customProgramCacheKey;
+  clothMat.onBeforeCompile = (sh, renderer) => {
+    prevCompile?.call(clothMat, sh, renderer);
+    Object.assign(sh.uniforms, hu);
+    if (sh.vertexShader.includes("#include <common>") && sh.vertexShader.includes("#include <begin_vertex>")) {
+      sh.vertexShader = sh.vertexShader
+        .replace(
+          "#include <common>",
+          `#include <common>
+uniform float uHammockWeight;
+uniform float uHammockSway;
+uniform float uHammockTime;
+void hammockMotion(in vec3 pos, out float theta, out float sag, out float pinch) {
+  float hU = clamp((pos.x + 1.8) / 3.6, 0.0, 1.0);
+  float span = sin(3.14159265 * hU);
+  float narrow = 0.35 + 0.65 * span;
+  float edge = clamp(pos.z / max(0.05, 0.55 * narrow), -1.0, 1.0);
+  float w = max(uHammockWeight, 0.0);
+  sag = w * span * (0.65 + 0.35 * span) * 0.095 * (1.0 - 0.32 * edge * edge);
+  pinch = 1.0 - 0.12 * min(w * span, 1.5);
+  theta = uHammockSway * span * (0.09 * cos(uHammockTime * 1.45) + 0.025 * sin(uHammockTime * 2.85 + hU * 3.14159265));
+}`,
+        )
+        .replace(
+          "#include <begin_vertex>",
+          `#include <begin_vertex>
+{
+  if (uHammockWeight != 0.0 || uHammockSway != 0.0) {
+    float hTheta;
+    float hSag;
+    float hPinch;
+    hammockMotion(position, hTheta, hSag, hPinch);
+    transformed.y -= hSag;
+    transformed.z *= hPinch;
+    float dy = transformed.y - 1.05;
+    float cs = cos(hTheta);
+    float sn = sin(hTheta);
+    transformed.y = 1.05 + dy * cs - transformed.z * sn;
+    transformed.z = dy * sn + transformed.z * cs;
+  }
+}`,
+        );
+      if (sh.vertexShader.includes("#include <beginnormal_vertex>")) {
+        sh.vertexShader = sh.vertexShader.replace(
+          "#include <beginnormal_vertex>",
+          `#include <beginnormal_vertex>
+{
+  if (uHammockSway != 0.0) {
+    float nTheta;
+    float nSag;
+    float nPinch;
+    hammockMotion(position, nTheta, nSag, nPinch);
+    float csN = cos(nTheta);
+    float snN = sin(nTheta);
+    objectNormal = vec3(objectNormal.x, objectNormal.y * csN - objectNormal.z * snN, objectNormal.y * snN + objectNormal.z * csN);
+  }
+}`,
+        );
+      }
+    }
+  };
+  clothMat.customProgramCacheKey = () => {
+    const pk = prevKeyFn && prevKeyFn !== THREE.Material.prototype.customProgramCacheKey ? prevKeyFn.call(clothMat) : "";
+    return pk ? `${pk}:set:hammock:cloth-v1` : "set:hammock:cloth-v1";
+  };
+  const cloth = new THREE.Mesh(clothGeo, clothMat);
+  cloth.name = "set:hammock:cloth";
+  cloth.castShadow = false;
+  cloth.receiveShadow = true;
+  cloth.userData.hammockUniforms = hu;
+  c.dyn.push(cloth);
+  c.extra.disposables.push(clothMat);
+
   for (const s of [-1, 1]) {
     for (const zz of [-0.12, 0.12]) {
       const { g: rg, m } = beam(V(s * 1.8, 1.05, zz * 0.6), V(s * 2.0, 1.45, 0), 0.015, 0.015, 4);
@@ -1062,7 +1159,10 @@ function buildPond(c: BuildCtx): void {
     uSkyColor: c.extra.waterUniforms.uSkyColor,
     uDayFade: c.extra.waterUniforms.uDayFade,
     uReflectionTexel: { value: 1 / 512 },
+    uRippleCenter: c.extra.pondRippleUniforms.uRippleCenter,
+    uRippleStrength: c.extra.pondRippleUniforms.uRippleStrength,
   });
+  mirror.userData.rippleUniforms = c.extra.pondRippleUniforms;
   water.vertexShader = /* glsl */ `
     uniform mat4 textureMatrix;
     varying vec4 vUv;
@@ -1093,6 +1193,8 @@ function buildPond(c: BuildCtx): void {
     uniform vec3 uSunColor;
     uniform vec3 uSkyColor;
     uniform float uDayFade;
+    uniform vec2 uRippleCenter;
+    uniform float uRippleStrength;
     varying vec4 vUv;
     varying vec3 vWorldPos;
     varying vec3 vBankColor;
@@ -1111,11 +1213,23 @@ function buildPond(c: BuildCtx): void {
       vec2 d2 = vec2( -3.8, 3.1 ) * cos( dot( p, vec2( -3.8, 3.1 ) ) + t * 1.05 ) * 0.012;
       vec2 d3 = vec2( 5.7, -4.9 ) * cos( dot( p, vec2( 5.7, -4.9 ) ) - t * 1.85 ) * 0.008;
       vec2 grad = d1 + d2 + d3;
+      float rippleCrest = 0.0;
+      if ( uRippleStrength > 0.001 ) {
+        vec2 rp = p - uRippleCenter;
+        float rDist = length( rp );
+        vec2 rDir = rDist > 1e-4 ? rp / rDist : vec2( 0.0 );
+        float rEnv = clamp( uRippleStrength, 0.0, 2.0 ) * exp( -rDist * 1.75 ) * ( 1.0 - smoothstep( 0.86, 1.0, vEdge ) ) * smoothstep( 0.015, 0.055, rDist );
+        float rPhase1 = rDist * 24.0 - t * 6.5;
+        float rPhase2 = rDist * 38.0 - t * 9.2;
+        float rSlope = ( cos( rPhase1 ) * 0.075 + cos( rPhase2 ) * 0.032 ) * rEnv;
+        grad += rDir * rSlope;
+        rippleCrest = pow( max( 0.0, sin( rPhase1 ) * 0.72 + sin( rPhase2 ) * 0.28 ), 4.0 ) * rEnv;
+      }
       vec3 N = normalize( vec3( -grad.x, 1.0, -grad.y ) );
 
       // Lively UV reflection distortion (~0.009 amplitude) with soft 5-tap blur
       vec4 rippleUv = vUv;
-      rippleUv.xy += clamp( N.xz * 0.09, -0.012, 0.012 ) * vUv.w;
+      rippleUv.xy += clamp( N.xz * 0.09, -0.014, 0.014 ) * vUv.w;
       vec2 stepUv = vec2( uReflectionTexel * 1.4 ) * vUv.w;
       vec4 base = texture2DProj( tDiffuse, rippleUv ) * 0.40;
       base += texture2DProj( tDiffuse, rippleUv + vec4( stepUv.x, stepUv.y, 0.0, 0.0 ) ) * 0.15;
@@ -1145,6 +1259,11 @@ function buildPond(c: BuildCtx): void {
       float specBroad = pow( max( dot( R, V ), 0.0 ), 24.0 );
       float glitter = 0.65 + 0.35 * sin( w1 * 3.1 + w2 * 2.7 - w3 * 2.3 );
       col += uSunColor * ( specTight * mix( 0.65, 1.35, uDayFade ) * glitter + specBroad * 0.07 * uDayFade );
+
+      if ( rippleCrest > 0.001 ) {
+        vec3 crestCol = mix( vec3( 0.48, 0.60, 0.82 ), vec3( 0.92, 0.98, 0.97 ), uDayFade );
+        col = mix( col, crestCol, clamp( rippleCrest * 0.20, 0.0, 0.22 ) );
+      }
 
       // Animated shoreline lapping foam near bank edge
       float lap = sin( vEdge * 28.0 - t * 2.1 + w1 * 1.3 + w2 * 0.9 );
@@ -2253,6 +2372,12 @@ export interface SetHandle {
   update(t: number, windowGlow: number, pointScale: number, lighting?: LightingParams): void;
   /** swing angle in radians (0 = hanging still) */
   setSwing(angle: number): void;
+  /** exact world-space [leftGrip, rightGrip] positions on the oak swing ropes at `setSwing(angle)` */
+  swingRopeGrips(angle: number): [Vec3, Vec3];
+  /** drive dynamic sag and gentle sway on `set:hammock:cloth` (weight === 0 preserves exact rest sag) */
+  setHammock(weight: number, sway: number, t: number): void;
+  /** concentric pond bobber ripple wave normals + crest highlights centered at world (x, z) */
+  setPondRipple(x: number, z: number, strength: number): void;
   /** swap in the CC0 ground detail textures (A5); missing ones keep the painted look */
   applyTextures(t: EnvTextures): void;
   dispose(): void;
@@ -2294,10 +2419,21 @@ export function buildBearsYard(mats: LookMaterials, opts: BuildSetOptions = {}):
     uSunColor: { value: new THREE.Color(0xfff0d8) },
     uDayFade: { value: 1 },
   };
+  const pondRippleUniforms: PondRippleUniforms = {
+    uRippleCenter: { value: new THREE.Vector2(-8, 10) },
+    uRippleStrength: { value: 0 },
+  };
+  const hammockUniforms: HammockUniforms = {
+    uHammockWeight: { value: 0 },
+    uHammockSway: { value: 0 },
+    uHammockTime: { value: 0 },
+  };
   const extra: SetExtras = {
     nature: new NatureAssets(),
     disposables: [],
     waterUniforms: installWaterRipples(mats.water, waterUniforms),
+    pondRippleUniforms,
+    hammockUniforms,
     grassUniforms,
   };
   const global = new GeoBag();
@@ -2464,6 +2600,29 @@ export function buildBearsYard(mats: LookMaterials, opts: BuildSetOptions = {}):
     },
     setSwing(angle) {
       if (extra.swingPivot) extra.swingPivot.rotation.x = angle;
+    },
+    swingRopeGrips(angle) {
+      const a = Number.isFinite(angle) ? angle : 0;
+      const oak = SET_ELEMENTS.oak_swing.pos;
+      const px = oak[0] + SWING_PIVOT_LOCAL[0];
+      const py = oak[1] + SWING_PIVOT_LOCAL[1];
+      const pz = oak[2] + SWING_PIVOT_LOCAL[2];
+      // +X right-hand rule matching THREE.Object3D.rotation.x = angle on local (x, yLocal, 0)
+      const wy = py + SWING_GRIP_LOCAL_Y * Math.cos(a);
+      const wz = pz + SWING_GRIP_LOCAL_Y * Math.sin(a);
+      return [
+        [px + SWING_ROPE_HALF_SPAN, wy, wz],
+        [px - SWING_ROPE_HALF_SPAN, wy, wz],
+      ];
+    },
+    setHammock(weight, sway, t) {
+      hammockUniforms.uHammockWeight.value = Number.isFinite(weight) ? Math.max(0, weight) : 0;
+      hammockUniforms.uHammockSway.value = Number.isFinite(sway) ? sway : 0;
+      hammockUniforms.uHammockTime.value = Number.isFinite(t) ? t : 0;
+    },
+    setPondRipple(x, z, strength) {
+      pondRippleUniforms.uRippleCenter.value.set(Number.isFinite(x) ? x : 0, Number.isFinite(z) ? z : 0);
+      pondRippleUniforms.uRippleStrength.value = Number.isFinite(strength) ? Math.max(0, strength) : 0;
     },
     applyTextures(t) {
       for(const location of [pondLocation,wolvesLocation]){

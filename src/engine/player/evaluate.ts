@@ -1,19 +1,23 @@
 // evaluate(timeline, t) → FrameState (spec §7.4). PURE and deterministic: no Date, no Math.random, no
 // globals mutated; blinks and fidgets are functions of t. The renderer applies the result each frame.
-import type { ActorFrame, FaceParams, FrameState, FxFrame, PropFrame } from "../api";
-import {doorOpenAt,objectOpenAt,cupboardHandleAt} from '../../shared/interactiveObjects';
+import type { ActorFrame, ActorSpringState, FaceParams, FrameState, FxFrame, ObjectContact, PropFrame } from "../api";
+import {doorOpenAt,doorHandleAt,objectOpenAt,cupboardHandleAt} from '../../shared/interactiveObjects';
 import {
   ACTOR_IDS, MARK_IDS, PROP_IDS, ADDED_ACTOR_START,
   type ActorClip, type ActorId, type CamKey, type Emotion, type MarkId, type Posture, type PropId, type PropLocation,
   type Segment, type TimeOfDay, type Timeline, type Vec2, type Vec3, type Viseme, type WorldState,
 } from "../../shared/schema";
-import { LOCOMOTION_VERBS } from "../../shared/grammar";
-import { MARKS } from "../../shared/bible/set";
+import { LOCOMOTION_VERBS, STRIDE } from "../../shared/grammar";
+import { MARKS, isInsideHouse } from "../../shared/bible/set";
 import { initialWorldState } from "../../compiler/worldState";
-import { CROSSFADE_S, addLayer, applyLookAt, blendLayers, qmul, clamp, clamp01, easeInOut, lerp, lookAtPose, qrot, qaxis, smooth, window01, type PoseLayer } from "../motion/blend";
+import {
+  CROSSFADE_S, SPRING_TAPS, SPRING_WINDOW_S, addLayer, applyLookAt, blendLayers, qmul, clamp, clamp01,
+  convolveSpring, easeInOut, lerp, lookAtPose, qrot, qaxis, smooth, springKernel, window01, type PoseLayer,
+} from "../motion/blend";
 import { SEAT_HEIGHT, STYLES, evaluatePose, type VerbCtx } from "../motion/library";
-import { hash1 } from "../motion/verbs/common";
-import { swingAngle } from "../motion/verbs/objects";
+import { byPersona, hash1 } from "../motion/verbs/common";
+import { STRIDE_SCALE } from "../motion/verbs/locomotion";
+import { swingAngleAt as clipSwingAngleAt } from "../motion/verbs/objects";
 import {emotionWeights,emotionBlendSeconds,type EmotionWeights} from '../motion/emotion';
 import {propRestPosition as restPos,propPlacementAtMark} from '../../shared/propPlacement';
 import {carrySeatRoot,carryLiftRootHeight} from '../../shared/carrySupport';
@@ -78,14 +82,37 @@ function pointAt(path: Vec2[], s: number): Vec2 {
   }
   return path[path.length - 1];
 }
-/** Trapezoidal velocity profile: eased start and stop, constant speed in between. */
-function travel(tau: number, ramp: number): number {
-  const x = clamp01(tau);
+/** Signed horizontal path curvature κ(s) (rad/m, + = turning left) over pointAt(path, s ± 0.25). */
+function curvatureAt(path: Vec2[], s: number, length: number): number {
+  if (length < 0.08 || path.length < 2) return 0;
+  const s0 = Math.max(0, s - 0.25);
+  const s2 = Math.min(length, s + 0.25);
+  const s1 = 0.5 * (s0 + s2);
+  const a = pointAt(path, s0);
+  const b = pointAt(path, s1);
+  const c = pointAt(path, s2);
+  const abx = b[0] - a[0], abz = b[1] - a[1];
+  const bcx = c[0] - b[0], bcz = c[1] - b[1];
+  const l1 = Math.hypot(abx, abz);
+  const l2 = Math.hypot(bcx, bcz);
+  if (l1 < 1e-4 || l2 < 1e-4) return 0;
+  const ds = 0.5 * (l1 + l2);
+  return clamp(wrapAngle(Math.atan2(bcx, bcz) - Math.atan2(abx, abz)) / ds, -3.5, 3.5);
+}
+
+/**
+ * Analytical trapezoidal velocity profile: eased start and stop, constant speed in between.
+ * Preserves exact endpoints s(0)=0, s(1)=1 and returns normalized { s, v = ds/dτ, aLong = d²s/dτ² }.
+ */
+function travel(tau: number, ramp: number): { s: number; v: number; aLong: number } {
+  if (tau <= 0) return { s: 0, v: 0, aLong: 0 };
+  if (tau >= 1) return { s: 1, v: 0, aLong: 0 };
+  const x = tau;
   const r = clamp(ramp, 1e-3, 0.5);
-  const v = 1 / (1 - r);
-  if (x < r) return (0.5 * v * x * x) / r;
-  if (x > 1 - r) return 1 - (0.5 * v * (1 - x) * (1 - x)) / r;
-  return v * (x - r / 2);
+  const vc = 1 / (1 - r);
+  if (x < r) return { s: (0.5 * vc * x * x) / r, v: vc * (x / r), aLong: vc / r };
+  if (x > 1 - r) return { s: 1 - (0.5 * vc * (1 - x) * (1 - x)) / r, v: vc * ((1 - x) / r), aLong: -vc / r };
+  return { s: vc * (x - r / 2), v: vc, aLong: 0 };
 }
 
 // ---------- per-actor clip resolution ----------
@@ -106,7 +133,9 @@ interface Resolved {
   firstYaw: number;
   /** in-place verb that still moves the root (dismount hop, carried transfer): no gait, no turning */
   slide: boolean;
-  heavy: boolean;
+  accelRamp: number;
+  turnScale: number;
+  childArmchair: boolean;
 }
 
 function derivedPosture(clip: ActorClip, from: Posture): Posture {
@@ -166,8 +195,8 @@ function resolveTrack(seg: Segment, actor: ActorId, extraPosture: { t: number; p
         if (Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]) > 1e-3) { endYaw = yawTo(pts[i - 1], pts[i], yaw); break; }
       }
       const dYaw = Math.abs(wrapAngle(firstYaw - yaw));
-      // turn in place before moving (Bear turns slower)
-      turnDur = dYaw > 0.35 && length > 0.05 ? Math.min((actor === "bear" ? 0.55 : isWolfId(actor) ? 0.25 : 0.3) * (dYaw / Math.PI) + 0.1, clip.dur * 0.3) : 0;
+      // turn in place before moving (scaled by per-actor turn inertia so Lady/Rival Bear share Bear's weight)
+      turnDur = dYaw > 0.35 && length > 0.05 ? Math.min(0.3 * style.turnScale * (dYaw / Math.PI) + 0.1, clip.dur * 0.3) : 0;
       if(p.arrivalYaw!==undefined)endYaw=p.arrivalYaw;
       if (isMark(p.target)) mark = p.target;
       else mark = null;
@@ -189,7 +218,11 @@ function resolveTrack(seg: Segment, actor: ActorId, extraPosture: { t: number; p
       if(p.to&&((clip.verb==='stand_up'&&fromPosture==='sit')||(p.target==='hammock'&&(fromPosture==='sleep'||fromPosture==='sit'))))mark=null;
     }
     posture = derivedPosture(clip, fromPosture);
-    out.push({ clip, end: clip.start + clip.dur, startPos: pos, endPos, startYaw: yaw, endYaw, fromPosture, posture, mark, path, length, turnDur, firstYaw, slide, heavy: actor === "bear" });
+    out.push({
+      clip, end: clip.start + clip.dur, startPos: pos, endPos, startYaw: yaw, endYaw,
+      fromPosture, posture, mark, path, length, turnDur, firstYaw, slide,
+      accelRamp: style.accelRamp, turnScale: style.turnScale, childArmchair: style.height < 1.3,
+    });
     pos = endPos;
     yaw = endYaw;
   }
@@ -203,7 +236,6 @@ function resolveTrack(seg: Segment, actor: ActorId, extraPosture: { t: number; p
       if (next) next.fromPosture = "offstage";
     }
   }
-  void style;
   return out;
 }
 
@@ -215,19 +247,27 @@ interface Kin {
   turned: number;
   /** mean path speed of the clip (m/s) — a hurried walk turns into a run */
   speed?: number;
-  /** in-place turn rate (rad/s) — drives the foot shuffle */
+  /** signed in-place turn rate (rad/s) — drives the foot shuffle */
   turnRate?: number;
+  /** move-phase local time and duration after pre-walk turnDur (s) */
+  moveT?: number;
+  moveDur?: number;
+  /** instantaneous speed (m/s), longitudinal accel (m/s²), lateral accel (m/s²), yaw rate (rad/s) */
+  vel?: number;
+  aLong?: number;
+  aLat?: number;
+  omega?: number;
 }
 
 function kinematics(r: Resolved, lt: number): Kin {
   const { clip } = r;
   if(clip.params.sceneCut){
     const arrived=lt>=clip.dur*.5;
-    return {pos:arrived?r.endPos:r.startPos,yaw:arrived?r.endYaw:r.startYaw,dist:0,turned:0,speed:0};
+    return {pos:arrived?r.endPos:r.startPos,yaw:arrived?r.endYaw:r.startYaw,dist:0,turned:0,speed:0,vel:0,aLong:0,aLat:0,omega:0};
   }
   if (r.path && r.slide) {
     if(clip.params.target==='house_living'&&clip.verb==='sit'&&r.fromPosture!=='sit'){
-      const motion=armchairMountMotion(!r.heavy,lt/clip.dur);
+      const motion=armchairMountMotion(r.childArmchair,lt/clip.dur);
       return{pos:pointAt(r.path,motion.travel*r.length),yaw:lerpAngle(r.startYaw,r.endYaw,smooth(clamp01(lt/.2))),dist:0,turned:0};
     }
     if(clip.params.target==='hammock'&&clip.verb==='sleep'&&r.fromPosture!=='sleep'){
@@ -245,28 +285,47 @@ function kinematics(r: Resolved, lt: number): Kin {
   }
   if (r.path) {
     const u = clamp(lt, 0, clip.dur);
-    if (u < r.turnDur) {
-      const k = smooth(u / r.turnDur);
-      return { pos: r.startPos, yaw: lerpAngle(r.startYaw, r.firstYaw, k), dist: 0, turned: Math.abs(wrapAngle(r.firstYaw - r.startYaw)) * k };
-    }
     const moveDur = Math.max(1e-3, clip.dur - r.turnDur);
-    const tau = (u - r.turnDur) / moveDur;
-    const ramp = Math.min(0.25, 0.35 / moveDur);
-    const s = travel(tau, ramp) * r.length;
+    if (u < r.turnDur) {
+      const x = clamp01(u / r.turnDur);
+      const k = smooth(x);
+      const dYawSigned = wrapAngle(r.firstYaw - r.startYaw);
+      const turnRate = (dYawSigned * 6 * x * (1 - x)) / r.turnDur;
+      return {
+        pos: r.startPos, yaw: lerpAngle(r.startYaw, r.firstYaw, k), dist: 0,
+        turned: Math.abs(dYawSigned) * k, turnRate, moveT: 0, moveDur,
+        vel: 0, aLong: 0, aLat: 0, omega: turnRate,
+      };
+    }
+    const moveT = u - r.turnDur;
+    const tau = moveT / moveDur;
+    const ramp = clamp(r.accelRamp / moveDur, 1e-3, 0.42);
+    const tr = travel(tau, ramp);
+    const s = tr.s * r.length;
     const p = pointAt(r.path, s);
     // smoothed tangent (look a little ahead and behind on the path)
     const a = pointAt(r.path, Math.max(0, s - 0.2));
     const b = pointAt(r.path, Math.min(r.length, s + 0.2));
     let yaw = yawTo(a, b, r.firstYaw);
     if (r.turnDur === 0) yaw = lerpAngle(r.startYaw, yaw, smooth(u / 0.25)); // small turns blend in while walking
-    return { pos: p, yaw, dist: s, turned: Math.abs(wrapAngle(r.firstYaw - r.startYaw)), speed: r.length / moveDur };
+    const vel = r.length > 1e-4 ? tr.v * (r.length / moveDur) : 0;
+    const aLong = r.length > 1e-4 ? tr.aLong * (r.length / (moveDur * moveDur)) : 0;
+    const kappa = curvatureAt(r.path, s, r.length);
+    const aLat = vel * vel * kappa;
+    const omega = vel * kappa;
+    return {
+      pos: p, yaw, dist: s, turned: Math.abs(wrapAngle(r.firstYaw - r.startYaw)),
+      speed: r.length / moveDur, moveT, moveDur, vel, aLong, aLat, omega,
+    };
   }
-  // in-place turns take longer the further they go (Bear turns slower than Masha)
-  const dYaw = Math.abs(wrapAngle(r.endYaw - r.startYaw));
-  const turnS = clamp((dYaw / Math.PI) * (clip.params.ambient ? 1.0 : 0.7) * (r.heavy ? 1.8 : 1), 0.2, Math.max(0.2, clip.dur));
+  // in-place turns take longer the further they go (scaled by per-actor turn inertia)
+  const dYawSigned = wrapAngle(r.endYaw - r.startYaw);
+  const dYaw = Math.abs(dYawSigned);
+  const turnS = clamp((dYaw / Math.PI) * (clip.params.ambient ? 1.0 : 0.7) * r.turnScale, 0.2, Math.max(0.2, clip.dur));
   const x = clamp01(lt / turnS);
   const k = smooth(x);
-  return { pos: r.startPos, yaw: lerpAngle(r.startYaw, r.endYaw, k), dist: 0, turned: dYaw * k, turnRate: (dYaw * 6 * x * (1 - x)) / turnS };
+  const turnRate = (dYawSigned * 6 * x * (1 - x)) / turnS;
+  return { pos: r.startPos, yaw: lerpAngle(r.startYaw, r.endYaw, k), dist: 0, turned: dYaw * k, turnRate, omega: turnRate };
 }
 
 // ---------- props ----------
@@ -409,7 +468,20 @@ function activeIndex(track: Resolved[], lt: number): number {
   return idx;
 }
 
-function makeCtx(actor: ActorId, r: Resolved | null, kin: Kin, lt: number, t: number, seg: Segment, posture: Posture, fromPosture: Posture, mark: MarkId | null, yaw: number, pos: Vec2): VerbCtx {
+function makeCtx(
+  actor: ActorId,
+  r: Resolved | null,
+  kin: Kin,
+  lt: number,
+  t: number,
+  seg: Segment,
+  posture: Posture,
+  fromPosture: Posture,
+  mark: MarkId | null,
+  yaw: number,
+  pos: Vec2,
+  holding: PropId | null = null,
+): VerbCtx {
   const clip = r?.clip;
   const style = STYLES[actor];
   let targetLocal: Vec3 | null = null;
@@ -425,15 +497,26 @@ function makeCtx(actor: ActorId, r: Resolved | null, kin: Kin, lt: number, t: nu
   const mountingArmchair=clip?.verb==='sit'&&clip.params.target==='house_living'&&clip.params.to&&fromPosture!=='sit';
   const seatPosition=mountingHammock||mountingArmchair?clip!.params.to!:exitingSeat&&r?r.startPos:pos;
   const seatMark = seatMark0 && Math.hypot(MARKS[seatMark0].pos[0] - seatPosition[0], MARKS[seatMark0].pos[1] - seatPosition[1]) < 1.0 ? seatMark0 : null;
+  const chairFit = seatMark === "house_living"
+    ? (actor === "masha" ? { seatClearance: 0.11, seatForward: 0.43 }
+      : actor === "bear" ? { seatClearance: 0.24, seatForward: 0.35 }
+      : style.height < 1.3 ? { seatClearance: 0.11 * style.height, seatForward: 0.43 * style.height }
+      : { seatClearance: 0.24 * (style.height / 2.4), seatForward: 0.35 * (style.height / 2.4) })
+    : {};
+  const hammockFit = seatMark === "hammock"
+    ? (actor === "bear" ? { lieClearance: 0.25, seatClearance: 0.57 }
+      : { lieClearance: 0.25 * (style.height / 2.4), seatClearance: 0.57 * (style.height / 2.4) })
+    : {};
   void seg;
   return {
     actor, style, dur: clip ? clip.dur : 1, emotion: clip ? clip.emotion : "neutral", t,
-    dist: kin.dist, turned: kin.turned, speed: kin.speed ?? 0, turnRate: kin.turnRate ?? 0, fromPosture, posture, targetLocal,
+    dist: kin.dist, turned: kin.turned, speed: kin.speed ?? 0, turnRate: kin.turnRate ?? 0,
+    moveT: kin.moveT, moveDur: kin.moveDur, vel: kin.vel ?? 0, aLong: kin.aLong ?? 0, aLat: kin.aLat ?? 0, omega: kin.omega ?? 0,
+    holding, fromPosture, posture, targetLocal,
     seat: seatMark ? SEAT_HEIGHT[seatMark] ?? 0 : 0,
-    ...(seatMark==='house_living'?{seatProfile:'armchair' as const}:{}),
-    ...(seatMark==='house_living'&&actor==='masha'?{seatClearance:.11,seatForward:.43}:{}),
-    ...(seatMark==='house_living'&&actor==='bear'?{seatClearance:.24,seatForward:.35}:{}),
-    ...(seatMark==='hammock'&&actor==='bear'?{lieClearance:.25,seatClearance:.57}:{}),
+    ...(seatMark === "house_living" ? { seatProfile: "armchair" as const } : {}),
+    ...chairFit,
+    ...hammockFit,
   };
 }
 
@@ -455,7 +538,222 @@ function lookFreedom(verb: ActorClip["verb"], from: Posture, u: number): number 
   }
 }
 
-function evalActor(actor: ActorId, inp: ActorCtxIn, bear: ActorFrame | null, carry: { k: number } | null): ActorEval {
+interface ImpulseSample {
+  aLong: number;
+  aLat: number;
+  omega: number;
+  yEff: number;
+  latStep: number;
+  portalCut: boolean;
+}
+
+const ZERO_IMPULSE: ImpulseSample = { aLong: 0, aLat: 0, omega: 0, yEff: 0, latStep: 0, portalCut: false };
+
+function doorContact(seg: Segment, lt: number, pos: Vec2, yaw: number, clipLt: number, dur: number, holding: PropId | null): ObjectContact {
+  const inside = isInsideHouse(pos[0], pos[1]);
+  const position = doorHandleAt(doorOpenAt(seg, lt), inside);
+  let side: 1 | -1 = 1;
+  if (!holding) {
+    const local = qrot(qaxis([0, 1, 0], -yaw), [position[0] - pos[0], 0, position[2] - pos[1]]);
+    side = local[0] >= 0 ? 1 : -1;
+  }
+  return { position, side, strength: Math.min(smooth(clipLt / 0.25), smooth((dur - clipLt) / 0.25)) };
+}
+
+/**
+ * Sample vertical center-of-mass motion and horizontal/rotational acceleration at an arbitrary story time
+ * across segment/clip boundaries for the 16-tap causal spring-damper convolution.
+ */
+function sampleMotionAt(
+  segs: Timeline["segments"],
+  trackFor: (segIdx: number, actor: ActorId) => Resolved[],
+  actor: ActorId,
+  tSample: number,
+  hintSegIdx: number,
+): ImpulseSample {
+  if (segs.length === 0 || tSample < segs[0].offset) return ZERO_IMPULSE;
+  let sIdx = Math.min(hintSegIdx, segs.length - 1);
+  while (sIdx > 0 && tSample < segs[sIdx].offset) sIdx--;
+  while (sIdx + 1 < segs.length && tSample >= segs[sIdx].offset + segs[sIdx].segment.duration) sIdx++;
+  const { offset, segment: seg } = segs[sIdx];
+  const ltS = tSample - offset;
+  if (ltS < 0 || ltS > seg.duration) return ZERO_IMPULSE;
+  const track = trackFor(sIdx, actor);
+  const idx = activeIndex(track, ltS);
+  const r = idx >= 0 ? track[idx] : null;
+  const inClip = r ? ltS < r.end : false;
+  const style = STYLES[actor];
+  let carryY = 0;
+  let carriedNow = false;
+  if (actor === "masha" && seg.actorClips.bear.some((c) => c.verb === "carry")) {
+    const carry = carryState(seg, ltS, track);
+    if (carry && (!inClip || !r || !LOCOMOTION_VERBS.includes(r.clip.verb))) {
+      carryY = carryLiftRootHeight(easeInOut(carry.k), STYLES.bear.shoulderHeight);
+      carriedNow = true;
+    }
+  }
+  if (!r || !inClip) return { ...ZERO_IMPULSE, yEff: carryY };
+  if (r.clip.params.sceneCut) return { ...ZERO_IMPULSE, yEff: carryY, portalCut: true };
+
+  const ltClip = ltS - r.clip.start;
+  const dur = Math.max(1e-3, r.clip.dur);
+  const u = clamp01(ltClip / dur);
+  const verb = r.clip.verb;
+  const kin = kinematics(r, ltClip);
+  let aLong = kin.aLong ?? 0;
+  const aLat = kin.aLat ?? 0;
+  let omega = kin.omega ?? kin.turnRate ?? 0;
+  let yEff = carryY;
+  let latStep = 0;
+
+  if (!carriedNow && r.fromPosture === "carried" && r.posture !== "carried") {
+    const hopDur = clamp(dur, 0.2, 0.85);
+    const s = clamp01(ltClip / hopDur);
+    yEff += lerp(STYLES.bear.shoulderHeight, 0, s) + 4 * s * (1 - s) * 0.25;
+  }
+
+  if (LOCOMOTION_VERBS.includes(verb) && kin.dist > 0.002) {
+    const speed = kin.speed && kin.speed > 0 ? kin.speed : 1;
+    const gait = verb === "run_to" || verb === "chase" ? "run" : verb === "tiptoe_to" ? "tiptoe" : speed > style.cadence.walk * STRIDE[actor] * 1.7 ? "run" : "walk";
+    const stride = STRIDE[actor] * STRIDE_SCALE[gait];
+    const stepPh = (kin.dist / Math.max(0.05, stride)) * Math.PI;
+    const moveT = kin.moveT ?? ltClip;
+    const moveDur = kin.moveDur ?? dur;
+    const wMove = Math.min(smooth(moveT / 0.25), smooth((moveDur - moveT) / 0.3));
+    yEff += (gait === "run" ? 0.045 : 0.018) * style.bounce * Math.abs(Math.sin(stepPh)) * wMove;
+    latStep = Math.sin(stepPh) * (gait === "run" ? 0.09 : 0.14) * wMove;
+  } else if (verb === "jump") {
+    const h = byPersona(actor, 0.28 * clamp(style.bounce, 0.9, 1.25), 0.19, 0.30, 0.24);
+    const T_air = Math.min(Math.sqrt((8 * h) / 9.81), dur * 0.54);
+    const massFactor = clamp(0.75 + 0.35 * Math.sqrt(style.mass / 60), 0.7, 1.45);
+    const T_pre = Math.min(0.24 * massFactor, (dur - T_air) * 0.52);
+    const tLand = T_pre + T_air;
+    const T_comp = Math.min(0.30 * massFactor, Math.max(0.06, dur - tLand));
+    const preU = clamp01(ltClip / Math.max(1e-3, T_pre));
+    const crouchPre = ltClip < T_pre ? smooth(preU / 0.65) * (1 - smooth((preU - 0.65) / 0.35)) : 0;
+    const s = ltClip >= T_pre && ltClip <= tLand ? clamp01((ltClip - T_pre) / Math.max(1e-3, T_air)) : 0;
+    const air = ltClip >= T_pre && ltClip <= tLand ? 4 * s * (1 - s) : 0;
+    const postU = ltClip > tLand ? clamp01((ltClip - tLand) / Math.max(1e-3, T_comp)) : 0;
+    const pPow = Math.pow(postU, 0.55);
+    const crouchLand = ltClip > tLand && postU < 1 ? 4 * pPow * (1 - pPow) * clamp(0.8 + 0.2 * massFactor, 0.8, 1.35) : 0;
+    yEff += h * air - 0.045 * style.hipHeight * (crouchPre + crouchLand);
+  } else if (verb === "fall_down") {
+    const qFall = clamp01((u - 0.15) / 0.25);
+    const fallK = qFall * qFall;
+    const getUp = r.posture === "sit" ? 0 : smooth((u - 0.75) / 0.25);
+    const tau = ltClip - 0.4 * dur;
+    const mNorm = clamp(style.mass / 60, 0.1, 5.5);
+    const amp = clamp(0.068 / Math.pow(mNorm, 0.35), 0.025, 0.12) * style.hipHeight;
+    const lambda = clamp(3.5 + 1.8 * Math.sqrt(mNorm), 4.0, 9.0);
+    const omegaF = clamp(18 / Math.pow(mNorm, 0.22), 11, 24);
+    const bounce = tau > 0 ? amp * Math.exp(-lambda * tau) * Math.abs(Math.sin(omegaF * tau)) * smooth((0.85 - u) / 0.1) * (1 - getUp) : 0;
+    yEff += -0.65 * style.hipHeight * fallK * (1 - getUp) + bounce;
+  } else if (verb === "angry_stomp") {
+    const liftS = (c: number) => Math.max(0, Math.sin(clamp01((u - (c - 0.15)) / 0.15) * Math.PI));
+    const recoil = (c: number) => {
+      const tau = ltClip - c * dur;
+      return tau > 0 && u < c + 0.25 ? Math.exp(-13 * tau) * Math.sin(24 * tau) * smooth((c + 0.25 - u) / 0.06) : 0;
+    };
+    const lL = u < 0.5 ? liftS(0.3) : 0;
+    const lR = u >= 0.5 ? liftS(0.7) : 0;
+    const absorb = Math.max(0, recoil(0.3) + recoil(0.7)) * clamp(0.7 + 0.35 * Math.sqrt(style.mass / 60), 0.7, 1.4);
+    yEff += 0.02 * (lL + lR) - 0.012 * absorb * style.hipHeight;
+  } else if (verb === "surprised") {
+    const s = clamp01(u / 0.32);
+    const hop = u < 0.32 ? 4 * s * (1 - s) : 0;
+    yEff += hop * byPersona(actor, 0.08, 0.04, 0.09, 0.065);
+  } else if (verb === "sneeze") {
+    const windUp = smooth(u / 0.52) * (1 - smooth((u - 0.52) / 0.06));
+    const snap = smooth((u - 0.53) / 0.05) * (1 - smooth((u - 0.9) / 0.1));
+    yEff += 0.015 * windUp - 0.04 * snap * style.hipHeight;
+    aLong += (snap - windUp * 0.4) * 3.5;
+  } else if (verb === "spin") {
+    const uSpin = clamp01((u - 0.08) / 0.84);
+    if (u >= 0.08 && u <= 0.92) omega += (uSpin < 0.5 ? 4 * uSpin : 4 * (1 - uSpin)) * ((Math.PI * 2) / (0.84 * dur));
+    yEff += Math.sin(u * Math.PI) * 0.04 * style.bounce;
+  } else if (verb === "dance") {
+    const beat = byPersona(actor, 2.2, 1.4, 2.0, 2.1);
+    yEff += -0.07 * style.hipHeight * Math.abs(Math.sin(ltClip * beat * Math.PI));
+    latStep = Math.sin(ltClip * beat * Math.PI * 0.5) * 0.12;
+  } else if (verb === "laugh") {
+    const f = byPersona(actor, 7, 4.5, 8.5, 6.5);
+    yEff += Math.abs(Math.sin(ltClip * f * Math.PI)) * byPersona(actor, 0.02, 0.008, 0.012, 0.016);
+  } else if (verb === "swing") {
+    const a = clipSwingAngleAt(ltClip, dur);
+    yEff += (1 - Math.cos(a)) * 2.97;
+    aLong += Math.sin(a) * 4.5;
+  } else if (r.clip.params.target === "hammock" && r.clip.params.to && (verb === "sleep" || verb === "wake_up" || verb === "stand_up")) {
+    const mount = verb === "sleep";
+    const { launch, land } = hammockTiming(mount, dur);
+    if (ltClip >= launch && ltClip <= land) {
+      const q = (ltClip - launch) / Math.max(1e-3, land - launch);
+      yEff += 4 * (mount ? 0.47 : 0.25) * q * (1 - q);
+    }
+  }
+  return { aLong, aLat, omega, yEff, latStep, portalCut: false };
+}
+
+/**
+ * Stateless finite-window causal 2nd-order spring-damper filter (16 taps over [t - 0.8s, t])
+ * evaluated across clip and segment boundaries. Guaranteed seek-invariant and zero-impulse when stationary.
+ */
+function evaluateCausalSpring(
+  segs: Timeline["segments"],
+  trackFor: (segIdx: number, actor: ActorId) => Resolved[],
+  actor: ActorId,
+  t: number,
+  hintSegIdx: number,
+  instantYawVel: number,
+): ActorSpringState {
+  const style = STYLES[actor];
+  const dt = SPRING_WINDOW_S / SPRING_TAPS;
+  const totalSamples = SPRING_TAPS + 2;
+  const samples: ImpulseSample[] = new Array(totalSamples);
+  let active = false;
+  for (let j = 0; j < totalSamples; j++) {
+    const s = sampleMotionAt(segs, trackFor, actor, t - (j + 0.5) * dt, hintSegIdx);
+    samples[j] = s;
+    if (s.aLong !== 0 || s.aLat !== 0 || s.omega !== 0 || s.yEff !== 0 || s.latStep !== 0) active = true;
+  }
+  if (!active) return { swayX: 0, swayZ: 0, bounceY: 0, yawVel: instantYawVel, time: t };
+
+  const latInputs = new Float64Array(SPRING_TAPS);
+  const longInputs = new Float64Array(SPRING_TAPS);
+  const vertInputs = new Float64Array(SPRING_TAPS);
+  const latGain = 0.85 + 0.35 * style.bankGain;
+  const longGain = 0.75 + 0.25 * style.bankGain;
+  const vertGain = clamp(0.65 + 0.35 * style.bounce, 0.5, 1.35);
+
+  for (let k = 0; k < SPRING_TAPS; k++) {
+    const s0 = samples[k];
+    const s1 = samples[k + 1];
+    const s2 = samples[k + 2];
+    latInputs[k] = (-s0.aLat / 9.81) * latGain + s0.latStep;
+    longInputs[k] = (-s0.aLong / 9.81) * longGain;
+    const yAccel = (s0.portalCut || s1.portalCut || s2.portalCut) ? 0 : clamp((s0.yEff - 2 * s1.yEff + s2.yEff) / (dt * dt), -40, 40);
+    vertInputs[k] = (-yAccel / 9.81) * vertGain;
+  }
+
+  const kernel = springKernel(style.springFreq, style.springDamping);
+  return {
+    swayX: convolveSpring(latInputs, kernel, 1, 1),
+    swayZ: convolveSpring(longInputs, kernel, 1, 1),
+    bounceY: convolveSpring(vertInputs, kernel, 1, 1),
+    yawVel: instantYawVel,
+    time: t,
+  };
+}
+
+function evalActor(
+  actor: ActorId,
+  inp: ActorCtxIn,
+  bear: ActorFrame | null,
+  carry: { k: number } | null,
+  holding: PropId | null,
+  segs: Timeline["segments"],
+  segmentIndex: number,
+  trackFor: (segIdx: number, a: ActorId) => Resolved[],
+): ActorEval {
   const { seg, lt, t, track } = inp;
   const st = inp.stateAtStart;
   const idx = activeIndex(track, lt);
@@ -501,7 +799,7 @@ function evalActor(actor: ActorId, inp: ActorCtxIn, bear: ActorFrame | null, car
   // sliding the child sideways through the cushion. Gaze remains independent.
   if(mark==='house_living'&&posture==='sit'){
     yaw=MARKS.house_living.facing;
-    kin={...kin,yaw,turned:0,turnRate:0};
+    kin={...kin,yaw,turned:0,turnRate:0,omega:0};
   }
   // Bear's carry lifts Masha onto his shoulders
   const carried = actor === "masha" && carry !== null && bear !== null;
@@ -511,7 +809,7 @@ function evalActor(actor: ActorId, inp: ActorCtxIn, bear: ActorFrame | null, car
       posture = "carried";
     }
   }
-  const ctx = makeCtx(actor, inClip ? r : null, kin, clipLt, t, seg, posture, fromPosture, mark, yaw, pos);
+  const ctx = makeCtx(actor, inClip ? r : null, kin, clipLt, t, seg, posture, fromPosture, mark, yaw, pos, holding);
   const poseTime=(clip:ActorClip|undefined,local:number)=>clip?.params.putDown?Math.max(0,clip.dur-local):local;
   let ev = evaluatePose(verb, poseTime(inClip?r?.clip:undefined,clipLt), inClip && r ? r.clip.params : {}, ctx);
   // A previous seated idle has no groundW field. Body blending defaults that
@@ -530,7 +828,12 @@ function evalActor(actor: ActorId, inp: ActorCtxIn, bear: ActorFrame | null, car
     prevR = r;
   }
   if (prevR && since < CROSSFADE_S) {
-    const pctx = makeCtx(actor, prevR, { pos: prevR.endPos, yaw: prevR.endYaw, dist: prevR.length, turned: 0 }, prevR.clip.dur, t, prevSeg, prevR.posture, prevR.fromPosture, prevR.mark, prevR.endYaw, prevR.endPos);
+    const pMoveDur = Math.max(1e-3, prevR.clip.dur - prevR.turnDur);
+    const pctx = makeCtx(
+      actor, prevR,
+      { pos: prevR.endPos, yaw: prevR.endYaw, dist: prevR.length, turned: 0, moveT: pMoveDur, moveDur: pMoveDur, vel: 0, aLong: 0, aLat: 0, omega: 0 },
+      prevR.clip.dur, t, prevSeg, prevR.posture, prevR.fromPosture, prevR.mark, prevR.endYaw, prevR.endPos, holding,
+    );
     const prev = evaluatePose(prevR.clip.verb, poseTime(prevR.clip,prevR.clip.dur), prevR.clip.params, pctx);
     const k = smooth(since / CROSSFADE_S);
     ev = { layer: blendLayers(prev.layer, ev.layer, k), breathe: ev.breathe };
@@ -555,12 +858,13 @@ function evalActor(actor: ActorId, inp: ActorCtxIn, bear: ActorFrame | null, car
       L = blendLayers(stand, ride, k);
     }
   }
-  // hopping down from Bear's shoulders: from the seat on his shoulders to the ground along the clip
+  // hopping down from Bear's shoulders: ballistic 4 * s * (1 - s) parabola
   if (!carried && bear && inClip && r && r.fromPosture === "carried" && posture !== "carried") {
     const shoulder = shoulderSeat(bear);
-    const k = smooth(clamp01((lt - r.clip.start) / Math.max(0.2, r.clip.dur)));
-    const arc = Math.sin(k * Math.PI) * 0.25;
-    pos3 = [lerp(shoulder[0], pos3[0], k), lerp(shoulder[1], 0, k) + arc, lerp(shoulder[2], pos3[2], k)];
+    const hopDur = clamp(r.clip.dur, 0.2, 0.85);
+    const s = clamp01((lt - r.clip.start) / hopDur);
+    const arc = 4 * s * (1 - s) * 0.25;
+    pos3 = [lerp(shoulder[0], pos3[0], smooth(s)), lerp(shoulder[1], 0, s) + arc, lerp(shoulder[2], pos3[2], smooth(s))];
   }
   // opacity: enter/exit fades, door exits, offstage holds
   let opacity = 1;
@@ -593,30 +897,29 @@ function evalActor(actor: ActorId, inp: ActorCtxIn, bear: ActorFrame | null, car
     lookAt,
     browRaise: clamp((face.browRaise ?? 0) + (vis ? 0.15 * vis.w * Math.max(0, Math.sin(t * 7)) : 0), -1, 1),
   };
-  // secondary drivers: Masha's hem sways with her motion; Bear's belly jiggles (delayed) with his hips
-  const layerAt = (dt: number): PoseLayer => {
-    if (!inClip || !r) return L;
-    const lt2 = Math.max(0, clipLt - dt);
-    const k2 = kinematics(r, lt2);
-    const c2 = makeCtx(actor, r, k2, lt2, t - dt, seg, posture, fromPosture, mark, k2.yaw, k2.pos);
-    return evaluatePose(verb, poseTime(r.clip,lt2), r.clip.params, c2).layer;
-  };
-  // the hem follows the hips' side-to-side roll a beat late (overlap), and flares in spins
-  const roll = (q: [number, number, number, number] | undefined) => (q ? 2 * Math.atan2(q[2], q[3]) : 0);
-  const lagged = actor === "masha" ? layerAt(0.1) : L;
-  const sway = clamp01(0.5 + 2 * roll(lagged.bones.Hips) + 1 * (lagged.hipsOffset[0] - L.hipsOffset[0]) / STYLES[actor].hipHeight + (L.yawOffset ? 0.25 * Math.sin(L.yawOffset) : 0));
-  let jiggle = 0.5 + 0.04 * Math.sin(t * 2 * Math.PI * STYLES[actor].breathRate - 0.8); // breathing settles the belly
-  if (actor === "bear") {
-    // the belly lags the hips: compare the hips height now with ~0.08 s and ~0.16 s ago (pure: re-evaluated)
-    const hipsAt = (dt: number): number => layerAt(dt).hipsOffset[1];
-    const y0 = L.hipsOffset[1];
-    const y1 = hipsAt(0.08);
-    const y2 = hipsAt(0.16);
-    jiggle += 4 * (y1 - y0) - 2 * (y2 - y1);
+
+  // Causal 16-tap 2nd-order spring-damper convolution driving frame.spring & frame.secondary
+  let instantYawVel = kin.omega ?? kin.turnRate ?? 0;
+  if (inClip && r && verb === "spin") {
+    const uSpin = clamp01((clipLt / Math.max(1e-3, r.clip.dur) - 0.08) / 0.84);
+    if (uSpin > 0 && uSpin < 1) instantYawVel += (uSpin < 0.5 ? 4 * uSpin : 4 * (1 - uSpin)) * ((Math.PI * 2) / (0.84 * Math.max(1e-3, r.clip.dur)));
   }
-  jiggle = clamp01(jiggle);
+  const spring = evaluateCausalSpring(segs, trackFor, actor, t, segmentIndex, instantYawVel);
+  const roll = (q: [number, number, number, number] | undefined) => (q ? 2 * Math.atan2(q[2], q[3]) : 0);
+  const sway = clamp01(0.5 + 0.44 * spring.swayX + 0.22 * clamp(spring.yawVel / 4, -1, 1) + 0.18 * clamp(roll(L.bones.Hips), -1, 1));
+  const jiggle = clamp01(0.5 + 0.46 * spring.bounceY + 0.16 * spring.swayZ + 0.04 * Math.sin(t * 2 * Math.PI * STYLES[actor].breathRate - 0.8));
+
   const release=inClip&&r?.clip.params.putDown&&r.clip.params.item?{item:r.clip.params.item,...propPlacementAtMark(r.clip.params.item,r.clip.params.putDown)}:null;
   const pickup=inClip&&r?.clip.params.pickUpAt&&r.clip.params.item?{item:r.clip.params.item,...propPlacementAtMark(r.clip.params.item,r.clip.params.pickUpAt)}:null;
+  const contactTarget = r?.clip.params.target;
+  const activeContact: { objectContact: ObjectContact } | Record<string, never> =
+    inClip && r && (verb === "open" || verb === "close")
+      ? contactTarget === "cupboard"
+        ? { objectContact: { position: cupboardHandleAt(objectOpenAt(seg, lt, "kitchen_cupboard")), side: 1 as const, strength: Math.min(smooth(clipLt / 0.3), smooth((r.clip.dur - clipLt) / 0.3)) } }
+        : (contactTarget === "door" || contactTarget === "house_door")
+          ? { objectContact: doorContact(seg, lt, pos, finalYaw, clipLt, r.clip.dur, holding) }
+          : {}
+      : {};
   const frame: ActorFrame = {
     pos: pos3,
     yaw: finalYaw,
@@ -625,16 +928,17 @@ function evalActor(actor: ActorId, inp: ActorCtxIn, bear: ActorFrame | null, car
     hipsOffset: L.hipsOffset,
     groundWeight:transitionGroundWeight??L.groundW??1,
     face: faceOut,
-    holding: null,
+    holding,
     posture,
     verb,
     action: { time:clipLt, duration:inClip&&r?r.clip.dur:0,...(inClip&&r&&verb==='fish'&&(r.clip.params.catchesFish===true||r.clip.params.catchesFish===undefined&&seg.endState.props.fish?.at===actor)?{contactEnd:r.clip.dur*.7}:{}) },
     ...(inClip&&r&&verb==='hug'&&isActor(r.clip.params.target)?{interaction:{kind:'hug' as const,partner:r.clip.params.target}}:{}),
     ...(release?{putDown:{item:release.item,position:release.pos,rotation:release.rot,release:.5}}:{}),
     ...(pickup?{pickup:{item:pickup.item,position:pickup.pos,rotation:pickup.rot,release:.5}}:{}),
-    ...(inClip&&r?.clip.params.target==='cupboard'&&(verb==='open'||verb==='close')?{objectContact:{position:cupboardHandleAt(objectOpenAt(seg,lt,'kitchen_cupboard')),side:1 as const,strength:Math.min(smooth(clipLt/.3),smooth((r.clip.dur-clipLt)/.3))}}:{}),
+    ...activeContact,
     ...(carried&&carry?{riding:{carrier:'bear' as const,progress:easeInOut(carry.k)}}:{}),
     secondary: { sway, jiggle, breathe: ev.breathe },
+    spring,
   };
   return { frame, carryLift: carry?.k ?? 0, mark, lookW, lookScale };
 }
@@ -646,7 +950,7 @@ const CALM_VERBS = new Set<ActorClip["verb"]>(["idle", "look_at", "point_at", "w
 function talkPose(actor: ActorId, t: number, w: number): Record<string, [number, number, number, number]> {
   const bob = Math.sin(t * 9.0) * 0.5 + Math.sin(t * 5.3) * 0.5;
   const gest = Math.max(0, Math.sin(t * 2.1));
-  const k = actor === "masha" ? 1 : isWolfId(actor) ? 0.8 : 0.6;
+  const k = byPersona(actor, 1, 0.6, 0.8, 0.85);
   return {
     Head: qmul(qaxis([1, 0, 0], 0.05 * bob * w * k), qaxis([0, 0, 1], 0.06 * Math.sin(t * 1.7) * w * k)),
     Spine1: qaxis([0, 1, 0], 0.05 * Math.sin(t * 1.3) * w * k),
@@ -862,21 +1166,38 @@ export function evaluate(timeline: Timeline, t: number): FrameState {
 
   // facing is chained across segments so yaw stays continuous at paragraph boundaries
   const yaws = startYaws(segs, segmentIndex);
-  const prevYaws = segmentIndex > 0 ? startYaws(segs, segmentIndex - 1) : yaws;
-  const tracks = { bear: resolveTrack(seg, "bear", [], yaws.bear), masha: [] as Resolved[] };
-  // Masha's posture can be imposed by Bear's carry clips
-  tracks.masha = resolveTrack(seg, "masha", carryEvents(seg), yaws.masha);
+  const yawMemo = new Map<number, Record<ActorId, number>>([[segmentIndex, yaws]]);
+  const yawsAt = (sIdx: number): Record<ActorId, number> => {
+    let hit = yawMemo.get(sIdx);
+    if (!hit) { hit = startYaws(segs, sIdx); yawMemo.set(sIdx, hit); }
+    return hit;
+  };
+  const trackMemo = new Map<string, Resolved[]>();
+  const trackFor = (sIdx: number, actor: ActorId): Resolved[] => {
+    const key = `${sIdx}|${actor}`;
+    let tr = trackMemo.get(key);
+    if (!tr) {
+      const s = segs[sIdx].segment;
+      tr = resolveTrack(s, actor, actor === "masha" ? carryEvents(s) : [], yawsAt(sIdx)[actor]);
+      trackMemo.set(key, tr);
+    }
+    return tr;
+  };
+  const tracks = { bear: segs.length ? trackFor(segmentIndex, "bear") : [], masha: segs.length ? trackFor(segmentIndex, "masha") : [] };
   const prevLast = (a: ActorId) => {
     if (!prevSeg) return null;
-    const tr = resolveTrack(prevSeg, a, a === "masha" ? carryEvents(prevSeg) : [], prevYaws[a]);
+    const tr = trackFor(segmentIndex - 1, a);
     return tr.length ? { r: tr[tr.length - 1], seg: prevSeg } : null;
   };
+  // Compute prop ownership before actor evaluation so heavy-carry counter-lean and door handle side know held props
+  const { at, flights } = segs.length === 0 ? { at: Object.fromEntries(PROP_IDS.map((id) => [id, seg.startState.props[id]?.at ?? "hidden"])) as Record<PropId, PropLocation>, flights: new Map() } : propLocationsAt(seg, Math.min(lt, seg.duration + 1e-6));
+  const heldBy = (a: ActorId): PropId | null => PROP_IDS.find((id) => at[id] === a) ?? null;
+
   const startOf = (a: ActorId) => ({ ...stOf(seg.startState, a), facing: yaws[a] });
-  const bear = evalActor("bear", { seg, lt, t, track: tracks.bear, stateAtStart: startOf("bear"), prevLast: lt < CROSSFADE_S ? prevLast("bear") : null }, null, null);
+  const bear = evalActor("bear", { seg, lt, t, track: tracks.bear, stateAtStart: startOf("bear"), prevLast: lt < CROSSFADE_S ? prevLast("bear") : null }, null, null, heldBy("bear"), segs, segmentIndex, trackFor);
   const carry = carryState(seg, lt, tracks.masha);
-  const masha = evalActor("masha", { seg, lt, t, track: tracks.masha, stateAtStart: startOf("masha"), prevLast: lt < CROSSFADE_S ? prevLast("masha") : null }, bear.frame, carry);
-  // the Wolves: independent tracks (nobody carries them)
-  const guest = (a: ActorId) => evalActor(a, { seg, lt, t, track: resolveTrack(seg, a, [], yaws[a]), stateAtStart: startOf(a), prevLast: lt < CROSSFADE_S ? prevLast(a) : null }, null, null);
+  const masha = evalActor("masha", { seg, lt, t, track: tracks.masha, stateAtStart: startOf("masha"), prevLast: lt < CROSSFADE_S ? prevLast("masha") : null }, bear.frame, carry, heldBy("masha"), segs, segmentIndex, trackFor);
+  const guest = (a: ActorId) => evalActor(a, { seg, lt, t, track: segs.length ? trackFor(segmentIndex, a) : [], stateAtStart: startOf(a), prevLast: lt < CROSSFADE_S ? prevLast(a) : null }, null, null, heldBy(a), segs, segmentIndex, trackFor);
   const evals = Object.fromEntries(ACTOR_IDS.map(a => [a, a === "masha" ? masha : a === "bear" ? bear : guest(a)])) as Record<ActorId, ActorEval>;
   const actors = Object.fromEntries(ACTOR_IDS.map(a => [a, evals[a].frame])) as Record<ActorId, ActorFrame>;
   if(segs.length)for(const actor of ACTOR_IDS)Object.assign(actors[actor].face,storyEmotion(timeline,actor,t));
@@ -907,9 +1228,8 @@ export function evaluate(timeline: Timeline, t: number): FrameState {
     if (explicit && ew > 0) applyLook(f, a, explicit, ew * ev.lookScale * rideGaze);
   }
 
-  // props and holding
-  const { at, flights } = segs.length === 0 ? { at: Object.fromEntries(PROP_IDS.map((id) => [id, seg.startState.props[id]?.at ?? "hidden"])) as Record<PropId, PropLocation>, flights: new Map() } : propLocationsAt(seg, Math.min(lt, seg.duration + 1e-6));
-  for(const actor of ACTOR_IDS)actors[actor].holding=PROP_IDS.find(id=>at[id]===actor)??actors[actor].holding;
+  // props frame
+  for(const actor of ACTOR_IDS)actors[actor].holding=heldBy(actor)??actors[actor].holding;
   const props = propsFrame(at, flights, actors, ltc);
 
   return {
@@ -928,7 +1248,10 @@ export function evaluate(timeline: Timeline, t: number): FrameState {
 
 /**
  * Angle for the set's rope swing (SetHandle.setSwing) at episode time t: follows Masha while she plays a
- * `swing` clip, 0 otherwise. Set convention: + rotates the seat about the pivot's local x (toward -z).
+ * `swing` clip, 0 otherwise.
+ * Set convention (`bearsYard.ts`): `+angle` rotates `swingPivot` about local `+X` right-hand rule (moving seat `(0,-L,0)`
+ * toward `-Z`). Since `clipSwingAngleAt(...)` produces `+angle` for forward `+Z` actor displacement, we negate by `-cos(yaw)`
+ * so the seat mesh tracks the swinger synchronously.
  */
 export function swingAngleAt(timeline: Timeline, t: number): number {
   for (const { offset, segment } of timeline.segments) {
@@ -938,7 +1261,7 @@ export function swingAngleAt(timeline: Timeline, t: number): number {
       for (const c of clipsOf(segment, a)) {
         if (c.verb !== "swing" || lt < c.start || lt > c.start + c.dur) continue;
         const yaw = c.params.facing ?? MARKS.swing.facing;
-        return -swingAngle(lt - c.start, c.dur) * Math.cos(yaw);
+        return -clipSwingAngleAt(lt - c.start, c.dur) * Math.cos(yaw);
       }
     }
   }

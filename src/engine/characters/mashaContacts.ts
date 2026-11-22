@@ -3,7 +3,7 @@ import type {ActorFrame} from '../api';
 import {createMashaHands,MASHA_HAND} from './mashaHands';
 import {PROP_CONTACTS} from '../../shared/propContacts';
 import {clapOpen} from '../../shared/contactTiming';
-import {contactHands} from './contactHands';
+import {contactHands,toolWristDelta,torsoElbowPole} from './contactHands';
 import {HOUSE_PREP_TABLE} from '../../shared/houseLayout';
 import {cookingSupportHeightAt} from '../../shared/cookingStation';
 
@@ -81,13 +81,13 @@ export function createMashaContacts(meshes:THREE.SkinnedMesh[],bones:Record<stri
  const orient=(h:Hand,long:THREE.Vector3,normal:THREE.Vector3)=>{
   const width=new THREE.Vector3().crossVectors(normal,long).normalize();return new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(long,width,normal)).multiply(h.basis.clone().invert()).multiply(h.restQ);
  };
- const place=(h:Hand,target:THREE.Vector3,q:THREE.Quaternion,localContact:THREE.Vector3)=>{
-  const offset=localContact.clone().multiply(h.scale).applyQuaternion(q),wristTarget=target.clone().sub(offset),pole=point(h.arm).add(new THREE.Vector3(h.side==='Left'?.13:-.13,-.18,.02).applyQuaternion(torsoDelta()));
+ const place=(h:Hand,target:THREE.Vector3,q:THREE.Quaternion,localContact:THREE.Vector3,poleOverride?:THREE.Vector3)=>{
+  const offset=localContact.clone().multiply(h.scale).applyQuaternion(q),wristTarget=target.clone().sub(offset),pole=poleOverride??torsoElbowPole(point(h.arm),h.side==='Left'?1:-1,.65,torsoDelta(),.08);
   const error=solveArm(h.arm,h.elbow,h.wrist,wristTarget,pole);
   h.wrist.quaternion.copy(h.wrist.parent!.getWorldQuaternion(new THREE.Quaternion()).invert().multiply(q));h.wrist.updateWorldMatrix(false,true);return error;
  };
- contactHands.set(root,hands.map(h=>({side:(h.side==='Left'?1:-1) as 1|-1,place(target,long,normal,strength){
-  const base=[h.arm,h.elbow,h.wrist].map(b=>b.quaternion.clone()),q=orient(h,long,normal),error=place(h,target,q,h.palm);
+ contactHands.set(root,hands.map(h=>({side:(h.side==='Left'?1:-1) as 1|-1,place(target,long,normal,strength,pole){
+  const base=[h.arm,h.elbow,h.wrist].map(b=>b.quaternion.clone()),q=orient(h,long,normal),error=place(h,target,q,h.palm,pole);
   if(strength<1)[h.arm,h.elbow,h.wrist].forEach((b,i)=>{const solved=b.quaternion.clone();b.quaternion.copy(base[i]).slerp(solved,strength);});
   root.updateMatrixWorld(true);return {error,point:h.wrist.localToWorld(h.palm.clone())};
  }})));
@@ -200,7 +200,8 @@ export function createMashaContacts(meshes:THREE.SkinnedMesh[],bones:Record<stri
    // surface. These supports follow authored take/give/cook poses unchanged.
    const h=hands[1],prop=PROP_CONTACTS[frame.holding],wristQ=h.wrist.getWorldQuaternion(new THREE.Quaternion()),delta=wristQ.clone().multiply(h.restQ.clone().invert());
    const axes=[h.long,h.width,h.normal].map(v=>v.clone().applyQuaternion(delta)),radii=[MASHA_HAND.palmLength,MASHA_HAND.palmWidth,MASHA_HAND.palmDepth];
-   const objectQ=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),frame.yaw).multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(...(prop.rotation??[0,0,0]),'YXZ'))),direction=prop.support?new THREE.Vector3(0,1,0):new THREE.Vector3(0,0,1).applyQuaternion(objectQ);
+   const toolDelta=toolWristDelta(frame),yawQ=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),frame.yaw),propQ=new THREE.Quaternion().setFromEuler(new THREE.Euler(...(prop.rotation??[0,0,0]),'YXZ'));
+   const objectQ=toolDelta?yawQ.multiply(toolDelta).multiply(propQ):yawQ.multiply(propQ),direction=prop.support?new THREE.Vector3(0,1,0):new THREE.Vector3(0,0,1).applyQuaternion(objectQ);
    const centre=h.wrist.localToWorld(h.palm.clone()).addScaledVector(axes[2],-MASHA_HAND.palmDepth),denom=Math.hypot(...axes.map((axis,i)=>radii[i]*axis.dot(direction))),touch=centre.clone();
    for(let i=0;i<3;i++)touch.addScaledVector(axes[i],radii[i]**2*axes[i].dot(direction)/Math.max(denom,1e-9));
    const anchor=touch.clone().addScaledVector(direction,prop.radius+.0005),origin=anchor.clone().sub(new THREE.Vector3(...prop.point).applyQuaternion(objectQ));
