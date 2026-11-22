@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import {RoundedBoxGeometry} from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import {KITCHEN_CUPBOARD} from '../../../shared/interactiveObjects';
+import {createSunbeamMaterial} from '../interiorDecor';
 
 export interface KitchenShapes {
   kitchen: THREE.Group;
@@ -8,6 +9,7 @@ export interface KitchenShapes {
   diningChairs: THREE.Group[];
   tableSurfaceY: number;
   seatY: number;
+  sunbeamMaterial: THREE.ShaderMaterial;
 }
 
 /** Reviewed kitchen geometry: supplied flat materials and no texture maps.
@@ -97,6 +99,30 @@ export function buildKitchenShapes(materials: Record<string, THREE.MeshStandardM
   leaf.getObjectByName('Interactive pantry door knob')!.position.set(.79,2.24,.065);
   leaf.userData.open=0;
   box(pantry, 'Open bay intermediate shelf', 0, 1.58, -.035, 1.79, .055, .51);
+  // Four cozy jam, honey and tea canisters resting cleanly on the open middle shelf (y = 1.6075).
+  const shelfTopY = 1.6075;
+  const jamMat = new THREE.MeshStandardMaterial({color: '#8c2f2b', roughness: .22});
+  jamMat.name = 'berry jam ceramic'; jamMat.userData.setOwned = true;
+  const honeyJarMat = new THREE.MeshStandardMaterial({color: '#c98528', roughness: .26});
+  honeyJarMat.name = 'amber honey stoneware'; honeyJarMat.userData.setOwned = true;
+  const addCanister = (x: number, z: number, profile: number[][], bodyMat: THREE.Material, lidProfile: number[][], lidMat: THREE.Material, knobY?: number) => {
+    const body = lathe(pantry, 'Pantry shelf canister', profile, bodyMat, x, shelfTopY, z, 20);
+    body.castShadow = false;
+    const lid = lathe(pantry, 'Pantry canister lid', lidProfile, lidMat, x, shelfTopY, z, 20);
+    lid.castShadow = false;
+    if (knobY !== undefined) {
+      const finial = mesh(pantry, 'Pantry canister knob', new THREE.SphereGeometry(.016, 10, 8), wood, x, shelfTopY + knobY, z);
+      finial.castShadow = false;
+    }
+  };
+  addCanister(-.55, .04, [[0, 0], [.072, 0], [.078, .02], [.078, .21], [.070, .225], [0, .225]], enamel,
+    [[0, .222], [.074, .222], [.074, .248], [.058, .260], [0, .260]], materials.blue, .272);
+  addCanister(-.20, .06, [[0, 0], [.060, 0], [.072, .05], [.072, .13], [.056, .168], [.060, .178], [0, .178]], jamMat,
+    [[0, .175], [.066, .175], [.066, .198], [0, .198]], enamel);
+  addCanister(.17, .03, [[0, 0], [.068, 0], [.084, .05], [.082, .12], [.058, .155], [.064, .168], [0, .168]], honeyJarMat,
+    [[0, .165], [.050, .165], [.056, .202], [0, .202]], wood);
+  addCanister(.53, .05, [[0, 0], [.065, 0], [.068, .19], [.060, .20], [0, .20]], materials.blue,
+    [[0, .198], [.070, .198], [.070, .224], [0, .224]], enamel, .236);
 
   // Rounded refrigerator shoulder and lower corners are in the actual profile,
   // rather than an extra small cube on top of a rectangular cabinet.
@@ -125,13 +151,26 @@ export function buildKitchenShapes(materials: Record<string, THREE.MeshStandardM
   // contrasting freezer seam from the highlight crossing its upper shoulder.
   fridgeDoor('Continuous crowned refrigerator door', .235, 2.545, .20, .10);
   // A projecting lever and mounts give the characteristic long handle silhouette.
-  box(fridge, 'Refrigerator handle upper mount', -.35, 1.57, .515, .12, .10, .09, metal, .024);
-  box(fridge, 'Refrigerator handle lower mount', -.35, 1.18, .515, .065, .07, .065, metal, .018);
+  const chrome = materials.chrome ?? metal;
+  box(fridge, 'Refrigerator handle upper mount', -.35, 1.57, .515, .12, .10, .09, chrome, .024);
+  box(fridge, 'Refrigerator handle lower mount', -.35, 1.18, .515, .065, .07, .065, chrome, .018);
   tube(fridge, 'Refrigerator curved vertical handle', [[-.35, 1.61, .53], [-.35, 1.54, .59],
-    [-.35, 1.31, .59], [-.35, 1.18, .55]], .029);
+    [-.35, 1.31, .59], [-.35, 1.18, .55]], .029, chrome);
 
   const window = group(kitchen, 'Framed divided kitchen window', -4.50, -3.27, .367);
-  box(window, 'Window glazing', 0, 2.27, .04, .82, 1.06, .025, materials.glass);
+  const glazing = box(window, 'Window glazing', 0, 2.27, .04, .82, 1.06, .025, materials.glass);
+  glazing.castShadow = false;
+  const sunbeamMaterial = createSunbeamMaterial();
+  const beamTop = new THREE.Vector3(0, 2.27, .14), beamBottom = new THREE.Vector3(0, .42, 2.34);
+  const beamDir = beamTop.clone().sub(beamBottom);
+  const sunbeam = new THREE.Mesh(new THREE.CylinderGeometry(.36, .72, beamDir.length(), 14, 1, true), sunbeamMaterial);
+  sunbeam.name = 'Kitchen window sunbeam';
+  sunbeam.position.copy(beamTop).add(beamBottom).multiplyScalar(.5);
+  sunbeam.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), beamDir.normalize());
+  sunbeam.castShadow = sunbeam.receiveShadow = false;
+  sunbeam.raycast = () => {};
+  sunbeam.renderOrder = 2;
+  window.add(sunbeam);
   for (const x of [-.445, .445]) box(window, 'Window outer jamb', x, 2.27, .105, .09, 1.26, .14);
   for (const y of [1.68, 2.86]) box(window, 'Window outer rail', 0, y, .105, .98, .09, .14);
   for (const x of [-.365, .365]) box(window, 'Window inset jamb', x, 2.27, .117, .035, 1.05, .065);
@@ -191,6 +230,13 @@ export function buildKitchenShapes(materials: Record<string, THREE.MeshStandardM
   box(stove, 'Firebox recessed face', 0, .69, .36, .225, .23, .018, dark, .014);
   box(stove, 'Firebox latch', .115, .69, .39, .12, .027, .026, metal, .008);
   box(stove, 'Lower air shutter', 0, .35, .333, .20, .065, .025, dark, .008);
+  // Cast-iron stove flue pipe rising behind the barrel stove at (-2.93, 2.5, -1.95) in kitchen space.
+  tube(stove, 'Cast iron stove flue pipe', [
+    [0, .88, -.30], [0, 1.12, -.42], [0, 1.48, -.42], [0, 1.85, -.30], [0, 2.50, -.30], [0, 3.85, -.30],
+  ], .055, metal);
+  for (const collarY of [1.88, 2.85]) {
+    mesh(stove, 'Stove flue pipe collar', new THREE.CylinderGeometry(.070, .070, .035, 18), metal, 0, collarY, -.30);
+  }
 
   // Hollow pot: real inner wall and rolled lip, no lid or painted ornament.
   const pot = group(stove, 'Open enamel cooking pot', 0, 0);
@@ -241,5 +287,5 @@ export function buildKitchenShapes(materials: Record<string, THREE.MeshStandardM
     const lower = box(chair, 'Narrow lower back slat', 0, 1.025, -.329, .535, .085, .060, wood, .008);
     lower.rotation.x = -.054;
   }
-  return {kitchen, prepTable, diningChairs, tableSurfaceY, seatY};
+  return {kitchen, prepTable, diningChairs, tableSurfaceY, seatY, sunbeamMaterial};
 }

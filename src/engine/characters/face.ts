@@ -263,7 +263,8 @@ export function buildFace(cfg: FaceConfig, mats: MaterialSet): FaceRig {
     sg.deleteAttribute("uv");
     paintVertices(sg, (p, out) => {
       const edge = 1 - Math.max(0, p.z / E.r);
-      out.copy(scleraC).multiplyScalar(0.99 - 0.06 * edge);
+      const topShadow = 1 - 0.14 * smoothstep(0.05, 0.85, p.y / E.r);
+      out.copy(scleraC).multiplyScalar((0.99 - 0.06 * edge) * topShadow);
     });
     parts.push({ geom: sg, bone: g, material: eyeMat, shadow: false });
 

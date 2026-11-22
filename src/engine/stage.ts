@@ -5,8 +5,9 @@ import { sceneLocationAt } from "../shared/bible/set";
 import { ACTOR_IDS, PROP_IDS, type ActorId } from "../shared/schema";
 import type { CharacterRig, FrameState, StageHandle, StageStats } from "./api";
 import { assetStatus, disposeGenerated, gltfSetElements, loadCharacter, loadPropOverrides, loadSetOverrides, TEST_GLTF_ID, type AssetStatus } from "./assets";
+import { createAtmosphere } from "./fx/atmosphere";
 import { createFx, type FxHandle } from "./fx/fx";
-import { applyLighting, applyLookTextures, createLook, followCamera, loadHdri, setShadowQuality, setupRenderer, updateEnvironment, type LookRig } from "./look";
+import { applyLighting, applyLookTextures, createLook, focusKeyShadow, followCamera, loadHdri, setShadowQuality, setupRenderer, updateEnvironment, updateSkyTime, type LookRig } from "./look";
 import { adaptStep, createPost, DEFAULT_GRADE, defaultPostQuality, isSoftwareRenderer, parsePostQuality, type PostPipeline, type PostQuality } from "./post/post";
 
 /** `?post=` flag, or null when absent. */
@@ -74,7 +75,121 @@ export const MAX_BUFFER_PIXELS = 1920 * 1080;
 const SCALE_MIN = 0.5;
 
 const NO_FX: FrameState["fx"] = [];
-const INDOOR_BACKGROUND=new THREE.Color(0x453c30);
+const INDOOR_BACKGROUND = new THREE.Color(0x453c30);
+
+const ACTOR_SHADOW_RADIUS: Record<ActorId, number> = {
+  bear: 0.72,
+  rival_bear: 0.78,
+  lady_bear: 0.68,
+  wolf_a: 0.44,
+  wolf_b: 0.42,
+  masha: 0.30,
+  rosie: 0.36,
+  hare: 0.28,
+  squirrel: 0.24,
+};
+
+function createContactShadows() {
+  let texture: THREE.CanvasTexture | null = null;
+  if (typeof document !== "undefined") {
+    const c = document.createElement("canvas");
+    c.width = c.height = 128;
+    const ctx = c.getContext("2d");
+    if (ctx) {
+      const grad = ctx.createRadialGradient(64, 64, 4, 64, 64, 62);
+      grad.addColorStop(0.0, "rgba(255,255,255,0.68)");
+      grad.addColorStop(0.45, "rgba(255,255,255,0.34)");
+      grad.addColorStop(0.8, "rgba(255,255,255,0.08)");
+      grad.addColorStop(1.0, "rgba(255,255,255,0.0)");
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 128, 128);
+      texture = new THREE.CanvasTexture(c);
+      texture.colorSpace = THREE.SRGBColorSpace;
+    }
+  }
+  const geometry = new THREE.PlaneGeometry(1, 1);
+  geometry.rotateX(-Math.PI / 2);
+  const alphas = new Float32Array(ACTOR_IDS.length);
+  const alphaAttr = new THREE.InstancedBufferAttribute(alphas, 1);
+  alphaAttr.setUsage(THREE.DynamicDrawUsage);
+  geometry.setAttribute("aShadowAlpha", alphaAttr);
+
+  const material = new THREE.MeshBasicMaterial({
+    color: 0x161c15,
+    map: texture,
+    transparent: true,
+    opacity: 1,
+    depthWrite: false,
+    polygonOffset: true,
+    polygonOffsetFactor: -2,
+    polygonOffsetUnits: -2,
+  });
+  material.onBeforeCompile = (shader) => {
+    if (shader.vertexShader.includes("#include <common>") && shader.vertexShader.includes("#include <begin_vertex>")) {
+      shader.vertexShader = shader.vertexShader
+        .replace("#include <common>", "#include <common>\nattribute float aShadowAlpha;\nvarying float vShadowAlpha;")
+        .replace("#include <begin_vertex>", "#include <begin_vertex>\nvShadowAlpha = aShadowAlpha;");
+    }
+    if (shader.fragmentShader.includes("#include <common>") && shader.fragmentShader.includes("#include <map_fragment>")) {
+      shader.fragmentShader = shader.fragmentShader
+        .replace("#include <common>", "#include <common>\nvarying float vShadowAlpha;")
+        .replace("#include <map_fragment>", "#include <map_fragment>\ndiffuseColor.a *= vShadowAlpha;");
+    }
+  };
+  material.customProgramCacheKey = () => "stage:contact-shadows-v1";
+
+  const mesh = new THREE.InstancedMesh(geometry, material, ACTOR_IDS.length);
+  mesh.name = "stage:contact-shadows";
+  mesh.castShadow = false;
+  mesh.receiveShadow = false;
+  mesh.frustumCulled = false;
+  mesh.renderOrder = 1;
+  mesh.count = 0;
+  mesh.visible = false;
+
+  const dummy = new THREE.Object3D();
+  return {
+    mesh,
+    update(rigs: Record<ActorId, CharacterRig>, frame: FrameState, location: string, stars: number, lifts: Partial<Record<ActorId, number>>) {
+      if (!texture) {
+        mesh.visible = false;
+        return;
+      }
+      material.color.setHex(location === "house" ? 0x241a12 : 0x161e14);
+      const baseStrength = location === "house" ? 0.36 : Math.max(0.20, 0.44 - 0.18 * stars);
+      let count = 0;
+      for (const id of ACTOR_IDS) {
+        const a = frame.actors?.[id];
+        const rig = rigs[id];
+        if (!a || !rig || !rig.root.visible || a.posture === "offstage") continue;
+        const supportY = a.pos[1] + (lifts[id] ?? 0);
+        const extraAir = Math.max(0, rig.root.position.y - supportY) + (a.verb === "jump" ? Math.max(0, a.hipsOffset[1]) : 0);
+        const heightFade = Math.max(0, 1 - extraAir / 0.75);
+        const alpha = baseStrength * THREE.MathUtils.clamp(a.opacity, 0, 1) * heightFade;
+        if (alpha <= 0.01) continue;
+        const r = ACTOR_SHADOW_RADIUS[id] * (a.posture === "sit" || a.posture === "sleep" ? 1.15 : 1.0) * (1 - 0.25 * Math.min(1, extraAir));
+        dummy.position.set(rig.root.position.x, supportY + 0.005, rig.root.position.z);
+        dummy.rotation.set(0, a.yaw, 0);
+        dummy.scale.set(r * 2.1, 1, r * 1.9);
+        dummy.updateMatrix();
+        mesh.setMatrixAt(count, dummy.matrix);
+        alphas[count] = alpha;
+        count++;
+      }
+      mesh.count = count;
+      mesh.visible = count > 0;
+      if (count > 0) {
+        mesh.instanceMatrix.needsUpdate = true;
+        alphaAttr.needsUpdate = true;
+      }
+    },
+    dispose() {
+      geometry.dispose();
+      material.dispose();
+      texture?.dispose();
+    },
+  };
+}
 
 export async function createStage(canvas: HTMLCanvasElement, opts: StageOptions = {}): Promise<StageHandleEx> {
   const postFlag: PostQuality | null = opts.post ?? parsePostQualityFlag(typeof location !== "undefined" ? location.search : "");
@@ -125,6 +240,10 @@ export async function createStage(canvas: HTMLCanvasElement, opts: StageOptions 
   scene.add(props.root);
   const fx = createFx();
   scene.add(fx.root);
+  const atmosphere = createAtmosphere();
+  scene.add(atmosphere.root);
+  const contactShadows = createContactShadows();
+  scene.add(contactShadows.mesh);
   mark("props_fx");
 
   let testRig: CharacterRig | null = null;
@@ -211,6 +330,7 @@ export async function createStage(canvas: HTMLCanvasElement, opts: StageOptions 
 
   const sockets: Partial<Record<ActorId, THREE.Object3D>> = {};
   const yaws: Partial<Record<ActorId, number>> = {};
+  const lifts: Partial<Record<ActorId, number>> = {};
 
   const handle: StageHandleEx = {
     camera,
@@ -260,11 +380,48 @@ export async function createStage(canvas: HTMLCanvasElement, opts: StageOptions 
       followCamera(look, camera);
       // light
       const lp = applyLighting(look, scene, renderer, frame.lighting);
-      look.sky.visible=location!=='house';
-      scene.background=location==='house'?INDOOR_BACKGROUND:null;
-      applySceneLightIntensities(look,lp,location);
-      if (post) post.grade.saturation = DEFAULT_GRADE.saturation - 0.16 * lp.stars; // calmer night palette
-      set.update(frame.t, lp.windowGlow, pointScale);
+      const indoor = location === 'house';
+      look.sky.visible = !indoor;
+      look.lantern.visible = location === 'yard';
+      look.key.castShadow = !indoor;
+      scene.fog = indoor ? null : look.fog;
+      scene.background = indoor ? INDOOR_BACKGROUND : null;
+      applySceneLightIntensities(look, lp, location);
+      scene.environmentIntensity = indoor ? 0.22 : lp.envIntensity;
+      updateSkyTime(look, frame.t);
+      if (!indoor) {
+        if (location === 'pond') {
+          focusKeyShadow(look, THREE.MathUtils.clamp(c.look[0], -14, -2), THREE.MathUtils.clamp(c.look[2], 4, 16), 14);
+        } else if (location === 'wolves') {
+          focusKeyShadow(look, THREE.MathUtils.clamp(c.look[0], 8, 20), THREE.MathUtils.clamp(c.look[2], -7, 5), 14);
+        } else {
+          focusKeyShadow(look, THREE.MathUtils.clamp(c.look[0], -10, 10), THREE.MathUtils.clamp(c.look[2], -9, 11), 17);
+        }
+      }
+      if (post) {
+        const g = post.grade;
+        if (indoor) {
+          g.gain[0] = 1.03; g.gain[1] = 1.005; g.gain[2] = 0.965;
+          g.lift[0] = 0.007; g.lift[1] = 0.004; g.lift[2] = 0.003;
+          g.saturation = 1.06;
+          g.contrast = 0.08;
+          g.bloomStrength = 0.21 + 0.04 * lp.windowGlow;
+        } else if (lp.stars >= 0.5) {
+          g.gain[0] = 0.99; g.gain[1] = 1.0; g.gain[2] = 1.025;
+          g.lift[0] = 0.004; g.lift[1] = 0.005; g.lift[2] = 0.009;
+          g.saturation = DEFAULT_GRADE.saturation - 0.16 * lp.stars; // calmer night palette
+          g.contrast = DEFAULT_GRADE.contrast;
+          g.bloomStrength = 0.24;
+        } else {
+          const twilight = THREE.MathUtils.clamp(lp.windowGlow * 2.0, 0, 1);
+          g.gain[0] = 1.02 + 0.015 * twilight; g.gain[1] = 1.005; g.gain[2] = 0.985 - 0.015 * twilight;
+          g.lift[0] = 0.005 + 0.001 * twilight; g.lift[1] = 0.004; g.lift[2] = 0.006;
+          g.saturation = DEFAULT_GRADE.saturation + 0.02 * twilight;
+          g.contrast = DEFAULT_GRADE.contrast;
+          g.bloomStrength = DEFAULT_GRADE.bloomStrength + 0.06 * twilight;
+        }
+      }
+      set.update(frame.t, lp.windowGlow, pointScale, lp);
       renderer.localClippingEnabled=true;
       set.setDoor(frame.objects?.house_door??0);
       set.setCupboard(frame.objects?.kitchen_cupboard??0);
@@ -275,6 +432,7 @@ export async function createStage(canvas: HTMLCanvasElement, opts: StageOptions 
         const rig = rigs[id];
         if (!a || !rig) continue;
         const lift = a.physicsRoot ? 0 : walkHeightAt(a.pos[0], a.pos[2]);
+        lifts[id] = lift;
         // Contacts solve before the stage lifts the complete rig onto decking.
         // Convert the resting prop's world target into that same coordinate space.
         const contactFrame=lift!==0?{...a,
@@ -297,13 +455,15 @@ export async function createStage(canvas: HTMLCanvasElement, opts: StageOptions 
       applyCarryContacts(rigs,frame);
       applyHugContacts(rigs,frame);
       applyObjectContacts(rigs,frame);
+      contactShadows.update(rigs, frame, location, lp.stars, lifts);
       props.apply(frame.props, sockets, yaws, frame.actors);
       for(const id of PROP_IDS) {
         const p=frame.props[id],holder=p.attachedTo?frame.actors[p.attachedTo]:null;
         const pos=holder?.pos??p.pos;
         props.objects[id].visible=props.objects[id].visible&&(!p.attachedTo||!frame.cast||frame.cast.includes(p.attachedTo))&&sceneLocationAt(pos[0],pos[2])===location;
       }
-      fx.apply(frame.fx?.filter(f=>sceneLocationAt(f.at[0],f.at[2])===location) ?? NO_FX, pointScale);
+      fx.apply(frame.fx?.filter(f=>sceneLocationAt(f.at[0],f.at[2])===location) ?? NO_FX, pointScale, { sunColor: lp.sunColor, skyHorizon: lp.skyHorizon, stars: lp.stars });
+      atmosphere.update(frame.t, location, lp.windowGlow, pointScale);
       updateEnvironment(look, scene, performance.now());
       renderer.info.reset();
       if (post) post.render();
@@ -333,6 +493,8 @@ export async function createStage(canvas: HTMLCanvasElement, opts: StageOptions 
       props.dispose();
       disposeGenerated(props.root);disposeGenerated(set.root);
       fx.dispose();
+      atmosphere.dispose();
+      contactShadows.dispose();
       set.dispose();
       look.dispose();
       post?.dispose();

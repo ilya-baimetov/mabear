@@ -42,34 +42,34 @@ export interface LightingParams {
 export const TOD_PRESETS: Record<TimeOfDay, LightingParams> = {
   morning: {
     skyTop: 0x7fb8f0, skyHorizon: 0xffe0bd, skyBottom: 0xd9d2b0,
-    sunDir: [10, 5.5, 6], sunColor: 0xffc994, sunIntensity: 2.1, sunGlow: 0.8,
-    hemiSky: 0xbcd4ff, hemiGround: 0x7d7a45, hemiIntensity: 0.58,
-    rimColor: 0xffe2c0, rimIntensity: 1.2,
-    fogColor: 0xf3e2c8, fogNear: 22, fogFar: 110,
+    sunDir: [10, 5.5, 6], sunColor: 0xffc288, sunIntensity: 2.3, sunGlow: 0.8,
+    hemiSky: 0x9ec5ff, hemiGround: 0x6b683b, hemiIntensity: 0.56,
+    rimColor: 0xffe2c0, rimIntensity: 0.48,
+    fogColor: 0xffe0bd, fogNear: 22, fogFar: 110,
     exposure: 0.92, envIntensity: 0.45, windowGlow: 0.0, stars: 0,
   },
   day: {
-    skyTop: 0x3a8ae8, skyHorizon: 0x9ccbf5, skyBottom: 0xc8dcc0,
-    sunDir: [6, 13, 9], sunColor: 0xfff0d8, sunIntensity: 2.05, sunGlow: 0.45,
-    hemiSky: 0xcfe2ff, hemiGround: 0x76884a, hemiIntensity: 0.55,
-    rimColor: 0xfff4e0, rimIntensity: 0.85,
-    fogColor: 0xbedbf2, fogNear: 26, fogFar: 110,
+    skyTop: 0x3a8ae8, skyHorizon: 0xaad3f6, skyBottom: 0xc8dcc0,
+    sunDir: [6, 13, 9], sunColor: 0xffebd0, sunIntensity: 2.25, sunGlow: 0.45,
+    hemiSky: 0xaecfff, hemiGround: 0x62733e, hemiIntensity: 0.54,
+    rimColor: 0xfff4e0, rimIntensity: 0.36,
+    fogColor: 0xaad3f6, fogNear: 26, fogFar: 110,
     exposure: 0.92, envIntensity: 0.5, windowGlow: 0.0, stars: 0,
   },
   sunset: {
-    skyTop: 0x4d5fa8, skyHorizon: 0xffa261, skyBottom: 0xc98f72,
-    sunDir: [-11, 3.2, 4], sunColor: 0xff9a5a, sunIntensity: 2.5, sunGlow: 1.0,
-    hemiSky: 0x9c8fd0, hemiGround: 0x6a4c3a, hemiIntensity: 0.9,
-    rimColor: 0xffb070, rimIntensity: 1.6,
-    fogColor: 0xe9a888, fogNear: 22, fogFar: 115,
+    skyTop: 0x4556a0, skyHorizon: 0xf7a46c, skyBottom: 0xc98f72,
+    sunDir: [-11, 3.2, 4], sunColor: 0xff9452, sunIntensity: 2.65, sunGlow: 1.0,
+    hemiSky: 0x7c76c2, hemiGround: 0x563d30, hemiIntensity: 0.78,
+    rimColor: 0xffb070, rimIntensity: 0.65,
+    fogColor: 0xf7a46c, fogNear: 22, fogFar: 115,
     exposure: 1.05, envIntensity: 0.4, windowGlow: 0.45, stars: 0.05,
   },
   night: {
-    skyTop: 0x0a1433, skyHorizon: 0x2b3f73, skyBottom: 0x1a2440,
-    sunDir: [-5, 10, 7], sunColor: 0x9fb8ff, sunIntensity: 0.6, sunGlow: 0.25,
-    hemiSky: 0x40589c, hemiGround: 0x161c2c, hemiIntensity: 0.55,
-    rimColor: 0x8fb0ff, rimIntensity: 0.9,
-    fogColor: 0x1d2a4f, fogNear: 14, fogFar: 80,
+    skyTop: 0x09122e, skyHorizon: 0x263969, skyBottom: 0x17213b,
+    sunDir: [-5, 10, 7], sunColor: 0x9ebcff, sunIntensity: 0.62, sunGlow: 0.25,
+    hemiSky: 0x354d8c, hemiGround: 0x121726, hemiIntensity: 0.52,
+    rimColor: 0x8fb0ff, rimIntensity: 0.28,
+    fogColor: 0x263969, fogNear: 14, fogFar: 80,
     exposure: 1.15, envIntensity: 0.12, windowGlow: 1.0, stars: 1,
   },
 };
@@ -157,9 +157,13 @@ void main() {
 
 const SKY_FRAG = /* glsl */ `
 uniform vec3 uTop; uniform vec3 uHorizon; uniform vec3 uBottom; uniform vec3 uSunDir; uniform vec3 uSunColor;
-uniform float uSunGlow; uniform float uStars;
+uniform float uSunGlow; uniform float uStars; uniform float uTime;
 varying vec3 vDir;
-float hash(vec3 p) { p = fract(p * 0.3183099 + 0.1); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
+vec3 hash33(vec3 p3) {
+  p3 = fract(p3 * vec3(0.1031, 0.1030, 0.0973));
+  p3 += dot(p3, p3.yxz + 33.33);
+  return fract((p3.xxy + p3.yxx) * p3.zyx);
+}
 float h2(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 float vnoise(vec2 p) {
   vec2 i = floor(p), f = fract(p);
@@ -171,32 +175,97 @@ float fbm(vec2 p) {
   for (int i = 0; i < 4; i++) { v += a * vnoise(p); p = p * 2.03 + vec2(1.7, 9.2); a *= 0.5; }
   return v;
 }
+vec3 starLayer(vec3 d, float scale, float density, float baseRadius, float t) {
+  vec3 p = d * scale;
+  vec3 id = floor(p);
+  vec3 f = fract(p) - 0.5;
+  vec3 rnd = hash33(id);
+  if (rnd.x < density) return vec3(0.0);
+  vec3 rnd2 = hash33(id + vec3(19.37, 7.13, 41.9));
+  vec3 ofs = (rnd2 - 0.5) * 0.50;
+  float dist = length(f - ofs);
+  float mag = (rnd.x - density) / (1.0 - density);
+  float r = baseRadius * (0.6 + 0.65 * mag);
+  float core = smoothstep(r, r * 0.12, dist);
+  float halo = exp(-dist * dist / max(1e-4, r * r * 0.7)) * 0.32 * mag;
+  float tw = 0.72 + 0.28 * sin(t * (1.4 + rnd.y * 2.4) + rnd.z * 6.28318);
+  vec3 tint = mix(vec3(0.78, 0.88, 1.0), vec3(1.0, 0.90, 0.74), rnd.y);
+  return tint * (core + halo) * (0.45 + 0.95 * mag) * tw;
+}
 void main() {
   vec3 d = normalize(vDir);
   float h = d.y;
+  vec3 sunD = normalize(uSunDir);
+  float s = max(dot(d, sunD), 0.0);
   vec3 col = h > 0.0 ? mix(uHorizon, uTop, pow(smoothstep(0.0, 1.0, h), 0.55)) : mix(uHorizon, uBottom, smoothstep(0.0, 0.25, -h));
-  // soft cumulus clouds on a sky plane (static, deterministic), lit warm from the sun side, fading to the horizon
-  if (h > 0.02) {
-    vec2 cp = d.xz / (h + 0.18) * 1.6 + vec2(3.0, 1.0);
-    float n = fbm(cp);
-    float cov = smoothstep(0.52, 0.78, n) * smoothstep(0.02, 0.22, h);
+
+  // sun atmospheric glow & disc (fades out as night falls and the moon appears)
+  float sunVis = uSunGlow * (1.0 - smoothstep(0.1, 0.5, uStars));
+  col += uSunColor * (pow(s, 8.0) * 0.35 + pow(s, 64.0) * 0.6) * sunVis;
+  col += uSunColor * smoothstep(0.9993, 0.9997, s) * sunVis * 2.0;
+
+  // moon disc & halo at night along uSunDir
+  float moonMask = smoothstep(0.1, 0.55, uStars);
+  float moonDisc = 0.0;
+  float moonHalo = 0.0;
+  if (moonMask > 0.001 && h > -0.05) {
+    vec3 refUp = abs(sunD.y) > 0.99 ? vec3(0.0, 0.0, 1.0) : vec3(0.0, 1.0, 0.0);
+    vec3 mRight = normalize(cross(refUp, sunD));
+    vec3 mUp = cross(sunD, mRight);
+    vec2 mUv = vec2(dot(d, mRight), dot(d, mUp));
+    float mAng = length(d - sunD);
+    float moonR = 0.034;
+    moonDisc = 1.0 - smoothstep(moonR * 0.94, moonR * 1.04, mAng);
+    float mTex = fbm(mUv / moonR * 1.8 + vec2(2.4, 5.1));
+    vec3 moonSurf = mix(vec3(0.86, 0.89, 0.94), vec3(1.0, 0.97, 0.90), smoothstep(0.32, 0.72, mTex));
+    moonHalo = (pow(s, 14.0) * 0.16 + pow(s, 96.0) * 0.42) * moonMask;
+    col += mix(uSunColor, vec3(0.92, 0.95, 1.0), 0.55) * moonHalo;
+    col = mix(col, moonSurf * 1.45, moonDisc * moonMask);
+  }
+
+  // multi-scale circular anti-aliased stars (masked from moon disc and horizon)
+  if (uStars > 0.0 && h > 0.04) {
+    float horizonStar = smoothstep(0.04, 0.35, h);
+    vec3 st = starLayer(d, 88.0, 0.982, 0.165, uTime) * 1.15
+            + starLayer(d, 152.0, 0.986, 0.165, uTime + 11.3) * 0.65;
+    col += st * uStars * horizonStar * (1.0 - moonDisc * moonMask);
+  }
+
+  // two-layer storybook clouds: high wispy cirrus + fluffy cumulus with warm sun silver-lining
+  if (h > 0.015) {
+    float horizonFade = smoothstep(0.015, 0.24, h);
+    float fwd = pow(s, 5.0);
+    float night = uStars;
+
+    // layer 1: wispy high cirrus
+    vec2 cirrusUv = d.xz / (h + 0.22) * vec2(0.95, 1.75) + vec2(uTime * 0.0045, uTime * 0.0018) + vec2(5.2, 2.7);
+    float cn = fbm(cirrusUv + vec2(fbm(cirrusUv * 1.6) * 0.45, 0.0));
+    float cirrusCov = smoothstep(0.56, 0.86, cn) * horizonFade * 0.42;
+    if (cirrusCov > 0.0) {
+      vec3 cirrusLit = mix(vec3(1.0, 0.98, 0.95), uSunColor, 0.40);
+      vec3 cirrusCol = mix(mix(uHorizon, uTop, 0.45), cirrusLit, 0.72 + 0.28 * fwd) * mix(1.0, 0.24, night);
+      cirrusCol += mix(vec3(1.0, 0.96, 0.88), uSunColor, 0.5) * fwd * 0.25 * uSunGlow * (1.0 - night * 0.7);
+      col = mix(col, cirrusCol, cirrusCov);
+    }
+
+    // layer 2: billowy storybook cumulus
+    vec2 cumUv = d.xz / (h + 0.16) * 1.45 + vec2(uTime * 0.0085, uTime * 0.0032) + vec2(3.0, 1.0);
+    float n1 = fbm(cumUv);
+    float n2 = fbm(cumUv * 2.15 + vec2(n1 * 0.65, 4.1));
+    float n = n1 * 0.68 + n2 * 0.32;
+    float cov = smoothstep(0.50, 0.76, n) * horizonFade;
     if (cov > 0.0) {
-      float lit = clamp(0.55 + 0.45 * dot(normalize(vec3(d.x, 0.0, d.z) + 1e-4), normalize(vec3(uSunDir.x, 0.0, uSunDir.z) + 1e-4)), 0.0, 1.0);
-      float night = uStars;
-      vec3 cLit = mix(vec3(1.0, 0.98, 0.95), uSunColor, 0.3) * mix(1.05, 0.2, night);
-      vec3 cShade = mix(uHorizon, uTop, 0.35) * mix(0.95, 0.35, night);
-      float edge = smoothstep(0.55, 0.9, n); // denser cores are brighter on the lit side
-      vec3 cc = mix(cShade, cLit, clamp(lit * 0.7 + edge * 0.5, 0.0, 1.0));
+      float litDir = clamp(0.55 + 0.45 * dot(normalize(vec3(d.x, 0.0, d.z) + 1e-4), normalize(vec3(sunD.x, 0.0, sunD.z) + 1e-4)), 0.0, 1.0);
+      float core = smoothstep(0.50, 0.86, n);
+      float edgeRim = smoothstep(0.50, 0.62, n) * (1.0 - smoothstep(0.64, 0.84, n));
+      float silver = fwd * (0.45 + 0.95 * edgeRim) * uSunGlow;
+      vec3 cLit = mix(vec3(1.0, 0.985, 0.96), uSunColor, 0.28) * mix(1.04, 0.22, night);
+      vec3 cShade = mix(uHorizon, uTop, 0.38) * mix(0.92, 0.32, night);
+      vec3 cc = mix(cShade, cLit, clamp(litDir * 0.62 + core * 0.45, 0.0, 1.0));
+      cc += mix(vec3(1.0, 0.96, 0.88), uSunColor, 0.55) * silver * mix(0.75, 0.18, night);
+      cc += mix(uSunColor, vec3(0.92, 0.95, 1.0), 0.55) * moonHalo * 0.3;
       col = mix(col, cc, cov * 0.92);
     }
-  }
-  float s = max(dot(d, normalize(uSunDir)), 0.0);
-  col += uSunColor * (pow(s, 8.0) * 0.35 + pow(s, 64.0) * 0.6) * uSunGlow;
-  col += uSunColor * smoothstep(0.9993, 0.9997, s) * uSunGlow * 2.0;
-  if (uStars > 0.0 && h > 0.05) {
-    vec3 g = floor(d * 260.0);
-    float st = step(0.9965, hash(g));
-    col += vec3(0.9, 0.95, 1.0) * st * uStars * smoothstep(0.05, 0.4, h);
   }
   gl_FragColor = vec4(col, 1.0);
   #include <tonemapping_fragment>
@@ -214,7 +283,7 @@ export function createLook(scene: THREE.Scene, renderer: THREE.WebGLRenderer): L
   sc.left = -24; sc.right = 24; sc.top = 24; sc.bottom = -24; sc.near = 1; sc.far = 110;
   key.shadow.bias = -0.0004;
   key.shadow.normalBias = 0.035;
-  key.shadow.radius = 4;
+  key.shadow.radius = 3.5;
   key.target.position.set(0, 0, 0);
   scene.add(key, key.target);
 
@@ -223,8 +292,8 @@ export function createLook(scene: THREE.Scene, renderer: THREE.WebGLRenderer): L
   rim.target.position.set(0, 1, 0);
   scene.add(rim, rim.target);
 
-  const lantern = new THREE.PointLight(0xffb060, 0, 9, 1.6);
-  lantern.position.set(-4.7, 2.85, -2.0); // the porch lantern of Bear's house
+  const lantern = new THREE.PointLight(0xffb060, 0, 12, 1.5);
+  lantern.position.set(-6.55, 2.95, -3.45); // under Bear's treehouse.glb porch red lamp
   scene.add(lantern);
 
   const skyMat = new THREE.ShaderMaterial({
@@ -238,6 +307,7 @@ export function createLook(scene: THREE.Scene, renderer: THREE.WebGLRenderer): L
       uSunColor: { value: new THREE.Color() },
       uSunGlow: { value: 0 },
       uStars: { value: 0 },
+      uTime: { value: 0 },
     },
     side: THREE.BackSide,
     depthWrite: false,
@@ -249,7 +319,7 @@ export function createLook(scene: THREE.Scene, renderer: THREE.WebGLRenderer): L
   sky.renderOrder = -10;
   scene.add(sky);
 
-  const fog = new THREE.Fog(0xd7e9f7, 30, 140);
+  const fog = new THREE.Fog(0xaad3f6, 30, 140);
   scene.fog = fog;
 
   // Image-based lighting: a procedural sky-gradient environment until the CC0 HDRI arrives (loadHdri), both tinted
@@ -291,7 +361,7 @@ void main() {
   g += uSunColor * pow(max(dot(d, uSunDir), 0.0), 6.0) * uSun;
   vec3 col = g;
   if (uHasHdr > 0.5) {
-    vec3 h = min(texture2D(tHdr, vec2(fract(vUv.x + uRot), vUv.y)).rgb, vec3(3.0)) * uGain;
+    vec3 h = min(texture2D(tHdr, vec2(fract(vUv.x + uRot), vUv.y)).rgb, vec3(14.0)) * uGain;
     float lh = dot(h, LUM);
     float lg = max(dot(g, LUM), 1e-3);
     vec3 gs = mix(vec3(lg), g, 0.45); // hue toward the time of day, but never fully saturated (night stays soft)
@@ -463,11 +533,16 @@ export function updateEnvironment(rig: LookRig, scene: THREE.Scene, now: number,
 }
 
 const _v = new THREE.Vector3();
+const _sun = new THREE.Vector3();
+const _lx = new THREE.Vector3();
+const _ly = new THREE.Vector3();
+const _upY = new THREE.Vector3(0, 1, 0);
+const _upZ = new THREE.Vector3(0, 0, 1);
 
 function applyParams(rig: LookRig, scene: THREE.Scene, renderer: THREE.WebGLRenderer, p: LightingParams): void {
   rig.current = p;
   _v.set(p.sunDir[0], p.sunDir[1], p.sunDir[2]).normalize();
-  rig.key.position.copy(_v).multiplyScalar(45);
+  rig.key.position.copy(rig.key.target.position).addScaledVector(_v, 45);
   rig.key.color.setHex(p.sunColor);
   rig.key.intensity = p.sunIntensity;
   rig.hemi.color.setHex(p.hemiSky);
@@ -475,7 +550,7 @@ function applyParams(rig: LookRig, scene: THREE.Scene, renderer: THREE.WebGLRend
   rig.hemi.intensity = p.hemiIntensity;
   rig.rim.color.setHex(p.rimColor);
   rig.rim.intensity = p.rimIntensity;
-  rig.lantern.intensity = p.windowGlow * 6;
+  rig.lantern.intensity = p.windowGlow * 7.5;
   rig.fog.color.setHex(p.fogColor);
   rig.fog.near = p.fogNear;
   rig.fog.far = p.fogFar;
@@ -516,8 +591,56 @@ export function applyLighting(
   return p;
 }
 
+/** Advance deterministic sky animation (cloud drift, star twinkle) from story time `t`. */
+export function updateSkyTime(rig: LookRig, t: number): void {
+  const u = (rig.sky.material as THREE.ShaderMaterial).uniforms;
+  if (u.uTime) u.uTime.value = Number.isFinite(t) ? t : 0;
+}
+
+/** Focus the directional key shadow frustum on (targetX, targetZ), snapped to light-space shadow texels to stop edge swimming. */
+export function focusKeyShadow(rig: LookRig, targetX: number, targetZ: number, halfExtent: number): void {
+  const he = Math.max(1, Number.isFinite(halfExtent) ? halfExtent : 24);
+  const mapSize = Math.max(1, rig.key.shadow.mapSize.x);
+  const texelSize = (2 * he) / mapSize;
+  const sd = rig.current.sunDir;
+  _sun.set(sd[0], sd[1], sd[2]);
+  if (_sun.lengthSq() < 1e-6) _sun.set(0, 1, 0);
+  else _sun.normalize();
+
+  // Match Three.js DirectionalLightShadow camera orientation basis (X_light, Y_light, Z_light = sunDir).
+  const up = Math.abs(_sun.y) > 0.999 ? _upZ : _upY;
+  _lx.crossVectors(up, _sun).normalize();
+  _ly.crossVectors(_sun, _lx).normalize();
+
+  const tx = Number.isFinite(targetX) ? targetX : 0;
+  const tz = Number.isFinite(targetZ) ? targetZ : 0;
+  const u = tx * _lx.x + tz * _lx.z;
+  const v = tx * _ly.x + tz * _ly.z;
+  const uSnap = Math.round(u / texelSize) * texelSize;
+  const vSnap = Math.round(v / texelSize) * texelSize;
+  // Project snapped (u, v) back onto y = 0 along sunDir so key.target.position stays on the ground plane.
+  const w = Math.abs(_sun.y) > 1e-4 ? -(vSnap * _ly.y) / _sun.y : 0;
+  const snappedX = _lx.x * uSnap + _ly.x * vSnap + _sun.x * w;
+  const snappedZ = _lx.z * uSnap + _ly.z * vSnap + _sun.z * w;
+
+  rig.key.target.position.set(snappedX, 0, snappedZ);
+  rig.key.position.copy(rig.key.target.position).addScaledVector(_sun, 45);
+  rig.key.target.updateMatrixWorld();
+  rig.key.updateMatrixWorld();
+
+  const sc = rig.key.shadow.camera;
+  if (sc.left !== -he || sc.right !== he || sc.top !== he || sc.bottom !== -he) {
+    sc.left = -he;
+    sc.right = he;
+    sc.top = he;
+    sc.bottom = -he;
+    sc.updateProjectionMatrix();
+  }
+}
+
 /** Shadow map resolution (2048 at full quality; 1024 when adaptive resolution drops). */
 export function setShadowQuality(rig: LookRig, size: 1024 | 2048 | 4096): void {
+  rig.key.shadow.radius = size >= 4096 ? 3.5 : 2.0;
   if (rig.key.shadow.mapSize.x === size) return;
   rig.key.shadow.mapSize.set(size, size);
   rig.key.shadow.map?.dispose();
@@ -583,17 +706,148 @@ function woodGrain(ctx: CanvasRenderingContext2D, s: number): void {
   }
 }
 
-function softNoise(ctx: CanvasRenderingContext2D, s: number, base: string, amp: number, seed: number): void {
-  ctx.fillStyle = base;
-  ctx.fillRect(0, 0, s, s);
+function clamp01(v: number): number {
+  return v < 0 ? 0 : v > 1 ? 1 : v;
+}
+
+function smooth01(e0: number, e1: number, x: number): number {
+  const t = clamp01((x - e0) / (e1 - e0));
+  return t * t * (3 - 2 * t);
+}
+
+function pixelTex(
+  size: number,
+  colorSpace: THREE.ColorSpace,
+  fill: (data: Uint8ClampedArray, size: number) => void,
+): THREE.Texture | null {
+  if (typeof document === "undefined") return null;
+  const c = document.createElement("canvas");
+  c.width = c.height = size;
+  const ctx = c.getContext("2d");
+  if (!ctx) return null;
+  const img = ctx.createImageData(size, size);
+  fill(img.data, size);
+  ctx.putImageData(img, 0, 0);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = colorSpace;
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.anisotropy = 4;
+  return t;
+}
+
+/** Seamless periodic 2D value noise in [0, 1] over `size × size`. */
+function periodicNoise(size: number, gridX: number, gridY: number, seed: number): Float32Array {
   const r = rng(seed);
-  for (let i = 0; i < 400; i++) {
-    const g = Math.floor(r() * 255);
-    ctx.fillStyle = `rgba(${g},${g},${g},${amp * r()})`;
-    ctx.beginPath();
-    ctx.arc(r() * s, r() * s, 2 + r() * 10, 0, Math.PI * 2);
-    ctx.fill();
+  const g = new Float32Array(gridX * gridY);
+  for (let i = 0; i < g.length; i++) g[i] = r();
+  const out = new Float32Array(size * size);
+  for (let y = 0; y < size; y++) {
+    const v = (y / size) * gridY;
+    const y0 = Math.floor(v) % gridY;
+    const y1 = (y0 + 1) % gridY;
+    const fy = v - Math.floor(v);
+    const sy = fy * fy * (3 - 2 * fy);
+    for (let x = 0; x < size; x++) {
+      const u = (x / size) * gridX;
+      const x0 = Math.floor(u) % gridX;
+      const x1 = (x0 + 1) % gridX;
+      const fx = u - Math.floor(u);
+      const sx = fx * fx * (3 - 2 * fx);
+      const a = g[y0 * gridX + x0], b = g[y0 * gridX + x1];
+      const c = g[y1 * gridX + x0], d = g[y1 * gridX + x1];
+      out[y * size + x] = (a + (b - a) * sx) + ((c + (d - c) * sx) - (a + (b - a) * sx)) * sy;
+    }
   }
+  return out;
+}
+
+/** Seamless periodic multi-octave FBM in [0, 1]. */
+function periodicFbm(size: number, octaves: readonly [number, number, number][], seed: number): Float32Array {
+  const out = new Float32Array(size * size);
+  let wSum = 0;
+  for (let k = 0; k < octaves.length; k++) {
+    const [gx, gy, w] = octaves[k];
+    const n = periodicNoise(size, gx, gy, seed + k * 97);
+    for (let i = 0; i < out.length; i++) out[i] += n[i] * w;
+    wSum += w;
+  }
+  if (wSum > 0) for (let i = 0; i < out.length; i++) out[i] /= wSum;
+  return out;
+}
+
+/** Seamless toroidal Voronoi crevice field (`edge = d2 - d1` in cell units). */
+function periodicVoronoiEdge(size: number, cells: number, seed: number): Float32Array {
+  const r = rng(seed);
+  const px = new Float32Array(cells * cells);
+  const py = new Float32Array(cells * cells);
+  for (let cy = 0; cy < cells; cy++) {
+    for (let cx = 0; cx < cells; cx++) {
+      const idx = cy * cells + cx;
+      px[idx] = (cx + 0.15 + r() * 0.7) / cells;
+      py[idx] = (cy + 0.15 + r() * 0.7) / cells;
+    }
+  }
+  const edge = new Float32Array(size * size);
+  for (let y = 0; y < size; y++) {
+    const uy = y / size;
+    const cy = Math.floor(uy * cells);
+    for (let x = 0; x < size; x++) {
+      const ux = x / size;
+      const cx = Math.floor(ux * cells);
+      let d1 = 1e9, d2 = 1e9;
+      for (let dy = -1; dy <= 1; dy++) {
+        const ny = ((cy + dy) % cells + cells) % cells;
+        for (let dx = -1; dx <= 1; dx++) {
+          const nx = ((cx + dx) % cells + cells) % cells;
+          const idx = ny * cells + nx;
+          let ox = px[idx] - ux;
+          let oy = py[idx] - uy;
+          ox -= Math.round(ox);
+          oy -= Math.round(oy);
+          const dist = Math.hypot(ox, oy) * cells;
+          if (dist < d1) { d2 = d1; d1 = dist; }
+          else if (dist < d2) d2 = dist;
+        }
+      }
+      edge[y * size + x] = d2 - d1;
+    }
+  }
+  return edge;
+}
+
+/** Bake a periodic heightfield into a tangent-space normal map (`NoColorSpace`). */
+function bakeNormalTex(h: Float32Array, size: number, strength: number): THREE.Texture | null {
+  return pixelTex(size, THREE.NoColorSpace, (data) => {
+    const mask = size - 1;
+    for (let y = 0; y < size; y++) {
+      const yu = (y - 1) & mask, yd = (y + 1) & mask;
+      for (let x = 0; x < size; x++) {
+        const xl = (x - 1) & mask, xr = (x + 1) & mask;
+        const dx = (h[y * size + xr] - h[y * size + xl]) * strength;
+        const dy = (h[yd * size + x] - h[yu * size + x]) * strength;
+        const nx = -dx, ny = dy, nz = 1.0;
+        const inv = 1 / Math.hypot(nx, ny, nz);
+        const o = (y * size + x) * 4;
+        data[o] = Math.round((nx * inv * 0.5 + 0.5) * 255);
+        data[o + 1] = Math.round((ny * inv * 0.5 + 0.5) * 255);
+        data[o + 2] = Math.round((nz * inv * 0.5 + 0.5) * 255);
+        data[o + 3] = 255;
+      }
+    }
+  });
+}
+
+/** Bake a normalized [0, 1] field into a roughnessMap scaled against `maxR` so effective roughness spans [minR, maxR]. */
+function bakeRoughnessTex(rField: Float32Array, size: number, minR: number, maxR: number): THREE.Texture | null {
+  const ratio = minR / maxR;
+  return pixelTex(size, THREE.NoColorSpace, (data) => {
+    for (let i = 0; i < size * size; i++) {
+      const v = Math.round(clamp01(ratio + (1 - ratio) * rField[i]) * 255);
+      const o = i * 4;
+      data[o] = data[o + 1] = data[o + 2] = v;
+      data[o + 3] = 255;
+    }
+  });
 }
 
 /** 1×1 flat tangent-space normal (placeholder until a CC0 normal map is loaded). */
@@ -603,22 +857,126 @@ function flatNormal(): THREE.DataTexture {
   return t;
 }
 
+interface ProceduralMaps {
+  map?: THREE.Texture | null;
+  normalMap?: THREE.Texture | null;
+  roughnessMap?: THREE.Texture | null;
+}
+
+function buildProceduralMaterialMaps(): Record<"stone" | "soil" | "paint" | "fabric" | "metal", ProceduralMaps> {
+  if (typeof document === "undefined") {
+    return { stone: {}, soil: {}, paint: {}, fabric: {}, metal: {} };
+  }
+  const S = 128;
+
+  // Stone: mossy mottled rock albedo + crisp crevice normal + roughness (0.84..0.96)
+  const stEdge = periodicVoronoiEdge(S, 6, 31);
+  const stFbm = periodicFbm(S, [[8, 8, 0.45], [16, 16, 0.3], [32, 32, 0.25]], 41);
+  const stMoss = periodicFbm(S, [[4, 4, 0.6], [16, 16, 0.4]], 53);
+  const stH = new Float32Array(S * S);
+  const stR = new Float32Array(S * S);
+  const stMap = pixelTex(S, THREE.SRGBColorSpace, (data) => {
+    for (let i = 0; i < S * S; i++) {
+      const cr = smooth01(0.03, 0.24, stEdge[i]);
+      const h = 0.55 * cr + 0.45 * stFbm[i];
+      stH[i] = h;
+      const moss = smooth01(0.62, 0.28, h) * smooth01(0.46, 0.72, stMoss[i]);
+      stR[i] = clamp01(1 - cr * 0.65 - (stFbm[i] - 0.5) * 0.3 + moss * 0.5);
+      const base = 0.73 + 0.21 * h;
+      const r = base * (1 - 0.18 * moss) + 0.10 * moss;
+      const g = base * (1 - 0.08 * moss) + 0.14 * moss;
+      const b = base * (1 - 0.32 * moss);
+      const o = i * 4;
+      data[o] = Math.round(clamp01(r) * 255);
+      data[o + 1] = Math.round(clamp01(g) * 255);
+      data[o + 2] = Math.round(clamp01(b) * 255);
+      data[o + 3] = 255;
+    }
+  });
+
+  // Soil: rich dark earthy cloddy loam albedo + bump normal + roughness (0.88..0.96)
+  const soEdge1 = periodicVoronoiEdge(S, 9, 71);
+  const soEdge2 = periodicVoronoiEdge(S, 18, 83);
+  const soFbm = periodicFbm(S, [[16, 16, 0.45], [32, 32, 0.35], [64, 64, 0.2]], 97);
+  const soH = new Float32Array(S * S);
+  const soR = new Float32Array(S * S);
+  const soMap = pixelTex(S, THREE.SRGBColorSpace, (data) => {
+    for (let i = 0; i < S * S; i++) {
+      const h = 0.52 * smooth01(0.02, 0.32, soEdge1[i]) + 0.28 * smooth01(0.02, 0.32, soEdge2[i]) + 0.20 * soFbm[i];
+      soH[i] = h;
+      soR[i] = clamp01(1 - h * 0.6);
+      const shade = 0.62 + 0.32 * h;
+      const o = i * 4;
+      data[o] = Math.round(clamp01(shade * 1.02) * 255);
+      data[o + 1] = Math.round(clamp01(shade * 0.94) * 255);
+      data[o + 2] = Math.round(clamp01(shade * 0.84) * 255);
+      data[o + 3] = 255;
+    }
+  });
+
+  // Paint: subtle painted timber brush/grain albedo + micro-normal + roughness (0.60..0.78)
+  const paBrush = periodicFbm(S, [[32, 4, 0.55], [64, 8, 0.3], [16, 16, 0.15]], 113);
+  const paR = new Float32Array(S * S);
+  const paMap = pixelTex(S, THREE.SRGBColorSpace, (data) => {
+    for (let i = 0; i < S * S; i++) {
+      const b = paBrush[i];
+      paR[i] = clamp01(0.2 + 0.75 * (1 - b));
+      const v = Math.round(clamp01(0.90 + 0.08 * b) * 255);
+      const o = i * 4;
+      data[o] = v;
+      data[o + 1] = v;
+      data[o + 2] = Math.max(0, v - 2);
+      data[o + 3] = 255;
+    }
+  });
+
+  // Fabric: subtle woven textile normal + roughness variation (0.84..0.95)
+  const faFbm = periodicFbm(S, [[16, 16, 0.6], [32, 32, 0.4]], 131);
+  const faH = new Float32Array(S * S);
+  const faR = new Float32Array(S * S);
+  const threads = 16;
+  for (let y = 0; y < S; y++) {
+    const ty = (y / S) * threads;
+    const cy = Math.floor(ty) & 1;
+    const sy = Math.sin((ty - Math.floor(ty)) * Math.PI);
+    for (let x = 0; x < S; x++) {
+      const tx = (x / S) * threads;
+      const cx = Math.floor(tx) & 1;
+      const sx = Math.sin((tx - Math.floor(tx)) * Math.PI);
+      const over = (cx ^ cy) === 0 ? sx : sy;
+      const i = y * S + x;
+      faH[i] = 0.72 * over + 0.28 * faFbm[i];
+      faR[i] = clamp01(0.35 + 0.65 * (1 - over * 0.6) * faFbm[i]);
+    }
+  }
+
+  // Metal: subtle brushed patina roughness map (0.28..0.44)
+  const meR = periodicFbm(S, [[64, 4, 0.45], [32, 8, 0.25], [8, 8, 0.3]], 157);
+
+  return {
+    stone: { map: stMap, normalMap: bakeNormalTex(stH, S, 2.8), roughnessMap: bakeRoughnessTex(stR, S, 0.84, 0.96) },
+    soil: { map: soMap, normalMap: bakeNormalTex(soH, S, 3.2), roughnessMap: bakeRoughnessTex(soR, S, 0.88, 0.96) },
+    paint: { map: paMap, normalMap: bakeNormalTex(paBrush, S, 0.95), roughnessMap: bakeRoughnessTex(paR, S, 0.60, 0.78) },
+    fabric: { normalMap: bakeNormalTex(faH, S, 1.4), roughnessMap: bakeRoughnessTex(faR, S, 0.84, 0.95) },
+    metal: { roughnessMap: bakeRoughnessTex(meR, S, 0.28, 0.44) },
+  };
+}
+
 export function createMaterials(): LookMaterials {
   const grain = canvasTex(256, woodGrain);
-  const stony = canvasTex(128, (c, s) => softNoise(c, s, "#dddddd", 0.3, 5));
+  const proc = buildProceduralMaterialMaps();
   const std = (o: THREE.MeshStandardMaterialParameters) => new THREE.MeshStandardMaterial({ vertexColors: true, ...o });
   const mats = {
     wood: std({ roughness: 0.82, map: grain, normalMap: flatNormal() }),
     bark: std({ roughness: 0.95, map: grain, normalMap: flatNormal() }),
     foliage: std({ roughness: 0.88 }),
-    paint: std({ roughness: 0.55 }),
-    metal: std({ roughness: 0.32, metalness: 0.65 }),
+    paint: std({ roughness: 0.78, normalScale: new THREE.Vector2(0.28, 0.28), ...proc.paint }),
+    metal: std({ roughness: 0.44, metalness: 0.65, ...proc.metal }),
     glass: new THREE.MeshStandardMaterial({ vertexColors: true, color: 0x6f8fb0, roughness: 0.15, metalness: 0.1, emissive: 0xffa040, emissiveIntensity: 0.05 }),
     water: std({ roughness: 0.18, metalness: 0.0, envMapIntensity: 1.1 }),
-    // set fabric (hammock) is two-sided geometry; same shader program as paint (fewer programs to compile)
-    fabric: std({ roughness: 0.95 }),
-    stone: std({ roughness: 0.92, map: stony }),
-    soil: std({ roughness: 1.0, map: stony }),
+    fabric: std({ roughness: 0.95, normalScale: new THREE.Vector2(0.45, 0.45), ...proc.fabric }),
+    stone: std({ roughness: 0.96, normalScale: new THREE.Vector2(0.8, 0.8), ...proc.stone }),
+    soil: std({ roughness: 0.96, normalScale: new THREE.Vector2(0.85, 0.85), ...proc.soil }),
   } as LookMaterials;
   for (const k of MAT_KEYS) mats[k].name = `look:${k}`;
   installFoliageClumps(mats.foliage);
@@ -707,6 +1065,7 @@ export function disposeMaterials(m: LookMaterials): void {
   for (const k of MAT_KEYS) {
     m[k].map?.dispose();
     m[k].normalMap?.dispose();
+    m[k].roughnessMap?.dispose();
     m[k].dispose();
   }
 }
@@ -805,12 +1164,13 @@ export function xf(
   return new THREE.Matrix4().compose(new THREE.Vector3(...pos), _q.clone(), _s.clone());
 }
 
-/** Materials that merge into another bucket (fewer draw calls: same shader, near-identical look). Bark keeps its own
- *  material since A5 (CC0 bark texture vs. sawn-log wood texture). */
-const MAT_ALIAS: Partial<Record<MatKey, MatKey>> = { soil: "stone" };
+/** Materials that merge into another bucket (fewer draw calls: same shader, near-identical look). */
+const MAT_ALIAS: Partial<Record<MatKey, MatKey>> = {};
 
-/** Texture tile size in metres per textured material (metric UVs, so grain and bark read at the same scale everywhere). */
-export const UV_TILE_M: Partial<Record<MatKey, number>> = { wood: 1.1, bark: 1.4, stone: 1.2 };
+/** Texture tile size in metres per textured material (metric UVs, so grain, stone, soil, paint and weave read at physical scale). */
+export const UV_TILE_M: Partial<Record<MatKey, number>> = {
+  wood: 1.1, bark: 1.4, stone: 1.2, soil: 1.0, paint: 1.2, fabric: 0.45, metal: 1.0,
+};
 
 const _sx = new THREE.Vector3();
 const _sy = new THREE.Vector3();

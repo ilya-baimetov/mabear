@@ -17,7 +17,21 @@ export const MASHA_HAND = {
  * merely positioning the wrist socket near a visibly intersecting stick. */
 export function createMashaHands(meshes:THREE.SkinnedMesh[],hands:HandFrame[]){
  const roots:THREE.Group[]=[],geometries:THREE.BufferGeometry[]=[],updates:((grip:number,relax:number)=>void)[]=[];
- const material=new THREE.MeshStandardMaterial({color:'#d1b49a',roughness:.78}),cuffMaterial=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.9,side:THREE.DoubleSide});
+ const material=new THREE.MeshStandardMaterial({color:'#d1b49a',roughness:.72}),cuffMaterial=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.9,side:THREE.DoubleSide,forceSinglePass:true});
+ const sssColor=new THREE.Color('#FF6A48');
+ material.onBeforeCompile=shader=>{
+  shader.uniforms.handSssColor={value:sssColor};
+  if(shader.fragmentShader.includes('#include <common>')){
+   shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nuniform vec3 handSssColor;');
+  }
+  if(shader.fragmentShader.includes('#include <emissivemap_fragment>')&&shader.fragmentShader.includes('handSssColor')){
+   shader.fragmentShader=shader.fragmentShader.replace(
+    '#include <emissivemap_fragment>',
+    '#include <emissivemap_fragment>\n{\n  float sssF = 1.0 - saturate(dot(normal, normalize(vViewPosition)));\n  totalEmissiveRadiance += handSssColor * diffuseColor.rgb * (0.02 + 0.14 * sssF * sssF);\n}',
+   );
+  }
+ };
+ material.customProgramCacheKey=()=>'masha-hand-skin-sss-v1';
  for(const hand of hands){
   const origin=hand.wrist.getWorldPosition(new THREE.Vector3()),at=([u,v,n]:P)=>origin.clone().addScaledVector(hand.long,u).addScaledVector(hand.width,v).addScaledVector(hand.normal,n);
   for(const mesh of meshes){

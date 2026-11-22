@@ -1,11 +1,13 @@
-// Props (spec §6.1): one small, charming procedural mesh per PropId (a stand-in for the production prop asset),
+// Props (spec §6.1): one charming multi-material procedural mesh per PropId (a stand-in for the production prop asset),
 // placed every frame from FrameState.props — resting on the set, or attached to an actor's hand socket.
-// Each prop is ONE vertex-coloured mesh (one draw call), origin at its base so it sits on surfaces.
+// Each prop is ONE BufferGeometry-grouped mesh named `prop:${id}`, origin at its base so it sits on surfaces.
 import * as THREE from "three";
+import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
+import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { FISHING_WATER_TARGET, MARKS } from "../../shared/bible/set";
 import { PROP_IDS, type ActorId, type MarkId, type PropId, type Vec3 } from "../../shared/schema";
 import type { ActorFrame, PropFrame } from "../api";
-import { GeoBag, bagToSingle, rng, xf, type LookMaterials } from "../look";
+import { GeoBag, rng, xf, type LookMaterials, type MatKey } from "../look";
 import { restHeightAt } from "../set/bearsYard";
 import {PROP_SLOTS,PROP_REST_HEIGHT,propPlacementAtMark} from '../../shared/propPlacement';
 import {HOUSE_PREP_TABLE,HOUSE_READING_TABLE} from '../../shared/houseLayout';
@@ -26,50 +28,78 @@ const cyl = (rt: number, rb: number, h: number, seg = 12) => new THREE.CylinderG
 const sph = (r: number, ws = 12, hs = 8) => new THREE.SphereGeometry(r, ws, hs);
 const lathe = (pts: [number, number][], seg = 16) => new THREE.LatheGeometry(pts.map(([x, y]) => new THREE.Vector2(x, y)), seg);
 
+function propLeaf(length: number, width: number, bend = 0.14): THREE.BufferGeometry {
+  const g = new THREE.BufferGeometry();
+  const p = [0, 0, 0, -width, length * 0.035, length * 0.43, 0, length * 0.1, length * 0.48, width, length * 0.035, length * 0.43, 0, length * bend, length];
+  g.setAttribute("position", new THREE.Float32BufferAttribute(p, 3));
+  g.setIndex([0, 2, 1, 0, 3, 2, 1, 2, 4, 2, 3, 4, 1, 2, 0, 2, 3, 0, 4, 2, 1, 4, 3, 2]);
+  const solid = g.toNonIndexed();
+  g.dispose();
+  solid.computeVertexNormals();
+  return solid;
+}
+
 export const PROP_VISUALS: Record<PropId, PropVisual> = {
   pantry_honey:{
     build(b){
-      b.add('paint',lathe([[0,0],[.08,0],[.105,.035],[.105,.23],[.083,.26],[.083,.28],[0,.28]],24),0xc48a36);
-      b.add('paint',cyl(.091,.091,.035,24),0x40594b,xf([0,.292,0]));
-      b.add('paint',cyl(.106,.106,.085,24),0xf0dfac,xf([0,.135,0]));
-      b.add('paint',sph(.025,12,8),0xb58b37,xf([.106,.14,0],[0,0,0],[.15,1,.75]));
+      b.add('glass',lathe([[0,0],[.08,0],[.105,.035],[.105,.23],[.083,.26],[.083,.28],[0,.28]],24),0xc48a36,undefined, {
+        colorFn: (p, _n, o) => { if (p.y > 0.092 && p.y < 0.178 && p.z > -0.04) o.setHex(0xf2e1ae); },
+      });
+      b.add('metal',cyl(.091,.091,.035,24),0x40594b,xf([0,.292,0]));
+      b.add('glass',sph(.025,12,8),0xb58b37,xf([.106,.14,0],[0,0,0],[.15,1,.75]));
     },grip:{pos:[0,-.13,.10],rot:[0,0,0]},
   },
   jam_jar: {
     build(b) {
-      b.add("paint", lathe([[0, 0], [0.055, 0], [0.062, 0.02], [0.062, 0.1], [0.05, 0.115], [0.05, 0.125], [0, 0.125]]), 0xb51f3c, undefined, {
+      b.add("glass", lathe([[0, 0], [0.055, 0], [0.062, 0.02], [0.062, 0.1], [0.05, 0.115], [0.05, 0.125], [0, 0.125]], 20), 0xb51f3c, undefined, {
         colorFn: (p, _n, o) => { if (p.y > 0.035 && p.y < 0.075) o.setHex(0xf7ecd2); },
       });
       b.add("fabric", sph(0.068, 12, 6), 0xffffff, xf([0, 0.125, 0], [0, 0, 0], [1, 0.35, 1]), {
         colorFn: (p, _n, o) => { if ((Math.floor((p.x + 1) * 40) + Math.floor((p.z + 1) * 40)) % 2) o.setHex(0xd8283a); },
       });
-      b.add("paint", cyl(0.054, 0.054, 0.012), 0xd8283a, xf([0, 0.118, 0]));
+      b.add("fabric", cyl(0.054, 0.054, 0.012, 16), 0xd8283a, xf([0, 0.118, 0]));
     },
     grip: { pos: [0, -0.07, 0.04], rot: [0, 0, 0] },
   },
   honey_pot: {
     build(b) {
-      b.add("paint", lathe([[0, 0], [0.07, 0], [0.1, 0.05], [0.105, 0.11], [0.08, 0.17], [0.075, 0.19], [0.085, 0.2], [0, 0.2]]), 0xc98a3a, undefined, {
+      b.add("glass", lathe([[0, 0], [0.07, 0], [0.1, 0.05], [0.105, 0.11], [0.08, 0.17], [0.075, 0.19], [0.085, 0.2], [0, 0.2]], 20), 0xc98a3a, undefined, {
         colorFn: (p, _n, o) => { if (p.y > 0.185) o.setHex(0xf5b22a); },
       });
-      b.add("paint", sph(0.03, 8, 6), 0xf5b22a, xf([0.07, 0.17, 0.02], [0, 0, 0], [0.6, 1.4, 0.6]));
-      b.add("wood", cyl(0.008, 0.008, 0.2, 5), 0xc89a60, xf([0.02, 0.24, 0], [0, 0, -0.35]));
+      b.add("glass", sph(0.03, 8, 6), 0xf5b22a, xf([0.07, 0.17, 0.02], [0, 0, 0], [0.6, 1.4, 0.6]));
+      b.add("wood", cyl(0.008, 0.008, 0.2, 6), 0xc89a60, xf([0.02, 0.24, 0], [0, 0, -0.35]));
+      b.add("wood", sph(0.018, 8, 6), 0xb88649, xf([0.054, 0.33, 0], [0, 0, -0.35], [1.1, 1.35, 1.1]));
     },
     grip: { pos: [0, -0.1, 0.06], rot: [0, 0, 0] },
   },
   pancakes: {
     build(b) {
-      b.add("paint", cyl(0.15, 0.13, 0.015, 20), 0xffffff, xf([0, 0.0075, 0]));
-      for (let i = 0; i < 6; i++) b.add("paint", cyl(0.11, 0.11, 0.016, 18), i % 2 ? 0xe2a750 : 0xeab862, xf([0.004 * (i % 3), 0.023 + i * 0.016, 0.003 * (i % 2)]));
-      b.add("paint", box(0.04, 0.025, 0.04), 0xfff1a8, xf([0, 0.13, 0], [0, 0.4, 0]));
-      b.add("paint", sph(0.05, 10, 6), 0xc41f3c, xf([0.03, 0.118, 0.02], [0, 0, 0], [1, 0.2, 1]));
+      // Chamfered porcelain plate + glossy berry syrup cap/drips + melting butter pat
+      b.add("glass", lathe([[0, 0], [0.105, 0], [0.148, 0.012], [0.156, 0.02], [0.148, 0.022], [0.11, 0.008], [0, 0.008]], 24), 0xfaf7ef);
+      const cakeProf: [number, number][] = [[0, 0], [0.098, 0], [0.108, 0.004], [0.109, 0.011], [0.10, 0.016], [0, 0.016]];
+      for (let i = 0; i < 6; i++) {
+        const ox = 0.003 * ((i % 3) - 1), oz = 0.003 * ((i % 2) - 0.5);
+        b.add("paint", lathe(cakeProf, 20), i % 2 ? 0xe5a44b : 0xedb45d, xf([ox, 0.009 + i * 0.0155, oz]), {
+          colorFn: (p, n, o) => {
+            if (Math.abs(n.y) > 0.6) o.lerp(new THREE.Color(0xc97b2c), 0.45);
+            else if (Math.hypot(p.x, p.z) > 0.096) o.lerp(new THREE.Color(0xf5ca78), 0.35);
+          },
+        });
+      }
+      // Glossy berry syrup cap + sculpted rim drips
+      b.add("glass", sph(0.068, 14, 8), 0xbd1f35, xf([0.006, 0.104, 0.004], [0, 0.3, 0], [1.12, 0.14, 1.05]));
+      for (const [ang, len, rad] of [[0.3, 0.038, 0.012], [1.6, 0.052, 0.014], [3.1, 0.032, 0.011], [4.7, 0.044, 0.013]] as const) {
+        b.add("glass", sph(rad, 8, 6), 0xb81d33, xf([Math.cos(ang) * 0.098, 0.102 - len * 0.45, Math.sin(ang) * 0.098], [0, 0, 0], [0.75, len / rad, 0.75]));
+      }
+      // Rounded butter pat
+      b.add("glass", new RoundedBoxGeometry(0.044, 0.019, 0.044, 2, 0.006), 0xffe985, xf([-0.004, 0.117, -0.002], [0.05, 0.42, -0.04]));
     },
     grip: { pos: [0, -0.04, 0.12], rot: [0, 0, 0] },
   },
   frying_pan: {
     build(b) {
       b.add("metal", lathe([[0, 0], [0.12, 0], [0.135, 0.04], [0.128, 0.042], [0.115, 0.008], [0, 0.008]], 20), 0x2e2e30);
-      b.add("wood", box(0.03, 0.025, 0.2), 0x6b3f22, xf([0, 0.03, -0.22], [0.12, 0, 0]));
+      b.add("wood", new RoundedBoxGeometry(0.03, 0.025, 0.2, 2, 0.007), 0x6b3f22, xf([0, 0.03, -0.22], [0.12, 0, 0]));
       b.add("metal", box(0.025, 0.015, 0.06), 0x2e2e30, xf([0, 0.025, -0.13]));
     },
     grip: { pos: [0, -0.03, 0.26], rot: [0, 0, 0] },
@@ -95,19 +125,36 @@ export const PROP_VISUALS: Record<PropId, PropVisual> = {
   },
   fish: {
     build(b) {
-      b.add("paint", sph(0.08, 14, 10), 0x8fb4cc, xf([0, 0.05, 0], [0, 0, 0], [1.8, 0.75, 0.55]), {
-        colorFn: (p, _n, o) => { if (p.y > 0.03) o.setHex(0x5f86a6); else if (p.y < -0.03) o.setHex(0xdfe8ee); },
+      // Sleek fusiform trout with wet sheen, dorsal/pectoral fins, and forked tail fin
+      const bodyGeo = lathe([
+        [0, -0.15], [0.016, -0.135], [0.044, -0.09], [0.064, -0.025],
+        [0.062, 0.045], [0.040, 0.10], [0.020, 0.145], [0, 0.155],
+      ], 16);
+      bodyGeo.rotateZ(-Math.PI / 2);
+      b.add("glass", bodyGeo, 0x8fb4cc, xf([0, 0.052, 0], [0, 0, 0], [1, 0.88, 0.46]), {
+        colorFn: (p, _n, o) => {
+          if (p.y > 0.018) o.setHex(0x466d85);
+          else if (p.y < -0.018) o.setHex(0xe5eef3);
+          else if (Math.sin(p.x * 75) * Math.cos(p.y * 95) > 0.76) o.setHex(0x3a5466);
+        },
       });
-      b.add("paint", new THREE.ConeGeometry(0.06, 0.09, 4), 0x6f96b6, xf([-0.17, 0.05, 0], [0, 0, Math.PI / 2], [1, 1, 0.3]));
-      b.add("paint", sph(0.014, 6, 5), 0x111111, xf([0.1, 0.065, 0.035]));
-      b.add("paint", sph(0.014, 6, 5), 0x111111, xf([0.1, 0.065, -0.035]));
+      // Forked caudal tail fin (upper and lower lobes)
+      for (const s of [-1, 1]) {
+        b.add("glass", new THREE.ConeGeometry(0.034, 0.085, 4), 0x5c829b, xf([-0.165, 0.052 + s * 0.024, 0], [0, 0, Math.PI / 2 - s * 0.42], [1, 1, 0.22]));
+      }
+      // Dorsal ridge fin & pectoral fins
+      b.add("glass", propLeaf(0.085, 0.026, 0.18), 0x5c829b, xf([-0.02, 0.095, 0], [-0.45, -Math.PI / 2, 0]));
+      for (const s of [-1, 1]) {
+        b.add("glass", propLeaf(0.048, 0.018, 0.1), 0x7ea5bd, xf([0.045, 0.038, s * 0.026], [0.2, s * 2.4, 0]));
+        b.add("glass", sph(0.011, 6, 5), 0x16191c, xf([0.11, 0.064, s * 0.024]));
+      }
     },
     grip: { pos: [0, -0.05, 0.08], rot: [0, Math.PI / 2, 0] },
   },
   lollipop: {
     build(b) {
       b.add("paint", cyl(0.006, 0.006, 0.16, 5), 0xffffff, xf([0, 0.08, 0]));
-      b.add("paint", cyl(0.065, 0.065, 0.025, 20), 0xffffff, xf([0, 0.2, 0], [Math.PI / 2, 0, 0]), {
+      b.add("glass", cyl(0.065, 0.065, 0.025, 20), 0xffffff, xf([0, 0.2, 0], [Math.PI / 2, 0, 0]), {
         colorFn: (p, _n, o) => { const a = Math.atan2(p.z, p.x); const rr = Math.hypot(p.x, p.z); o.setHex(Math.sin(a * 1 + rr * 90) > 0 ? 0xff5fa2 : 0xfff2f8); },
       });
     },
@@ -116,16 +163,26 @@ export const PROP_VISUALS: Record<PropId, PropVisual> = {
   },
   flowers: {
     build(b) {
-      const heads = [0xffffff, 0xffd84a, 0xe8433a, 0x6b8cff, 0xff8fc0, 0xa070e0, 0xffffff];
+      // Real petaled bouquet: sculpted flower petals, pollen centers, leaves, and fabric ribbon wrap
+      const heads = [0xffffff, 0xffd84a, 0xe84d42, 0x6b8cff, 0xff8fc0, 0xa070e0, 0xffffff];
       const r = rng(5);
       for (let i = 0; i < 7; i++) {
         const a = (i / 7) * Math.PI * 2;
         const lean: R3 = [Math.sin(a) * 0.25, 0, -Math.cos(a) * 0.25];
-        b.add("foliage", cyl(0.005, 0.006, 0.3, 4), 0x4f8f3a, xf([Math.cos(a) * 0.02, 0.15, Math.sin(a) * 0.02], lean));
+        b.add("foliage", cyl(0.005, 0.006, 0.3, 4), 0x4d8a39, xf([Math.cos(a) * 0.02, 0.15, Math.sin(a) * 0.02], lean));
         const hx = Math.cos(a) * 0.02 - lean[2] * 0.15, hz = Math.sin(a) * 0.02 + lean[0] * 0.15;
-        b.add("foliage", sph(0.035 + r() * 0.01, 8, 6), heads[i], xf([hx, 0.3, hz], [0, 0, 0], [1, 0.7, 1]));
+        const hy = 0.3 + (i === 0 ? 0.025 : r() * 0.015);
+        const petals = i % 2 === 0 ? 7 : 6;
+        const pCol = heads[i];
+        for (let k = 0; k < petals; k++) {
+          const pa = (k / petals) * Math.PI * 2 + i * 0.5;
+          b.add("foliage", sph(0.017, 6, 4), pCol, xf([hx + Math.cos(pa) * 0.02, hy, hz + Math.sin(pa) * 0.02], [0, -pa, 0.28], [1.45, 0.26, 0.72]));
+        }
+        b.add("foliage", sph(0.013, 6, 5), pCol === 0xffd84a ? 0xa36d2c : 0xf2bf42, xf([hx, hy + 0.005, hz], [0, 0, 0], [1, 0.65, 1]));
+        if (i % 2 === 0) b.add("foliage", propLeaf(0.09, 0.028, 0.2), 0x5c9640, xf([hx * 0.5, 0.18, hz * 0.5], [-0.45, a + 0.7, 0]));
       }
-      b.add("fabric", cyl(0.028, 0.028, 0.04, 10), 0xd8283a, xf([0, 0.1, 0]));
+      b.add("fabric", cyl(0.028, 0.028, 0.045, 10), 0xd8283a, xf([0, 0.1, 0]));
+      for (const s of [-1, 1]) b.add("fabric", sph(0.018, 6, 5), 0xd8283a, xf([s * 0.025, 0.1, 0.025], [0, s * 0.5, 0], [1.3, 0.7, 0.6]));
     },
     grip: { pos: [0, -0.06, 0.04], rot: [0, 0, 0] },
     restRot: [Math.PI / 2.2, 0, 0],
@@ -195,7 +252,7 @@ export const PROP_VISUALS: Record<PropId, PropVisual> = {
         colorFn: (p, _n, o) => { if (p.z > 0.09 && Math.abs(p.y) < 0.04 && Math.abs(p.x) < 0.06) o.setHex(0x3d7fc1); },
       });
       b.add("fabric", new THREE.ConeGeometry(0.05, 0.08, 8), 0xe6dcc2, xf([0, 0.3, 0]));
-      b.add("paint", new THREE.TorusGeometry(0.035, 0.008, 4, 10), 0x9a6a3e, xf([0, 0.27, 0], [Math.PI / 2, 0, 0]));
+      b.add("fabric", new THREE.TorusGeometry(0.035, 0.008, 4, 10), 0x9a6a3e, xf([0, 0.27, 0], [Math.PI / 2, 0, 0]));
     },
     grip: { pos: [0, -0.14, 0.12], rot: [0, 0, 0] },
   },
@@ -210,7 +267,7 @@ export const PROP_VISUALS: Record<PropId, PropVisual> = {
       for (let i = 0; i < 3; i++) {
         const a = (i / 3) * Math.PI * 2;
         b.add("paint", cyl(0.006, 0.006, 0.06, 5), [0x6b8cff, 0xffd84a, 0xff5fa2][i], xf([Math.cos(a) * 0.05, 0.21, Math.sin(a) * 0.05]));
-        b.add("glass", sph(0.01, 6, 4), 0xffffff, xf([Math.cos(a) * 0.05, 0.25, Math.sin(a) * 0.05], [0, 0, 0], [1, 1.6, 1]));
+        b.add("glass", sph(0.011, 6, 4), 0xffe8a0, xf([Math.cos(a) * 0.05, 0.25, Math.sin(a) * 0.05], [0, 0, 0], [1, 1.75, 1]));
       }
     },
     grip: { pos: [0, -0.06, 0.16], rot: [0, 0, 0] },
@@ -218,12 +275,12 @@ export const PROP_VISUALS: Record<PropId, PropVisual> = {
   teapot: {
     build(b) {
       const blue = 0x2f63b8;
-      b.add("paint", sph(0.075, 16, 12), 0xffffff, xf([0, 0.07, 0], [0, 0, 0], [1, 0.85, 1]), {
+      b.add("glass", sph(0.075, 16, 12), 0xffffff, xf([0, 0.07, 0], [0, 0, 0], [1, 0.85, 1]), {
         colorFn: (p, _n, o) => { if (Math.abs(p.y) < 0.012 || (Math.abs(p.y - 0.035) < 0.008)) o.setHex(blue); else if (Math.sin(Math.atan2(p.z, p.x) * 6) > 0.85 && Math.abs(p.y) < 0.04) o.setHex(blue); },
       });
-      b.add("paint", cyl(0.01, 0.02, 0.09, 8), 0xffffff, xf([0.085, 0.08, 0], [0, 0, -0.9]));
-      b.add("paint", new THREE.TorusGeometry(0.035, 0.009, 6, 10, Math.PI * 1.2), 0xffffff, xf([-0.075, 0.075, 0], [0, 0, Math.PI / 2]));
-      b.add("paint", sph(0.016, 8, 6), blue, xf([0, 0.14, 0]));
+      b.add("glass", cyl(0.01, 0.02, 0.09, 8), 0xffffff, xf([0.085, 0.08, 0], [0, 0, -0.9]));
+      b.add("glass", new THREE.TorusGeometry(0.035, 0.009, 6, 10, Math.PI * 1.2), 0xffffff, xf([-0.075, 0.075, 0], [0, 0, Math.PI / 2]));
+      b.add("glass", sph(0.016, 8, 6), blue, xf([0, 0.14, 0]));
     },
     grip: { pos: [0, -0.07, 0.07], rot: [0, 0, 0] },
   },
@@ -277,20 +334,99 @@ export interface PropsHandle {
   dispose(): void;
 }
 
-const SMALL_PROPS = new Set<PropId>(["jam_jar", "teapot", "lollipop", "book", "carrot", "fish", "pancakes", "honey_pot", "flowers", "frying_pan"]);
+const SMALL_PROPS = new Set<PropId>(["carrot", "flowers", "fish", "lollipop", "book"]);
 
-export function buildPropMesh(id: PropId, mats: LookMaterials): THREE.Mesh {
+interface PropPalette {
+  ceramic: THREE.MeshStandardMaterial;
+  matteFood: THREE.MeshStandardMaterial;
+  flower: THREE.MeshStandardMaterial;
+  flame: THREE.MeshStandardMaterial;
+  owned: THREE.Material[];
+}
+
+function createPropPalette(mats: LookMaterials): PropPalette {
+  const ceramic = mats.paint.clone();
+  ceramic.name = "prop:ceramic";
+  ceramic.roughness = 0.2;
+  ceramic.metalness = 0.04;
+  ceramic.envMapIntensity = 1.35;
+
+  const matteFood = mats.paint.clone();
+  matteFood.name = "prop:food";
+  matteFood.roughness = 0.78;
+  matteFood.metalness = 0.0;
+
+  const flower = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.68, metalness: 0.0 });
+  flower.name = "prop:flower";
+
+  const flame = new THREE.MeshStandardMaterial({
+    vertexColors: true,
+    color: 0xffe49e,
+    emissive: 0xff9a28,
+    emissiveIntensity: 2.2,
+    roughness: 0.3,
+  });
+  flame.name = "prop:flame";
+
+  return { ceramic, matteFood, flower, flame, owned: [ceramic, matteFood, flower, flame] };
+}
+
+function resolvePropMaterial(id: PropId, key: MatKey, mats: LookMaterials, pal: PropPalette): THREE.Material {
+  if (key === "glass") return id === "cake" ? pal.flame : pal.ceramic;
+  if (key === "paint" && id === "pancakes") return pal.matteFood;
+  if (key === "foliage") return pal.flower;
+  return mats[key];
+}
+
+export function buildPropMesh(id: PropId, mats: LookMaterials, palette?: PropPalette): THREE.Mesh {
+  const pal = palette ?? createPropPalette(mats);
   const bag = new GeoBag();
   PROP_VISUALS[id].build(bag);
-  const g = bagToSingle(bag);
+  const merged = bag.merged();
   bag.dispose();
-  // one mesh per prop: metal props use the metal material, others the paint material (all vertex-coloured)
-  const metal = id === "frying_pan" || id === "bucket";
-  const mesh = new THREE.Mesh(g, metal ? mats.metal : mats.paint);
+
+  // Coalesce parts that resolve to the same material instance so groups match minimal draw calls.
+  const buckets = new Map<THREE.Material, THREE.BufferGeometry[]>();
+  for (const [key, g] of merged) {
+    const m = resolvePropMaterial(id, key, mats, pal);
+    const list = buckets.get(m) ?? [];
+    list.push(g);
+    buckets.set(m, list);
+  }
+
+  const groupGeos: THREE.BufferGeometry[] = [];
+  const groupMats: THREE.Material[] = [];
+  for (const [m, list] of buckets) {
+    if (list.length === 1) {
+      groupGeos.push(list[0]);
+    } else {
+      groupGeos.push(mergeGeometries(list, false)!);
+      for (const item of list) item.dispose();
+    }
+    groupMats.push(m);
+  }
+
+  let geometry: THREE.BufferGeometry;
+  let material: THREE.Material | THREE.Material[];
+  if (groupGeos.length === 1) {
+    geometry = groupGeos[0];
+    material = groupMats[0];
+  } else {
+    geometry = mergeGeometries(groupGeos, true)!;
+    for (const part of groupGeos) part.dispose();
+    material = groupMats;
+  }
+
+  const mesh = new THREE.Mesh(geometry, material);
   mesh.name = `prop:${id}`;
-  // tiny props skip the shadow pass (draw-call budget); medium ones keep a contact shadow
+  // tiny props skip the shadow pass (draw-call budget); hero tabletop & medium props keep contact shadows
   mesh.castShadow = !SMALL_PROPS.has(id);
   mesh.receiveShadow = true;
+  if (!palette) {
+    const used = new Set(groupMats);
+    for (const m of pal.owned) if (!used.has(m)) m.dispose();
+    mesh.userData.propOwnedMaterials = pal.owned.filter((m) => used.has(m));
+  }
   return mesh;
 }
 
@@ -302,6 +438,7 @@ const _up = new THREE.Vector3(0, 1, 0);
 export function createProps(mats: LookMaterials): PropsHandle {
   const root = new THREE.Group();
   root.name = "props";
+  const palette = createPropPalette(mats);
   const objects = {} as Record<PropId, THREE.Object3D>;
   const cache = {} as Record<PropId, { x: number; y: number; z: number; p: THREE.Vector3; r: THREE.Euler }>;
   for (const id of PROP_IDS) {
@@ -309,7 +446,7 @@ export function createProps(mats: LookMaterials): PropsHandle {
     const holder = new THREE.Group();
     holder.name = `prop:${id}:holder`;
     holder.rotation.order = "YXZ";
-    holder.add(buildPropMesh(id, mats));
+    holder.add(buildPropMesh(id, mats, palette));
     holder.visible = false;
     root.add(holder);
     objects[id] = holder;
@@ -378,6 +515,7 @@ export function createProps(mats: LookMaterials): PropsHandle {
     },
     dispose() {
       line.material.dispose();float.material.dispose();
+      for (const m of palette.owned) m.dispose();
       root.traverse((x) => (x as THREE.Mesh).geometry?.dispose());
     },
   };

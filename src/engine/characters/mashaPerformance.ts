@@ -101,6 +101,15 @@ function cutRegion(mesh:THREE.SkinnedMesh,points:Point[],r:Region,contains?:(x:n
  mesh.geometry.setIndex(keep);return outer;
 }
 
+function cloneSkinMaterial(source:THREE.MeshStandardMaterial):THREE.MeshStandardMaterial{
+ const mat=source.clone();
+ mat.side=THREE.DoubleSide;
+ mat.forceSinglePass=true;
+ mat.onBeforeCompile=source.onBeforeCompile;
+ mat.customProgramCacheKey=source.customProgramCacheKey;
+ return mat;
+}
+
 const faceUV=(x:number,y:number)=>new THREE.Vector2((x+.16)/.32,(y-.56)/.29);
 function mouthSkin(outer:Point[],r:Region,sample:ReturnType<typeof surfaceSampler>,material:THREE.Material,inner:(angle:number)=>THREE.Vector3,outerAt:(point:Point)=>THREE.Vector3):Ring{
  const active=outer.map((_,i)=>i),indices:number[]=[],rows=14;
@@ -126,7 +135,7 @@ function mouthSkin(outer:Point[],r:Region,sample:ReturnType<typeof surfaceSample
   const p=outer[active[i]].p.clone().lerp(base[i],j/rows);if(j<rows)p.z=sample(p.x,p.y).p.z;rest.push(p);
   const a=vertex(j-1,i),b=vertex(j-1,(i+1)%count),c=vertex(j,i),d=vertex(j,(i+1)%count);indices.push(a,b,c,b,d,c);
  }
- const positions=new Float32Array(rest.length*3);rest.forEach((p,i)=>{p.toArray(positions,i*3);const t=faceUV(p.x,p.y);uv.push(t.x,t.y);});const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(positions,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));g.setIndex(indices);g.computeVertexNormals();const mat=material.clone() as THREE.MeshStandardMaterial;mat.side=THREE.DoubleSide;const mesh=new THREE.Mesh(g,mat);mesh.frustumCulled=false;
+ const positions=new Float32Array(rest.length*3);rest.forEach((p,i)=>{p.toArray(positions,i*3);const t=faceUV(p.x,p.y);uv.push(t.x,t.y);});const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(positions,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));g.setIndex(indices);g.computeVertexNormals();const mat=cloneSkinMaterial(material as THREE.MeshStandardMaterial);const mesh=new THREE.Mesh(g,mat);mesh.frustumCulled=false;
  return {mesh,angles,update(next){
   const edgePositions=outer.map(outerAt);for(let i=0;i<outer.length;i++)edgePositions[i].toArray(positions,i*3);
   for(let i=0;i<count;i++){
@@ -174,7 +183,7 @@ function skinRing(outer:Point[],r:Region,sample:ReturnType<typeof surfaceSampler
   for(let pass=0;pass<4;pass++){for(let i=0;i<rest.length;i++){let x=normals.getX(i)*2,y=normals.getY(i)*2,z=normals.getZ(i)*2;for(const j of neighborIds[i]){x+=normals.getX(j);y+=normals.getY(j);z+=normals.getZ(j);}const length=Math.hypot(x,y,z)||1;normalBuffer[i*3]=x/length;normalBuffer[i*3+1]=y/length;normalBuffer[i*3+2]=z/length;}for(let i=0;i<rest.length;i++)normals.setXYZ(i,normalBuffer[i*3],normalBuffer[i*3+1],normalBuffer[i*3+2]);if(outerNormals)outerNormals.forEach((normal,i)=>normals.setXYZ(i,normal.x,normal.y,normal.z));}
   normals.needsUpdate=true;
  };
- const mat=material.clone() as THREE.MeshStandardMaterial;mat.side=THREE.DoubleSide;const mesh=new THREE.Mesh(geom,mat);mesh.frustumCulled=false;mesh.receiveShadow=true;
+ const mat=cloneSkinMaterial(material as THREE.MeshStandardMaterial);const mesh=new THREE.Mesh(geom,mat);mesh.frustumCulled=false;mesh.receiveShadow=true;
  const workingPoint=new THREE.Vector3();
  return {mesh,angles,update(next){
   for(let i=0;i<outer.length;i++)outerAt(outer[i]).toArray(positions,i*3);
@@ -187,8 +196,10 @@ function skinRing(outer:Point[],r:Region,sample:ReturnType<typeof surfaceSampler
  * along its irregular seam. Clean forehead/temple samples avoid turning the
  * whole eyelid into the source cheek's pink blush. */
 function cleanEyeTexture(source:THREE.CanvasTexture,target:THREE.CanvasTexture,outer:Point[],cx:number,cy:number,side:number){
- const original=source.image as HTMLCanvasElement,canvas=target.image as HTMLCanvasElement,ctx=canvas.getContext('2d')!,width=canvas.width,height=canvas.height;
- const raw=original.getContext('2d')!.getImageData(0,0,width,height).data,out=ctx.getImageData(0,0,width,height);
+ if(typeof document==='undefined'||!source?.image||!target?.image)return;
+ const original=source.image as HTMLCanvasElement,canvas=target.image as HTMLCanvasElement,ctx=canvas.getContext?.('2d'),origCtx=original.getContext?.('2d');
+ if(!ctx||!origCtx)return;
+ const width=canvas.width,height=canvas.height,raw=origCtx.getImageData(0,0,width,height).data,out=ctx.getImageData(0,0,width,height);
  const rgb=(x:number,y:number)=>{const u=clamp(Math.round((x+.16)/.32*(width-1)),0,width-1),v=clamp(Math.round((y-.56)/.29*(height-1)),0,height-1),i=(v*width+u)*4;return [raw[i],raw[i+1],raw[i+2]];};
  const inner=rgb(cx-side*.047,cy-.014),temple=rgb(cx+side*.061,cy-.010),innerTop=rgb(cx-side*.040,cy+.042),templeTop=rgb(cx+side*.060,cy+.040);
  const minX=Math.max(0,Math.floor((Math.min(...outer.map(v=>v.p.x))+.16)/.32*(width-1))),maxX=Math.min(width-1,Math.ceil((Math.max(...outer.map(v=>v.p.x))+.16)/.32*(width-1)));
@@ -206,29 +217,66 @@ function cleanEyeTexture(source:THREE.CanvasTexture,target:THREE.CanvasTexture,o
  ctx.putImageData(out,0,0);target.needsUpdate=true;
 }
 
+function scleraGeometry(){
+ const g=new THREE.SphereGeometry(1,48,32),pos=g.getAttribute('position'),colors=new Float32Array(pos.count*3);
+ const base=new THREE.Color('#fff9eb'),corner=new THREE.Color('#f0d4cb'),c=new THREE.Color();
+ for(let i=0;i<pos.count;i++){
+  const px=pos.getX(i),py=pos.getY(i),pz=pos.getZ(i),edge=1-Math.max(0,pz);
+  const topOcclusion=mix(1,.80,smooth((py+.05)/.72)),cornerBlend=smooth((Math.abs(px)-.42)/.58)*(1-.35*Math.max(0,pz));
+  c.copy(base).lerp(corner,cornerBlend*.45).multiplyScalar((.99-.06*edge)*topOcclusion);
+  c.toArray(colors,i*3);
+ }
+ g.setAttribute('color',new THREE.BufferAttribute(colors,3));return g;
+}
+
 function irisGeometry(rx:number,ry:number,depth:number){
- const pos:number[]=[],colors:number[]=[],idx:number[]=[],radial=12,segments=64;
- const green=new THREE.Color('#367e58'),light=new THREE.Color('#78a477'),dark=new THREE.Color('#294c37'),pupil=new THREE.Color('#0b1814');
+ const pos:number[]=[],colors:number[]=[],idx:number[]=[],radial=24,segments=64;
+ const green=new THREE.Color('#347b54'),light=new THREE.Color('#7ca875'),bounce=new THREE.Color('#a6d482'),dark=new THREE.Color('#193826'),pupil=new THREE.Color('#091410');
  for(let r=0;r<=radial;r++)for(let s=0;s<=segments;s++){
   const u=r/radial,a=s/segments*Math.PI*2,x=Math.cos(a)*.0203*u,y=Math.sin(a)*.0203*u;
   pos.push(x,y,depth*Math.sqrt(Math.max(0,1-(x/rx)**2-(y/ry)**2))+.0006);
   const streak=.5+.2*Math.sin(a*49)+.16*Math.sin(a*93+.9)+.14*Math.sin(a*21+u*7);
-  const c=u<.47?pupil.clone():green.clone().lerp(light,streak*.68).lerp(dark,smooth((u-.84)/.16)*.78);c.toArray(colors,colors.length);
+  const limbal=smooth((u-.76)/.24),lowerBounce=smooth((-Math.sin(a)-.08)/.78)*smooth((u-.46)/.16)*(1-smooth((u-.82)/.18)),upperShadow=1-.24*smooth((Math.sin(a)*u-.12)/.82),pupilMask=1-smooth((u-.42)/.07);
+  const c=green.clone().lerp(light,streak*.68).lerp(bounce,lowerBounce*.62).lerp(dark,limbal*.86).multiplyScalar(upperShadow).lerp(pupil,pupilMask);
+  c.toArray(colors,colors.length);
   if(r<radial&&s<segments){const k=r*(segments+1)+s;idx.push(k,k+segments+1,k+1,k+1,k+segments+1,k+segments+2);}
  }
  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));g.setIndex(idx);g.computeVertexNormals();return g;
 }
 
-function dynamicLine(count:number,material:THREE.Material,width:number){
+function catchlightGeometry(rx:number,ry:number,depth:number){
+ const pos:number[]=[],nrm:number[]=[],idx:number[]=[],segments=20;
+ const discs:[number,number,number][]=[[-.26*rx,.30*ry,.0044],[.21*rx,-.21*ry,.0018]];
+ for(const [cx,cy,rad] of discs){
+  const base=pos.length/3;
+  const pushPoint=(x:number,y:number)=>{
+   const z=depth*Math.sqrt(Math.max(.02,1-(x/rx)**2-(y/ry)**2))+.00097;
+   pos.push(x,y,z);
+   const nx=x/(rx*rx),ny=y/(ry*ry),nz=z/(depth*depth),len=Math.hypot(nx,ny,nz)||1;
+   nrm.push(nx/len,ny/len,nz/len);
+  };
+  pushPoint(cx,cy);
+  for(let s=0;s<=segments;s++){const a=s/segments*Math.PI*2;pushPoint(cx+Math.cos(a)*rad,cy+Math.sin(a)*rad);}
+  for(let s=0;s<segments;s++)idx.push(base,base+1+s,base+2+s);
+ }
+ const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('normal',new THREE.Float32BufferAttribute(nrm,3));g.setIndex(idx);return g;
+}
+
+function dynamicLine(count:number,material:THREE.Material,width:number,taper:'band'|'flick'='band'){
  const g=new THREE.BufferGeometry(),p=new Float32Array(count*2*3),idx:number[]=[];
  for(let i=0;i<count-1;i++)idx.push(i*2,i*2+1,i*2+2,i*2+1,i*2+3,i*2+2);
  g.setAttribute('position',new THREE.BufferAttribute(p,3));g.setIndex(idx);const mesh=new THREE.Mesh(g,material);mesh.frustumCulled=false;
- return {mesh,write(fn:(t:number)=>THREE.Vector3){for(let i=0;i<count;i++){const v=fn(i/(count-1)),w=width*Math.max(0,Math.sin(Math.PI*i/(count-1)))**.4;v.clone().add(new THREE.Vector3(0,w,.0005)).toArray(p,i*6);v.clone().add(new THREE.Vector3(0,-w,.0005)).toArray(p,i*6+3);}g.attributes.position.needsUpdate=true;g.computeVertexNormals();}};
+ return {mesh,write(fn:(t:number)=>THREE.Vector3){for(let i=0;i<count;i++){const t=i/(count-1),v=fn(t),w=width*(taper==='flick'?Math.pow(1-t,.75):Math.max(0,Math.sin(Math.PI*t))**.38);v.clone().add(new THREE.Vector3(0,w,.0005)).toArray(p,i*6);v.clone().add(new THREE.Vector3(0,-w,.0005)).toArray(p,i*6+3);}g.attributes.position.needsUpdate=true;g.computeVertexNormals();}};
 }
 
 function bakeFaceTexture(source:THREE.MeshStandardMaterial,sample:ReturnType<typeof surfaceSampler>,cleanEyes=false){
- const image=source.map!.image as ImageBitmap,input=document.createElement('canvas');input.width=image.width;input.height=image.height;const ctx=input.getContext('2d',{willReadFrequently:true})!;ctx.drawImage(image,0,0);const data=ctx.getImageData(0,0,input.width,input.height).data;
- const canvas=document.createElement('canvas');canvas.width=512;canvas.height=512;const out=canvas.getContext('2d')!,pixels=out.createImageData(512,512);
+ const material=cloneSkinMaterial(source);material.normalMap=null;material.roughnessMap=null;material.metalnessMap=null;material.aoMap=null;material.roughness=.72;
+ const image=source.map?.image as ImageBitmap|undefined;
+ if(typeof document==='undefined'||!image)return material;
+ const input=document.createElement('canvas');input.width=image.width;input.height=image.height;const ctx=input.getContext('2d',{willReadFrequently:true});
+ const canvas=document.createElement('canvas');canvas.width=512;canvas.height=512;const out=canvas.getContext('2d');
+ if(!ctx||!out)return material;
+ ctx.drawImage(image,0,0);const data=ctx.getImageData(0,0,input.width,input.height).data,pixels=out.createImageData(512,512);
  for(let y=0;y<512;y++)for(let x=0;x<512;x++){
   const s=sample(x/511*.32-.16,y/511*.29+.56),u=clamp(Math.round(s.uv.x*(input.width-1)),0,input.width-1),v=clamp(Math.round(s.uv.y*(input.height-1)),0,input.height-1),from=(v*input.width+u)*4,to=(y*512+x)*4;
   pixels.data.set(data.subarray(from,from+4),to);
@@ -238,7 +286,7 @@ function bakeFaceTexture(source:THREE.MeshStandardMaterial,sample:ReturnType<typ
   }
  }
  out.putImageData(pixels,0,0);const texture=new THREE.CanvasTexture(canvas);texture.flipY=false;texture.colorSpace=THREE.SRGBColorSpace;texture.anisotropy=8;
- const material=source.clone();material.map=texture;material.normalMap=null;material.roughnessMap=null;material.metalnessMap=null;material.aoMap=null;material.side=THREE.DoubleSide;return material;
+ material.map=texture;return material;
 }
 
 /** The shared cartoon presets are deliberately broad. Masha's sculpt needs
@@ -316,6 +364,11 @@ export function createMashaPerformance(meshes:THREE.SkinnedMesh[],bones:Record<s
  });
 
  // Replace each baked eye with a real gaze pivot and a skin eyelid aperture.
+ const eyeballMat=new THREE.MeshPhysicalMaterial({color:0xffffff,vertexColors:true,roughness:.22,clearcoat:.85,clearcoatRoughness:.1});
+ const irisMat=new THREE.MeshPhysicalMaterial({vertexColors:true,roughness:.2,clearcoat:1,clearcoatRoughness:.08});
+ const catchlightMat=new THREE.MeshBasicMaterial({color:new THREE.Color(1.38,1.35,1.28)});
+ const lashMat=new THREE.MeshStandardMaterial({color:'#3d281c',roughness:.78,side:THREE.DoubleSide,forceSinglePass:true});
+ const browMat=new THREE.MeshStandardMaterial({color:'#78593a',roughness:.92,side:THREE.DoubleSide,forceSinglePass:true});
  for(const [side,cx,cy] of [[1,.0556,.7374],[-1,-.053,.7449]]){
   const er={cx,cy,rx:.049,ry:.049};
   // The source lash fan reaches farther toward the temple than the eye itself.
@@ -324,8 +377,9 @@ export function createMashaPerformance(meshes:THREE.SkinnedMesh[],bones:Record<s
   cleanEyeTexture(skin.map as THREE.CanvasTexture,lidSkin.map as THREE.CanvasTexture,outer,cx,cy,side);
   const eyeRx=.037,eyeRy=.034,eyeDepth=.023;
   const eye=new THREE.Group();eye.name=side>0?'masha:left-eye':'masha:right-eye';eye.position.set(cx,cy,front-eyeDepth);add(eye);
-  const eyeball=new THREE.Mesh(new THREE.SphereGeometry(1,48,32),new THREE.MeshPhysicalMaterial({color:'#fff9eb',roughness:.24,clearcoat:.8,clearcoatRoughness:.12}));eyeball.scale.set(eyeRx,eyeRy,eyeDepth);eye.add(eyeball);
-  const iris=new THREE.Mesh(irisGeometry(eyeRx,eyeRy,eyeDepth),new THREE.MeshPhysicalMaterial({vertexColors:true,roughness:.22,clearcoat:1,clearcoatRoughness:.1}));eye.add(iris);
+  const eyeball=new THREE.Mesh(scleraGeometry(),eyeballMat);eyeball.scale.set(eyeRx,eyeRy,eyeDepth);eye.add(eyeball);
+  const iris=new THREE.Mesh(irisGeometry(eyeRx,eyeRy,eyeDepth),irisMat);eye.add(iris);
+  const catchlights=new THREE.Mesh(catchlightGeometry(eyeRx,eyeRy,eyeDepth),catchlightMat);catchlights.name=side>0?'masha:left-catchlights':'masha:right-catchlights';eye.add(catchlights);
   const lidPoint=(a:number,close=0,tilt=0,upperDrop=.003,lowerLift=.003)=>{
    const sn=Math.sin(a),x=.035*Math.cos(a),aperture=sn>=0?.0295*sn-upperDrop*Math.pow(sn,.65):.027*sn+lowerLift*Math.pow(-sn,.65);
    const y=aperture*(1-close)-close*.003+tilt*Math.cos(a);
@@ -337,10 +391,9 @@ export function createMashaPerformance(meshes:THREE.SkinnedMesh[],bones:Record<s
   const boundaryNormals=outer.map(point=>new THREE.Vector3().fromBufferAttribute(faceMesh.geometry.attributes.normal,point.index!).transformDirection(faceMesh.matrixWorld));
   const lid=skinRing(outer,er,sample,lidSkin,a=>lidPoint(a),outerAt,p=>{const d=((p.x-cx)/eyeRx)**2+((p.y-cy)/eyeRy)**2;if(d<1){const cover=front-eyeDepth+eyeDepth*Math.sqrt(1-d)+.0012,delta=p.z-cover;p.z=(p.z+cover+Math.sqrt(delta*delta+.00000225))*.5;}},boundaryNormals);lid.mesh.name='masha:eyelid-skin';add(lid.mesh);
   const irisRest=iris.geometry.attributes.position.array.slice();
-  const lashMat=new THREE.MeshStandardMaterial({color:'#70503a',roughness:.85,side:THREE.DoubleSide});
-  const lash=dynamicLine(48,lashMat,.00065);add(lash.mesh);
-  const flicks=Array.from({length:7},()=>dynamicLine(10,lashMat,.00045));for(const f of flicks)add(f.mesh);
-  const brow=dynamicLine(32,new THREE.MeshStandardMaterial({color:'#a08057',roughness:1,side:THREE.DoubleSide}),.0013);add(brow.mesh);
+  const lash=dynamicLine(48,lashMat,.00105);add(lash.mesh);
+  const flicks=Array.from({length:7},()=>dynamicLine(12,lashMat,.00062,'flick'));for(const f of flicks)add(f.mesh);
+  const brow=dynamicLine(32,browMat,.0014);add(brow.mesh);
   updates.push(frame=>{
    const pre=expression(frame),close=clamp(frame.face.lidClose,0,1),tilt=pre.tilt*.004*side;
    const smile=Math.max(0,pre.mouth.smile),asym=pre.mouth.asym*side;
@@ -348,7 +401,7 @@ export function createMashaPerformance(meshes:THREE.SkinnedMesh[],bones:Record<s
    // of squeezing both edges symmetrically into a circular inset disc.
    const upperDrop=clamp(.003+Math.max(0,pre.lid)*.023+Math.min(0,pre.lid)*.007+asym*.0015,.0003,.021),lowerLift=clamp(.0008+smile*.006+Math.min(0,pre.lid)*.005+Math.max(0,asym)*.001,-.001,.009);
    lid.update(a=>lidPoint(a,close,tilt,upperDrop,lowerLift));lash.write(k=>lidPoint(k*Math.PI,close,tilt,upperDrop,lowerLift));
-   flicks.forEach((f,i)=>{const angle=side>0?.16+i*.12:Math.PI-.16-i*.12,length=.0048-i*.00035;f.write(k=>{const p=lidPoint(angle,close,tilt,upperDrop,lowerLift);return p.add(new THREE.Vector3(side*length*k,length*k*(1-close*.65),.001*Math.sin(k*Math.PI)));});});
+   flicks.forEach((f,i)=>{const angle=side>0?.14+i*.11:Math.PI-.14-i*.11,length=.0064-i*.00042;f.write(k=>{const p=lidPoint(angle,close,tilt,upperDrop,lowerLift);return p.add(new THREE.Vector3(side*length*(k*.82+.18*k*k),length*(.32*k+.68*k*k)*(1-close*.72),.0009*Math.sin(k*Math.PI)));});});
    brow.write(k=>{const nx=k*2-1,x=cx+.029*nx,y=cy+.0365+.0035*(1-nx*nx)+(side>0?pre.browL:pre.browR)*.005+frame.face.browRaise*.0025-pre.tilt*side*nx*.007;const p=sample(x,y).p;p.z+=.0007;return p;});
    eye.updateWorldMatrix(true,false);
    // Keep the sclera stationary: rotating an ellipsoid moves its silhouette

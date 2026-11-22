@@ -486,16 +486,20 @@ float furNoise(vec3 x) {
         "#include <color_fragment>",
         `#include <color_fragment>
 vec3 furP = vFurPos * furFreq * vec3(1.0, furStretch, 1.0);
-float furH = furNoise(furP) * 0.65 + furNoise(furP * 2.3 + 7.1) * 0.35;
+vec3 furClumpP = furP * 0.28 + vec3(3.7, 1.9, 5.3);
+float furFineH = furNoise(furP) * 0.65 + furNoise(furP * 2.3 + 7.1) * 0.35;
+float furClumpH = furNoise(furClumpP);
 float furFoot = length(fwidth(furP));
 float furFade = 1.0 - smoothstep(0.35, 0.9, furFoot);
-diffuseColor.rgb *= 1.0 + furValue * furFade * (furH - 0.5) * 2.0;`,
+float furClumpFade = 1.0 - smoothstep(0.45, 1.45, length(fwidth(furClumpP)));
+float furColorMod = (furFineH - 0.5) * furFade * 0.68 + (furClumpH - 0.5) * furClumpFade * 0.45;
+diffuseColor.rgb *= 1.0 + furValue * furColorMod * 2.0;`,
       )
       .replace(
         "#include <normal_fragment_maps>",
         `#include <normal_fragment_maps>
 {
-  vec2 dH = vec2(dFdx(furH), dFdy(furH)) * furBump * furFade;
+  vec2 dH = (vec2(dFdx(furFineH), dFdy(furFineH)) * furFade * 0.72 + vec2(dFdx(furClumpH), dFdy(furClumpH)) * furClumpFade * 0.52) * furBump;
   vec3 sX = dFdx(-vViewPosition);
   vec3 sY = dFdy(-vViewPosition);
   vec3 r1 = cross(sY, normal);
@@ -514,7 +518,7 @@ diffuseColor.rgb *= 1.0 + furValue * furFade * (furH - 0.5) * 2.0;`,
 }`,
       );
   };
-  m.customProgramCacheKey = () => "mabear-fur-v2";
+  m.customProgramCacheKey = () => "mabear-fur-v3";
   return m;
 }
 

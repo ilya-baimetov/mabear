@@ -30,12 +30,55 @@ export function generatedRig(id: ActorId, model: THREE.Group, options: Generated
       if(m.isSkinnedMesh) meshes.push(m);
       for(const mat of Array.isArray(m.material) ? m.material : [m.material]) {
         const material = mat as THREE.MeshStandardMaterial;
-        material.transparent = true; material.roughness = Math.max(.65,material.roughness); material.metalness = 0;
+        material.transparent = true; material.forceSinglePass = true; material.roughness = Math.max(.65,material.roughness); material.metalness = 0;
+        material.envMapIntensity = 0.68;
         // Generated normal maps contain some high-frequency baked fur; keep it subtle under sunlight.
-        material.normalScale?.set(.6,.6); materials.add(material);
+        material.normalScale?.set(.6,.6);
+        if(material.map) material.map.anisotropy = 6;
+        if(material.normalMap) material.normalMap.anisotropy = 6;
+        if(material.roughnessMap) material.roughnessMap.anisotropy = 6;
+        materials.add(material);
       }
     }
   });
+  const roughnessFloor = id === 'masha' ? 0.70 : 0.80;
+  const rimTint = (
+    id === 'masha' ? new THREE.Color('#ffe0cf').multiplyScalar(0.14)
+    : id === 'rosie' ? new THREE.Color('#ffd9d0').multiplyScalar(0.13)
+    : new THREE.Color('#fff5ea').multiplyScalar(0.15)
+  );
+  for(const material of materials) {
+    const previousCompile = material.onBeforeCompile;
+    const previousKey = material.customProgramCacheKey;
+    material.onBeforeCompile = (shader, renderer) => {
+      previousCompile?.call(material, shader, renderer);
+      shader.uniforms.charRoughnessFloor = { value: roughnessFloor };
+      shader.uniforms.charRimTint = { value: rimTint };
+      if(shader.fragmentShader.includes('#include <common>')) {
+        shader.fragmentShader = shader.fragmentShader.replace(
+          '#include <common>',
+          '#include <common>\nuniform float charRoughnessFloor;\nuniform vec3 charRimTint;',
+        );
+      }
+      if(shader.fragmentShader.includes('#include <roughnessmap_fragment>') && shader.fragmentShader.includes('charRoughnessFloor')) {
+        shader.fragmentShader = shader.fragmentShader.replace(
+          '#include <roughnessmap_fragment>',
+          '#include <roughnessmap_fragment>\nroughnessFactor = max(roughnessFactor, charRoughnessFloor);',
+        );
+      }
+      if(shader.fragmentShader.includes('#include <emissivemap_fragment>') && shader.fragmentShader.includes('charRimTint')) {
+        shader.fragmentShader = shader.fragmentShader.replace(
+          '#include <emissivemap_fragment>',
+          '#include <emissivemap_fragment>\n{\n  float charRim = pow(1.0 - saturate(dot(normal, normalize(vViewPosition))), 3.2);\n  totalEmissiveRadiance += diffuseColor.rgb * charRimTint * charRim;\n}',
+        );
+      }
+    };
+    material.customProgramCacheKey = () => {
+      const pk = previousKey && previousKey !== THREE.Material.prototype.customProgramCacheKey ? previousKey.call(material) : '';
+      return pk ? `${pk}:generated-char-v1:${id}` : `generated-char-v1:${id}`;
+    };
+    material.needsUpdate = true;
+  }
   for(const name of BONES) {
     const source = Object.keys(byName).find(n => n.replace(/^mixamorig[:_]?/i,'') === name);
     if(source) map[name] = source;
@@ -164,7 +207,7 @@ export function generatedRig(id: ActorId, model: THREE.Group, options: Generated
 function repairDress(mesh:THREE.SkinnedMesh):number {
   const mat=(Array.isArray(mesh.material)?mesh.material[0]:mesh.material) as THREE.MeshStandardMaterial;
   const tex=mat.map, uv=mesh.geometry.getAttribute('uv'), position=mesh.geometry.getAttribute('position');
-  if(!tex?.image || !uv) return 0;
+  if(!tex?.image || !uv || typeof document === 'undefined') return 0;
   const bitmap=tex.image as ImageBitmap;
   const canvas=document.createElement('canvas'); canvas.width=bitmap.width; canvas.height=bitmap.height;
   const ctx=canvas.getContext('2d',{willReadFrequently:true}); if(!ctx)return 0;

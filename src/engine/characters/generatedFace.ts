@@ -29,7 +29,11 @@ function sampler(mesh:THREE.SkinnedMesh,points:Point[],eye:Eye){
 }
 
 function textureColor(source:THREE.MeshStandardMaterial){
- const image=source.map!.image as ImageBitmap,canvas=document.createElement('canvas');canvas.width=image.width;canvas.height=image.height;const ctx=canvas.getContext('2d',{willReadFrequently:true})!;ctx.drawImage(image,0,0);const pixels=ctx.getImageData(0,0,canvas.width,canvas.height).data;
+ const image=source.map?.image as ImageBitmap|undefined;
+ if(!image||typeof document==='undefined')return ()=>new THREE.Color('#808080');
+ const canvas=document.createElement('canvas');canvas.width=image.width;canvas.height=image.height;const ctx=canvas.getContext('2d',{willReadFrequently:true});
+ if(!ctx)return ()=>new THREE.Color('#808080');
+ ctx.drawImage(image,0,0);const pixels=ctx.getImageData(0,0,canvas.width,canvas.height).data;
  return(uv:THREE.Vector2)=>{const x=clamp(Math.round(uv.x*(canvas.width-1)),0,canvas.width-1),y=clamp(Math.round(uv.y*(canvas.height-1)),0,canvas.height-1),n=(y*canvas.width+x)*4;return new THREE.Color().setRGB(pixels[n]/255,pixels[n+1]/255,pixels[n+2]/255,THREE.SRGBColorSpace);};
 }
 function movingLid(eye:Eye,top:boolean,sample:ReturnType<typeof sampler>,material:THREE.Material,colorAt:(uv:THREE.Vector2)=>THREE.Color){
@@ -46,7 +50,7 @@ function movingLid(eye:Eye,top:boolean,sample:ReturnType<typeof sampler>,materia
  for(let i=0;i<=columns;i++){const color=left.clone().lerp(right,i/columns).multiplyScalar(.52);color.toArray(edgeColors,i*6);color.toArray(edgeColors,i*6+3);if(i<columns){const k=i*2;edgeIndices.push(k,k+1,k+2,k+1,k+3,k+2);}}
  const edgeGeom=new THREE.BufferGeometry();edgeGeom.setAttribute('position',new THREE.BufferAttribute(edgePos,3));edgeGeom.setAttribute('color',new THREE.BufferAttribute(edgeColors,3));edgeGeom.setIndex(edgeIndices);const edge=new THREE.Mesh(edgeGeom,material);edge.frustumCulled=false;edge.name='lid-crease';mesh.add(edge);
  let priorClose=NaN;
- return{mesh,update(close:number){if(close===priorClose)return;priorClose=close;mesh.visible=close>.001;edge.visible=top&&close>.12;for(let i=0;i<=columns;i++){const u=i/columns*2-1,extent=Math.sqrt(Math.max(0,1-u*u));for(let j=0;j<=rows;j++){const v=j/rows,closed=close*(top?.72:.28),f=top?closed*v:1-closed*v,at=clamp(f*64,0,64),lo=Math.floor(at),p=surface[i][lo].p.clone().lerp(surface[i][Math.min(64,lo+1)].p,at-lo);p.z+=eye.rx*(.018+.05*Math.sin(v*Math.PI))*extent;p.toArray(positions,(j*(columns+1)+i)*3);if(j===rows){const width=eye.ry*.035*extent;p.z+=eye.rx*.018;p.y+=width;p.toArray(edgePos,i*6);p.y-=width*2;p.toArray(edgePos,i*6+3);}}}geometry.attributes.position.needsUpdate=true;geometry.computeVertexNormals();edgeGeom.attributes.position.needsUpdate=true;edgeGeom.computeVertexNormals();},dispose(){geometry.dispose();edgeGeom.dispose();}};
+ return{mesh,update(close:number){if(close===priorClose)return;priorClose=close;mesh.visible=close>.001;edge.visible=top&&close>.22;for(let i=0;i<=columns;i++){const u=i/columns*2-1,extent=Math.sqrt(Math.max(0,1-u*u));for(let j=0;j<=rows;j++){const v=j/rows,closed=close*(top?.72:.28),f=top?closed*v:1-closed*v,at=clamp(f*64,0,64),lo=Math.floor(at),p=surface[i][lo].p.clone().lerp(surface[i][Math.min(64,lo+1)].p,at-lo);p.z+=eye.rx*(.018+.05*Math.sin(v*Math.PI))*extent;p.toArray(positions,(j*(columns+1)+i)*3);if(j===rows){const width=eye.ry*.035*extent;p.z+=eye.rx*.018;p.y+=width;p.toArray(edgePos,i*6);p.y-=width*2;p.toArray(edgePos,i*6+3);}}}geometry.attributes.position.needsUpdate=true;geometry.computeVertexNormals();edgeGeom.attributes.position.needsUpdate=true;edgeGeom.computeVertexNormals();},dispose(){geometry.dispose();edgeGeom.dispose();}};
 }
 
 /** The generated eyes are painted into a continuous textured face. Occlude
@@ -57,21 +61,29 @@ function sourceBlink(source:THREE.MeshStandardMaterial,mesh:THREE.SkinnedMesh,po
  const close={value:0},colors=profile.eyes.flatMap(eye=>{const sample=sampler(mesh,points,eye);return[-1,1].flatMap(y=>[-1,1].map(x=>colorAt(sample(eye.x+x*eye.rx*1.55,eye.y+y*eye.ry*.85).uv)));});
  const previous=source.onBeforeCompile,previousKey=source.customProgramCacheKey;
  const f=(n:number)=>Number(n).toFixed(8);
- source.onBeforeCompile=(shader,renderer)=>{previous.call(source,shader,renderer);shader.uniforms.animalBlink=close;colors.forEach((color,i)=>shader.uniforms[`animalLidColor${i}`]={value:color});
-  shader.vertexShader='attribute vec3 animalFaceBindPosition; varying vec3 vAnimalFaceBind;\n'+shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvAnimalFaceBind = animalFaceBindPosition;');
-  shader.fragmentShader='varying vec3 vAnimalFaceBind; uniform float animalBlink; '+colors.map((_,i)=>`uniform vec3 animalLidColor${i};`).join(' ')+'\n'+shader.fragmentShader.replace('#include <map_fragment>','#include <map_fragment>\n'+profile.eyes.map((eye,i)=>`{
+ source.onBeforeCompile=(shader,renderer)=>{previous?.call(source,shader,renderer);shader.uniforms.animalBlink=close;colors.forEach((color,i)=>shader.uniforms[`animalLidColor${i}`]={value:color});
+  if(shader.vertexShader.includes('#include <begin_vertex>')){
+   shader.vertexShader='attribute vec3 animalFaceBindPosition; varying vec3 vAnimalFaceBind;\n'+shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvAnimalFaceBind = animalFaceBindPosition;');
+  }
+  if(shader.fragmentShader.includes('#include <map_fragment>')){
+   shader.fragmentShader='varying vec3 vAnimalFaceBind; uniform float animalBlink; '+colors.map((_,i)=>`uniform vec3 animalLidColor${i};`).join(' ')+'\n'+shader.fragmentShader.replace('#include <map_fragment>','#include <map_fragment>\nfloat animalLidMask = 0.0;\n'+profile.eyes.map((eye,i)=>`{
    vec2 lidXY = (vAnimalFaceBind.xy - vec2(${f(eye.x)}, ${f(eye.y)})) / vec2(${f(eye.rx*1.32)}, ${f(eye.ry*1.3)});
    float lidRadius = length(lidXY);
    float lidRegion = (1.0-smoothstep(0.91,1.15,lidRadius))*smoothstep(${f(eye.z-eye.rx*2.2)},${f(eye.z-eye.rx*1.8)},vAnimalFaceBind.z);
    float topCover=smoothstep(1.0-1.44*animalBlink-.035,1.0-1.44*animalBlink+.035,lidXY.y);
    float lowCover=1.0-smoothstep(-1.0+.56*animalBlink-.035,-1.0+.56*animalBlink+.035,lidXY.y);
    float lidMask=lidRegion*max(topCover,lowCover)*smoothstep(0.0,.025,animalBlink);
+   animalLidMask = max(animalLidMask, lidMask);
    vec2 skinBlend=clamp(lidXY*.5+.5,0.0,1.0);
    vec3 lidSkin=mix(mix(animalLidColor${i*4},animalLidColor${i*4+1},skinBlend.x),mix(animalLidColor${i*4+2},animalLidColor${i*4+3},skinBlend.x),skinBlend.y);
    diffuseColor.rgb=mix(diffuseColor.rgb,lidSkin,lidMask);
   }`).join('\n'));
+  }
+  if(shader.fragmentShader.includes('#include <roughnessmap_fragment>')&&shader.fragmentShader.includes('animalLidMask')){
+   shader.fragmentShader=shader.fragmentShader.replace('#include <roughnessmap_fragment>','#include <roughnessmap_fragment>\nroughnessFactor = mix(roughnessFactor, 0.94, animalLidMask);');
+  }
  };
- source.customProgramCacheKey=()=>`animal-face-blink:${id}`;source.needsUpdate=true;
+ source.customProgramCacheKey=()=>{const pk=previousKey&&previousKey!==THREE.Material.prototype.customProgramCacheKey?previousKey.call(source):'';return pk?`${pk}:animal-face-blink:${id}`:`animal-face-blink:${id}`;};source.needsUpdate=true;
  return{close,dispose(){source.onBeforeCompile=previous;source.customProgramCacheKey=previousKey;mesh.geometry.deleteAttribute('animalFaceBindPosition');}};
 }
 
@@ -94,7 +106,7 @@ export function createGeneratedFace(id:ActorId,meshes:THREE.SkinnedMesh[],bones:
  }
  const offset=mesh.geometry.morphAttributes.position?.length??0;mesh.geometry.morphAttributes.position=[...(mesh.geometry.morphAttributes.position??[]),...arrays.map(a=>new THREE.BufferAttribute(a,3))];mesh.geometry.morphTargetsRelative=true;mesh.updateMorphTargets();
  const space=new THREE.Group();space.name=`${id}:facial-articulation`;space.matrixAutoUpdate=false;space.matrix.copy(bones.Head.matrixWorld).invert();bones.Head.add(space);
- const source=(Array.isArray(mesh.material)?mesh.material[0]:mesh.material) as THREE.MeshStandardMaterial,material=source.clone();material.side=THREE.DoubleSide;material.map=null;material.vertexColors=true;material.normalMap=null;material.roughnessMap=null;material.aoMap=null;material.transparent=true;material.roughness=.9;
+ const source=(Array.isArray(mesh.material)?mesh.material[0]:mesh.material) as THREE.MeshStandardMaterial,material=source.clone();material.side=THREE.DoubleSide;material.forceSinglePass=true;material.map=null;material.vertexColors=true;material.normalMap=null;material.roughnessMap=null;material.aoMap=null;material.transparent=true;material.roughness=.9;
  const colorAt=textureColor(source),blinkSurface=sourceBlink(source,mesh,points,profile,colorAt,id);
  const lids=profile.eyes.flatMap(eye=>{const sample=sampler(mesh,points,eye);return[true,false].map(top=>{const lid=movingLid(eye,top,sample,material,colorAt);space.add(lid.mesh);return lid;});});
  const metrics={type:'source-preserving animal face',activeVertices:active,lidClose:0,browL:0,browR:0,jaw:0};root.userData.facialPerformance=metrics;

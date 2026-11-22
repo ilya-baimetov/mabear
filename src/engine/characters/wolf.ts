@@ -381,7 +381,7 @@ export function buildWolf(variant: WolfVariant): CharacterRig {
       lidMaterial: fur,
     },
     eyeMaterial: eyeMat,
-    brows: { color: variant === "b" ? C.light : C.furDark, y: .054, dx: .005, length: .09, thickness: .013, arch: variant === "a" ? .012 : .004, range: .027, material: fur },
+    brows: { color: variant === "b" ? "#5e5a56" : C.furDark, y: .054, dx: .005, length: .09, thickness: .013, arch: variant === "a" ? .012 : .004, range: .027, material: fur },
     mouth: {
       surface: { center: H.snoutCenter as V3, radius: sr[2], zAt: () => sc.z + sr[2] },
       y: sc.y - 0.026,
@@ -412,6 +412,21 @@ export function buildWolf(variant: WolfVariant): CharacterRig {
   paintVertices(lowerJaw, (_p, out) => out.copy(cLight).lerp(cFur, .16));
   parts.push({ geom: lowerJaw, bone: jaw, material: fur });
   const mouthMat = mats.add(new THREE.MeshStandardMaterial({color: 0xffffff, vertexColors: true, roughness: .82}));
+  mouthMat.onBeforeCompile = (shader) => {
+    if (shader.fragmentShader.includes("#include <roughnessmap_fragment>")) {
+      shader.fragmentShader = shader.fragmentShader.replace(
+        "#include <roughnessmap_fragment>",
+        `#include <roughnessmap_fragment>
+{
+  float toothMask = smoothstep(0.45, 0.72, min(diffuseColor.g, diffuseColor.b));
+  float tongueMask = smoothstep(0.15, 0.35, diffuseColor.r - diffuseColor.g) * (1.0 - toothMask);
+  roughnessFactor = mix(0.94, 0.38, tongueMask);
+  roughnessFactor = mix(roughnessFactor, 0.28, toothMask);
+}`,
+      );
+    }
+  };
+  mouthMat.customProgramCacheKey = () => "mabear-wolf-mouth-v1";
   const interior = blob(4, (d, out) => out.set(d.x * jawWidth * .91, .002 + d.y * .009,
     jawCenterZ + d.z * jawLength * .9));
   paintVertices(interior, (_p, out) => out.copy(col(C.mouthInterior)));

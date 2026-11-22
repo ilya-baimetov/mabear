@@ -3,6 +3,7 @@
 // (`source: { gltf: url }`, plus `skeletonMap` when the official rig doesn't use Mixamo bone names).
 // The `robot_test` entry is a working glTF example (three.js RobotExpressive.glb, CC0) loaded as a hidden character.
 import * as THREE from "three";
+import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import {openHouseAperture} from './set/houseDoor';
 import { ACTOR_IDS, PROP_IDS, type Vec3, type ActorId } from "../shared/schema";
 import type { ActorFrame, CharacterRig } from "./api";
@@ -171,6 +172,51 @@ export async function loadCharacter(id: string, manifest: Record<string, AssetEn
   }
 }
 
+function addHouseNightGlow(house: THREE.Group): void {
+  const parts: THREE.BufferGeometry[] = [];
+  const addPart = (g: THREE.BufferGeometry, x: number, y: number, z: number, rotY = 0, sx = 1, sy = 1, sz = 1) => {
+    g.scale(sx, sy, sz);
+    if (rotY) g.rotateY(rotY);
+    g.translate(x, y, z);
+    const nonIdx = g.index ? g.toNonIndexed() : g;
+    if (nonIdx !== g) g.dispose();
+    parts.push(nonIdx);
+  };
+  // Front right 4-pane window glass aligned inside treehouse.glb's recessed wooden panes.
+  for (const px of [0.83, 1.08]) {
+    addPart(new THREE.BoxGeometry(0.17, 0.18, 0.015), px, 2.14, 0.945);
+    addPart(new THREE.BoxGeometry(0.17, 0.18, 0.015), px, 1.90, 0.962);
+  }
+  // Left shed window glass on the recessed shed wall (behind the front bough).
+  addPart(new THREE.BoxGeometry(0.36, 0.22, 0.015), -4.05, 2.72, -0.37);
+  // Porch lantern bulb tucked inside the red conical shade above the front door.
+  addPart(new THREE.SphereGeometry(0.085, 10, 8), -0.58, 3.44, 1.54, 0, 1, 1.3, 1);
+
+  const merged = mergeGeometries(parts, false);
+  for (const p of parts) p.dispose();
+  if (!merged) return;
+
+  const glowMat = new THREE.MeshStandardMaterial({
+    color: 0xffd28a,
+    emissive: new THREE.Color(0xff9d3b),
+    emissiveIntensity: 0,
+    roughness: 0.2,
+    metalness: 0.0,
+    transparent: true,
+    opacity: 0,
+    depthWrite: false,
+  });
+  glowMat.userData.generated = true;
+  const mesh = new THREE.Mesh(merged, glowMat);
+  mesh.name = "set:house:night_glow";
+  mesh.castShadow = false;
+  mesh.receiveShadow = false;
+  mesh.visible = false;
+  house.add(mesh);
+  house.userData.glowMaterials = [glowMat];
+  house.userData.glowMesh = mesh;
+}
+
 /** Load glTF replacements of set elements into their named anchors (non-blocking for the caller). */
 export async function loadSetOverrides(anchors: Record<SetElementId, THREE.Group>, manifest: Record<string, AssetEntry> = ASSET_MANIFEST, isDisposed:()=>boolean=()=>false): Promise<void> {
   await Promise.all(
@@ -186,9 +232,14 @@ export async function loadSetOverrides(anchors: Record<SetElementId, THREE.Group
             o.receiveShadow = true;
           }
         });
-        for(const child of [...anchors[id].children]) if(child.name !== 'set:bees') { anchors[id].remove(child); child.traverse(o=>(o as THREE.Mesh).geometry?.dispose()); }
+        for(const child of [...anchors[id].children]) if(child.name !== 'set:bees' && child.name !== 'set:chimney_smoke') { anchors[id].remove(child); child.traverse(o=>(o as THREE.Mesh).geometry?.dispose()); }
         anchors[id].add(normalized);
-        if(id==='house')openHouseAperture(normalized);
+        if(id==='house'){
+          openHouseAperture(normalized);
+          const smoke = anchors[id].getObjectByName('set:chimney_smoke');
+          if (smoke) smoke.position.set(-1.05, 10.65, -2.6);
+          addHouseNightGlow(anchors[id]);
+        }
         status.set(e.id, { id: e.id, source: "gltf", ok: true });
       } catch (err) {
         status.set(e.id, { id: e.id, source: "gltf", ok: false, error: String(err) });
@@ -225,7 +276,22 @@ export function normalizeStatic(model:THREE.Object3D,height?:number,scale=1,offs
   const inner=new THREE.Group();inner.add(model);inner.scale.setScalar(s);
   inner.position.set(-(b.min.x+b.max.x)*s/2,-b.min.y*s,-(b.min.z+b.max.z)*s/2);
   const root=new THREE.Group();root.add(inner);root.position.fromArray(offset);
-  model.traverse(o=>{if((o as THREE.Mesh).isMesh){o.castShadow=true;o.receiveShadow=true;const m=o as THREE.Mesh;for(const material of Array.isArray(m.material)?m.material:[m.material]){const mat=material as THREE.MeshStandardMaterial;mat.userData.generated=true;mat.roughness=Math.max(.75,mat.roughness);mat.metalness=0;mat.normalScale?.setScalar(.55);}}});
+  model.traverse(o=>{
+    if((o as THREE.Mesh).isMesh){
+      o.castShadow=true;o.receiveShadow=true;
+      const m=o as THREE.Mesh;
+      for(const material of Array.isArray(m.material)?m.material:[m.material]){
+        const mat=material as THREE.MeshStandardMaterial;
+        mat.userData.generated=true;
+        mat.roughness=Math.max(.75,mat.roughness);
+        mat.metalness=0;
+        mat.normalScale?.setScalar(.55);
+        for(const tex of [mat.map,mat.normalMap,mat.roughnessMap,mat.metalnessMap,mat.emissiveMap]){
+          if(tex) tex.anisotropy = Math.max(tex.anisotropy ?? 1, 4);
+        }
+      }
+    }
+  });
   return root;
 }
 

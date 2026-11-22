@@ -80,13 +80,13 @@ export interface GradeParams {
 }
 
 export const DEFAULT_GRADE: GradeParams = {
-  gain: [1.015, 1.0, 0.98],
-  lift: [0.008, 0.009, 0.006],
-  saturation: 1.03,
-  contrast: 0.06,
-  vignette: 0.16,
-  bloomStrength: 0.12,
-  bloomThreshold: 1.0,
+  gain: [1.02, 1.005, 0.985],
+  lift: [0.005, 0.004, 0.006],
+  saturation: 1.07,
+  contrast: 0.085,
+  vignette: 0.15,
+  bloomStrength: 0.18,
+  bloomThreshold: 0.88,
   aoIntensity: 0.85,
 };
 
@@ -145,8 +145,8 @@ void main() {
 }`;
 
 const COMPOSITE_FRAG = /* glsl */ `
-uniform sampler2D tScene; uniform sampler2D tBloom; uniform sampler2D tAO;
-uniform float uExposure; uniform float uBloom; uniform float uAO;
+uniform sampler2D tScene; uniform sampler2D tBloom; uniform sampler2D tAO; uniform sampler2D tDepth;
+uniform float uExposure; uniform float uBloom; uniform float uAO; uniform float uNear; uniform float uFar;
 uniform vec3 uGain; uniform vec3 uLift; uniform float uSat; uniform float uContrast; uniform float uVignette;
 uniform vec2 uAspect;
 varying vec2 vUv;
@@ -164,6 +164,15 @@ vec3 aces(vec3 color) {
   color = RRTAndODTFit(color);
   return clamp(ACESOutputMat * color, 0.0, 1.0);
 }
+vec3 preserveChroma(vec3 c) {
+  float mx = max(c.r, max(c.g, c.b));
+  float mn = min(c.r, min(c.g, c.b));
+  float lum = dot(c, vec3(0.2126, 0.7152, 0.0722));
+  if (lum <= 1e-4 || mx <= mn) return c;
+  float sat = (mx - mn) / max(mx, 1e-4);
+  float boost = 1.0 + 0.18 * sat * smoothstep(0.15, 0.9, sat);
+  return max(vec3(0.0), mix(vec3(lum), c, boost));
+}
 vec3 srgb(vec3 c) {
   return mix(pow(c, vec3(0.41666)) * 1.055 - vec3(0.055), c * 12.92, vec3(lessThanEqual(c, vec3(0.0031308))));
 }
@@ -171,12 +180,17 @@ void main() {
   vec3 c = texture2D(tScene, vUv).rgb;
   #ifdef USE_AO
   float ao = texture2D(tAO, vUv).r;
-  c *= mix(1.0, ao, uAO);
+  float lum = dot(c, vec3(0.2126, 0.7152, 0.0722));
+  float rawDepth = texture2D(tDepth, vUv).r;
+  float linZ = (uNear * uFar) / max(1e-4, uFar - rawDepth * (uFar - uNear));
+  float depthMask = 1.0 - smoothstep(45.0, 95.0, linZ);
+  float aoWeight = uAO * (1.0 - 0.62 * smoothstep(0.55, 2.2, lum)) * depthMask;
+  c *= mix(1.0, ao, aoWeight);
   #endif
   #ifdef USE_BLOOM
   c += texture2D(tBloom, vUv).rgb * uBloom;
   #endif
-  c = srgb(aces(c));
+  c = srgb(aces(preserveChroma(c)));
   // grade (display-referred): saturation, gentle S-curve, warm gain + lift, soft vignette
   float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
   c = mix(vec3(l), c, uSat);
@@ -184,10 +198,12 @@ void main() {
   c = c * uGain + uLift * (1.0 - c);
   vec2 d = (vUv - 0.5) * uAspect;
   c *= 1.0 - uVignette * smoothstep(0.35, 1.05, length(d));
+  float dither = (fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715)))) - 0.5) / 255.0;
+  c += vec3(dither);
   gl_FragColor = vec4(clamp(c, 0.0, 1.0), 1.0);
 }`;
 
-const BLOOM_LEVELS = 4;
+const BLOOM_LEVELS = 5;
 
 /**
  * Create the pipeline. Returns null if the device cannot render to half-float targets (the stage then keeps the
@@ -236,9 +252,12 @@ export function createPost(renderer: THREE.WebGLRenderer, scene: THREE.Scene, ca
       tScene: { value: sceneRT.texture },
       tBloom: { value: mips[0].texture },
       tAO: { value: null },
+      tDepth: { value: depthTexture },
       uExposure: { value: 1 },
       uBloom: { value: 0 },
       uAO: { value: 0 },
+      uNear: { value: camera.near },
+      uFar: { value: camera.far },
       uGain: { value: new THREE.Vector3() },
       uLift: { value: new THREE.Vector3() },
       uSat: { value: 1 },
@@ -329,6 +348,8 @@ export function createPost(renderer: THREE.WebGLRenderer, scene: THREE.Scene, ca
       u.uExposure.value = renderer.toneMappingExposure;
       u.uBloom.value = g.bloomStrength;
       u.uAO.value = g.aoIntensity;
+      u.uNear.value = camera.near;
+      u.uFar.value = camera.far;
       (u.uGain.value as THREE.Vector3).set(g.gain[0], g.gain[1], g.gain[2]);
       (u.uLift.value as THREE.Vector3).set(g.lift[0], g.lift[1], g.lift[2]);
       u.uSat.value = g.saturation;
