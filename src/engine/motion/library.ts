@@ -25,7 +25,7 @@ export const VERB_IMPLS: Record<Verb, VerbImpl> = {
   shake_head: gesture.shake_head, shrug: gesture.shrug, facepalm: gesture.facepalm, hug: gesture.hug,
   laugh: emotion.laugh, cry: emotion.cry, sulk: emotion.sulk, surprised: emotion.surprised, scared: emotion.scared,
   angry_stomp: emotion.angry_stomp, sneeze: emotion.sneeze, sigh: emotion.sigh,
-  put_down: objects.take, take: objects.take, give: objects.give, eat: objects.eat, throw: objects.throw_, drop: objects.drop, cook: objects.cook, fish: objects.fish,
+  nudge: objects.nudge, put_down: objects.take, take: objects.take, give: objects.give, eat: objects.eat, throw: objects.throw_, drop: objects.drop, cook: objects.cook, fish: objects.fish,
   swing: objects.swing, carry: objects.carry, water_plants: objects.water_plants,
 };
 
@@ -41,7 +41,7 @@ export const VERB_KIND: Record<Verb, VerbKind> = {
   shake_head: "clip+procedural", shrug: "procedural", facepalm: "procedural", hug: "procedural",
   laugh: "procedural", cry: "clip+procedural", sulk: "procedural", surprised: "procedural", scared: "procedural",
   angry_stomp: "procedural", sneeze: "procedural", sigh: "procedural",
-  put_down: "procedural", take: "procedural", give: "procedural", eat: "procedural", throw: "procedural", drop: "procedural", cook: "procedural", fish: "procedural",
+  nudge: "procedural", put_down: "procedural", take: "procedural", give: "procedural", eat: "procedural", throw: "procedural", drop: "procedural", cook: "procedural", fish: "procedural",
   swing: "procedural", carry: "procedural", water_plants: "procedural",
 };
 

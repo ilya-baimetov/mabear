@@ -1,0 +1,1679 @@
+{
+  "stable": true,
+  "errors": [],
+  "info": {
+    "mode": "after",
+    "physicsInitMs": 6.700000047683716,
+    "carrotResources": {
+      "instances": 9,
+      "materials": 1,
+      "geometries": 1,
+      "textures": 1
+    },
+    "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36",
+    "buffer": [
+      1280,
+      720
+    ],
+    "assets": [
+      {
+        "id": "wolf_a",
+        "source": "procedural",
+        "ok": true
+      },
+      {
+        "id": "wolf_b",
+        "source": "procedural",
+        "ok": true
+      },
+      {
+        "id": "hare",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "rosie",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "squirrel",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "masha",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "rival_bear",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "bear",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "lady_bear",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "robot_test",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "prop:carrot",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "prop:carrot_2",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "prop:carrot_3",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "prop:carrot_4",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "prop:carrot_5",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "prop:carrot_6",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "prop:carrot_7",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "prop:carrot_8",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "prop:carrot_9",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "set:beehive",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "set:house",
+        "source": "gltf",
+        "ok": true
+      }
+    ],
+    "durations": {
+      "kitchen": 55.050999999999995,
+      "kitchenRu": 55.050999999999995,
+      "bench": 25.317999999999998,
+      "benchRu": 25.317999999999998,
+      "fishing": 46.296,
+      "continuity": 28.689,
+      "continuityWide": 28.689,
+      "parsedContinuity": 22.689,
+      "carrots": 28.408,
+      "carrotsRu": 28.408,
+      "cupboard": 39.199,
+      "entry": 18.53,
+      "regression": 68.166,
+      "cozy": 71.521,
+      "live-carrot-en": 15.685,
+      "live-carrot-ru": 16.699,
+      "live-ball-en": 22.177,
+      "live-ball-ru": 23.834,
+      "live-cupboard-en": 29.198,
+      "live-cupboard-ru": 29.198
+    }
+  },
+  "stories": [
+    {
+      "id": "kitchen",
+      "duration": 55.050999999999995,
+      "physics": {
+        "t": 55.050999999999995,
+        "root": null,
+        "grounded": false,
+        "stride": 1,
+        "ball": null,
+        "sleeping": false,
+        "reason": "outside supported standing yard motion",
+        "steps": 0,
+        "computeMs": 0,
+        "samples": 1,
+        "caches": 1,
+        "revision": 1,
+        "continuity": false,
+        "routes": [],
+        "pickups": [],
+        "impulses": [],
+        "preparing": false,
+        "preparation": {
+          "wallMs": 0,
+          "workerMs": 0,
+          "poseMs": 0,
+          "poseRequests": 0,
+          "rounds": 0,
+          "error": null
+        }
+      },
+      "contacts": [
+        {
+          "actor": "masha",
+          "verb": "take",
+          "item": "carrot_2",
+          "t": 3.685,
+          "jump": 0.01582373915299965,
+          "contact": {
+            "mode": "pickup",
+            "prop": "carrot_2",
+            "strength": 1,
+            "reachError": 0.015819584592837117,
+            "attachmentError": 0.015823487925896603,
+            "targetError": 0.015823487925896603,
+            "contactPoint": [
+              4.109045850423462,
+              0.2719395591385588,
+              -5.526562203237772
+            ],
+            "targetPoint": [
+              4.109101813054037,
+              0.26,
+              -5.536946160378565
+            ],
+            "withdrawal": 0,
+            "surfaceGrip": false,
+            "releaseError": 0.015823487925896603
+          },
+          "source": null
+        },
+        {
+          "actor": "masha",
+          "verb": "put_down",
+          "item": "carrot_2",
+          "t": 28.794999999999998,
+          "jump": 0.0000279291029655484,
+          "contact": {
+            "mode": "putDown",
+            "prop": "carrot_2",
+            "strength": 1,
+            "reachError": 0.00002716241832619566,
+            "attachmentError": 0.00002792910296654022,
+            "targetError": 0.00002791490299233912,
+            "contactPoint": [
+              -11.410025637813494,
+              0.49000499723924557,
+              -11.195509887614055
+            ],
+            "targetPoint": [
+              -11.41,
+              0.49000007998222234,
+              -11.1955
+            ],
+            "withdrawal": 0.00009999999999887876,
+            "surfaceGrip": false,
+            "releaseError": 0.00002792910296654022
+          },
+          "source": null
+        },
+        {
+          "actor": "bear",
+          "verb": "take",
+          "item": "carrot_2",
+          "t": 46.339999999999996,
+          "jump": 0.000014225586895450723,
+          "contact": {
+            "mode": "pickup",
+            "prop": "carrot_2",
+            "strength": 1,
+            "reachError": 0.000020332753056696832,
+            "attachmentError": 0.000014272149062625373,
+            "targetError": 0.000014272149062625373,
+            "contactPoint": [
+              -11.409990226009446,
+              1.2899910215539157,
+              -11.195494751109313
+            ],
+            "targetPoint": [
+              -11.41,
+              1.29,
+              -11.1955
+            ],
+            "withdrawal": 0,
+            "surfaceGrip": false,
+            "releaseGap": 0.000014272149062625373
+          },
+          "source": null
+        },
+        {
+          "actor": "bear",
+          "verb": "put_down",
+          "item": "carrot_2",
+          "t": 53.45099999999999,
+          "jump": 0.000027837932194899948,
+          "contact": {
+            "mode": "putDown",
+            "prop": "carrot_2",
+            "strength": 1,
+            "reachError": 0.00001461962063258826,
+            "attachmentError": 0.000027789323740534212,
+            "targetError": 0.00002770471963879877,
+            "contactPoint": [
+              -13.791688456415326,
+              2.0624651674501258,
+              -14.06994068335134
+            ],
+            "targetPoint": [
+              -13.791687757111617,
+              2.062437718664448,
+              -14.069936991924866
+            ],
+            "withdrawal": 0.00010000000000687237,
+            "surfaceGrip": false,
+            "releaseGap": 0.000027789323740534212
+          },
+          "source": null
+        }
+      ]
+    },
+    {
+      "id": "kitchenRu",
+      "duration": 55.050999999999995,
+      "physics": {
+        "t": 55.050999999999995,
+        "root": null,
+        "grounded": false,
+        "stride": 1,
+        "ball": null,
+        "sleeping": false,
+        "reason": "outside supported standing yard motion",
+        "steps": 0,
+        "computeMs": 0,
+        "samples": 1,
+        "caches": 1,
+        "revision": 1,
+        "continuity": false,
+        "routes": [],
+        "pickups": [],
+        "impulses": [],
+        "preparing": false,
+        "preparation": {
+          "wallMs": 0,
+          "workerMs": 0,
+          "poseMs": 0,
+          "poseRequests": 0,
+          "rounds": 0,
+          "error": null
+        }
+      },
+      "contacts": [
+        {
+          "actor": "masha",
+          "verb": "take",
+          "item": "carrot_2",
+          "t": 3.685,
+          "jump": 0.01582373915299965,
+          "contact": {
+            "mode": "pickup",
+            "prop": "carrot_2",
+            "strength": 1,
+            "reachError": 0.015819584592837117,
+            "attachmentError": 0.015823487925896603,
+            "targetError": 0.015823487925896603,
+            "contactPoint": [
+              4.109045850423462,
+              0.2719395591385588,
+              -5.526562203237772
+            ],
+            "targetPoint": [
+              4.109101813054037,
+              0.26,
+              -5.536946160378565
+            ],
+            "withdrawal": 0,
+            "surfaceGrip": false,
+            "releaseError": 0.015823487925896603
+          },
+          "source": null
+        },
+        {
+          "actor": "masha",
+          "verb": "put_down",
+          "item": "carrot_2",
+          "t": 28.794999999999998,
+          "jump": 0.0000279291029655484,
+          "contact": {
+            "mode": "putDown",
+            "prop": "carrot_2",
+            "strength": 1,
+            "reachError": 0.00002716241832619566,
+            "attachmentError": 0.00002792910296654022,
+            "targetError": 0.00002791490299233912,
+            "contactPoint": [
+              -11.410025637813494,
+              0.49000499723924557,
+              -11.195509887614055
+            ],
+            "targetPoint": [
+              -11.41,
+              0.49000007998222234,
+              -11.1955
+            ],
+            "withdrawal": 0.00009999999999887876,
+            "surfaceGrip": false,
+            "releaseError": 0.00002792910296654022
+          },
+          "source": null
+        },
+        {
+          "actor": "bear",
+          "verb": "take",
+          "item": "carrot_2",
+          "t": 46.339999999999996,
+          "jump": 0.000014225586895450723,
+          "contact": {
+            "mode": "pickup",
+            "prop": "carrot_2",
+            "strength": 1,
+            "reachError": 0.000020332753056696832,
+            "attachmentError": 0.000014272149062625373,
+            "targetError": 0.000014272149062625373,
+            "contactPoint": [
+              -11.409990226009446,
+              1.2899910215539157,
+              -11.195494751109313
+            ],
+            "targetPoint": [
+              -11.41,
+              1.29,
+              -11.1955
+            ],
+            "withdrawal": 0,
+            "surfaceGrip": false,
+            "releaseGap": 0.000014272149062625373
+          },
+          "source": null
+        },
+        {
+          "actor": "bear",
+          "verb": "put_down",
+          "item": "carrot_2",
+          "t": 53.45099999999999,
+          "jump": 0.000027837932194899948,
+          "contact": {
+            "mode": "putDown",
+            "prop": "carrot_2",
+            "strength": 1,
+            "reachError": 0.00001461962063258826,
+            "attachmentError": 0.000027789323740534212,
+            "targetError": 0.00002770471963879877,
+            "contactPoint": [
+              -13.791688456415326,
+              2.0624651674501258,
+              -14.06994068335134
+            ],
+            "targetPoint": [
+              -13.791687757111617,
+              2.062437718664448,
+              -14.069936991924866
+            ],
+            "withdrawal": 0.00010000000000687237,
+            "surfaceGrip": false,
+            "releaseGap": 0.000027789323740534212
+          },
+          "source": null
+        }
+      ]
+    },
+    {
+      "id": "bench",
+      "duration": 25.317999999999998,
+      "physics": {
+        "t": 25.317999999999998,
+        "root": [
+          0.5595515966415405,
+          -9.536743172944284e-9,
+          2.8267862796783447
+        ],
+        "grounded": true,
+        "stride": 0.999602030436184,
+        "ball": null,
+        "sleeping": false,
+        "reason": null,
+        "steps": 1539,
+        "computeMs": 336.7000000476837,
+        "samples": 1540,
+        "caches": 1,
+        "revision": 2,
+        "continuity": true,
+        "routes": [
+          {
+            "start": 0,
+            "path": [
+              [
+                0.25,
+                0.5
+              ],
+              [
+                0.3126,
+                1.1821
+              ]
+            ],
+            "target": "ball"
+          },
+          {
+            "start": 3.779,
+            "path": [
+              [
+                0.3125999867916107,
+                1.1821000576019287
+              ],
+              [
+                0.8649999999999999,
+                3.475
+              ],
+              [
+                1.8126,
+                3.46
+              ]
+            ],
+            "target": "bench"
+          },
+          {
+            "start": 9.323,
+            "path": [
+              [
+                1.812600016593933,
+                3.459993600845337
+              ],
+              [
+                1.8876,
+                3.46
+              ]
+            ],
+            "target": "bench"
+          },
+          {
+            "start": 14.773,
+            "path": [
+              [
+                1.8875997066497803,
+                3.4600000381469727
+              ],
+              [
+                0.8649999999999999,
+                3.475
+              ],
+              [
+                0,
+                0
+              ]
+            ],
+            "target": "clearing"
+          },
+          {
+            "start": 20.55349919766338,
+            "path": [
+              [
+                0,
+                0
+              ],
+              [
+                0.5595515801045045,
+                2.8267862292277477
+              ]
+            ],
+            "target": "ball"
+          }
+        ],
+        "pickups": [
+          {
+            "start": 22.518,
+            "attach": 23.618000000000002,
+            "position": [
+              0.506093394425059,
+              0.25071161835416467,
+              3.1099545179533177
+            ]
+          }
+        ],
+        "impulses": [
+          {
+            "time": 11.273000000000001,
+            "position": [
+              1.8999942541122437,
+              0.6229301691055298,
+              3.074986457824707
+            ],
+            "impulse": [
+              -0.82,
+              0,
+              0
+            ]
+          }
+        ],
+        "preparing": false,
+        "preparation": {
+          "wallMs": 663.5999999046326,
+          "workerMs": 531.5,
+          "poseMs": 3.200000047683716,
+          "poseRequests": 1,
+          "rounds": 2,
+          "error": null
+        }
+      },
+      "contacts": [
+        {
+          "actor": "masha",
+          "verb": "take",
+          "item": "ball",
+          "t": 2.6790000000000003,
+          "jump": 0.000009228304275427908,
+          "contact": {
+            "mode": "pickup",
+            "prop": "ball",
+            "strength": 1,
+            "reachError": 0.000008376515067145612,
+            "attachmentError": 0.000009237603663792695,
+            "targetError": 0.000009237603663792695,
+            "contactPoint": [
+              0.3999924563621675,
+              0.2854990219246345,
+              0.9999947587961039
+            ],
+            "targetPoint": [
+              0.4,
+              0.28550000000000003,
+              1
+            ],
+            "withdrawal": 0,
+            "surfaceGrip": true,
+            "releaseError": 0.000009237603663792695
+          },
+          "source": null
+        },
+        {
+          "actor": "masha",
+          "verb": "put_down",
+          "item": "ball",
+          "t": 7.723,
+          "jump": 0.000004408996500754792,
+          "contact": {
+            "mode": "putDown",
+            "prop": "ball",
+            "strength": 1,
+            "reachError": 0.0000152718648308447,
+            "attachmentError": 0.000014568095438784981,
+            "targetError": 0.00001453607569427406,
+            "contactPoint": [
+              1.8677842156270894,
+              0.6400042506752928,
+              3.2168767694449936
+            ],
+            "targetPoint": [
+              1.867789175524536,
+              0.6400001110699588,
+              3.216889790987974
+            ],
+            "withdrawal": 0.00009999999999976694,
+            "surfaceGrip": true,
+            "releaseError": 0.000014568095438784981
+          },
+          "source": null
+        },
+        {
+          "actor": "masha",
+          "verb": "nudge",
+          "item": "ball",
+          "t": 11.273000000000001,
+          "jump": 0.000018515943780350605,
+          "contact": {
+            "mode": "nudge",
+            "strength": 1,
+            "reachError": 0.004730331606006973,
+            "targetPoint": [
+              1.9749950880270575,
+              0.6479301691091434,
+              3.201987081251904
+            ],
+            "contactPoint": [
+              1.9749605366549108,
+              0.6462143856584649,
+              3.2063967277787264
+            ],
+            "attached": false
+          },
+          "source": null
+        },
+        {
+          "actor": "masha",
+          "verb": "take",
+          "item": "ball",
+          "t": 23.618000000000002,
+          "jump": 0.0000021714541087422125,
+          "contact": {
+            "mode": "pickup",
+            "prop": "ball",
+            "strength": 1,
+            "reachError": 0.000006202824962270679,
+            "attachmentError": 0.000002113184464274325,
+            "targetError": 0.000002113184464274325,
+            "contactPoint": [
+              0.60421184131255,
+              0.2884322378720725,
+              3.0524099068508677
+            ],
+            "targetPoint": [
+              0.6042126449603443,
+              0.28843092731260184,
+              3.0524084569775365
+            ],
+            "withdrawal": 0,
+            "surfaceGrip": true,
+            "releaseError": 0.000002113184464274325
+          },
+          "source": null
+        }
+      ]
+    },
+    {
+      "id": "benchRu",
+      "duration": 25.317999999999998,
+      "physics": {
+        "t": 25.317999999999998,
+        "root": [
+          0.5595515966415405,
+          -9.536743172944284e-9,
+          2.8267862796783447
+        ],
+        "grounded": true,
+        "stride": 0.999602030436184,
+        "ball": null,
+        "sleeping": false,
+        "reason": null,
+        "steps": 1539,
+        "computeMs": 336.7000000476837,
+        "samples": 1540,
+        "caches": 1,
+        "revision": 2,
+        "continuity": true,
+        "routes": [
+          {
+            "start": 0,
+            "path": [
+              [
+                0.25,
+                0.5
+              ],
+              [
+                0.3126,
+                1.1821
+              ]
+            ],
+            "target": "ball"
+          },
+          {
+            "start": 3.779,
+            "path": [
+              [
+                0.3125999867916107,
+                1.1821000576019287
+              ],
+              [
+                0.8649999999999999,
+                3.475
+              ],
+              [
+                1.8126,
+                3.46
+              ]
+            ],
+            "target": "bench"
+          },
+          {
+            "start": 9.323,
+            "path": [
+              [
+                1.812600016593933,
+                3.459993600845337
+              ],
+              [
+                1.8876,
+                3.46
+              ]
+            ],
+            "target": "bench"
+          },
+          {
+            "start": 14.773,
+            "path": [
+              [
+                1.8875997066497803,
+                3.4600000381469727
+              ],
+              [
+                0.8649999999999999,
+                3.475
+              ],
+              [
+                0,
+                0
+              ]
+            ],
+            "target": "clearing"
+          },
+          {
+            "start": 20.55349919766338,
+            "path": [
+              [
+                0,
+                0
+              ],
+              [
+                0.5595515801045045,
+                2.8267862292277477
+              ]
+            ],
+            "target": "ball"
+          }
+        ],
+        "pickups": [
+          {
+            "start": 22.518,
+            "attach": 23.618000000000002,
+            "position": [
+              0.506093394425059,
+              0.25071161835416467,
+              3.1099545179533177
+            ]
+          }
+        ],
+        "impulses": [
+          {
+            "time": 11.273000000000001,
+            "position": [
+              1.8999942541122437,
+              0.6229301691055298,
+              3.074986457824707
+            ],
+            "impulse": [
+              -0.82,
+              0,
+              0
+            ]
+          }
+        ],
+        "preparing": false,
+        "preparation": {
+          "wallMs": 663.5999999046326,
+          "workerMs": 531.5,
+          "poseMs": 3.200000047683716,
+          "poseRequests": 1,
+          "rounds": 2,
+          "error": null
+        }
+      },
+      "contacts": [
+        {
+          "actor": "masha",
+          "verb": "take",
+          "item": "ball",
+          "t": 2.6790000000000003,
+          "jump": 0.000009228304275427908,
+          "contact": {
+            "mode": "pickup",
+            "prop": "ball",
+            "strength": 1,
+            "reachError": 0.000008376515067145612,
+            "attachmentError": 0.000009237603663792695,
+            "targetError": 0.000009237603663792695,
+            "contactPoint": [
+              0.3999924563621675,
+              0.2854990219246345,
+              0.9999947587961039
+            ],
+            "targetPoint": [
+              0.4,
+              0.28550000000000003,
+              1
+            ],
+            "withdrawal": 0,
+            "surfaceGrip": true,
+            "releaseError": 0.000009237603663792695
+          },
+          "source": null
+        },
+        {
+          "actor": "masha",
+          "verb": "put_down",
+          "item": "ball",
+          "t": 7.723,
+          "jump": 0.000004408996500754792,
+          "contact": {
+            "mode": "putDown",
+            "prop": "ball",
+            "strength": 1,
+            "reachError": 0.0000152718648308447,
+            "attachmentError": 0.000014568095438784981,
+            "targetError": 0.00001453607569427406,
+            "contactPoint": [
+              1.8677842156270894,
+              0.6400042506752928,
+              3.2168767694449936
+            ],
+            "targetPoint": [
+              1.867789175524536,
+              0.6400001110699588,
+              3.216889790987974
+            ],
+            "withdrawal": 0.00009999999999976694,
+            "surfaceGrip": true,
+            "releaseError": 0.000014568095438784981
+          },
+          "source": null
+        },
+        {
+          "actor": "masha",
+          "verb": "nudge",
+          "item": "ball",
+          "t": 11.273000000000001,
+          "jump": 0.000018515943780350605,
+          "contact": {
+            "mode": "nudge",
+            "strength": 1,
+            "reachError": 0.004730331606006973,
+            "targetPoint": [
+              1.9749950880270575,
+              0.6479301691091434,
+              3.201987081251904
+            ],
+            "contactPoint": [
+              1.9749605366549108,
+              0.6462143856584649,
+              3.2063967277787264
+            ],
+            "attached": false
+          },
+          "source": null
+        },
+        {
+          "actor": "masha",
+          "verb": "take",
+          "item": "ball",
+          "t": 23.618000000000002,
+          "jump": 0.0000021714541087422125,
+          "contact": {
+            "mode": "pickup",
+            "prop": "ball",
+            "strength": 1,
+            "reachError": 0.000006202824962270679,
+            "attachmentError": 0.000002113184464274325,
+            "targetError": 0.000002113184464274325,
+            "contactPoint": [
+              0.60421184131255,
+              0.2884322378720725,
+              3.0524099068508677
+            ],
+            "targetPoint": [
+              0.6042126449603443,
+              0.28843092731260184,
+              3.0524084569775365
+            ],
+            "withdrawal": 0,
+            "surfaceGrip": true,
+            "releaseError": 0.000002113184464274325
+          },
+          "source": null
+        }
+      ]
+    },
+    {
+      "id": "live-carrot-en",
+      "duration": 15.685,
+      "physics": {
+        "t": 15.685,
+        "root": null,
+        "grounded": false,
+        "stride": 1,
+        "ball": null,
+        "sleeping": false,
+        "reason": "authored choreography: take",
+        "steps": 0,
+        "computeMs": 0,
+        "samples": 1,
+        "caches": 1,
+        "revision": 3,
+        "continuity": false,
+        "routes": [],
+        "pickups": [],
+        "impulses": [],
+        "preparing": false,
+        "preparation": {
+          "wallMs": 0,
+          "workerMs": 0,
+          "poseMs": 0,
+          "poseRequests": 0,
+          "rounds": 0,
+          "error": null
+        }
+      },
+      "contacts": [
+        {
+          "actor": "masha",
+          "verb": "take",
+          "item": "carrot_2",
+          "t": 3.685,
+          "jump": 0.020199916188998624,
+          "contact": {
+            "mode": "pickup",
+            "prop": "carrot_2",
+            "strength": 1,
+            "reachError": 0.02019557635440701,
+            "attachmentError": 0.02019974486997174,
+            "targetError": 0.02019974486997174,
+            "contactPoint": [
+              4.109016289217411,
+              0.2753067202097004,
+              -5.523765618094301
+            ],
+            "targetPoint": [
+              4.109101813054037,
+              0.26,
+              -5.536946160378565
+            ],
+            "withdrawal": 0,
+            "surfaceGrip": false,
+            "releaseError": 0.02019974486997174
+          },
+          "source": null
+        },
+        {
+          "actor": "masha",
+          "verb": "put_down",
+          "item": "carrot_2",
+          "t": 12.585,
+          "jump": 0.000024911241546855745,
+          "contact": {
+            "mode": "putDown",
+            "prop": "carrot_2",
+            "strength": 1,
+            "reachError": 0.000024839027822604162,
+            "attachmentError": 0.000024911241546855745,
+            "targetError": 0.000024853570544640318,
+            "contactPoint": [
+              1.8899979631712447,
+              0.6315129752597047,
+              2.999978832479606
+            ],
+            "targetPoint": [
+              1.8900000000000001,
+              0.631500111069959,
+              3
+            ],
+            "withdrawal": 0.00009999999999976694,
+            "surfaceGrip": false,
+            "releaseError": 0.000024911241546855745
+          },
+          "source": null
+        }
+      ]
+    },
+    {
+      "id": "live-carrot-ru",
+      "duration": 16.699,
+      "physics": {
+        "t": 16.699,
+        "root": null,
+        "grounded": false,
+        "stride": 1,
+        "ball": null,
+        "sleeping": false,
+        "reason": "authored choreography: take",
+        "steps": 0,
+        "computeMs": 0,
+        "samples": 1,
+        "caches": 1,
+        "revision": 4,
+        "continuity": false,
+        "routes": [],
+        "pickups": [],
+        "impulses": [],
+        "preparing": false,
+        "preparation": {
+          "wallMs": 0,
+          "workerMs": 0,
+          "poseMs": 0,
+          "poseRequests": 0,
+          "rounds": 0,
+          "error": null
+        }
+      },
+      "contacts": [
+        {
+          "actor": "masha",
+          "verb": "take",
+          "item": "carrot_2",
+          "t": 4.7989999999999995,
+          "jump": 0.016852926803139795,
+          "contact": {
+            "mode": "pickup",
+            "prop": "carrot_2",
+            "strength": 1,
+            "reachError": 0.016849248649957283,
+            "attachmentError": 0.016853172580083543,
+            "targetError": 0.016853172580083543,
+            "contactPoint": [
+              4.109089287010294,
+              0.2725691392162664,
+              -5.525719139024955
+            ],
+            "targetPoint": [
+              4.109101813054037,
+              0.26,
+              -5.536946160378565
+            ],
+            "withdrawal": 0,
+            "surfaceGrip": false,
+            "releaseError": 0.016853172580083543
+          },
+          "source": null
+        },
+        {
+          "actor": "masha",
+          "verb": "put_down",
+          "item": "carrot_2",
+          "t": 13.699,
+          "jump": 0.0000250536164520718,
+          "contact": {
+            "mode": "putDown",
+            "prop": "carrot_2",
+            "strength": 1,
+            "reachError": 0.000025074399364221408,
+            "attachmentError": 0.000025053616452491947,
+            "targetError": 0.00002499580062096414,
+            "contactPoint": [
+              1.8899982707585243,
+              0.6315130817785035,
+              2.9999787030403002
+            ],
+            "targetPoint": [
+              1.8900000000000001,
+              0.631500111069959,
+              3
+            ],
+            "withdrawal": 0.00009999999999976694,
+            "surfaceGrip": false,
+            "releaseError": 0.000025053616452491947
+          },
+          "source": null
+        }
+      ]
+    },
+    {
+      "id": "live-ball-en",
+      "duration": 22.177,
+      "physics": {
+        "t": 22.177,
+        "root": [
+          2.0545120239257812,
+          0.00009690761566161221,
+          3.5142669677734375
+        ],
+        "grounded": true,
+        "stride": 0.9999999999960612,
+        "ball": null,
+        "sleeping": false,
+        "reason": null,
+        "steps": 1345,
+        "computeMs": 300.2000000476837,
+        "samples": 1346,
+        "caches": 1,
+        "revision": 5,
+        "continuity": true,
+        "routes": [
+          {
+            "start": 0,
+            "path": [
+              [
+                0.25,
+                0.5
+              ],
+              [
+                0.3126,
+                1.1821
+              ]
+            ],
+            "target": "ball"
+          },
+          {
+            "start": 3.779,
+            "path": [
+              [
+                0.3125999867916107,
+                1.1821000576019287
+              ],
+              [
+                0.8649999999999999,
+                3.475
+              ],
+              [
+                2,
+                3.52
+              ]
+            ],
+            "target": "bench"
+          },
+          {
+            "start": 12.346,
+            "path": [
+              [
+                2,
+                3.5199997425079346
+              ],
+              [
+                0.8649999999999999,
+                3.475
+              ],
+              [
+                0,
+                0
+              ]
+            ],
+            "target": "clearing"
+          },
+          {
+            "start": 16.287,
+            "path": [
+              [
+                0.0000063886254793033,
+                0.00002566527109593153
+              ],
+              [
+                0.8649999999999999,
+                3.475
+              ],
+              [
+                2,
+                3.52
+              ]
+            ],
+            "target": "bench"
+          },
+          {
+            "start": 17.863,
+            "path": [
+              [
+                1.9956066608428955,
+                3.5197720527648926
+              ],
+              [
+                2.054512109616242,
+                3.5142670753304883
+              ]
+            ],
+            "target": "ball"
+          }
+        ],
+        "pickups": [
+          {
+            "start": 19.377,
+            "attach": 20.477,
+            "position": [
+              2.283514712101017,
+              -0.0000687926646238124,
+              3.4928690627342824
+            ]
+          }
+        ],
+        "impulses": [],
+        "preparing": false,
+        "preparation": {
+          "wallMs": 413.7000000476837,
+          "workerMs": 411.3000000715256,
+          "poseMs": 3,
+          "poseRequests": 1,
+          "rounds": 2,
+          "error": null
+        }
+      },
+      "contacts": [
+        {
+          "actor": "masha",
+          "verb": "take",
+          "item": "ball",
+          "t": 2.6790000000000003,
+          "jump": 0.000009228304275427908,
+          "contact": {
+            "mode": "pickup",
+            "prop": "ball",
+            "strength": 1,
+            "reachError": 0.000008376515067145612,
+            "attachmentError": 0.000009237603663792695,
+            "targetError": 0.000009237603663792695,
+            "contactPoint": [
+              0.3999924563621675,
+              0.2854990219246345,
+              0.9999947587961039
+            ],
+            "targetPoint": [
+              0.4,
+              0.28550000000000003,
+              1
+            ],
+            "withdrawal": 0,
+            "surfaceGrip": true,
+            "releaseError": 0.000009237603663792695
+          },
+          "source": null
+        },
+        {
+          "actor": "masha",
+          "verb": "drop",
+          "item": "ball",
+          "t": 7.3149999999999995,
+          "jump": 0.000005503127318683599,
+          "contact": {
+            "mode": "prop",
+            "prop": "ball",
+            "contactPoint": [
+              2.2835142256172287,
+              0.6662647801716625,
+              3.4928736018968367
+            ],
+            "gripPoint": [
+              2.2835142256172287,
+              0.6667647801716624,
+              3.4928736018968367
+            ],
+            "radius": 0
+          },
+          "source": null
+        },
+        {
+          "actor": "masha",
+          "verb": "take",
+          "item": "ball",
+          "t": 20.477,
+          "jump": 0.000010852686027466706,
+          "contact": {
+            "mode": "pickup",
+            "prop": "ball",
+            "strength": 1,
+            "reachError": 0.000004871354312210372,
+            "attachmentError": 0.000010812702208147076,
+            "targetError": 0.000010812702208147076,
+            "contactPoint": [
+              2.283514063705366,
+              0.2854358530253459,
+              3.492875562657364
+            ],
+            "targetPoint": [
+              2.2835142612457275,
+              0.2854312072992325,
+              3.492865800857544
+            ],
+            "withdrawal": 0,
+            "surfaceGrip": true,
+            "releaseError": 0.000010812702208147076
+          },
+          "source": null
+        }
+      ]
+    },
+    {
+      "id": "live-ball-ru",
+      "duration": 23.834,
+      "physics": {
+        "t": 23.834,
+        "root": [
+          2.0545601844787598,
+          -9.536743172944284e-9,
+          3.514775514602661
+        ],
+        "grounded": true,
+        "stride": 0.9990511220903351,
+        "ball": null,
+        "sleeping": false,
+        "reason": null,
+        "steps": 1445,
+        "computeMs": 309.89999997615814,
+        "samples": 1446,
+        "caches": 1,
+        "revision": 6,
+        "continuity": true,
+        "routes": [
+          {
+            "start": 0,
+            "path": [
+              [
+                0.25,
+                0.5
+              ],
+              [
+                0.3126,
+                1.1821
+              ]
+            ],
+            "target": "ball"
+          },
+          {
+            "start": 3.779,
+            "path": [
+              [
+                0.3125999867916107,
+                1.1821000576019287
+              ],
+              [
+                0.8649999999999999,
+                3.475
+              ],
+              [
+                2,
+                3.52
+              ]
+            ],
+            "target": "bench"
+          },
+          {
+            "start": 11.638,
+            "path": [
+              [
+                1.999999761581421,
+                3.5199999809265137
+              ],
+              [
+                0.8649999999999999,
+                3.475
+              ],
+              [
+                0,
+                0
+              ]
+            ],
+            "target": "clearing"
+          },
+          {
+            "start": 15.579,
+            "path": [
+              [
+                0.00007228122558444738,
+                0.00029037834610790014
+              ],
+              [
+                0.8649999999999999,
+                3.475
+              ],
+              [
+                2,
+                3.52
+              ]
+            ],
+            "target": "bench"
+          },
+          {
+            "start": 19.52,
+            "path": [
+              [
+                1.9999762773513794,
+                3.519998788833618
+              ],
+              [
+                2.0545601856048745,
+                3.514775416268195
+              ]
+            ],
+            "target": "ball"
+          }
+        ],
+        "pickups": [
+          {
+            "start": 21.034,
+            "attach": 22.134,
+            "position": [
+              2.283514712101017,
+              -0.0000687926646238124,
+              3.4928690627342824
+            ]
+          }
+        ],
+        "impulses": [],
+        "preparing": false,
+        "preparation": {
+          "wallMs": 423,
+          "workerMs": 420.60000002384186,
+          "poseMs": 3,
+          "poseRequests": 1,
+          "rounds": 2,
+          "error": null
+        }
+      },
+      "contacts": [
+        {
+          "actor": "masha",
+          "verb": "take",
+          "item": "ball",
+          "t": 2.6790000000000003,
+          "jump": 0.000009228304275427908,
+          "contact": {
+            "mode": "pickup",
+            "prop": "ball",
+            "strength": 1,
+            "reachError": 0.000008376515067145612,
+            "attachmentError": 0.000009237603663792695,
+            "targetError": 0.000009237603663792695,
+            "contactPoint": [
+              0.3999924563621675,
+              0.2854990219246345,
+              0.9999947587961039
+            ],
+            "targetPoint": [
+              0.4,
+              0.28550000000000003,
+              1
+            ],
+            "withdrawal": 0,
+            "surfaceGrip": true,
+            "releaseError": 0.000009237603663792695
+          },
+          "source": null
+        },
+        {
+          "actor": "masha",
+          "verb": "drop",
+          "item": "ball",
+          "t": 7.3149999999999995,
+          "jump": 0.000005503127318683599,
+          "contact": {
+            "mode": "prop",
+            "prop": "ball",
+            "contactPoint": [
+              2.2835142256172287,
+              0.6662647801716625,
+              3.4928736018968367
+            ],
+            "gripPoint": [
+              2.2835142256172287,
+              0.6667647801716624,
+              3.4928736018968367
+            ],
+            "radius": 0
+          },
+          "source": null
+        },
+        {
+          "actor": "masha",
+          "verb": "take",
+          "item": "ball",
+          "t": 22.134,
+          "jump": 0.0015801337079008148,
+          "contact": {
+            "mode": "pickup",
+            "prop": "ball",
+            "strength": 1,
+            "reachError": 0.0015736406346774242,
+            "attachmentError": 0.0015774146880640242,
+            "targetError": 0.0015774146880640242,
+            "contactPoint": [
+              2.2826309962805134,
+              0.2864357516113754,
+              3.493701845607714
+            ],
+            "targetPoint": [
+              2.2835142612457275,
+              0.2854312072992325,
+              3.492865800857544
+            ],
+            "withdrawal": 0,
+            "surfaceGrip": true,
+            "releaseError": 0.0015774146880640242
+          },
+          "source": null
+        }
+      ]
+    },
+    {
+      "id": "live-cupboard-en",
+      "duration": 29.198,
+      "physics": {
+        "t": 29.198,
+        "root": null,
+        "grounded": false,
+        "stride": 1,
+        "ball": null,
+        "sleeping": false,
+        "reason": "authored choreography: look_at",
+        "steps": 0,
+        "computeMs": 0,
+        "samples": 1,
+        "caches": 1,
+        "revision": 7,
+        "continuity": false,
+        "routes": [],
+        "pickups": [],
+        "impulses": [],
+        "preparing": false,
+        "preparation": {
+          "wallMs": 0,
+          "workerMs": 0,
+          "poseMs": 0,
+          "poseRequests": 0,
+          "rounds": 0,
+          "error": null
+        }
+      },
+      "contacts": [
+        {
+          "actor": "bear",
+          "verb": "take",
+          "item": "pantry_honey",
+          "t": 24.898,
+          "jump": 7.290837366965268e-8,
+          "contact": {
+            "mode": "pickup",
+            "prop": "pantry_honey",
+            "strength": 1,
+            "reachError": 0.00002293968489383714,
+            "attachmentError": 0.000014891093426549517,
+            "targetError": 0.000014891093426549517,
+            "contactPoint": [
+              -14.944504947276807,
+              2.2299974983920743,
+              -11.399986179324422
+            ],
+            "targetPoint": [
+              -14.944500000000001,
+              2.23,
+              -11.4
+            ],
+            "withdrawal": 0,
+            "surfaceGrip": true,
+            "releaseGap": 0.000014891093426549517
+          },
+          "source": null
+        }
+      ]
+    },
+    {
+      "id": "live-cupboard-ru",
+      "duration": 29.198,
+      "physics": {
+        "t": 29.198,
+        "root": null,
+        "grounded": false,
+        "stride": 1,
+        "ball": null,
+        "sleeping": false,
+        "reason": "authored choreography: look_at",
+        "steps": 0,
+        "computeMs": 0,
+        "samples": 1,
+        "caches": 1,
+        "revision": 8,
+        "continuity": false,
+        "routes": [],
+        "pickups": [],
+        "impulses": [],
+        "preparing": false,
+        "preparation": {
+          "wallMs": 0,
+          "workerMs": 0,
+          "poseMs": 0,
+          "poseRequests": 0,
+          "rounds": 0,
+          "error": null
+        }
+      },
+      "contacts": [
+        {
+          "actor": "bear",
+          "verb": "take",
+          "item": "pantry_honey",
+          "t": 24.898,
+          "jump": 7.290837366965268e-8,
+          "contact": {
+            "mode": "pickup",
+            "prop": "pantry_honey",
+            "strength": 1,
+            "reachError": 0.00002293968489383714,
+            "attachmentError": 0.000014891093426549517,
+            "targetError": 0.000014891093426549517,
+            "contactPoint": [
+              -14.944504947276807,
+              2.2299974983920743,
+              -11.399986179324422
+            ],
+            "targetPoint": [
+              -14.944500000000001,
+              2.23,
+              -11.4
+            ],
+            "withdrawal": 0,
+            "surfaceGrip": true,
+            "releaseGap": 0.000014891093426549517
+          },
+          "source": null
+        }
+      ]
+    }
+  ]
+}

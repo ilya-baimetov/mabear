@@ -1,0 +1,44 @@
+[
+  {
+    "id": "kitchen",
+    "bytes": 52081367,
+    "sha256": "f9b6e1d1f490d42e6f3fe937e3d5631531eb8069470a8149d42d8d3d0eea04eb",
+    "duration": 64.69999999999999,
+    "frames": 3886,
+    "sourceErrors": [
+      null,
+      null
+    ],
+    "sourceDimensions": [
+      [
+        1280,
+        768
+      ],
+      [
+        1280,
+        768
+      ]
+    ]
+  },
+  {
+    "id": "bench",
+    "bytes": 20587322,
+    "sha256": "798f30fa6b1300cc5b8e09306676f1e656710da2d627aeb295c99e3233ded3fd",
+    "duration": 25.317999999999998,
+    "frames": 1521,
+    "sourceErrors": [
+      null,
+      null
+    ],
+    "sourceDimensions": [
+      [
+        1280,
+        768
+      ],
+      [
+        1280,
+        768
+      ]
+    ]
+  }
+]

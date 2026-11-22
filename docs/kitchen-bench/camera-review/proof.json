@@ -1,0 +1,428 @@
+{
+  "source": "6b059a3ed328acb504fc5d48d2729ddcbaa7ae2846857d2907ddf27599bf2fea",
+  "stable": true,
+  "errors": [],
+  "duration": 55.050999999999995,
+  "progressionFrames": 245,
+  "reverseSeekDifferences": 0,
+  "boundaryAndActionSamples": 174,
+  "travelCoverage": {
+    "frames": 389,
+    "below25Percent": [],
+    "fullyOutside": []
+  },
+  "details": [
+    {
+      "file": "docs/kitchen-bench/iteration-camera-review/pot-detail--0.1.png",
+      "t": 52.25099999999999
+    },
+    {
+      "file": "docs/kitchen-bench/iteration-camera-review/pot-detail-0.2.png",
+      "t": 52.85099999999999
+    },
+    {
+      "file": "docs/kitchen-bench/iteration-camera-review/pot-detail-0.3.png",
+      "t": 53.050999999999995
+    },
+    {
+      "file": "docs/kitchen-bench/iteration-camera-review/pot-detail-0.4.png",
+      "t": 53.25099999999999
+    },
+    {
+      "file": "docs/kitchen-bench/iteration-camera-review/pot-detail-0.5.png",
+      "t": 53.45099999999999
+    },
+    {
+      "file": "docs/kitchen-bench/iteration-camera-review/pot-detail-0.6.png",
+      "t": 53.650999999999996
+    },
+    {
+      "file": "docs/kitchen-bench/iteration-camera-review/pot-detail-0.75.png",
+      "t": 53.95099999999999
+    },
+    {
+      "file": "docs/kitchen-bench/iteration-camera-review/pot-detail-0.9.png",
+      "t": 54.25099999999999
+    },
+    {
+      "file": "docs/kitchen-bench/iteration-camera-review/pot-detail-1.2.png",
+      "t": 54.85099999999999
+    }
+  ],
+  "info": {
+    "mode": "after",
+    "physicsInitMs": 7.299999952316284,
+    "carrotResources": {
+      "instances": 9,
+      "materials": 1,
+      "geometries": 1,
+      "textures": 1
+    },
+    "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36",
+    "buffer": [
+      1280,
+      720
+    ],
+    "assets": [
+      {
+        "id": "wolf_b",
+        "source": "procedural",
+        "ok": true
+      },
+      {
+        "id": "wolf_a",
+        "source": "procedural",
+        "ok": true
+      },
+      {
+        "id": "rosie",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "hare",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "squirrel",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "masha",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "lady_bear",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "rival_bear",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "bear",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "robot_test",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "prop:carrot",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "prop:carrot_2",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "prop:carrot_3",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "prop:carrot_4",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "prop:carrot_5",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "prop:carrot_6",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "prop:carrot_7",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "prop:carrot_8",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "prop:carrot_9",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "set:beehive",
+        "source": "gltf",
+        "ok": true
+      },
+      {
+        "id": "set:house",
+        "source": "gltf",
+        "ok": true
+      }
+    ],
+    "durations": {
+      "kitchen": 55.050999999999995,
+      "kitchenRu": 55.050999999999995,
+      "bench": 25.317999999999998,
+      "benchRu": 25.317999999999998,
+      "fishing": 46.296,
+      "continuity": 28.689,
+      "continuityWide": 28.689,
+      "parsedContinuity": 22.689,
+      "carrots": 28.408,
+      "carrotsRu": 28.408,
+      "cupboard": 39.199,
+      "entry": 18.53,
+      "regression": 68.166,
+      "cozy": 71.521,
+      "live-carrot-en": 15.685,
+      "live-carrot-ru": 16.699,
+      "live-ball-en": 22.177,
+      "live-ball-ru": 23.834,
+      "live-cupboard-en": 29.198,
+      "live-cupboard-ru": 29.198
+    }
+  },
+  "sheets": [
+    {
+      "file": "docs/kitchen-bench/iteration-camera-review/scene-0-boundaries-0.png",
+      "times": [
+        0,
+        0.00005,
+        2.46,
+        2.584629,
+        2.584729,
+        5.53495,
+        5.53505,
+        7.38495,
+        7.38505
+      ]
+    },
+    {
+      "file": "docs/kitchen-bench/iteration-camera-review/scene-1-boundaries-0.png",
+      "times": [
+        7.38495,
+        7.38505,
+        13.38495,
+        13.38505,
+        13.62,
+        16.262875,
+        16.262975,
+        17.913206,
+        17.913306,
+        22.19995,
+        22.20005,
+        22.7,
+        23.79995,
+        23.80005
+      ]
+    },
+    {
+      "file": "docs/kitchen-bench/iteration-camera-review/scene-2-boundaries-0.png",
+      "times": [
+        23.79995,
+        23.80005,
+        27.544749,
+        27.544849,
+        27.67,
+        29.794749,
+        29.794849,
+        29.79495,
+        29.79505,
+        30.295,
+        31.39495,
+        31.39505
+      ]
+    },
+    {
+      "file": "docs/kitchen-bench/iteration-camera-review/scene-3-boundaries-0.png",
+      "times": [
+        31.39495,
+        31.39505,
+        38.59495,
+        38.59505,
+        40.565347,
+        40.565447,
+        44.772395,
+        44.772495,
+        45.006,
+        47.439792,
+        47.439892,
+        52.150605,
+        52.150705,
+        52.301,
+        55.05095,
+        55.05099
+      ]
+    },
+    {
+      "file": "docs/kitchen-bench/iteration-camera-review/travel-route-overview-0.png",
+      "times": [
+        0.000023,
+        0.58375,
+        1.1675,
+        1.75125,
+        2.334977,
+        7.38506,
+        7.985,
+        8.485,
+        8.985,
+        9.485,
+        9.985,
+        10.485,
+        10.985,
+        11.485,
+        11.985,
+        12.485,
+        12.985,
+        13.38494,
+        15.25501,
+        15.8298,
+        16.21299,
+        16.313016,
+        16.913,
+        17.413
+      ]
+    },
+    {
+      "file": "docs/kitchen-bench/iteration-camera-review/travel-route-overview-1.png",
+      "times": [
+        17.912984,
+        17.913043,
+        18.511186,
+        19.109372,
+        19.707558,
+        20.305744,
+        20.90393,
+        21.502116,
+        22.100302,
+        22.199957,
+        23.800037,
+        24.391316,
+        24.982632,
+        25.573947,
+        26.165263,
+        26.756579,
+        27.347895,
+        27.544963,
+        31.39506,
+        31.995,
+        32.495,
+        32.995,
+        33.495,
+        33.995
+      ]
+    },
+    {
+      "file": "docs/kitchen-bench/iteration-camera-review/travel-route-overview-2.png",
+      "times": [
+        34.495,
+        34.995,
+        35.495,
+        35.995,
+        36.495,
+        36.995,
+        37.39494,
+        37.395011,
+        37.97,
+        38.544988,
+        38.645019,
+        39.221,
+        39.797,
+        40.373,
+        40.564981,
+        40.565042,
+        41.152023,
+        41.739047,
+        42.32607,
+        42.913093,
+        43.500116,
+        44.08714,
+        44.674163,
+        44.771958
+      ]
+    },
+    {
+      "file": "docs/kitchen-bench/iteration-camera-review/travel-route-overview-3.png",
+      "times": [
+        47.440047,
+        48.028875,
+        48.61775,
+        49.206625,
+        49.7955,
+        50.384375,
+        50.97325,
+        51.562125,
+        52.150953
+      ]
+    },
+    {
+      "file": "docs/kitchen-bench/iteration-camera-review/pot-complete-action-0.png",
+      "times": [
+        51,
+        51.1,
+        51.2,
+        51.3,
+        51.4,
+        51.5,
+        51.6,
+        51.7,
+        51.8,
+        51.9,
+        52,
+        52.1,
+        52.2,
+        52.3,
+        52.4,
+        52.5,
+        52.6,
+        52.7,
+        52.8,
+        52.9,
+        53,
+        53.1,
+        53.2,
+        53.3
+      ]
+    },
+    {
+      "file": "docs/kitchen-bench/iteration-camera-review/pot-complete-action-1.png",
+      "times": [
+        53.4,
+        53.5,
+        53.6,
+        53.7,
+        53.8,
+        53.9,
+        54,
+        54.1,
+        54.2,
+        54.3,
+        54.4,
+        54.5,
+        54.6,
+        54.7,
+        54.8,
+        54.9,
+        55,
+        55.05099
+      ]
+    }
+  ],
+  "raw": {
+    "path": "docs/kitchen-bench/iteration-camera-review/proof.json",
+    "sha256": "64d26dcd86a021b6cf294c139970458ac04228927098490559434e83ad0ca112"
+  },
+  "method": "Actual loaded stage, blocked API calls; every protected-camera start/end +/-50 microseconds plus turn midpoints; pot action at0.1s and60Hz forward/reverse pose verification. Image visibility requires separate visual review."
+}

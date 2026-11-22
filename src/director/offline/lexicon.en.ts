@@ -72,12 +72,13 @@ export const LEXICON_EN: Lexicon = {
     { re: W("sighs?|sighed"), verb: "sigh" },
     { re: W("gives?|gave|hands?|handed|offers?|offered|brings?|brought|shares?|shared"), verb: "give" },
     { re: W("eats?|ate|eating|munch(?:es|ed)?|tastes?|tasted|licks?|licked|drinks?|drank|gobbles?|gobbled"), verb: "eat" },
+    { re: W("nudges?|nudged|push(?:es|ed)?|rolls?|rolled"), verb: "nudge" },
     { re: W("throws?|threw|thrown|tosses?|tossed|kicks?|kicked"), verb: "throw" },
     { re: W("puts?(?: down)?|put down|places?|placed|sets? down|set down"), verb: "put_down" },
     { re: W("waits?|waited|waiting"), verb: "idle" },
     { re: W("drops?|dropped"), verb: "drop" },
     { re: W("swings?|swung|swinging"), verb: "swing" },
-    { re: W("takes?|took|picks?(?: up)?|picked(?: up)?|grabs?|grabbed|steals?|stole|finds?|found|gets?|got"), verb: "take" },
+    { re: W("harvests?|harvested|pulls? out|pulled out|takes?|took|picks?(?: up)?|picked(?: up)?|grabs?|grabbed|steals?|stole|finds?|found|gets?|got"), verb: "take" },
   ],
   speech: W("says?|said|shouts?|shouted|yells?|yelled|calls?|called|asks?|asked|whispers?|whispered|tells?|told|sings?|sang|screams?|screamed|exclaims?|exclaimed|replies?|replied|answers?|answered|cries out|cried out"),
   speechVerb: [
@@ -100,6 +101,8 @@ export const LEXICON_EN: Lexicon = {
     { re: W("snickers?|snickered|snickering|sniggers?|sniggered"), emote: "snicker" },
   ],
   marks: [
+    { re: W("(?:kitchen )?bowl"), id: "kitchen_bowl" },
+    { re: W("(?<!honey )(?:cooking |kitchen |enamel |soup )?pot(?! of honey)"), id: "kitchen_pot" },
     { re: W("kitchen|stove|cooking counter"), id: "house_kitchen" },
     { re: W("living room|lounge|armchair|sofa"), id: "house_living" },
     { re: W("house|home|cabin|hut|inside"), id: "house_living" },
@@ -210,7 +213,7 @@ export const LEXICON_EN: Lexicon = {
   ],
   verbLabels: {
     open:'opens the door',close:'closes the door',
-    put_down: "puts down", drop: "drops",
+    nudge:"nudges", put_down: "puts down", drop: "drops",
     walk_to: "walks", run_to: "runs", tiptoe_to: "tiptoes", chase: "chases", enter: "arrives", exit: "leaves",
     idle: "waits", jump: "jumps", spin: "spins", dance: "dances", sit: "sits down", stand_up: "stands up",
     fall_down: "falls down", sleep: "sleeps", wake_up: "wakes up", yawn_stretch: "yawns", hide: "hides", peek: "peeks",

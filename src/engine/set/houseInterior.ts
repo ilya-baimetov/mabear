@@ -2,9 +2,10 @@ import * as THREE from 'three';
 import {RoundedBoxGeometry} from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import type {LookMaterials} from '../look';
-import {HOUSE_ORIGIN, HOUSE_FOOTPRINT, HOUSE_KITCHEN_OFFSET, HOUSE_COOKING_HELPER, HOUSE_READING_TABLE, houseLocal} from '../../shared/houseLayout';
+import {HOUSE_ORIGIN, HOUSE_FOOTPRINT, HOUSE_KITCHEN_OFFSET, HOUSE_COOKING_HELPER, HOUSE_READING_TABLE,HOUSE_PREP_TABLE,HOUSE_KITCHEN_CHAIR_SHIFT,HOUSE_KITCHEN_LEFT_CHAIR_POSITION, houseLocal} from '../../shared/houseLayout';
 import {buildArchitectureShapes, roundedRoomOutline} from './interiorShapes/architecture';
 import {buildLivingShapes} from './interiorShapes/living';
+import {KITCHEN_CONTAINERS} from '../../shared/kitchenContainers';
 import {buildKitchenShapes} from './interiorShapes/kitchen';
 
 /** Lower and upper surfaces meet at a single edge rather than overlapping. */
@@ -96,13 +97,20 @@ export function buildHouseInterior(_materials: LookMaterials): THREE.Group {
   const {kitchen, prepTable, diningChairs, tableSurfaceY, seatY} = buildKitchenShapes(m);
   // Keep the stove approach open for Bear's full body; the second chair now
   // faces its table from the south side instead of blocking the cooking aisle.
-  diningChairs[1].position.set(-5.05 - HOUSE_KITCHEN_OFFSET[0], 0, 2.82 - HOUSE_KITCHEN_OFFSET[1]);
+  const prepLocal=houseLocal(HOUSE_PREP_TABLE.position);prepTable.position.set(prepLocal[0]-HOUSE_KITCHEN_OFFSET[0],0,prepLocal[1]-HOUSE_KITCHEN_OFFSET[1]);
+  const sideChair=houseLocal(HOUSE_KITCHEN_LEFT_CHAIR_POSITION);diningChairs[0].position.z=sideChair[1]-HOUSE_KITCHEN_OFFSET[1];
+  diningChairs[1].position.set(-5.05 - HOUSE_KITCHEN_OFFSET[0], 0, 2.82+HOUSE_KITCHEN_CHAIR_SHIFT - HOUSE_KITCHEN_OFFSET[1]);
   diningChairs[1].rotation.y = Math.PI;
   kitchen.add(prepTable, ...diningChairs); kitchen.position.set(HOUSE_KITCHEN_OFFSET[0], 0, HOUSE_KITCHEN_OFFSET[1]);
   // Keep the pot in one believable place through the entire story. The stove
   // is reserved for an actor's pan, so cooking never pops set dressing away.
   const cookingPot = kitchen.getObjectByName('Open enamel cooking pot')!;
-  kitchen.add(cookingPot); cookingPot.position.set(-4.52, 1.32, -2.88);
+  const potSlot=KITCHEN_CONTAINERS.kitchen_pot,potLocal=houseLocal(potSlot.position);
+  cookingPot.scale.set(potSlot.radius/.43,1,potSlot.radius/.43);
+  kitchen.add(cookingPot); cookingPot.position.set(potLocal[0]-HOUSE_KITCHEN_OFFSET[0],potSlot.baseY,potLocal[1]-HOUSE_KITCHEN_OFFSET[1]);
+  const bowlSlot=KITCHEN_CONTAINERS.kitchen_bowl,bowlLocal=houseLocal(bowlSlot.position);
+  const bowl=new THREE.Mesh(new THREE.LatheGeometry([[0,0],[.16,0],[.21,.025],[.27,.14],[.30,.215],[.30,.23],[.275,.23],[.245,.14],[.19,.045],[0,.035]].map(([x,y])=>new THREE.Vector2(x,y)),40),m.enamel);
+  bowl.name='set:house:kitchen-bowl';bowl.position.set(bowlLocal[0],bowlSlot.baseY,bowlLocal[1]);bowl.castShadow=bowl.receiveShadow=true;root.add(bowl);
   root.add(envelope, ceiling, opposite, fireplace, furnishings, kitchen);
 
   // The helper uses the exact support footprint followed by Masha's feet.
@@ -121,7 +129,7 @@ export function buildHouseInterior(_materials: LookMaterials): THREE.Group {
   root.userData = {
     setElement: 'house_interior', revision: 'reviewed-wall-return-04', geometryVersion: 'integrated-interior-v1',
     description: 'Connected kitchen and living room from the reviewed cartoon shape study',
-    wallSections, ceiling, cookingPot, windowMaterials: [m.glass], assetsReady: Promise.resolve(),
+    wallSections, ceiling, cookingPot, kitchenBowl:bowl, windowMaterials: [m.glass], assetsReady: Promise.resolve(),
     anchors: {chair, prepTable, tableSurfaceY, diningSeatY: seatY, helper},
   };
   batchStaticGeometry(root);

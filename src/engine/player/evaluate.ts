@@ -1,3 +1,4 @@
+import {isKitchenContainer} from '../../shared/kitchenContainers';
 // evaluate(timeline, t) → FrameState (spec §7.4). PURE and deterministic: no Date, no Math.random, no
 // globals mutated; blinks and fidgets are functions of t. The renderer applies the result each frame.
 import type { ActorFrame, FaceParams, FrameState, FxFrame, PropFrame } from "../api";
@@ -15,7 +16,7 @@ import { SEAT_HEIGHT, STYLES, evaluatePose, type VerbCtx } from "../motion/libra
 import { hash1 } from "../motion/verbs/common";
 import { swingAngle } from "../motion/verbs/objects";
 import {emotionWeights,emotionBlendSeconds,type EmotionWeights} from '../motion/emotion';
-import {propRestPosition as restPos,propPlacementAtMark,propPlacementInState} from '../../shared/propPlacement';
+import {propRestPosition as restPos,propPlacementAtMark,propPlacementInState,BENCH_BALL_FALLBACK,ballOriginFromSupport} from '../../shared/propPlacement';
 import {carrySeatRoot,carryLiftRootHeight} from '../../shared/carrySupport';
 import {armchairMountMotion,hammockTiming,hammockTravelProgress} from '../../shared/physicalInteractions';
 import {cookingSupportHeightAt} from '../../shared/cookingStation';
@@ -288,6 +289,7 @@ function propLocationsAt(seg: Segment, localT: number): { at: Record<PropId, Pro
       const end = c.start + c.dur;
       if (item) touched.set(item, Math.max(touched.get(item) ?? 0, end));
       if (c.params.putDown && item) events.push({ t: c.start + c.dur * 0.5, prop: item, at: c.params.putDown });
+      else if(c.verb==='nudge'&&item)events.push({t:c.start+c.dur*.5,prop:item,at:"clearing"});
       else if (c.verb === "drop" && item) events.push({ t: c.start + c.dur * 0.5, prop: item, at: c.params.dropAt ?? "clearing" });
       else if (c.verb === "take" && item) events.push({ t: c.start + c.dur * 0.5, prop: item, at: a });
       else if (c.verb === "give" && item && isActor(c.params.target)) events.push({ t: c.start + c.dur * 0.6, prop: item, at: c.params.target });
@@ -632,8 +634,9 @@ function evalActor(actor: ActorId, inp: ActorCtxIn, bear: ActorFrame | null, car
     verb,
     action: { time:clipLt, duration:inClip&&r?r.clip.dur:0,...(inClip&&r&&verb==='fish'&&(r.clip.params.catchesFish===true||r.clip.params.catchesFish===undefined&&seg.endState.props.fish?.at===actor)?{contactEnd:r.clip.dur*.7}:{}) },
     ...(inClip&&r&&verb==='hug'&&isActor(r.clip.params.target)?{interaction:{kind:'hug' as const,partner:r.clip.params.target}}:{}),
-    ...(release?{putDown:{item:release.item,position:release.pos,rotation:release.rot,release:.5}}:{}),
-    ...(pickup?{pickup:{item:pickup.item,position:pickup.pos,rotation:pickup.rot,release:.5}}:{}),
+    ...(release?{putDown:{item:release.item,position:release.pos,rotation:release.rot,release:.5,...(isKitchenContainer(r?.clip.params.putDown)?{container:r.clip.params.putDown}:{})}}:{}),
+    ...(pickup?{pickup:{item:pickup.item,position:pickup.pos,rotation:pickup.rot,release:.5,...(isKitchenContainer(r?.clip.params.pickUpAt)?{container:r.clip.params.pickUpAt}:{})}}:{}),
+    ...(inClip&&r?.clip.params.nudgeAt&&r.clip.params.nudgePosition?{nudge:{item:'ball' as const,position:r.clip.params.nudgePosition,rotation:r.clip.params.nudgeRotation??[0,0,0] as Vec3,release:.5}}:{}),
     ...(inClip&&r?.clip.params.target==='cupboard'&&(verb==='open'||verb==='close')?{objectContact:{position:cupboardHandleAt(objectOpenAt(seg,lt,'kitchen_cupboard')),side:1 as const,strength:Math.min(smooth(clipLt/.3),smooth((r.clip.dur-clipLt)/.3))}}:{}),
     ...(carried&&carry?{riding:{carrier:'bear' as const,progress:easeInOut(carry.k)}}:{}),
     secondary: { sway, jiggle, breathe: ev.breathe },
@@ -913,11 +916,30 @@ export function evaluate(timeline: Timeline, t: number): FrameState {
   const { at, flights } = segs.length === 0 ? { at: Object.fromEntries(PROP_IDS.map((id) => [id, seg.startState.props[id]?.at ?? "hidden"])) as Record<PropId, PropLocation>, flights: new Map() } : propLocationsAt(seg, Math.min(lt, seg.duration + 1e-6));
   for(const actor of ACTOR_IDS)actors[actor].holding=PROP_IDS.find(id=>at[id]===actor)??actors[actor].holding;
   const props = propsFrame(at, flights, actors, ltc);
+  // Optional authored resting poses keep the non-physics fallback continuous
+  // across scene boundaries. A new ownership event supersedes the old pose.
+  if(!props.ball.attachedTo&&!flights.has('ball')){
+    const events=ACTOR_IDS.flatMap(a=>clipsOf(seg,a).filter(c=>c.params.item==='ball'&&['take','give','throw','drop','put_down','nudge'].includes(c.verb)).map(c=>({c,t:c.start+c.dur*.5}))).filter(e=>e.t<=ltc).sort((a,b)=>a.t-b.t);
+    const last=events.at(-1),saved=last?.c.verb==='nudge'?seg.endState.props.ball:events.length?null:seg.startState.props.ball;
+    if(saved?.position){const p=saved.position,rot=saved.rotation??[0,0,0];props.ball={visible:true,attachedTo:null,pos:[...p],rotation:qmul(qmul(qaxis([0,1,0],rot[1]),qaxis([1,0,0],rot[0])),qaxis([0,0,1],rot[2]))};}
+    if(last?.c.verb==='nudge'){
+      const from=last.c.params.nudgePosition??propPlacementAtMark('ball','bench').pos,age=Math.max(0,ltc-last.t),travel=Math.min(age/BENCH_BALL_FALLBACK.rollSeconds,1),fall=Math.max(0,age-BENCH_BALL_FALLBACK.edgeSeconds);
+      const x=from[0]+(BENCH_BALL_FALLBACK.support[0]-from[0])*travel,y=fall===0?from[1]:Math.max(0,from[1]-4.905*fall*fall);
+      const rotation=-(from[0]-x)/.15;
+      props.ball={visible:true,attachedTo:null,pos:ballOriginFromSupport([x,y,from[2]],[0,0,rotation]),rotation:[0,0,Math.sin(rotation/2),Math.cos(rotation/2)]};
+    }
+    // Exact table/bench base origins bypass the renderer's semantic nearest-mark snap.
+    if(at.ball==='bench'&&!last?.c.params.nudgeAt){const p=propPlacementAtMark('ball','bench');props.ball={visible:true,attachedTo:null,pos:p.pos,rotation:[0,0,0,1]};}
+  }
   for(const id of CARROT_IDS){
     const loc=at[id];if(!isMark(loc)||flights.has(id))continue;
     const picked=ACTOR_IDS.some(a=>clipsOf(seg,a).some(c=>c.params.item===id&&c.verb==='take'&&!c.params.putDown&&ltc>=c.start+c.dur*.5));
     const planted=loc==='garden'&&!!seg.startState.props[id]?.planted&&!picked;
     const placement=propPlacementInState(id,{at:loc,planted}),[x,y,z]=placement.rot;
+    if(loc==='kitchen_pot'){
+      const deposit=ACTOR_IDS.flatMap(a=>clipsOf(seg,a)).filter(c=>c.params.item===id&&c.params.putDown==='kitchen_pot'&&c.params.putDownPosition&&ltc>=c.start+c.dur*.5).at(-1);
+      if(deposit){const releaseY=deposit.params.putDownPosition![1],age=ltc-deposit.start-deposit.dur*.5;placement.pos[1]=Math.max(placement.pos[1],releaseY-4.905*age*age);}
+    }
     // Quaternion in the renderer's YXZ order, independent of the generic resting-mark snap.
     const cx=Math.cos(x/2),sx=Math.sin(x/2),cy=Math.cos(y/2),sy=Math.sin(y/2),cz=Math.cos(z/2),sz=Math.sin(z/2);
     props[id]={visible:true,pos:placement.pos,attachedTo:null,rotation:[sx*cy*cz+cx*sy*sz,cx*sy*cz-sx*cy*sz,cx*cy*sz-sx*sy*cz,cx*cy*cz+sx*sy*sz]};

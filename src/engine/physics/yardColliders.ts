@@ -11,12 +11,13 @@ export const STATIC_GROUP = (1 << 16) | 6;
 export const MASHA_GROUP = (2 << 16) | 1;
 export const BALL_GROUP = (4 << 16) | 1;
 
-export function createYardColliders(world: RAPIER.World): void {
+/** Returns the ground collider so material changes can follow real contacts. */
+export function createYardColliders(world: RAPIER.World): RAPIER.Collider {
   const add = (desc: RAPIER.ColliderDesc) => world.createCollider(desc.setCollisionGroups(STATIC_GROUP).setFriction(.8));
   const box = (x: number, y: number, z: number, hx: number, hy: number, hz: number) =>
     add(RAPIER.ColliderDesc.cuboid(hx, hy, hz).setTranslation(x, y, z));
   // groundY is identically zero throughout this bounded yard.
-  box(0, -.2, 0, 19, .2, 19);
+  const ground=box(0, -.2, 0, 19, .2, 19);
   // Round table: top, pedestal and cross feet. The capsule hits the top's rim.
   add(RAPIER.ColliderDesc.cylinder(.035, .75).setTranslation(2, .745, 1.5));
   add(RAPIER.ColliderDesc.cylinder(.355, .1).setTranslation(2, .355, 1.5));
@@ -28,4 +29,5 @@ export function createYardColliders(world: RAPIER.World): void {
   const s = COOKING_STATION;
   box(s.position[0], s.top / 2, (s.topBack + s.topFront) / 2, s.width / 2, s.top / 2, (s.topFront - s.topBack) / 2);
   box(s.position[0], s.stepTop / 2, (s.stepBack + s.topBack) / 2, s.width / 2, s.stepTop / 2, (s.topBack - s.stepBack) / 2);
+  return ground;
 }

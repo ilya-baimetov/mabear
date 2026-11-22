@@ -5,14 +5,20 @@ import {MASHA_RADIUS,SKIN} from './yardColliders';
 // Same conservative furniture silhouettes as createYardColliders. Inflate by
 // the character capsule, then leave a small route-following clearance.
 const margin=MASHA_RADIUS+SKIN+.08;
+// Bench interactions need a reachable near edge. Keep 3cm beyond the capsule
+// and skin here; the taller table/helper retain the broader walking clearance.
+const benchMargin=MASHA_RADIUS+SKIN+.03;
 type Box={min:Vec2;max:Vec2};
 const s=COOKING_STATION;
 const boxes:Box[]=[
- {min:[2-.85-margin,3-.19-margin],max:[2+.85+margin,3+.19+margin]},
+ {min:[2-.85-benchMargin,3-.19-benchMargin],max:[2+.85+benchMargin,3+.19+benchMargin]},
  {min:[s.position[0]-s.width/2-margin,s.stepBack-margin],max:[s.position[0]+s.width/2+margin,s.topFront+margin]},
 ];
 const circle={center:[2,1.5] as Vec2,radius:.75+margin};
-const epsilon=1e-5; // Rapier stores translations as float32.
+// Float32 translations and the KCC's small contact corrections can put a
+// stopped actor a fraction of a millimetre inside the inflated route boundary.
+// This tolerance is well below the additional 8cm planning clearance.
+const epsilon=.001;
 const dist=(a:Vec2,b:Vec2)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
 function pointSegment(p:Vec2,a:Vec2,b:Vec2){const dx=b[0]-a[0],dz=b[1]-a[1],l=dx*dx+dz*dz,k=l?Math.max(0,Math.min(1,((p[0]-a[0])*dx+(p[1]-a[1])*dz)/l)):0;return Math.hypot(p[0]-a[0]-dx*k,p[1]-a[1]-dz*k);}
 export function yardPointClear(p:Vec2){return p[0]>=-3&&p[0]<=5&&p[1]>=-1&&p[1]<=6&&dist(p,circle.center)>=circle.radius-epsilon&&boxes.every(b=>p[0]<=b.min[0]+epsilon||p[0]>=b.max[0]-epsilon||p[1]<=b.min[1]+epsilon||p[1]>=b.max[1]-epsilon);}

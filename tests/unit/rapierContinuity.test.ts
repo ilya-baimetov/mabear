@@ -98,7 +98,7 @@ describe('drop → obstacle route → physical pickup (compiled actual story)',(
  });
  it('declines unsupported ball participation as one coherent story before any physics takeover',async()=>{
   const tl=parallelStories().continuity,seg=tl.segments[1].segment;
-  seg.actorClips.bear.push({start:2,dur:1,verb:'look_at',emotion:'neutral',params:{target:'ball'}});
+  seg.actorClips.bear.push({start:2,dur:1,verb:'take',emotion:'neutral',params:{target:'ball',item:'ball'}});
   const r=await setup(tl);expect(r.inspect(tl,0).reason).toBe('unsupported ball choreography');expect(r.inspect(tl,0).continuity).toBe(false);
   for(const t of [0,8,tl.duration,2])expect(r.evaluate(tl,t)).toEqual(evaluate(tl,t));
  });

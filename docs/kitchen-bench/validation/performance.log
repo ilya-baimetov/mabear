@@ -1,0 +1,4 @@
+{"mode":"before","id":"bench","coldMs":6.599999904632568,"meanFps":59.9291930165937,"evalP95":0.5,"renderP95":6.200000047683716}
+{"mode":"before","id":"kitchen","coldMs":4.600000023841858,"meanFps":59.71317087232707,"evalP95":0.5,"renderP95":9.399999976158142}
+{"mode":"after","id":"bench","coldMs":682.3999999761581,"meanFps":59.99842109418174,"evalP95":0.6000000238418579,"renderP95":6.200000047683716}
+{"mode":"after","id":"kitchen","coldMs":3.399999976158142,"meanFps":59.87001522180605,"evalP95":0.6000000238418579,"renderP95":7.400000095367432}

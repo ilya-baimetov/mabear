@@ -10,7 +10,9 @@ export interface PlayerOptions {
   onTime?: (t: number, playing: boolean) => void;
   onFrame?: (frame: FrameState) => void;
   /** Optional deterministic physics trajectory; unsupported stories retain animation. */
-  evaluator?: PlaybackEvaluator;
+  evaluator?: PlaybackEvaluator & {readonly ready?:boolean};
+  /** Preparation holds the existing picture and requested timestamp, including audio. */
+  onPreparing?: (preparing:boolean)=>void;
 }
 
 export class Player {
@@ -36,6 +38,9 @@ export class Player {
   private toEnd = false;
   private lastNow = 0;
   private resumableAudio = false;
+  private preparationHeld = false;
+  private preparingReported = false;
+  private deferredAudio = false;
   /** debug/screenshot hook: replaces the compiled camera (e.g. a character close-up) */
   cameraOverride: ((frame: FrameState) => CamKey) | null = null;
   /** Cast inspection may show an actor who is absent from the current story. */
@@ -57,13 +62,16 @@ export class Player {
     this.lang = lang;
     this.setPreviewEnd(this.previewEnd ?? undefined);
     if (this.t > tl.duration) this.t = tl.duration;
-    if (changed && wasPlaying) {
-      // timeline edited during playback: re-schedule from the current time (the engine keeps lines/music running)
-      this.opts.audio?.play(this.previewTimeline, this.t, lang);
+    if (wasPlaying && (changed || this.isPreparing)) {
+      if(this.isPreparing){this.opts.audio?.stop();this.deferredAudio=true;}
+      else {this.deferredAudio=false;this.opts.audio?.play(this.previewTimeline, this.t, lang);}
+      this.tStart=this.t;this.wallStart=performance.now();
     }
     if (this.endT > tl.duration || !wasPlaying || this.toEnd) this.endT = this.previewTimeline.duration;
     // Stop at an unvoiced new paragraph; the app prepares it before resuming.
     if(wasPlaying&&this.opts.audio?.readyUntil)this.endT=Math.min(this.endT,Math.max(this.t,this.opts.audio.readyUntil(this.previewTimeline,lang,this.t)));
+    if(this.isPreparing)this.preparationHeld=true;
+    this.reportPreparing();
   }
 
   private setPreviewEnd(end?: number): void {
@@ -80,6 +88,8 @@ export class Player {
   get isPlaying(): boolean {
     return this.playing;
   }
+  get isPreparing():boolean{return this.opts.evaluator?.ready===false;}
+  private reportPreparing(){const value=this.isPreparing;if(value!==this.preparingReported){this.preparingReported=value;this.opts.onPreparing?.(value);}}
   get frame(): FrameState | null {
     return this.lastFrame;
   }
@@ -95,16 +105,21 @@ export class Player {
     this.playing = true;
     this.tStart = this.t;
     this.wallStart = performance.now();
-    if (resume && this.opts.audio?.resume) this.opts.audio.resume();
+    if(this.isPreparing){
+      this.preparationHeld=true;this.deferredAudio=true;this.opts.audio?.stop();
+    }else if (resume && this.opts.audio?.resume) this.opts.audio.resume();
     else { this.opts.audio?.stop(); this.opts.audio?.play(this.previewTimeline, this.t, this.lang); }
+    if(!this.isPreparing){this.preparationHeld=false;this.deferredAudio=false;}
+    this.reportPreparing();
     this.opts.onTime?.(this.t, true);
   }
 
   pause(): void {
     if (!this.playing) return;
     this.playing = false;
-    this.resumableAudio = !!this.opts.audio?.pause;
-    if (this.opts.audio?.pause) this.opts.audio.pause(); else this.opts.audio?.stop();
+    this.resumableAudio = !this.deferredAudio && !!this.opts.audio?.pause;
+    if(this.deferredAudio){this.deferredAudio=false;this.opts.audio?.stop();}
+    else if (this.opts.audio?.pause) this.opts.audio.pause(); else this.opts.audio?.stop();
     this.opts.onTime?.(this.t, false);
   }
 
@@ -121,6 +136,13 @@ export class Player {
   private loop(now: number): void {
     this.raf = requestAnimationFrame(this.loop);
     if (this.frozen) return;
+    this.reportPreparing();
+    if(this.isPreparing){this.preparationHeld=true;this.lastNow=now;return;}
+    if(this.preparationHeld){
+      this.preparationHeld=false;this.tStart=this.t;this.wallStart=now;this.lastNow=now;
+      if(this.deferredAudio&&this.playing)this.opts.audio?.play(this.previewTimeline,this.t,this.lang);
+      this.deferredAudio=false;
+    }
     const dt = this.lastNow ? Math.min(0.1, Math.max(0, (now - this.lastNow) / 1000)) : 1 / 60;
     this.lastNow = now;
     if (this.playing) {

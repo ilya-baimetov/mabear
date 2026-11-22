@@ -1,0 +1,104 @@
+{
+  "status": "complete-local-not-deployed",
+  "source": "6b059a3ed328acb504fc5d48d2729ddcbaa7ae2846857d2907ddf27599bf2fea",
+  "baselineCommit": "0a81ce43861dd3bc1a1fce2f751940d6f31dcbad",
+  "branch": "codex/kitchen-bench-continuity",
+  "tests": {
+    "passed": 895,
+    "files": 75
+  },
+  "typecheck": "passed-app-and-worker",
+  "build": "passed",
+  "sameCaptureHarness": true,
+  "proofs": [
+    {
+      "file": "production/proof.json",
+      "sha256": "6ce81d4f31b2f8b45d6688972c97e41a8aeb320a83fd93fff89765c7c2e3b2a4",
+      "source": "6b059a3ed328acb504fc5d48d2729ddcbaa7ae2846857d2907ddf27599bf2fea",
+      "stable": true
+    },
+    {
+      "file": "after-contacts/proof.json",
+      "sha256": "1eeb95899cc2f29a611393df654883c7d43baa23ad889ea33849cbd540dc3c00",
+      "source": "6b059a3ed328acb504fc5d48d2729ddcbaa7ae2846857d2907ddf27599bf2fea",
+      "stable": true
+    },
+    {
+      "file": "regression/proof.json",
+      "sha256": "ee9082e01d16936904ae65e3f0fd7ec810e8aebb51102426a9636f55b9c0ee74",
+      "source": "6b059a3ed328acb504fc5d48d2729ddcbaa7ae2846857d2907ddf27599bf2fea",
+      "stable": true
+    },
+    {
+      "file": "camera-review/proof.json",
+      "sha256": "f7744a419df15b233aa349596aa1fb98f0bdcd7eb5e7ce55ddde45193e585ddc",
+      "source": "6b059a3ed328acb504fc5d48d2729ddcbaa7ae2846857d2907ddf27599bf2fea",
+      "stable": true
+    },
+    {
+      "file": "pot-contact-review/proof.json",
+      "sha256": "be520c68e6bd901b64e53f4094cca702cafa00b4d6f1fc1e023a9271fa25a986",
+      "source": "6b059a3ed328acb504fc5d48d2729ddcbaa7ae2846857d2907ddf27599bf2fea",
+      "stable": true
+    },
+    {
+      "file": "preparation/proof.json",
+      "sha256": "b3bdb2aec72b23b26d3c052e0ea5c1f35ecff4fb332352d1665e66c50d93e8bb",
+      "source": "6b059a3ed328acb504fc5d48d2729ddcbaa7ae2846857d2907ddf27599bf2fea",
+      "stable": true
+    },
+    {
+      "file": "performance.json",
+      "sha256": "47c552d0f1d19a8db161abf315ec26ad761063357127cf39a047f11ac0dbc8c5",
+      "source": "6b059a3ed328acb504fc5d48d2729ddcbaa7ae2846857d2907ddf27599bf2fea",
+      "stable": true
+    },
+    {
+      "file": "after/proof.json",
+      "sha256": "e1a06ff77488859b103ff97220cc9528f91d2efacaec2a28d8efc5cb52709771",
+      "source": "6b059a3ed328acb504fc5d48d2729ddcbaa7ae2846857d2907ddf27599bf2fea",
+      "stable": true
+    },
+    {
+      "file": "media-playback.json",
+      "sha256": "05f4837eda122d1f671a7bac37051afdf7665b6268b230eda49e6bc0a0ea2178",
+      "source": "6b059a3ed328acb504fc5d48d2729ddcbaa7ae2846857d2907ddf27599bf2fea",
+      "stable": true
+    }
+  ],
+  "media": [
+    {
+      "file": "kitchen-before-after.mp4",
+      "sha256": "f9b6e1d1f490d42e6f3fe937e3d5631531eb8069470a8149d42d8d3d0eea04eb",
+      "bytes": 52081367,
+      "decodedFrames": 1946,
+      "duration": 64.930767,
+      "playedToEnd": true
+    },
+    {
+      "file": "bench-before-after.mp4",
+      "sha256": "798f30fa6b1300cc5b8e09306676f1e656710da2d627aeb295c99e3233ded3fd",
+      "bytes": 20587322,
+      "decodedFrames": 763,
+      "duration": 25.503967,
+      "playedToEnd": true
+    }
+  ],
+  "decodedImagesVisuallyInspected": [
+    "kitchen-camera-sheet.png",
+    "kitchen-final-sequence.png",
+    "bench-contact-sheet.png",
+    "bench-camera-sheet.png"
+  ],
+  "potAcceptance": {
+    "visual": "accepted after independent review and decoded-frame review",
+    "strictZeroIntersections": false,
+    "remainingHeadFurDepthMm": 2.094,
+    "remainingShoulderDepthMm": 0.107
+  },
+  "deployPerformed": false,
+  "commitOrPushPerformed": false,
+  "falCalls": 0,
+  "liveDirectorCalls": 6,
+  "note": "Six authorized live director calls used the previously deployed contract. All subsequent browser checks blocked APIs or replayed saved responses. New kitchen/bench contract is locally verified."
+}

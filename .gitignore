@@ -108,3 +108,14 @@ docs/parallel-interactions/after/*.png
 docs/parallel-interactions/iteration-*/
 docs/parallel-interactions/ui/carrots-proof.json
 docs/parallel-interactions/ui/rapier-proof.json
+
+# Next interaction batch: preserve final evidence, omit machine-specific paths
+# and dense intermediate frame sweeps.
+docs/kitchen-bench/baseline-path.txt
+docs/kitchen-bench/before/*.png
+docs/kitchen-bench/after/*.png
+docs/kitchen-bench/iteration-*/
+# Contact/camera iterations are superseded by after-contacts and final videos.
+docs/kitchen-bench/kitchen-*/
+docs/kitchen-bench/after-contacts/*.png
+docs/kitchen-bench/regression/*.png

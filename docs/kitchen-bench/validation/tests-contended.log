@@ -1,0 +1,138 @@
+
+> mabear@0.1.0 test
+> vitest run --maxWorkers=4
+
+
+ RUN  v5.1.0 /Users/ilya.baimetov/Projects/mabear/codex
+
+ ❯ tests/unit/physicalInteractions.test.ts (21 tests | 1 failed) 22682ms
+   ❯ hug contacts on shipped characters (9)
+     × keeps the actual Bear surface above the cloth through mounting, rest and dismount 6401ms
+ ❯ tests/unit/rapierBench.test.ts (11 tests | 2 failed) 25469ms
+   ❯ bench support → visible nudge → ground retrieval (11)
+     × runs the ordinary en three-scene text story with physical placement and pickup 5681ms
+     × recomputes the actual landing and pickup after editing nudge strength 8478ms
+ ❯ tests/unit/rapierContinuity.test.ts (13 tests | 4 failed) 34268ms
+   ❯ drop → obstacle route → physical pickup (compiled actual story) (13)
+     × supports a direct en text story through the ordinary parser/compiler 5440ms
+     × walks around the bench, remains supported, and retrieves the actual settled ball 6595ms
+     × preserves clip and scene continuity, arbitrary seek order, preview endpoints and replay 7770ms
+     × invalidates all reconciled paths and ball contacts after an actual source-timeline edit 5879ms
+(node:57583) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:57601) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:57602) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:57617) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:57620) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:57657) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:57659) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:57672) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 7 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/physicalInteractions.test.ts > hug contacts on shipped characters > keeps the actual Bear surface above the cloth through mounting, rest and dismount
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ tests/unit/physicalInteractions.test.ts:159:2
+    157|   }
+    158|  });
+    159|  it('keeps the actual Bear surface above the cloth through mounting, r…
+       |  ^
+    160|   const tl=compile('bears_nap'),rig=rigs.bear,meshes:THREE.SkinnedMesh…
+    161|   const clearances:{verb:string;phase:number;clearance:number}[]=[];
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/7]⎯
+
+ FAIL  tests/unit/rapierBench.test.ts > bench support → visible nudge → ground retrieval > runs the ordinary en three-scene text story with physical placement and pickup
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ tests/unit/rapierBench.test.ts:30:13
+     28|   ['en',['Masha takes the ball and puts it on the bench.','Masha nudge…
+     29|   ['ru',['Маша берёт мяч и кладёт его на скамейку.','Маша толкает мяч …
+     30|  ] as const)('runs the ordinary %s three-scene text story with physica…
+       |             ^
+     31|   const tl=textStory([...texts],lang),r=await replay(tl),proof=r.inspe…
+     32|   expect(proof.reason).toBeNull();expect(proof.impulses).toHaveLength(…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/7]⎯
+
+ FAIL  tests/unit/rapierBench.test.ts > bench support → visible nudge → ground retrieval > recomputes the actual landing and pickup after editing nudge strength
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ tests/unit/rapierBench.test.ts:92:2
+     90|   for(const t of [attach+.001,attach-.001,tl.duration,0,attach])expect…
+     91|  });
+     92|  it('recomputes the actual landing and pickup after editing nudge stre…
+       |  ^
+     93|   const tl=benchStory(),r=await replay(tl),before=r.preparedData(),rev…
+     94|   edited.segments[0].segment.actorClips.masha.find(c=>c.verb==='nudge'…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/7]⎯
+
+ FAIL  tests/unit/rapierContinuity.test.ts > drop → obstacle route → physical pickup (compiled actual story) > supports a direct en text story through the ordinary parser/compiler
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ tests/unit/rapierContinuity.test.ts:22:13
+     20|   ['en',['Masha takes the ball and walks to the bench.','Masha drops t…
+     21|   ['ru',['Маша берёт мяч и идёт к скамейке.','Маша роняет мяч и ждёт.'…
+     22|  ] as const)('supports a direct %s text story through the ordinary par…
+       |             ^
+     23|   const tl=textStory([...texts],lang),r=await setup(tl),proof=r.inspec…
+     24|   expect(proof.reason).toBeNull();expect(proof.pickups).toHaveLength(1…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/7]⎯
+
+ FAIL  tests/unit/rapierContinuity.test.ts > drop → obstacle route → physical pickup (compiled actual story) > walks around the bench, remains supported, and retrieves the actual settled ball
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ tests/unit/rapierContinuity.test.ts:26:2
+     24|   expect(proof.reason).toBeNull();expect(proof.pickups).toHaveLength(1…
+     25|  });
+     26|  it('walks around the bench, remains supported, and retrieves the actu…
+       |  ^
+     27|   const tl=parallelStories().continuity,r=await setup(tl),proof=r.insp…
+     28|   expect(proof.reason).toBeNull();expect(proof.continuity).toBe(true);…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/7]⎯
+
+ FAIL  tests/unit/rapierContinuity.test.ts > drop → obstacle route → physical pickup (compiled actual story) > preserves clip and scene continuity, arbitrary seek order, preview endpoints and replay
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ tests/unit/rapierContinuity.test.ts:53:2
+     51|   expect(new Quaternion().setFromEuler(new Euler(...contact.rotation,'…
+     52|  });
+     53|  it('preserves clip and scene continuity, arbitrary seek order, previe…
+       |  ^
+     54|   const tl=parallelStories().continuity,a=await setup(tl),b=await setu…
+     55|   const times=new Set([0,tl.duration,tl.duration+30,2.337]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/7]⎯
+
+ FAIL  tests/unit/rapierContinuity.test.ts > drop → obstacle route → physical pickup (compiled actual story) > invalidates all reconciled paths and ball contacts after an actual source-timeline edit
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ tests/unit/rapierContinuity.test.ts:64:2
+     62|   expect(a.evaluate(tl,tl.duration+30).actors.masha.pos).toEqual(a.eva…
+     63|  });
+     64|  it('invalidates all reconciled paths and ball contacts after an actua…
+       |  ^
+     65|   const tl=parallelStories().continuity,r=await setup(tl),before=r.ins…
+     66|   const edited=structuredClone(tl);edited.segments[0].segment.startSta…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/7]⎯
+
+
+ Test Files  3 failed | 72 passed (75)
+      Tests  7 failed | 886 passed (893)
+   Start at  23:39:09
+   Duration  54.47s (tests 91%, import 8%, transform 1%)
+
+    Isolate  75 workers spawned · ~236ms startup each (spawn + environment, per file)
+             at least ~4.19s faster with isolate: false — reuses workers across files instead of one per file

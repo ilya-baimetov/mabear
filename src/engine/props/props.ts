@@ -9,6 +9,7 @@ import { GeoBag, bagToSingle, rng, xf, type LookMaterials } from "../look";
 import { restHeightAt } from "../set/bearsYard";
 import {PROP_SLOTS,PROP_REST_HEIGHT,propPlacementAtMark} from '../../shared/propPlacement';
 import {HOUSE_PREP_TABLE,HOUSE_READING_TABLE} from '../../shared/houseLayout';
+import {KITCHEN_CONTAINERS} from '../../shared/kitchenContainers';
 export {PROP_SLOTS} from '../../shared/propPlacement';
 
 type R3 = [number, number, number];
@@ -248,6 +249,7 @@ const PLAYER_REST_Y=PROP_REST_HEIGHT;
 export function restingMark(pos: Vec3): MarkId | null {
   const cupboard=PROP_SLOTS.pantry_honey!;
   if(Math.hypot(pos[0]-cupboard.pos[0],pos[1]-cupboard.pos[1],pos[2]-cupboard.pos[2])<.01)return 'cupboard';
+  for(const id of ['kitchen_bowl','kitchen_pot'] as const){const c=KITCHEN_CONTAINERS[id];if(Math.hypot(pos[0]-c.position[0],pos[1]-c.baseY,pos[2]-c.position[1])<.01)return id;}
   let best: MarkId | null = null;
   let bestD = 0.6;
   for (const id of Object.keys(MARKS) as MarkId[]) {
@@ -265,7 +267,7 @@ export function restingMark(pos: Vec3): MarkId | null {
 /** Final resting transform for a prop given the player's position. Pure. */
 export function restPlacement(id: PropId, pos: Vec3): { pos: Vec3; rot: R3 } {
   const mark = restingMark(pos);
-  if(isCarrot(id)&&mark)return propPlacementAtMark(id,mark);
+  if(mark&&(isCarrot(id)||id==='ball'&&mark==='bench'))return propPlacementAtMark(id,mark);
   const slot = PROP_SLOTS[id];
   const vis = PROP_VISUALS[id];
   if (mark && slot && slot.mark === mark) return { pos: [...slot.pos] as Vec3, rot: slot.rot ?? vis.restRot ?? [0, 0, 0] };

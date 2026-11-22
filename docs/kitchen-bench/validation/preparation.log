@@ -1,0 +1,80 @@
+{
+  "source": "6b059a3ed328acb504fc5d48d2729ddcbaa7ae2846857d2907ddf27599bf2fea",
+  "stable": true,
+  "synchronous": {
+    "wallMs": 442.5,
+    "maxMainThreadTimerGapMs": 442.8000000715256,
+    "heartbeatCount": 4
+  },
+  "cold": {
+    "wallMs": 635.9000000953674,
+    "maxMainThreadTimerGapMs": 6.600000023841858,
+    "heartbeatCount": 162
+  },
+  "warm": {
+    "wallMs": 0.5,
+    "maxMainThreadTimerGapMs": 4.600000023841858,
+    "heartbeatCount": 3
+  },
+  "reuse": {
+    "wallMs": 428.09999990463257,
+    "maxMainThreadTimerGapMs": 5.600000023841858,
+    "heartbeatCount": 110
+  },
+  "preparation": {
+    "wallMs": 635.3000000715256,
+    "workerMs": 516.7999999523163,
+    "poseMs": 3.4000000953674316,
+    "poseRequests": 1,
+    "rounds": 2,
+    "error": null
+  },
+  "cancellation": {
+    "revision": 4,
+    "reason": null
+  },
+  "fallbacks": [
+    {
+      "id": "cupboard",
+      "immediate": true,
+      "wallMs": 0.5
+    },
+    {
+      "id": "regression",
+      "immediate": true,
+      "wallMs": 1.100000023841858
+    }
+  ],
+  "transport": {
+    "queued": {
+      "preparing": true,
+      "time": 2,
+      "playing": true,
+      "samePicture": true,
+      "audioStarted": false
+    },
+    "seek": {
+      "time": 3.337,
+      "playing": false,
+      "frameT": 3.337,
+      "audioStarted": false
+    },
+    "paused": {
+      "time": 1,
+      "playing": false,
+      "playEvents": [
+        "play:3.337"
+      ]
+    },
+    "audioEvents": [
+      "stop",
+      "stop",
+      "stop",
+      "play:3.337",
+      "stop",
+      "stop",
+      "stop",
+      "stop"
+    ]
+  }
+}

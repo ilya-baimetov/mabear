@@ -22,15 +22,20 @@ export const HOUSE_STOVE=houseWorld([-4.18,-.25]);
 // Offset the adult's right-paw reach: facing the root directly at the stove
 // put the pan behind the hotplate, over the adjacent wooden counter.
 export const HOUSE_KITCHEN_FACING=Math.atan2(HOUSE_STOVE[0]-HOUSE_KITCHEN_MARK[0],HOUSE_STOVE[1]-HOUSE_KITCHEN_MARK[1])+.30;
-export const HOUSE_PREP_TABLE={position:houseWorld([-4.53,1.55]),height:1.20,width:2.55,depth:1.62} as const;
+/** Leave a usable adult aisle between the stove and preparation table. */
+export const HOUSE_KITCHEN_WORK_SHIFT=.55;
+export const HOUSE_KITCHEN_CHAIR_SHIFT=.30;
+export const HOUSE_PREP_TABLE={position:houseWorld([-4.53,1.55+HOUSE_KITCHEN_WORK_SHIFT]),height:1.20,width:2.55,depth:1.62} as const;
+/** The side chair belongs beside the table, clear of the stove-to-counter turn. */
+export const HOUSE_KITCHEN_LEFT_CHAIR_POSITION=houseWorld([-5.75,1.55+HOUSE_KITCHEN_WORK_SHIFT]);
 export const HOUSE_READING_TABLE={position:houseWorld([-.83,-.22]),height:.793,width:1.96,depth:1.45} as const;
 /** A three-tread helper beside the prep table, approached from its east side.
  * It leaves the stove's adult standing space and the front circulation clear. */
-export const HOUSE_COOKING_HELPER={position:houseWorld([-2.96,1.95]),height:.80,width:.70,depth:1.20,stepDepth:.28,steps:3,
- facing:-Math.PI/2,entry:houseWorld([-1.83,1.95])} as const;
-export const HOUSE_CHILD_COOK_POSITION=houseWorld([-2.96,2.30]);
+export const HOUSE_COOKING_HELPER={position:houseWorld([-2.96,1.95+HOUSE_KITCHEN_WORK_SHIFT]),height:.80,width:.70,depth:1.20,stepDepth:.28,steps:3,
+ facing:-Math.PI/2,entry:houseWorld([-1.83,1.95+HOUSE_KITCHEN_WORK_SHIFT])} as const;
+export const HOUSE_CHILD_COOK_POSITION=houseWorld([-2.96,2.30+HOUSE_KITCHEN_WORK_SHIFT]);
 /** Working objects sit on the reachable east edge, away from the active pan. */
-export const houseWorkPropZ=(item:PropId):number=>item==='pancakes'||item==='cake'||item==='jam_jar'?1.48:item==='frying_pan'?2.30:item==='flour_bag'?1.86:2.02;
+export const houseWorkPropZ=(item:PropId):number=>HOUSE_KITCHEN_WORK_SHIFT+(item==='pancakes'||item==='cake'||item==='jam_jar'?1.75:item==='frying_pan'?2.30:item==='flour_bag'?1.86:2.02);
 export const housePickupPosition=(item:PropId):Vec2=>houseWorld([-3.22,houseWorkPropZ(item)]);
 export function houseCookingSupportHeightAt(x:number,z:number):number {
  const s=HOUSE_COOKING_HELPER,dx=x-s.position[0],dz=Math.abs(z-s.position[1]);

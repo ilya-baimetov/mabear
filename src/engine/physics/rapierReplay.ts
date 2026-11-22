@@ -11,8 +11,11 @@ import {ballApproach,planYardRoute,yardPointClear,yardRouteLength} from './yardN
 export const PHYSICS_DT = 1 / 60;
 const MAX_SECONDS = 180;
 const MAX_CONTINUITY_SECONDS = 60;
-const ROOT_VERBS = new Set(['idle','walk_to','run_to','tiptoe_to','wave','look_at','point_at','nod','shake_head','shrug','laugh','surprised','sigh','drop','take']);
+const ROOT_VERBS = new Set(['idle','walk_to','run_to','tiptoe_to','wave','look_at','point_at','nod','shake_head','shrug','laugh','surprised','sigh','drop','take','put_down','nudge']);
 const MOVE_VERBS = new Set(['walk_to','run_to','tiptoe_to']);
+const NONCONTACT_VERBS = new Set(['idle','look_at','point_at','wave','nod','shake_head','shrug','laugh','surprised','sigh','facepalm']);
+const BENCH_TOP=.47;
+const DEFAULT_BENCH_IMPULSE:Vec3=[-.82,0,0];
 export interface BallTransform { pos: Vec3; rotation: Quat }
 export interface ReplayOptions {
   /** Simple drops warm in short tasks. A continuity chain is validated atomically. */
@@ -25,7 +28,7 @@ export interface PlaybackEvaluator {
   evaluate(view: Timeline, t: number): FrameState;
   dispose(): void;
 }
-interface Sample {
+export interface ReplaySample {
   t: number;
   root: Vec3 | null;
   grounded: boolean;
@@ -34,7 +37,17 @@ interface Sample {
   ballBefore?: BallTransform | null;
   sleeping: boolean;
 }
-interface Drop { t: number }
+type Sample=ReplaySample;
+export interface BallImpulse {time:number;position:Vec3;impulse:Vec3}
+/** Serializable canonical result shared by synchronous captures and the worker
+ * reader. No world, loaded rig or wall-clock state crosses this boundary. */
+export interface PreparedReplayData {
+  source:Timeline;view:Timeline;samples:ReplaySample[];reason:string|null;failure:boolean;
+  continuity:boolean;dropsCount:number;routes:{start:number;path:Vec2[];target:string|null}[];
+  pickups:{start:number;attach:number;position:Vec3}[];impulses:BallImpulse[];
+  steps:number;computeMs:number;revision:number;
+}
+interface Drop {t:number;bench:boolean;position?:Vec3;rotation?:Vec3}
 let init: Promise<void> | undefined;
 export async function createRapierReplay(options: ReplayOptions): Promise<RapierReplay> {
   await (init ??= RAPIER.init());
@@ -53,12 +66,17 @@ const yard = (p: number[]) => sceneLocationAt(p[0],p.at(-1)!) === 'yard' && p[0]
 function rootReason(timeline: Timeline): string | null {
   if (!timeline.segments.length) return 'empty timeline';
   if(timeline.segments.every(({segment})=>segment.cast&&!segment.cast.includes('masha')))return 'Masha is not in this story';
+  // Permit the director's spectator acting within the supported ball story;
+  // do not opt unrelated indoor/object choreography into yard root control.
+  const ballStory=timeline.segments.some(({segment})=>segment.actorClips.masha.some(c=>['drop','put_down','nudge'].includes(c.verb)&&c.params.item==='ball'));
   for (const {segment} of timeline.segments) {
     if (!yard(segment.startState.actors.masha.pos) || segment.startState.actors.masha.posture !== 'stand') return 'outside supported standing yard motion';
-    if (ACTOR_IDS.some(id=>segment.actorClips[id].some(c=>c.verb==='carry'||c.verb==='hug'||id!=='masha'&&c.params.target==='masha'))) return 'paired choreography';
+    if (ACTOR_IDS.some(id=>segment.actorClips[id].some(c=>c.verb==='carry'||c.verb==='hug'||id!=='masha'&&c.params.target==='masha'&&!(ballStory&&NONCONTACT_VERBS.has(c.verb))))) return 'paired choreography';
     for (const c of segment.actorClips.masha) {
       if(c.verb==='take'&&(c.params.item!=='ball'||c.params.putDown))return 'authored non-ball pickup';
-      if (!ROOT_VERBS.has(c.verb) || c.params.sceneCut || c.params.posture && c.params.posture !== 'stand' || ACTOR_IDS.includes(c.params.target as typeof ACTOR_IDS[number])) return `authored choreography: ${c.verb}`;
+      if(c.verb==='put_down'&&(c.params.item!=='ball'||c.params.putDown!=='bench'))return 'authored non-bench placement';
+      if(c.verb==='nudge'&&(c.params.item!=='ball'||c.params.nudgeAt!=='bench'))return 'authored non-bench nudge';
+      if (!ROOT_VERBS.has(c.verb) || c.params.sceneCut || c.params.posture && c.params.posture !== 'stand' || ACTOR_IDS.includes(c.params.target as typeof ACTOR_IDS[number])&&!(ballStory&&NONCONTACT_VERBS.has(c.verb))) return `authored choreography: ${c.verb}`;
       if ([c.params.from,c.params.to,...(c.params.path??[])].some(p=>p&&!yard(p))) return 'travel outside the trial yard';
     }
   }
@@ -72,9 +90,9 @@ function canSimulateDrops(timeline:Timeline):boolean {
   const clips=timeline.segments.flatMap(({offset,segment})=>ACTOR_IDS.flatMap(actor=>segment.actorClips[actor].map(clip=>({actor,clip,t:offset+clip.start})))).sort((a,b)=>a.t-b.t);
   for(const {actor,clip} of clips){
     if(clip.verb==='carry'||clip.verb==='hug')return false;
-    if(released&&(clip.params.item==='ball'||clip.params.target==='ball')&&clip.verb!=='idle'&&!(actor==='masha'&&(['take','drop',...MOVE_VERBS].includes(clip.verb))))return false;
+    if(released&&(clip.params.item==='ball'||clip.params.target==='ball')&&!NONCONTACT_VERBS.has(clip.verb)&&!(actor==='masha'&&(['take','drop','put_down','nudge',...MOVE_VERBS].includes(clip.verb))))return false;
     if(actor==='masha'&&clip.verb==='take'&&clip.params.item==='ball')released=false;
-    if(actor==='masha'&&clip.verb==='drop'&&clip.params.item==='ball')released=true;
+    if(actor==='masha'&&(clip.verb==='drop'||clip.verb==='put_down')&&clip.params.item==='ball')released=true;
   }
   return true;
 }
@@ -82,12 +100,15 @@ function canSimulateDrops(timeline:Timeline):boolean {
 class Trajectory {
   readonly view:Timeline;
   readonly world = new RAPIER.World({x:0,y:-9.81,z:0});
+  private readonly ground:RAPIER.Collider;
   readonly samples: Sample[] = [];
   readonly drops: Drop[];
   private controller: RAPIER.KinematicCharacterController | null = null;
   private masha: RAPIER.RigidBody | null = null;
   private capsule: RAPIER.Collider | null = null;
   private ball: RAPIER.RigidBody | null = null;
+  private ballFromBench=false;
+  private groundResistance=false;
   private previous: FrameState;
   private tick = 0;
   private dropIndex = 0;
@@ -97,6 +118,9 @@ class Trajectory {
   readonly continuity:boolean;
   readonly routes:{start:number;path:Vec2[];target:string|null}[]=[];
   readonly pickups:{start:number;attach:number;position:Vec3}[]=[];
+  readonly impulses:BallImpulse[]=[];
+  private nudges:{t:number;impulse:Vec3}[]=[];
+  private nudgeIndex=0;
   private actions:{t:number;clip:ActorClip;segmentIndex:number}[]=[];
   private actionIndex=0;
   private prepared=false;
@@ -109,20 +133,20 @@ class Trajectory {
 
   constructor(source: Timeline, private options: ReplayOptions, canonicalReason: string | null) {
     const view=this.view=structuredClone(source);
-    createYardColliders(this.world);
+    this.ground=createYardColliders(this.world);
     this.world.integrationParameters.numSolverIterations=8;
     this.world.integrationParameters.maxCcdSubsteps=4;
     this.reason = canonicalReason;
     let released=false;
-    const requested=view.segments.flatMap(({offset,segment})=>segment.actorClips.masha.map(clip=>({clip,t:offset+clip.start}))).sort((a,b)=>a.t-b.t).some(({clip:c})=>{if(c.verb==='drop'&&c.params.item==='ball')released=true;return released&&c.verb==='take'&&c.params.item==='ball';});
+    const requested=view.segments.flatMap(({offset,segment})=>segment.actorClips.masha.map(clip=>({clip,t:offset+clip.start}))).sort((a,b)=>a.t-b.t).some(({clip:c})=>{if(c.params.item==='ball'&&(c.verb==='put_down'||c.verb==='nudge'))return true;if(c.verb==='drop'&&c.params.item==='ball')released=true;return released&&c.verb==='take'&&c.params.item==='ball';});
     const compatible=canSimulateDrops(view);
     if(requested&&!compatible&&!this.reason)this.reason='unsupported ball choreography';
     if(requested&&view.duration>MAX_CONTINUITY_SECONDS&&!this.reason)this.reason=`continuity preparation limit: ${MAX_CONTINUITY_SECONDS}s`;
     this.continuity=!this.reason&&requested;
     this.actions=this.continuity?view.segments.flatMap(({offset,segment},segmentIndex)=>segment.actorClips.masha.map(clip=>({t:offset+clip.start,clip,segmentIndex}))).sort((a,b)=>a.t-b.t):[];
     this.drops = view.duration > MAX_SECONDS || !compatible || requested&&!this.continuity ? [] : view.segments.flatMap(({offset,segment})=>segment.actorClips.masha
-      .filter(c=>c.verb==='drop'&&c.params.item==='ball')
-      .map(c=>({t:offset+c.start+c.dur*.5}))).filter(d=>d.t<=view.duration).sort((a,b)=>a.t-b.t);
+      .filter(c=>(c.verb==='drop'||c.verb==='put_down'&&c.params.putDown==='bench')&&c.params.item==='ball')
+      .map(c=>({t:offset+c.start+c.dur*.5,bench:c.verb==='put_down',position:c.params.putDownPosition,rotation:c.params.putDownRotation}))).filter(d=>d.t<=view.duration).sort((a,b)=>a.t-b.t);
     this.previous = evaluate(view,0);
     if (!this.reason) {
       const p=this.previous.actors.masha.pos;
@@ -174,6 +198,9 @@ class Trajectory {
         }else{
           const destination=clip.params.to??clip.params.path?.at(-1)??from;
           route=planYardRoute(from,destination);
+          // The semantic bench mark is in the seat. Approach its open front;
+          // a shorter rear corner would release a carried ball under the table.
+          if(!route&&clip.params.target==='bench'&&!yardPointClear(destination))route=planYardRoute(from,[Math.max(1.35,Math.min(2.65,destination[0])),3.52]);
           // A semantic furniture mark may be inside its collider. Reach its
           // nearest free edge instead of trying to stand inside the bench.
           if(!route&&!yardPointClear(destination)){
@@ -198,6 +225,20 @@ class Trajectory {
         const e=new Euler().setFromQuaternion(new Quaternion(...b.rotation),'YXZ');
         clip.params={...clip.params,from:[...from],facing:Math.atan2(support[0]-from[0],support[2]-from[1]),lookAt:support,pickUpAt:'clearing',pickUpPosition:[...b.pos],pickUpRotation:[e.x,e.y,e.z]};
         this.pickups.push({start,attach:start+clip.dur*.5,position:[...b.pos]});
+      }else if(clip.verb==='put_down'&&clip.params.item==='ball'){
+        const at=clip.params.putDownPosition;
+        if(!at||Math.abs(at[1]-BENCH_TOP)>.005||at[0]<1.31||at[0]>2.69||Math.abs(at[2]-3)>.14||Math.hypot(at[0]-from[0],at[2]-from[1])>.7){this.failure='bench placement has no reachable support';return;}
+      }else if(clip.verb==='nudge'&&clip.params.item==='ball'){
+        if(!this.ball){this.failure='bench nudge has no physical ball';return;}
+        const b=this.snapshot(start).ball!,support=ballSupport(b),v=this.ball.linvel(),w=this.ball.angvel();
+        if(Math.abs(support[1]-BENCH_TOP)>.015||support[0]<1.30||support[0]>2.70||Math.abs(support[2]-3)>.14||Math.hypot(v.x,v.y,v.z)>.04||Math.hypot(w.x,w.y,w.z)>.1||Math.hypot(from[0]-support[0],from[1]-support[2])>.7){this.failure='bench nudge has no reachable resting contact';return;}
+        const impulse=clip.params.nudgeImpulse??DEFAULT_BENCH_IMPULSE;
+        // This bounded action rolls left along the seat. An arbitrary impulse
+        // would need its own contact pose and a new supported retrieval region.
+        if(impulse.some(v=>!Number.isFinite(v))||impulse[0]>-.4||impulse[0]<-1.2||impulse[1]!==0||impulse[2]!==0){this.failure='unsupported bench nudge direction';return;}
+        const e=new Euler().setFromQuaternion(new Quaternion(...b.rotation),'YXZ');
+        clip.params={...clip.params,from:[...from],lookAt:[support[0],support[1]+BALL_RADIUS,support[2]],nudgePosition:[...b.pos],nudgeRotation:[e.x,e.y,e.z]};
+        this.nudges.push({t:start+clip.dur*.5,impulse:[...impulse]});
       }
     }
   }
@@ -212,6 +253,7 @@ class Trajectory {
   get warmingComplete():boolean {
     return this.failure!==null||this.reason!==null&&this.drops.length===0||this.samples.at(-1)!.t>=this.view.duration;
   }
+  get failed():boolean {return this.failure!==null;}
 
   private snapshot(t:number): Sample {
     let ball:BallTransform|null=null;
@@ -247,23 +289,50 @@ class Trajectory {
     }
     this.world.timestep=dt;
     this.world.step();this.steps++;
+    // A rubber ball rolls freely on the wooden seat, then loses energy much
+    // faster on grass. Rapier's contact friction alone does not supply rolling
+    // resistance. Change damping only after the first actual ground contact;
+    // the solver still owns every position, rebound and final resting point.
+    if(this.ball&&this.ballFromBench&&!this.groundResistance&&this.ball.translation().y<=BALL_RADIUS+.02){
+      let touching=false;
+      this.world.contactPair(this.ball.collider(0),this.ground,m=>{for(let i=0;i<m.numContacts();i++)if(m.contactImpulse(i)>0)touching=true;});
+      if(touching){this.ball.setLinearDamping(2);this.ball.setAngularDamping(3);this.groundResistance=true;}
+    }
     // Keep the left side of a boundary for a moment preview that ends before
     // the next scene takes ownership. Full-story playback uses its right side.
     const handoff=!!this.ball&&(!!frame.props.ball.attachedTo||!frame.props.ball.visible);
     const ballBefore=handoff?this.snapshot(t).ball:undefined;
     if(handoff&&this.ball){this.world.removeRigidBody(this.ball);this.ball=null;}
     if(this.dropIndex<this.drops.length&&Math.abs(t-this.drops[this.dropIndex].t)<1e-7){
-      this.dropIndex++;
+      const release=this.drops[this.dropIndex++];
       const held=evaluate(this.view,Math.max(0,t-1e-7));
       if(held.props.ball.attachedTo==='masha'&&yard(held.actors.masha.pos)){
         const p=this.masha?.translation();
         if(p)held.actors.masha={...held.actors.masha,pos:[p.x,p.y-MASHA_CENTER,p.z],physicsRoot:true};
         const transform=this.options.sampleBall(held),q=new Quaternion(...transform.rotation);
         const centre=new Vector3(...transform.pos).add(new Vector3(0,BALL_RADIUS,0).applyQuaternion(q));
+        if(release.bench){
+          const expectedQ=new Quaternion().setFromEuler(new Euler(...(release.rotation??[0,0,0] as Vec3),'YXZ'));
+          const expected=release.position?new Vector3(...release.position).add(new Vector3(0,BALL_RADIUS,0).applyQuaternion(expectedQ)):null;
+          // A sphere may overhang the seat: its bottom contact must stay on the
+          // flat top, rather than requiring the whole diameter to fit. The
+          // loaded hand must nevertheless reach the intended centre within12mm.
+          if(!expected||centre.distanceTo(expected)>.012||Math.abs(centre.y-BALL_RADIUS-BENCH_TOP)>.012||centre.x<1.30||centre.x>2.70||Math.abs(centre.z-3)>.14){this.failure='held ball does not reach the bench surface';return;}
+        }
         if(this.ball)this.world.removeRigidBody(this.ball);
+        this.ballFromBench=release.bench;this.groundResistance=false;
         this.ball=this.world.createRigidBody(RAPIER.RigidBodyDesc.dynamic().setTranslation(centre.x,centre.y,centre.z).setRotation(q).setCcdEnabled(true).setLinearDamping(.35).setAngularDamping(.6));
-        this.world.createCollider(RAPIER.ColliderDesc.ball(BALL_RADIUS).setCollisionGroups(BALL_GROUP).setRestitution(.5).setRestitutionCombineRule(RAPIER.CoefficientCombineRule.Max).setFriction(.8).setDensity(100),this.ball);
+        this.world.createCollider(RAPIER.ColliderDesc.ball(BALL_RADIUS).setContactSkin(release.bench?.003:0).setCollisionGroups(BALL_GROUP).setRestitution(release.bench?.3:.5).setRestitutionCombineRule(RAPIER.CoefficientCombineRule.Max).setFriction(.8).setDensity(100),this.ball);
       }
+    }
+    const nudge=this.nudges[this.nudgeIndex];
+    if(nudge&&Math.abs(t-nudge.t)<1e-7){
+      this.nudgeIndex++;
+      if(!this.ball){this.failure='bench ball disappeared before the nudge';return;}
+      const p=this.ball.translation();
+      // Match the visible near/right palm contact at the push midpoint.
+      this.ball.applyImpulseAtPoint(vec(nudge.impulse),{x:p.x+.075,y:p.y+.025,z:p.z+.127},true);
+      this.impulses.push({time:t,position:tuple(p),impulse:[...nudge.impulse]});
     }
     this.previous=frame;
     this.samples.push({...this.snapshot(t),...(ballBefore!==undefined?{ballBefore}:{})});
@@ -286,8 +355,9 @@ class Trajectory {
       while(!this.failure&&this.actionIndex<this.actions.length&&this.actions[this.actionIndex].t<=last+1e-9)this.prepareActions(last);
       if(this.failure)break;
       const action=this.actions[this.actionIndex]?.t??Infinity;
+      const nudge=this.nudges[this.nudgeIndex]?.t??Infinity;
       const attachments=this.pickups.map(p=>p.attach).filter(t=>t>last+1e-9);
-      const next=Math.min((this.tick+1)*PHYSICS_DT,drop,boundary,action,...attachments,this.view.duration);
+      const next=Math.min((this.tick+1)*PHYSICS_DT,drop,boundary,action,nudge,...attachments,this.view.duration);
       if(next<=last+1e-9){this.dropIndex++;continue;}
       this.step(next);
     }
@@ -357,6 +427,13 @@ export class RapierReplay implements PlaybackEvaluator {
     if(s.ball&&!frame.props.ball.attachedTo&&frame.props.ball.visible)frame.props={...frame.props,ball:{visible:true,attachedTo:null,...s.ball}};
     return frame;
   }
-  inspect(view:Timeline,t:number){const c=this.trajectory(),s=this.sample(view,t);return {...s,reason:c.reason,steps:c.steps,computeMs:c.computeMs,samples:c.samples.length,caches:1,revision:this.revision,continuity:c.continuity,routes:c.routes,pickups:c.pickups};}
+  inspect(view:Timeline,t:number){const c=this.trajectory(),s=this.sample(view,t);return {...s,reason:c.reason,steps:c.steps,computeMs:c.computeMs,samples:c.samples.length,caches:1,revision:this.revision,continuity:c.continuity,routes:c.routes,pickups:c.pickups,impulses:c.impulses};}
+  /** Finish the one canonical trajectory before publishing it to the reader.
+   * sampleBall may throw a worker pose request; the caller then starts a fresh
+   * cache with that pose supplied, never resumes a half-applied world step. */
+  preparedData():PreparedReplayData {
+    const c=this.trajectory();c.sample(this.timeline.duration);
+    return {source:this.timeline,view:c.view,samples:c.samples,reason:c.reason,failure:c.failed,continuity:c.continuity,dropsCount:c.drops.length,routes:c.routes,pickups:c.pickups,impulses:c.impulses,steps:c.steps,computeMs:c.computeMs,revision:this.revision};
+  }
   dispose():void {if(this.warmTimer!==undefined)clearTimeout(this.warmTimer);this.warmTimer=undefined;this.cache?.dispose();this.cache=undefined;}
 }

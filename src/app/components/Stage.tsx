@@ -15,7 +15,7 @@ import { MapPin, Maximize, Hand, LoaderCircle, Trees, ChevronRight, Users } from
 
 declare global {
   interface Window {
-    __mabear?: { objects:()=>unknown; physics: () => unknown; assets: () => unknown; rigs: () => unknown; screenOf: (actor: ActorId) => [number, number] | null; closeup: (actor: ActorId | null, angle?: number) => void; wide: (pos: [number, number, number], look: [number, number, number], fov?: number) => void; stats: () => { fps: number; drawCalls: number; triangles: number } | null; t: () => number; playing: () => boolean; segments: () => number; timeline: () => unknown; compiles: () => number; freeze: (on: boolean) => void; snapshot: () => string | null; quality: () => { scale: number; post: number } | null };
+    __mabear?: { preparing:()=>boolean; objects:()=>unknown; physics: () => unknown; assets: () => unknown; rigs: () => unknown; screenOf: (actor: ActorId) => [number, number] | null; closeup: (actor: ActorId | null, angle?: number) => void; wide: (pos: [number, number, number], look: [number, number, number], fov?: number) => void; stats: () => { fps: number; drawCalls: number; triangles: number } | null; t: () => number; playing: () => boolean; segments: () => number; timeline: () => unknown; compiles: () => number; freeze: (on: boolean) => void; snapshot: () => string | null; quality: () => { scale: number; post: number } | null };
   }
 }
 
@@ -33,6 +33,7 @@ export function Stage({ exploring = false }: { exploring?: boolean }) {
   const activeIndex = s.timeline.segments.findIndex(seg => s.t >= seg.offset && s.t < seg.offset + seg.segment.duration);
   const activeMoment = s.paragraphs.findIndex(p => p.id === s.segmentIds[activeIndex]);
   const [ready, setReady] = useState(false);
+  const [physicsPreparing, setPhysicsPreparing] = useState(false);
   const [failed, setFailed] = useState(false);
   const handles = useRef<{ stage: StageHandle; player: Player; audio: AudioEngine | null; pick: (u: number, v: number) => ActorId | null } | null>(null);
   const down = useRef<{ x: number; y: number } | null>(null);
@@ -75,12 +76,12 @@ export function Stage({ exploring = false }: { exploring?: boolean }) {
       }
       // Supported stories use physics by default; keep a diagnostic animation control.
       const trial = new URLSearchParams(window.location.search).get('physics') !== 'off';
-      let evaluator: import('../../engine/physics/rapierReplay').RapierReplay | undefined;
+      let evaluator: import('../../engine/physics/responsiveReplay').ResponsiveReplay | undefined;
       if (trial) {
         try {
           await stage.assetsReady;
-          const {createStageReplay} = await import('../../engine/physics/stageReplay');
-          evaluator = await createStageReplay(stage);
+          const {createResponsiveStageReplay} = await import('../../engine/physics/stageReplay');
+          evaluator = createResponsiveStageReplay(stage);
         } catch (error) { console.warn('Physics unavailable; using animation playback.', error); }
         if (disposed) { evaluator?.dispose(); stage.dispose(); return; }
       }
@@ -95,6 +96,7 @@ export function Stage({ exploring = false }: { exploring?: boolean }) {
         stage,
         audio,
         evaluator,
+        onPreparing:value=>{if(!disposed)setPhysicsPreparing(value);},
         onFrame: frame => {
           const next = frame.camera.location ?? "yard";
           if (locationRef.current !== next) { locationRef.current = next; setLocation(next); }
@@ -123,6 +125,7 @@ export function Stage({ exploring = false }: { exploring?: boolean }) {
       ro = new ResizeObserver(fit);
       if (wrap.current) ro.observe(wrap.current);
       window.__mabear = {
+        preparing:()=>player.isPreparing,
         objects:()=>({state:player.frame?.objects,cupboard:stage.set.root.getObjectByName('object:kitchen_cupboard')?.userData.open,pantryJar:{...player.frame?.props.pantry_honey,worldPosition:stage.props.objects.pantry_honey.position.toArray()},
           carrots:Object.fromEntries(Object.entries(player.frame?.props??{}).filter(([id])=>/^carrot(?:_\d+)?$/.test(id)).map(([id,prop])=>[id,{...prop,worldPosition:stage.props.objects[id as keyof typeof stage.props.objects]?.position.toArray()}])),
           ball:{...player.frame?.props.ball,worldPosition:stage.props.objects.ball.position.toArray()},
@@ -174,6 +177,7 @@ export function Stage({ exploring = false }: { exploring?: boolean }) {
         },
       };
       await stage.assetsReady;
+      await evaluator?.whenReady();
       if (!disposed) {setReady(true);store.setStageReady(true);}
     })().catch((err) => {
       if (disposed) return;
@@ -198,7 +202,7 @@ export function Stage({ exploring = false }: { exploring?: boolean }) {
   // Capture actual compiled frames in the existing renderer, then restore the monitor in the
   // same task. One frame per animation tick keeps the editor responsive; playback always wins.
   useEffect(() => {
-    if (!ready || s.playing || s.waiting || !handles.current || !canvas.current || capturedTimeline.current === storyboardKey) return;
+    if (!ready || physicsPreparing || s.playing || s.waiting || !handles.current || !canvas.current || capturedTimeline.current === storyboardKey) return;
     let cancelled = false, raf = 0, index = 0;
     const frames: Record<string, string> = {};
     const thumb = document.createElement("canvas");
@@ -209,6 +213,7 @@ export function Stage({ exploring = false }: { exploring?: boolean }) {
       const entry = s.timeline.segments[index];
       if (!entry) { capturedTimeline.current = storyboardKey; publishStoryboardFrames(frames); return; }
       const { stage, player } = handles.current;
+      if(player.isPreparing)return;
       const end = entry.offset + entry.segment.duration;
       const bounded = { segments: s.timeline.segments.slice(0, index + 1), duration: end };
       try {
@@ -226,7 +231,7 @@ export function Stage({ exploring = false }: { exploring?: boolean }) {
     };
     raf = requestAnimationFrame(capture);
     return () => { cancelled = true; cancelAnimationFrame(raf); };
-  }, [s.timeline, s.segmentIds, s.episodeId, s.playing, s.waiting, ready, storyboardKey]);
+  }, [s.timeline, s.segmentIds, s.episodeId, s.playing, s.waiting, ready, physicsPreparing, storyboardKey]);
 
   useEffect(() => {
     handles.current?.audio?.setVolume(s.volume);
@@ -246,7 +251,7 @@ export function Stage({ exploring = false }: { exploring?: boolean }) {
           const h = handles.current;
           const d = down.current;
           down.current = null;
-          if (!exploring || !h || !d || Math.hypot(e.clientX - d.x, e.clientY - d.y) > 6 || h.player.isPlaying || !playback.canReact()) return;
+          if (!exploring || !h || !d || Math.hypot(e.clientX - d.x, e.clientY - d.y) > 6 || h.player.isPlaying || h.player.isPreparing || !playback.canReact()) return;
           const r = e.currentTarget.getBoundingClientRect();
           const actor = h.pick((e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height);
           if (!actor) return;
@@ -268,6 +273,7 @@ export function Stage({ exploring = false }: { exploring?: boolean }) {
       <button className="fullscreen-btn" title={s.lang === "en" ? "Fullscreen" : "На весь экран"} aria-label={s.lang === "en" ? "Fullscreen" : "На весь экран"} onClick={() => { const el = wrap.current?.closest<HTMLElement>(".stage-col"); if (document.fullscreenElement) void document.exitFullscreen().catch(() => {}); else void el?.requestFullscreen?.().catch(() => {}); }}><Maximize size={18}/></button>
       {ready && !s.waiting && <div className="stage-scope"><span className={s.playing ? "scope-live" : ""}/>{s.previewScope?.kind !== "moment" ? (s.lang === "en" ? `Entire story${activeMoment >= 0 ? ` · scene ${activeMoment + 1}` : ""}` : `Просмотр всей истории${activeMoment >= 0 ? ` · сцена ${activeMoment + 1}` : ""}`) : (s.lang === "en" ? `Scene ${Math.max(0, s.paragraphs.findIndex(p => p.id === (s.previewScope?.kind === "moment" ? s.previewScope.id : s.selectedId))) + 1} preview` : `Просмотр сцены ${Math.max(0, s.paragraphs.findIndex(p => p.id === (s.previewScope?.kind === "moment" ? s.previewScope.id : s.selectedId))) + 1}`)}</div>}
       {s.waiting && <div className="getting-ready" data-testid="getting-ready" role="status"><LoaderCircle size={17} className="spin"/> {t.gettingReady}</div>}
+      {ready && physicsPreparing && !s.waiting && <div className="getting-ready" data-testid="movement-preparing" role="status"><LoaderCircle size={17} className="spin"/> {s.lang === 'en' ? 'Preparing movement…' : 'Готовим движения…'}</div>}
       {exploring && ready && !s.playing && !s.waiting && (s.timeline.duration === 0 || s.t >= s.timeline.duration - 0.05) && <div className="tap-hint"><Hand size={14}/> {t.tapToReact}</div>}
       {!ready && !failed && <div className="stage-loading" role="status"><span className="loading-mark"><Trees size={43} strokeWidth={1.2}/></span><strong>{t.loading}</strong><span>{s.lang === "en" ? "A little world is waking up." : "Маленький мир просыпается."}</span><LoaderCircle size={20} className="spin"/></div>}
       {failed && <div className="stage-error">{t.stageError}</div>}
@@ -276,7 +282,7 @@ export function Stage({ exploring = false }: { exploring?: boolean }) {
       <div className="cast-heading"><span><Users size={13}/>{s.lang === "en" ? "THE CAST" : "ГЕРОИ"}</span><small>{s.lang === "en" ? "Use their names in your story" : "Добавь их имена в историю"}</small></div>
       <div className="cast-bar" ref={cast}>
         <button className={`cast-friend cast-world ${!focus ? "selected" : ""}`} aria-pressed={!focus} aria-label={s.lang === "en" ? "Story view" : "История"} onClick={() => { setFocus(null); window.__mabear?.closeup(null); }}><span className="cast-portrait"><Trees size={25} strokeWidth={1.5}/></span><span>{s.lang === "en" ? "Story view" : "История"}</span></button>
-        {ACTOR_IDS.map(id => <button key={id} className={`cast-friend ${focus === id ? "selected" : ""}`} aria-pressed={focus === id} aria-label={CHARACTERS[id].name[s.lang]} title={CHARACTERS[id].name[s.lang]} disabled={!ready || s.playing || s.waiting} onClick={() => { setFocus(id); window.__mabear?.closeup(id, .18); }}><span className="cast-portrait"><img src={PORTRAITS[id]} alt="" width={44} height={44} loading="lazy"/></span><span>{CHARACTERS[id].name[s.lang]}</span></button>)}
+        {ACTOR_IDS.map(id => <button key={id} className={`cast-friend ${focus === id ? "selected" : ""}`} aria-pressed={focus === id} aria-label={CHARACTERS[id].name[s.lang]} title={CHARACTERS[id].name[s.lang]} disabled={!ready || physicsPreparing || s.playing || s.waiting} onClick={() => { setFocus(id); window.__mabear?.closeup(id, .18); }}><span className="cast-portrait"><img src={PORTRAITS[id]} alt="" width={44} height={44} loading="lazy"/></span><span>{CHARACTERS[id].name[s.lang]}</span></button>)}
       </div>
       <button className="cast-next" aria-label={s.lang === "en" ? "More friends" : "Другие герои"} onClick={() => { const row = cast.current; if (row) row.scrollTo({ left: row.scrollLeft + row.clientWidth >= row.scrollWidth - 5 ? 0 : row.scrollLeft + row.clientWidth * .7, behavior: "smooth" }); }}><ChevronRight size={17}/></button>
     </div>}

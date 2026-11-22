@@ -1,0 +1,868 @@
+{
+  "source": "6b059a3ed328acb504fc5d48d2729ddcbaa7ae2846857d2907ddf27599bf2fea",
+  "stable": true,
+  "capturedAt": "2026-11-22T08:25:51.967Z",
+  "resolution": [
+    1280,
+    720
+  ],
+  "singleBrowserProcess": true,
+  "notes": "One headed Chrome process; preparation and first seek on each changed story, followed by the full compiled story at warmed 1x playback, including final transfers. Cold preparation responsiveness is measured separately in preparation/proof.json.",
+  "results": [
+    {
+      "mode": "before",
+      "id": "bench",
+      "info": {
+        "mode": "before",
+        "physicsInitMs": 81.40000009536743,
+        "carrotResources": {
+          "instances": 9,
+          "materials": 1,
+          "geometries": 1,
+          "textures": 1
+        },
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36",
+        "buffer": [
+          1280,
+          720
+        ],
+        "assets": [
+          {
+            "id": "wolf_a",
+            "source": "procedural",
+            "ok": true
+          },
+          {
+            "id": "wolf_b",
+            "source": "procedural",
+            "ok": true
+          },
+          {
+            "id": "hare",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "rosie",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "masha",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "squirrel",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "bear",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "lady_bear",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "rival_bear",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "robot_test",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "prop:carrot",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "prop:carrot_2",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "prop:carrot_3",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "prop:carrot_4",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "prop:carrot_5",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "prop:carrot_6",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "prop:carrot_7",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "prop:carrot_8",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "prop:carrot_9",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "set:beehive",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "set:house",
+            "source": "gltf",
+            "ok": true
+          }
+        ],
+        "durations": {
+          "kitchen": 38.849,
+          "kitchenRu": 38.849,
+          "bench": 14.797999999999998,
+          "benchRu": 12.597999999999999,
+          "fishing": 46.296,
+          "continuity": 28.551000000000002,
+          "continuityWide": 28.551000000000002,
+          "parsedContinuity": 22.551000000000002,
+          "carrots": 28.408,
+          "carrotsRu": 28.408,
+          "cupboard": 40.857,
+          "entry": 18.53,
+          "regression": 68.166,
+          "cozy": 71.685,
+          "live-carrot-en": 15.685,
+          "live-carrot-ru": 16.699,
+          "live-ball-en": 22.016,
+          "live-ball-ru": 23.673,
+          "live-cupboard-en": 30.857,
+          "live-cupboard-ru": 30.857
+        }
+      },
+      "from": 0,
+      "coldMs": 6.599999904632568,
+      "frames": 888,
+      "seconds": 14.797999999999998,
+      "meanFps": 59.9291930165937,
+      "gapP50": 16.69999999999891,
+      "gapP95": 17.30000000000291,
+      "evalP50": 0.30000007152557373,
+      "evalP95": 0.5,
+      "renderP50": 5.299999952316284,
+      "renderP95": 6.200000047683716,
+      "stats": {
+        "fps": 59.952038372161006,
+        "drawCalls": 179,
+        "triangles": 2118407
+      },
+      "physics": {
+        "t": 14.797999999999998,
+        "root": null,
+        "grounded": false,
+        "stride": 1,
+        "ball": null,
+        "sleeping": false,
+        "reason": "paired choreography",
+        "steps": 0,
+        "computeMs": 0,
+        "samples": 1,
+        "caches": 1,
+        "revision": 2,
+        "continuity": false,
+        "routes": [],
+        "pickups": []
+      }
+    },
+    {
+      "mode": "before",
+      "id": "kitchen",
+      "info": {
+        "mode": "before",
+        "physicsInitMs": 81.40000009536743,
+        "carrotResources": {
+          "instances": 9,
+          "materials": 1,
+          "geometries": 1,
+          "textures": 1
+        },
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36",
+        "buffer": [
+          1280,
+          720
+        ],
+        "assets": [
+          {
+            "id": "wolf_a",
+            "source": "procedural",
+            "ok": true
+          },
+          {
+            "id": "wolf_b",
+            "source": "procedural",
+            "ok": true
+          },
+          {
+            "id": "hare",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "rosie",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "masha",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "squirrel",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "bear",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "lady_bear",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "rival_bear",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "robot_test",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "prop:carrot",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "prop:carrot_2",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "prop:carrot_3",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "prop:carrot_4",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "prop:carrot_5",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "prop:carrot_6",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "prop:carrot_7",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "prop:carrot_8",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "prop:carrot_9",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "set:beehive",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "set:house",
+            "source": "gltf",
+            "ok": true
+          }
+        ],
+        "durations": {
+          "kitchen": 38.849,
+          "kitchenRu": 38.849,
+          "bench": 14.797999999999998,
+          "benchRu": 12.597999999999999,
+          "fishing": 46.296,
+          "continuity": 28.551000000000002,
+          "continuityWide": 28.551000000000002,
+          "parsedContinuity": 22.551000000000002,
+          "carrots": 28.408,
+          "carrotsRu": 28.408,
+          "cupboard": 40.857,
+          "entry": 18.53,
+          "regression": 68.166,
+          "cozy": 71.685,
+          "live-carrot-en": 15.685,
+          "live-carrot-ru": 16.699,
+          "live-ball-en": 22.016,
+          "live-ball-ru": 23.673,
+          "live-cupboard-en": 30.857,
+          "live-cupboard-ru": 30.857
+        }
+      },
+      "from": 0,
+      "coldMs": 4.600000023841858,
+      "frames": 2321,
+      "seconds": 38.849,
+      "meanFps": 59.71317087232707,
+      "gapP50": 16.69999999999709,
+      "gapP95": 17.39999999999418,
+      "evalP50": 0.3999999761581421,
+      "evalP95": 0.5,
+      "renderP50": 8.100000023841858,
+      "renderP95": 9.399999976158142,
+      "stats": {
+        "fps": 59.56517423095432,
+        "drawCalls": 199,
+        "triangles": 2312393
+      },
+      "physics": {
+        "t": 38.849,
+        "root": null,
+        "grounded": false,
+        "stride": 1,
+        "ball": null,
+        "sleeping": false,
+        "reason": "travel outside the trial yard",
+        "steps": 0,
+        "computeMs": 0,
+        "samples": 1,
+        "caches": 1,
+        "revision": 3,
+        "continuity": false,
+        "routes": [],
+        "pickups": []
+      }
+    },
+    {
+      "mode": "after",
+      "id": "bench",
+      "info": {
+        "mode": "after",
+        "physicsInitMs": 7.5,
+        "carrotResources": {
+          "instances": 9,
+          "materials": 1,
+          "geometries": 1,
+          "textures": 1
+        },
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36",
+        "buffer": [
+          1280,
+          720
+        ],
+        "assets": [
+          {
+            "id": "wolf_b",
+            "source": "procedural",
+            "ok": true
+          },
+          {
+            "id": "wolf_a",
+            "source": "procedural",
+            "ok": true
+          },
+          {
+            "id": "hare",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "rosie",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "squirrel",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "masha",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "rival_bear",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "lady_bear",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "bear",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "robot_test",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "prop:carrot",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "prop:carrot_2",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "prop:carrot_3",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "prop:carrot_4",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "prop:carrot_5",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "prop:carrot_6",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "prop:carrot_7",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "prop:carrot_8",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "prop:carrot_9",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "set:beehive",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "set:house",
+            "source": "gltf",
+            "ok": true
+          }
+        ],
+        "durations": {
+          "kitchen": 55.050999999999995,
+          "kitchenRu": 55.050999999999995,
+          "bench": 25.317999999999998,
+          "benchRu": 25.317999999999998,
+          "fishing": 46.296,
+          "continuity": 28.689,
+          "continuityWide": 28.689,
+          "parsedContinuity": 22.689,
+          "carrots": 28.408,
+          "carrotsRu": 28.408,
+          "cupboard": 39.199,
+          "entry": 18.53,
+          "regression": 68.166,
+          "cozy": 71.521,
+          "live-carrot-en": 15.685,
+          "live-carrot-ru": 16.699,
+          "live-ball-en": 22.177,
+          "live-ball-ru": 23.834,
+          "live-cupboard-en": 29.198,
+          "live-cupboard-ru": 29.198
+        }
+      },
+      "from": 0,
+      "coldMs": 682.3999999761581,
+      "frames": 1521,
+      "seconds": 25.317999999999998,
+      "meanFps": 59.99842109418174,
+      "gapP50": 16.69999999999891,
+      "gapP95": 17.099999999998545,
+      "evalP50": 0.3999999761581421,
+      "evalP95": 0.6000000238418579,
+      "renderP50": 5.200000047683716,
+      "renderP95": 6.200000047683716,
+      "stats": {
+        "fps": 59.94005994005994,
+        "drawCalls": 179,
+        "triangles": 2118407
+      },
+      "physics": {
+        "t": 25.317999999999998,
+        "root": [
+          0.5595515966415405,
+          -9.536743172944284e-9,
+          2.8267862796783447
+        ],
+        "grounded": true,
+        "stride": 0.999602030436184,
+        "ball": null,
+        "sleeping": false,
+        "reason": null,
+        "steps": 1539,
+        "computeMs": 367,
+        "samples": 1540,
+        "caches": 1,
+        "revision": 2,
+        "continuity": true,
+        "routes": [
+          {
+            "start": 0,
+            "path": [
+              [
+                0.25,
+                0.5
+              ],
+              [
+                0.3126,
+                1.1821
+              ]
+            ],
+            "target": "ball"
+          },
+          {
+            "start": 3.779,
+            "path": [
+              [
+                0.3125999867916107,
+                1.1821000576019287
+              ],
+              [
+                0.8649999999999999,
+                3.475
+              ],
+              [
+                1.8126,
+                3.46
+              ]
+            ],
+            "target": "bench"
+          },
+          {
+            "start": 9.323,
+            "path": [
+              [
+                1.812600016593933,
+                3.459993600845337
+              ],
+              [
+                1.8876,
+                3.46
+              ]
+            ],
+            "target": "bench"
+          },
+          {
+            "start": 14.773,
+            "path": [
+              [
+                1.8875997066497803,
+                3.4600000381469727
+              ],
+              [
+                0.8649999999999999,
+                3.475
+              ],
+              [
+                0,
+                0
+              ]
+            ],
+            "target": "clearing"
+          },
+          {
+            "start": 20.55349919766338,
+            "path": [
+              [
+                0,
+                0
+              ],
+              [
+                0.5595515801045045,
+                2.8267862292277477
+              ]
+            ],
+            "target": "ball"
+          }
+        ],
+        "pickups": [
+          {
+            "start": 22.518,
+            "attach": 23.618000000000002,
+            "position": [
+              0.506093394425059,
+              0.25071161835416467,
+              3.1099545179533177
+            ]
+          }
+        ],
+        "impulses": [
+          {
+            "time": 11.273000000000001,
+            "position": [
+              1.8999942541122437,
+              0.6229301691055298,
+              3.074986457824707
+            ],
+            "impulse": [
+              -0.82,
+              0,
+              0
+            ]
+          }
+        ],
+        "preparing": false,
+        "preparation": {
+          "wallMs": 678.7000000476837,
+          "workerMs": 532.7999999523163,
+          "poseMs": 4,
+          "poseRequests": 1,
+          "rounds": 2,
+          "error": null
+        }
+      }
+    },
+    {
+      "mode": "after",
+      "id": "kitchen",
+      "info": {
+        "mode": "after",
+        "physicsInitMs": 7.5,
+        "carrotResources": {
+          "instances": 9,
+          "materials": 1,
+          "geometries": 1,
+          "textures": 1
+        },
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36",
+        "buffer": [
+          1280,
+          720
+        ],
+        "assets": [
+          {
+            "id": "wolf_b",
+            "source": "procedural",
+            "ok": true
+          },
+          {
+            "id": "wolf_a",
+            "source": "procedural",
+            "ok": true
+          },
+          {
+            "id": "hare",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "rosie",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "squirrel",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "masha",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "rival_bear",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "lady_bear",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "bear",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "robot_test",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "prop:carrot",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "prop:carrot_2",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "prop:carrot_3",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "prop:carrot_4",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "prop:carrot_5",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "prop:carrot_6",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "prop:carrot_7",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "prop:carrot_8",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "prop:carrot_9",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "set:beehive",
+            "source": "gltf",
+            "ok": true
+          },
+          {
+            "id": "set:house",
+            "source": "gltf",
+            "ok": true
+          }
+        ],
+        "durations": {
+          "kitchen": 55.050999999999995,
+          "kitchenRu": 55.050999999999995,
+          "bench": 25.317999999999998,
+          "benchRu": 25.317999999999998,
+          "fishing": 46.296,
+          "continuity": 28.689,
+          "continuityWide": 28.689,
+          "parsedContinuity": 22.689,
+          "carrots": 28.408,
+          "carrotsRu": 28.408,
+          "cupboard": 39.199,
+          "entry": 18.53,
+          "regression": 68.166,
+          "cozy": 71.521,
+          "live-carrot-en": 15.685,
+          "live-carrot-ru": 16.699,
+          "live-ball-en": 22.177,
+          "live-ball-ru": 23.834,
+          "live-cupboard-en": 29.198,
+          "live-cupboard-ru": 29.198
+        }
+      },
+      "from": 0,
+      "coldMs": 3.399999976158142,
+      "frames": 3297,
+      "seconds": 55.050999999999995,
+      "meanFps": 59.87001522180605,
+      "gapP50": 16.69999999999709,
+      "gapP95": 16.80000000000291,
+      "evalP50": 0.3999999761581421,
+      "evalP95": 0.6000000238418579,
+      "renderP50": 5.600000023841858,
+      "renderP95": 7.400000095367432,
+      "stats": {
+        "fps": 60.12626515826588,
+        "drawCalls": 199,
+        "triangles": 2312393
+      },
+      "physics": {
+        "t": 55.050999999999995,
+        "root": null,
+        "grounded": false,
+        "stride": 1,
+        "ball": null,
+        "sleeping": false,
+        "reason": "outside supported standing yard motion",
+        "steps": 0,
+        "computeMs": 0,
+        "samples": 1,
+        "caches": 1,
+        "revision": 3,
+        "continuity": false,
+        "routes": [],
+        "pickups": [],
+        "impulses": [],
+        "preparing": false,
+        "preparation": {
+          "wallMs": 0,
+          "workerMs": 0,
+          "poseMs": 0,
+          "poseRequests": 0,
+          "rounds": 0,
+          "error": null
+        }
+      }
+    }
+  ]
+}

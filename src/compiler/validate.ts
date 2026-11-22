@@ -63,6 +63,7 @@ const NEW_CAST_ALIASES: Record<string, ActorId> = {
   "гималайский_медведь": "rival_bear"
 };
 const TARGET_SYNONYMS: Record<string, string> = {
+  bowl:"kitchen_bowl",kitchen_bowl:"kitchen_bowl",миска:"kitchen_bowl",миску:"kitchen_bowl",pot:"kitchen_pot",cooking_pot:"kitchen_pot",кастрюля:"kitchen_pot",кастрюлю:"kitchen_pot",
   house_door:'door',front_door:'door',
   kitchen_cupboard:'cupboard',pantry:'cupboard',cabinet:'cupboard',honey_jar:'pantry_honey',
   ...NEW_CAST_ALIASES,
@@ -209,6 +210,9 @@ export function validateBeatScript(bs: BeatScript, startState: WorldState, lang:
     const b: Beat = { ...raw };
     let actor = b.actor;
     if (!inList(VERBS, b.verb)) { errors.push(`${tag}: unknown verb → idle`); b.verb = "idle"; }
+
+    // Carrying a held prop to a place is locomotion, not Bear lifting Masha.
+    if(b.verb==='carry'&&b.item&&isMark(resolveTargetId(b.target))){b.verb='walk_to';b.target=resolveTargetId(b.target);b.item=null;}
 
     // Masha-only / Bear-only verbs
     if (!GRAMMAR[b.verb].actors.includes(actor)) {

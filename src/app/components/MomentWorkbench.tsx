@@ -13,6 +13,7 @@ import { revealStage } from "./studioView";
 
 const PLACES: Record<MarkId, { en: string; ru: string }> = {
   cupboard:{en:'cupboard',ru:'шкаф'},
+  kitchen_bowl:{en:'kitchen bowl',ru:'миска на кухне'}, kitchen_pot:{en:'kitchen pot',ru:'кастрюля на кухне'},
   house_kitchen: { en: "kitchen", ru: "кухня" }, house_living: { en: "living room", ru: "гостиная" },
   clearing: { en: "yard", ru: "двор" }, porch: { en: "porch", ru: "крыльцо" }, door: { en: "door", ru: "дверь" }, garden: { en: "garden", ru: "огород" }, beehive: { en: "beehive", ru: "улей" }, swing: { en: "swing", ru: "качели" }, pond_shore: { en: "pond", ru: "пруд" }, pier: { en: "pier", ru: "причал" }, table: { en: "table", ru: "стол" }, bench: { en: "bench", ru: "скамейка" }, woodpile: { en: "woodpile", ru: "поленница" }, path_entry: { en: "forest path", ru: "лесная тропинка" }, big_tree: { en: "big tree", ru: "большое дерево" }, bush: { en: "bush", ru: "куст" }, hammock: { en: "hammock", ru: "гамак" }, creek: { en: "creek", ru: "ручей" }, van: { en: "ambulance", ru: "скорая помощь" },
 };

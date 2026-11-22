@@ -28,8 +28,13 @@ export const take: VerbImpl = (lt, _p, ctx) => {
     const reach=CHARACTER_REACH[ctx.actor],targetY=_p.lookAt?.[1]??_p.pickUpPosition?.[1]??reach.shoulder[1],k=window01(u,0,1,.3);
     const crouch=Math.max(0,Math.min(1,(reach.shoulder[1]-targetY-reach.length*.65)/Math.max(.01,ctx.style.hipHeight*.62)));
     const plantedLean=_p.pickUpAt==='garden'&&isCarrot(_p.item)&&(_p.pickUpPosition?.[1]??0)<0?(reach.shoulder[1]<.45?.65:.25):0;
-    const hip=1.45*crouch*k,knee=2.65*crouch*k,bend=(.06+.72*crouch+plantedLean)*k;
-    return addLayer(armsOver(ctx,holdArm(),1),pose({Spine:rx(bend),Spine1:rx(bend*.25),Neck:rx(-.2*crouch*k),Head:rx(-.7*crouch*k)},leg('Left',hip,knee,.06*crouch*k,hip-knee),leg('Right',hip,knee,.06*crouch*k,hip-knee)));
+    const benchLean=_p.item==='ball'&&(_p.pickUpAt==='bench'||_p.putDown==='bench')?.28:0;
+    const potDeposit=ctx.actor==='bear'&&_p.putDown==='kitchen_pot';
+    const hip=1.45*crouch*k,knee=2.65*crouch*k,bend=(.06+.72*crouch+plantedLean+benchLean+(ctx.actor==='bear'&&(_p.pickUpAt==='kitchen_bowl'||_p.putDown==='kitchen_bowl')?.30:0)+(potDeposit?.10:0))*k;
+    // The evaluator reverses pickup time for a put-down. Its exit must become
+    // an empty idle paw, not the original forward holding pose inside the pot.
+    const hold=potDeposit?smooth((u-.30)/.20):1;
+    return addLayer(armsOver(ctx,holdArm(),hold),pose({Spine:rx(bend),Spine1:rx(bend*.25),Neck:rx(-.2*crouch*k-(benchLean?.20*k:0)),Head:rx(-.7*crouch*k-(benchLean?.75*k:0))},leg('Left',hip,knee,.06*crouch*k,hip-knee),leg('Right',hip,knee,.06*crouch*k,hip-knee)));
   }
   // reach down/forward, grab at 0.5 (prop_pickup), bring it up to the chest
   const reach = window01(u, 0, 0.75, 0.3);
@@ -42,7 +47,8 @@ export const take: VerbImpl = (lt, _p, ctx) => {
     // The worktop is near hand height (Masha stands on the helper). A floor
     // pickup's crouch put faces into the food and paws through the apron.
     // Keep the body upright; the contact rig reaches the actual table edge.
-    return addLayer(out, pose({ Spine: rx(.06 * reach), Spine1: rx(.02 * reach) }));
+    const adult=ctx.actor==='bear'&&_p.pickUpAt==='house_kitchen',lean=adult?.26:.06;
+    return addLayer(out, pose({ Spine: rx(lean * reach), Spine1: rx((adult?lean*.3:.02) * reach) }));
   }
   const bend = reach * byPersona(ctx.actor, 0.35, 0.6, 0.5);
   return addLayer(out, pose({ Spine: rx(bend), Spine1: rx(bend * 0.4) }, leg("Left", 0.3 * reach, 0.5 * reach), leg("Right", 0.3 * reach, 0.5 * reach)), 1, [0, -0.08 * ctx.style.hipHeight * reach, 0]);
@@ -56,6 +62,12 @@ export const give: VerbImpl = (lt, _p, ctx) => {
   const L = armsOver(ctx, arm("Right", down, 1.35, 0.25 + 0.6 * (1 - ext), -0.3), 1);
   const out = addLayer(L, { Spine: rx(byPersona(ctx.actor, -0.05, 0.25, 0.15) * ext), Head: rz(0.15 * ext) });
   return { ...out, face: { emotion: ctx.emotion === "neutral" ? "happy" : ctx.emotion, browRaise: 0.3 * ext } };
+};
+
+/** Empty-hand reach and swipe; exact ball contact is solved after the rig pose. */
+export const nudge:VerbImpl=(lt,p,ctx)=>{
+ const k=window01(lt/ctx.dur,0,1,.28);
+ return addLayer(idleBase(ctx,.2),pose(arm('Right',.8,1.1,.35),{Spine:rx(.36*k),Spine1:rx(.072*k),Neck:rx(-.20*k),Head:rx(-.75*k)},leg('Left',.18*k,.24*k),leg('Right',.18*k,.24*k)));
 };
 
 /** Release at 50%; no crouch or throw impulse. Keep the hand steady at release. */

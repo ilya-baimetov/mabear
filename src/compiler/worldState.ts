@@ -29,7 +29,7 @@ export function worldStateDigest(ws: WorldState): string {
     if (!s) return `${id}:-`;
     return `${id}:${r(s.pos[0])},${r(s.pos[1])},${s.mark ?? "-"},${s.holding ?? "-"},${s.posture}`;
   };
-  const props = Object.keys(ws.props).sort().map((k) => `${k}@${ws.props[k as PropId]?.at}${isCarrot(k)?`:planted=${ws.props[k]?.planted??false}`:""}`).join(";");
+  const props = Object.keys(ws.props).sort().map((k) => `${k}@${ws.props[k as PropId]?.at}${isCarrot(k)?`:planted=${ws.props[k]?.planted??false}`:""}${ws.props[k as PropId]?.position?`:pose=${JSON.stringify([ws.props[k as PropId].position,ws.props[k as PropId].rotation])}`:""}`).join(";");
   // masha/bear first (unchanged layout); wolves appended so pre-wolf digests stay comparable in shape
   return `${ws.timeOfDay}|${ACTOR_IDS.map((id) => a(id)).join("|")}|${props}|door:${ws.objects?.house_door??0}|cupboard:${ws.objects?.kitchen_cupboard??0}`;
 }

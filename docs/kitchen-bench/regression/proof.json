@@ -1,0 +1,5419 @@
+{
+  "source": "6b059a3ed328acb504fc5d48d2729ddcbaa7ae2846857d2907ddf27599bf2fea",
+  "baselineSource": "52812749d39446e0aa10f06d9f5685d262e1a23a0317f36a8858b9af2d084e5c",
+  "stable": true,
+  "capturedAt": "2026-11-22T08:23:03.396Z",
+  "raw": {
+    "path": "docs/kitchen-bench/iteration-regression-current/proof-full.json",
+    "sha256": "72992f12e6739503029a78fd6db916380d0d844ccd88f7f70361b07a9582a3ba"
+  },
+  "comparisons": {
+    "regression": {
+      "samples": 115,
+      "durationBefore": 68.166,
+      "durationAfter": 68.166,
+      "strictParity": true,
+      "differences": [],
+      "semanticMatch": true,
+      "semanticBefore": {
+        "actors": {
+          "masha": {
+            "holding": [
+              null
+            ],
+            "posture": [
+              "stand",
+              "carried"
+            ]
+          },
+          "bear": {
+            "holding": [
+              null
+            ],
+            "posture": [
+              "stand",
+              "sleep",
+              "stand"
+            ]
+          }
+        },
+        "props": {
+          "pantry_honey": [
+            [
+              null,
+              true
+            ]
+          ],
+          "frying_pan": [
+            [
+              null,
+              true
+            ]
+          ],
+          "pancakes": [
+            [
+              null,
+              false
+            ]
+          ],
+          "fishing_rod": [
+            [
+              null,
+              true
+            ]
+          ],
+          "fish": [
+            [
+              null,
+              false
+            ]
+          ],
+          "ball": [
+            [
+              null,
+              true
+            ]
+          ]
+        }
+      },
+      "semanticAfter": {
+        "actors": {
+          "masha": {
+            "holding": [
+              null
+            ],
+            "posture": [
+              "stand",
+              "carried"
+            ]
+          },
+          "bear": {
+            "holding": [
+              null
+            ],
+            "posture": [
+              "stand",
+              "sleep",
+              "stand"
+            ]
+          }
+        },
+        "props": {
+          "pantry_honey": [
+            [
+              null,
+              true
+            ]
+          ],
+          "frying_pan": [
+            [
+              null,
+              true
+            ]
+          ],
+          "pancakes": [
+            [
+              null,
+              false
+            ]
+          ],
+          "fishing_rod": [
+            [
+              null,
+              true
+            ]
+          ],
+          "fish": [
+            [
+              null,
+              false
+            ]
+          ],
+          "ball": [
+            [
+              null,
+              true
+            ]
+          ]
+        }
+      }
+    },
+    "entry": {
+      "samples": 36,
+      "durationBefore": 18.53,
+      "durationAfter": 18.53,
+      "strictParity": true,
+      "differences": [],
+      "semanticMatch": true,
+      "semanticBefore": {
+        "actors": {
+          "masha": {
+            "holding": [
+              null
+            ],
+            "posture": [
+              "stand"
+            ]
+          },
+          "bear": {
+            "holding": [
+              null
+            ],
+            "posture": [
+              "stand"
+            ]
+          }
+        },
+        "props": {
+          "pantry_honey": [
+            [
+              null,
+              true
+            ]
+          ],
+          "frying_pan": [
+            [
+              null,
+              true
+            ]
+          ],
+          "pancakes": [
+            [
+              null,
+              false
+            ]
+          ],
+          "fishing_rod": [
+            [
+              null,
+              true
+            ]
+          ],
+          "fish": [
+            [
+              null,
+              false
+            ]
+          ],
+          "ball": [
+            [
+              null,
+              true
+            ]
+          ]
+        }
+      },
+      "semanticAfter": {
+        "actors": {
+          "masha": {
+            "holding": [
+              null
+            ],
+            "posture": [
+              "stand"
+            ]
+          },
+          "bear": {
+            "holding": [
+              null
+            ],
+            "posture": [
+              "stand"
+            ]
+          }
+        },
+        "props": {
+          "pantry_honey": [
+            [
+              null,
+              true
+            ]
+          ],
+          "frying_pan": [
+            [
+              null,
+              true
+            ]
+          ],
+          "pancakes": [
+            [
+              null,
+              false
+            ]
+          ],
+          "fishing_rod": [
+            [
+              null,
+              true
+            ]
+          ],
+          "fish": [
+            [
+              null,
+              false
+            ]
+          ],
+          "ball": [
+            [
+              null,
+              true
+            ]
+          ]
+        }
+      }
+    },
+    "fishing": {
+      "samples": 110,
+      "durationBefore": 46.296,
+      "durationAfter": 46.296,
+      "strictParity": true,
+      "differences": [],
+      "semanticMatch": true,
+      "semanticBefore": {
+        "actors": {
+          "masha": {
+            "holding": [
+              null,
+              "ball",
+              null
+            ],
+            "posture": [
+              "stand",
+              "sit"
+            ]
+          },
+          "bear": {
+            "holding": [
+              null,
+              "fishing_rod",
+              "fish",
+              null
+            ],
+            "posture": [
+              "stand",
+              "sit"
+            ]
+          }
+        },
+        "props": {
+          "pantry_honey": [
+            [
+              null,
+              true
+            ]
+          ],
+          "frying_pan": [
+            [
+              null,
+              true
+            ]
+          ],
+          "pancakes": [
+            [
+              null,
+              false
+            ]
+          ],
+          "fishing_rod": [
+            [
+              null,
+              true
+            ],
+            [
+              "bear",
+              true
+            ],
+            [
+              null,
+              true
+            ]
+          ],
+          "fish": [
+            [
+              null,
+              false
+            ],
+            [
+              "bear",
+              true
+            ],
+            [
+              null,
+              true
+            ]
+          ],
+          "ball": [
+            [
+              null,
+              true
+            ],
+            [
+              "masha",
+              true
+            ],
+            [
+              "masha",
+              false
+            ],
+            [
+              "masha",
+              true
+            ],
+            [
+              null,
+              true
+            ]
+          ]
+        }
+      },
+      "semanticAfter": {
+        "actors": {
+          "masha": {
+            "holding": [
+              null,
+              "ball",
+              null
+            ],
+            "posture": [
+              "stand",
+              "sit"
+            ]
+          },
+          "bear": {
+            "holding": [
+              null,
+              "fishing_rod",
+              "fish",
+              null
+            ],
+            "posture": [
+              "stand",
+              "sit"
+            ]
+          }
+        },
+        "props": {
+          "pantry_honey": [
+            [
+              null,
+              true
+            ]
+          ],
+          "frying_pan": [
+            [
+              null,
+              true
+            ]
+          ],
+          "pancakes": [
+            [
+              null,
+              false
+            ]
+          ],
+          "fishing_rod": [
+            [
+              null,
+              true
+            ],
+            [
+              "bear",
+              true
+            ],
+            [
+              null,
+              true
+            ]
+          ],
+          "fish": [
+            [
+              null,
+              false
+            ],
+            [
+              "bear",
+              true
+            ],
+            [
+              null,
+              true
+            ]
+          ],
+          "ball": [
+            [
+              null,
+              true
+            ],
+            [
+              "masha",
+              true
+            ],
+            [
+              "masha",
+              false
+            ],
+            [
+              "masha",
+              true
+            ],
+            [
+              null,
+              true
+            ]
+          ]
+        }
+      }
+    },
+    "cupboard": {
+      "samples": 49,
+      "durationBefore": 40.857,
+      "durationAfter": 39.199,
+      "strictParity": false,
+      "differences": [
+        {
+          "t": 18.769000000000002,
+          "kind": "t"
+        },
+        {
+          "t": 18.769000000000002,
+          "kind": "actors"
+        },
+        {
+          "t": 21.169,
+          "kind": "t"
+        },
+        {
+          "t": 21.169,
+          "kind": "actors"
+        },
+        {
+          "t": 23.569000000000003,
+          "kind": "t"
+        },
+        {
+          "t": 23.569000000000003,
+          "kind": "actors"
+        },
+        {
+          "t": 24.2378,
+          "kind": "t"
+        },
+        {
+          "t": 24.2378,
+          "kind": "actors"
+        },
+        {
+          "t": 24.513,
+          "kind": "t"
+        },
+        {
+          "t": 24.513,
+          "kind": "actors"
+        },
+        {
+          "t": 24.7882,
+          "kind": "t"
+        },
+        {
+          "t": 24.7882,
+          "kind": "actors"
+        },
+        {
+          "t": 25.076999999999998,
+          "kind": "t"
+        },
+        {
+          "t": 25.076999999999998,
+          "kind": "actors"
+        },
+        {
+          "t": 25.957,
+          "kind": "t"
+        },
+        {
+          "t": 25.957,
+          "kind": "actors"
+        },
+        {
+          "t": 25.957,
+          "kind": "objects"
+        },
+        {
+          "t": 26.837,
+          "kind": "t"
+        },
+        {
+          "t": 26.837,
+          "kind": "actors"
+        },
+        {
+          "t": 27.357000000000003,
+          "kind": "t"
+        },
+        {
+          "t": 27.357000000000003,
+          "kind": "actors"
+        },
+        {
+          "t": 28.557000000000002,
+          "kind": "t"
+        },
+        {
+          "t": 28.557000000000002,
+          "kind": "actors"
+        },
+        {
+          "t": 28.557000000000002,
+          "kind": "props"
+        },
+        {
+          "t": 29.757,
+          "kind": "t"
+        },
+        {
+          "t": 29.757,
+          "kind": "actors"
+        },
+        {
+          "t": 29.757,
+          "kind": "props"
+        },
+        {
+          "t": 30.277,
+          "kind": "t"
+        },
+        {
+          "t": 30.277,
+          "kind": "actors"
+        },
+        {
+          "t": 30.277,
+          "kind": "props"
+        },
+        {
+          "t": 31.157000000000004,
+          "kind": "t"
+        },
+        {
+          "t": 31.157000000000004,
+          "kind": "actors"
+        },
+        {
+          "t": 31.157000000000004,
+          "kind": "objects"
+        },
+        {
+          "t": 31.157000000000004,
+          "kind": "props"
+        },
+        {
+          "t": 32.037,
+          "kind": "t"
+        },
+        {
+          "t": 32.037,
+          "kind": "actors"
+        },
+        {
+          "t": 32.037,
+          "kind": "props"
+        },
+        {
+          "t": 32.857,
+          "kind": "t"
+        },
+        {
+          "t": 32.857,
+          "kind": "actors"
+        },
+        {
+          "t": 32.857,
+          "kind": "props"
+        },
+        {
+          "t": 33.457,
+          "kind": "t"
+        },
+        {
+          "t": 33.457,
+          "kind": "actors"
+        },
+        {
+          "t": 33.457,
+          "kind": "props"
+        },
+        {
+          "t": 35.857,
+          "kind": "t"
+        },
+        {
+          "t": 35.857,
+          "kind": "actors"
+        },
+        {
+          "t": 35.857,
+          "kind": "props"
+        },
+        {
+          "t": 38.257,
+          "kind": "t"
+        },
+        {
+          "t": 38.257,
+          "kind": "actors"
+        },
+        {
+          "t": 38.257,
+          "kind": "props"
+        },
+        {
+          "t": 38.997,
+          "kind": "t"
+        },
+        {
+          "t": 38.997,
+          "kind": "actors"
+        },
+        {
+          "t": 38.997,
+          "kind": "props"
+        },
+        {
+          "t": 39.557,
+          "kind": "t"
+        },
+        {
+          "t": 39.557,
+          "kind": "actors"
+        },
+        {
+          "t": 39.557,
+          "kind": "props"
+        },
+        {
+          "t": 40.117,
+          "kind": "t"
+        },
+        {
+          "t": 40.117,
+          "kind": "actors"
+        },
+        {
+          "t": 40.117,
+          "kind": "props"
+        },
+        {
+          "t": 40.857,
+          "kind": "t"
+        },
+        {
+          "t": 40.857,
+          "kind": "actors"
+        },
+        {
+          "t": 40.857,
+          "kind": "props"
+        }
+      ],
+      "semanticMatch": true,
+      "semanticBefore": {
+        "actors": {
+          "masha": {
+            "holding": [
+              null
+            ],
+            "posture": [
+              "stand"
+            ]
+          },
+          "bear": {
+            "holding": [
+              null,
+              "pantry_honey"
+            ],
+            "posture": [
+              "stand"
+            ]
+          }
+        },
+        "props": {
+          "pantry_honey": [
+            [
+              null,
+              true
+            ],
+            [
+              "bear",
+              true
+            ]
+          ],
+          "frying_pan": [
+            [
+              null,
+              true
+            ]
+          ],
+          "pancakes": [
+            [
+              null,
+              false
+            ]
+          ],
+          "fishing_rod": [
+            [
+              null,
+              true
+            ]
+          ],
+          "fish": [
+            [
+              null,
+              false
+            ]
+          ],
+          "ball": [
+            [
+              null,
+              true
+            ]
+          ]
+        }
+      },
+      "semanticAfter": {
+        "actors": {
+          "masha": {
+            "holding": [
+              null
+            ],
+            "posture": [
+              "stand"
+            ]
+          },
+          "bear": {
+            "holding": [
+              null,
+              "pantry_honey"
+            ],
+            "posture": [
+              "stand"
+            ]
+          }
+        },
+        "props": {
+          "pantry_honey": [
+            [
+              null,
+              true
+            ],
+            [
+              "bear",
+              true
+            ]
+          ],
+          "frying_pan": [
+            [
+              null,
+              true
+            ]
+          ],
+          "pancakes": [
+            [
+              null,
+              false
+            ]
+          ],
+          "fishing_rod": [
+            [
+              null,
+              true
+            ]
+          ],
+          "fish": [
+            [
+              null,
+              false
+            ]
+          ],
+          "ball": [
+            [
+              null,
+              true
+            ]
+          ]
+        }
+      }
+    },
+    "cozy": {
+      "samples": 124,
+      "durationBefore": 71.685,
+      "durationAfter": 71.521,
+      "strictParity": false,
+      "differences": [
+        {
+          "t": 28.345,
+          "kind": "props"
+        },
+        {
+          "t": 28.495,
+          "kind": "props"
+        },
+        {
+          "t": 28.517000000000003,
+          "kind": "props"
+        },
+        {
+          "t": 28.615,
+          "kind": "props"
+        },
+        {
+          "t": 28.735,
+          "kind": "props"
+        },
+        {
+          "t": 29.517,
+          "kind": "props"
+        },
+        {
+          "t": 30.0334,
+          "kind": "t"
+        },
+        {
+          "t": 30.0334,
+          "kind": "actors"
+        },
+        {
+          "t": 30.0334,
+          "kind": "props"
+        },
+        {
+          "t": 32.099,
+          "kind": "t"
+        },
+        {
+          "t": 32.099,
+          "kind": "actors"
+        },
+        {
+          "t": 32.099,
+          "kind": "props"
+        },
+        {
+          "t": 34.1646,
+          "kind": "t"
+        },
+        {
+          "t": 34.1646,
+          "kind": "actors"
+        },
+        {
+          "t": 34.1646,
+          "kind": "props"
+        },
+        {
+          "t": 34.743399999999994,
+          "kind": "t"
+        },
+        {
+          "t": 34.743399999999994,
+          "kind": "actors"
+        },
+        {
+          "t": 34.743399999999994,
+          "kind": "props"
+        },
+        {
+          "t": 34.992999999999995,
+          "kind": "t"
+        },
+        {
+          "t": 34.992999999999995,
+          "kind": "actors"
+        },
+        {
+          "t": 34.992999999999995,
+          "kind": "props"
+        },
+        {
+          "t": 35.242599999999996,
+          "kind": "t"
+        },
+        {
+          "t": 35.242599999999996,
+          "kind": "actors"
+        },
+        {
+          "t": 35.242599999999996,
+          "kind": "props"
+        },
+        {
+          "t": 35.405,
+          "kind": "t"
+        },
+        {
+          "t": 35.405,
+          "kind": "actors"
+        },
+        {
+          "t": 35.405,
+          "kind": "props"
+        },
+        {
+          "t": 35.805,
+          "kind": "t"
+        },
+        {
+          "t": 35.805,
+          "kind": "actors"
+        },
+        {
+          "t": 35.805,
+          "kind": "props"
+        },
+        {
+          "t": 36.205,
+          "kind": "t"
+        },
+        {
+          "t": 36.205,
+          "kind": "actors"
+        },
+        {
+          "t": 36.205,
+          "kind": "props"
+        },
+        {
+          "t": 36.7592,
+          "kind": "t"
+        },
+        {
+          "t": 36.7592,
+          "kind": "actors"
+        },
+        {
+          "t": 36.7592,
+          "kind": "props"
+        },
+        {
+          "t": 38.576,
+          "kind": "t"
+        },
+        {
+          "t": 38.576,
+          "kind": "actors"
+        },
+        {
+          "t": 38.576,
+          "kind": "props"
+        },
+        {
+          "t": 40.3928,
+          "kind": "t"
+        },
+        {
+          "t": 40.3928,
+          "kind": "actors"
+        },
+        {
+          "t": 40.3928,
+          "kind": "props"
+        },
+        {
+          "t": 40.947,
+          "kind": "t"
+        },
+        {
+          "t": 40.947,
+          "kind": "actors"
+        },
+        {
+          "t": 40.947,
+          "kind": "props"
+        },
+        {
+          "t": 41.347,
+          "kind": "t"
+        },
+        {
+          "t": 41.347,
+          "kind": "actors"
+        },
+        {
+          "t": 41.347,
+          "kind": "props"
+        },
+        {
+          "t": 41.747,
+          "kind": "t"
+        },
+        {
+          "t": 41.747,
+          "kind": "actors"
+        },
+        {
+          "t": 41.747,
+          "kind": "props"
+        },
+        {
+          "t": 42.2978,
+          "kind": "t"
+        },
+        {
+          "t": 42.2978,
+          "kind": "actors"
+        },
+        {
+          "t": 42.2978,
+          "kind": "props"
+        },
+        {
+          "t": 44.101,
+          "kind": "t"
+        },
+        {
+          "t": 44.101,
+          "kind": "actors"
+        },
+        {
+          "t": 44.101,
+          "kind": "props"
+        },
+        {
+          "t": 45.9042,
+          "kind": "t"
+        },
+        {
+          "t": 45.9042,
+          "kind": "actors"
+        },
+        {
+          "t": 45.9042,
+          "kind": "props"
+        },
+        {
+          "t": 46.495000000000005,
+          "kind": "t"
+        },
+        {
+          "t": 46.495000000000005,
+          "kind": "actors"
+        },
+        {
+          "t": 46.495000000000005,
+          "kind": "props"
+        },
+        {
+          "t": 47.05500000000001,
+          "kind": "t"
+        },
+        {
+          "t": 47.05500000000001,
+          "kind": "actors"
+        },
+        {
+          "t": 47.05500000000001,
+          "kind": "props"
+        },
+        {
+          "t": 47.615,
+          "kind": "t"
+        },
+        {
+          "t": 47.615,
+          "kind": "actors"
+        },
+        {
+          "t": 47.615,
+          "kind": "props"
+        },
+        {
+          "t": 47.955,
+          "kind": "t"
+        },
+        {
+          "t": 47.955,
+          "kind": "actors"
+        },
+        {
+          "t": 47.955,
+          "kind": "props"
+        },
+        {
+          "t": 48.754999999999995,
+          "kind": "t"
+        },
+        {
+          "t": 48.754999999999995,
+          "kind": "actors"
+        },
+        {
+          "t": 48.754999999999995,
+          "kind": "props"
+        },
+        {
+          "t": 49.55499999999999,
+          "kind": "t"
+        },
+        {
+          "t": 49.55499999999999,
+          "kind": "actors"
+        },
+        {
+          "t": 49.55499999999999,
+          "kind": "props"
+        },
+        {
+          "t": 49.855,
+          "kind": "t"
+        },
+        {
+          "t": 49.855,
+          "kind": "actors"
+        },
+        {
+          "t": 49.855,
+          "kind": "props"
+        },
+        {
+          "t": 50.254999999999995,
+          "kind": "t"
+        },
+        {
+          "t": 50.254999999999995,
+          "kind": "actors"
+        },
+        {
+          "t": 50.254999999999995,
+          "kind": "props"
+        },
+        {
+          "t": 50.654999999999994,
+          "kind": "t"
+        },
+        {
+          "t": 50.654999999999994,
+          "kind": "actors"
+        },
+        {
+          "t": 50.654999999999994,
+          "kind": "props"
+        },
+        {
+          "t": 51.355000000000004,
+          "kind": "t"
+        },
+        {
+          "t": 51.355000000000004,
+          "kind": "actors"
+        },
+        {
+          "t": 51.355000000000004,
+          "kind": "props"
+        },
+        {
+          "t": 51.522200000000005,
+          "kind": "t"
+        },
+        {
+          "t": 51.522200000000005,
+          "kind": "actors"
+        },
+        {
+          "t": 51.522200000000005,
+          "kind": "props"
+        },
+        {
+          "t": 52.191,
+          "kind": "t"
+        },
+        {
+          "t": 52.191,
+          "kind": "actors"
+        },
+        {
+          "t": 52.191,
+          "kind": "props"
+        },
+        {
+          "t": 52.85980000000001,
+          "kind": "t"
+        },
+        {
+          "t": 52.85980000000001,
+          "kind": "actors"
+        },
+        {
+          "t": 52.85980000000001,
+          "kind": "props"
+        },
+        {
+          "t": 53.127,
+          "kind": "t"
+        },
+        {
+          "t": 53.127,
+          "kind": "actors"
+        },
+        {
+          "t": 53.127,
+          "kind": "props"
+        },
+        {
+          "t": 53.527,
+          "kind": "t"
+        },
+        {
+          "t": 53.527,
+          "kind": "actors"
+        },
+        {
+          "t": 53.527,
+          "kind": "props"
+        },
+        {
+          "t": 53.927,
+          "kind": "t"
+        },
+        {
+          "t": 53.927,
+          "kind": "actors"
+        },
+        {
+          "t": 53.927,
+          "kind": "props"
+        },
+        {
+          "t": 54.1731,
+          "kind": "t"
+        },
+        {
+          "t": 54.1731,
+          "kind": "actors"
+        },
+        {
+          "t": 54.1731,
+          "kind": "props"
+        },
+        {
+          "t": 54.7575,
+          "kind": "t"
+        },
+        {
+          "t": 54.7575,
+          "kind": "actors"
+        },
+        {
+          "t": 54.7575,
+          "kind": "props"
+        },
+        {
+          "t": 55.3419,
+          "kind": "t"
+        },
+        {
+          "t": 55.3419,
+          "kind": "actors"
+        },
+        {
+          "t": 55.3419,
+          "kind": "props"
+        },
+        {
+          "t": 55.648,
+          "kind": "t"
+        },
+        {
+          "t": 55.648,
+          "kind": "actors"
+        },
+        {
+          "t": 55.648,
+          "kind": "props"
+        },
+        {
+          "t": 56.288000000000004,
+          "kind": "t"
+        },
+        {
+          "t": 56.288000000000004,
+          "kind": "actors"
+        },
+        {
+          "t": 56.288000000000004,
+          "kind": "props"
+        },
+        {
+          "t": 56.928000000000004,
+          "kind": "t"
+        },
+        {
+          "t": 56.928000000000004,
+          "kind": "actors"
+        },
+        {
+          "t": 56.928000000000004,
+          "kind": "props"
+        },
+        {
+          "t": 57.098,
+          "kind": "t"
+        },
+        {
+          "t": 57.098,
+          "kind": "actors"
+        },
+        {
+          "t": 57.098,
+          "kind": "props"
+        },
+        {
+          "t": 57.138,
+          "kind": "t"
+        },
+        {
+          "t": 57.138,
+          "kind": "actors"
+        },
+        {
+          "t": 57.138,
+          "kind": "props"
+        },
+        {
+          "t": 57.178000000000004,
+          "kind": "t"
+        },
+        {
+          "t": 57.178000000000004,
+          "kind": "actors"
+        },
+        {
+          "t": 57.178000000000004,
+          "kind": "props"
+        },
+        {
+          "t": 57.2839,
+          "kind": "t"
+        },
+        {
+          "t": 57.2839,
+          "kind": "actors"
+        },
+        {
+          "t": 57.2839,
+          "kind": "props"
+        },
+        {
+          "t": 57.667500000000004,
+          "kind": "t"
+        },
+        {
+          "t": 57.667500000000004,
+          "kind": "actors"
+        },
+        {
+          "t": 57.667500000000004,
+          "kind": "props"
+        },
+        {
+          "t": 58.051100000000005,
+          "kind": "t"
+        },
+        {
+          "t": 58.051100000000005,
+          "kind": "actors"
+        },
+        {
+          "t": 58.051100000000005,
+          "kind": "props"
+        },
+        {
+          "t": 58.286100000000005,
+          "kind": "t"
+        },
+        {
+          "t": 58.286100000000005,
+          "kind": "actors"
+        },
+        {
+          "t": 58.286100000000005,
+          "kind": "props"
+        },
+        {
+          "t": 58.74700000000001,
+          "kind": "t"
+        },
+        {
+          "t": 58.74700000000001,
+          "kind": "actors"
+        },
+        {
+          "t": 58.74700000000001,
+          "kind": "props"
+        },
+        {
+          "t": 58.84250000000001,
+          "kind": "t"
+        },
+        {
+          "t": 58.84250000000001,
+          "kind": "actors"
+        },
+        {
+          "t": 58.84250000000001,
+          "kind": "props"
+        },
+        {
+          "t": 59.398900000000005,
+          "kind": "t"
+        },
+        {
+          "t": 59.398900000000005,
+          "kind": "actors"
+        },
+        {
+          "t": 59.398900000000005,
+          "kind": "props"
+        },
+        {
+          "t": 59.730000000000004,
+          "kind": "t"
+        },
+        {
+          "t": 59.730000000000004,
+          "kind": "actors"
+        },
+        {
+          "t": 59.730000000000004,
+          "kind": "props"
+        },
+        {
+          "t": 60.498000000000005,
+          "kind": "t"
+        },
+        {
+          "t": 60.498000000000005,
+          "kind": "actors"
+        },
+        {
+          "t": 60.498000000000005,
+          "kind": "props"
+        },
+        {
+          "t": 61.147000000000006,
+          "kind": "t"
+        },
+        {
+          "t": 61.147000000000006,
+          "kind": "actors"
+        },
+        {
+          "t": 61.147000000000006,
+          "kind": "props"
+        },
+        {
+          "t": 61.266000000000005,
+          "kind": "t"
+        },
+        {
+          "t": 61.266000000000005,
+          "kind": "actors"
+        },
+        {
+          "t": 61.266000000000005,
+          "kind": "props"
+        },
+        {
+          "t": 61.468,
+          "kind": "t"
+        },
+        {
+          "t": 61.468,
+          "kind": "actors"
+        },
+        {
+          "t": 61.468,
+          "kind": "props"
+        },
+        {
+          "t": 61.508,
+          "kind": "t"
+        },
+        {
+          "t": 61.508,
+          "kind": "actors"
+        },
+        {
+          "t": 61.508,
+          "kind": "props"
+        },
+        {
+          "t": 61.54800000000001,
+          "kind": "t"
+        },
+        {
+          "t": 61.54800000000001,
+          "kind": "actors"
+        },
+        {
+          "t": 61.54800000000001,
+          "kind": "props"
+        },
+        {
+          "t": 61.67300000000001,
+          "kind": "t"
+        },
+        {
+          "t": 61.67300000000001,
+          "kind": "actors"
+        },
+        {
+          "t": 61.67300000000001,
+          "kind": "props"
+        },
+        {
+          "t": 62.13300000000001,
+          "kind": "t"
+        },
+        {
+          "t": 62.13300000000001,
+          "kind": "actors"
+        },
+        {
+          "t": 62.13300000000001,
+          "kind": "props"
+        },
+        {
+          "t": 62.593,
+          "kind": "t"
+        },
+        {
+          "t": 62.593,
+          "kind": "actors"
+        },
+        {
+          "t": 62.593,
+          "kind": "props"
+        },
+        {
+          "t": 63.30800000000001,
+          "kind": "t"
+        },
+        {
+          "t": 63.30800000000001,
+          "kind": "actors"
+        },
+        {
+          "t": 63.30800000000001,
+          "kind": "props"
+        },
+        {
+          "t": 63.547000000000004,
+          "kind": "t"
+        },
+        {
+          "t": 63.547000000000004,
+          "kind": "actors"
+        },
+        {
+          "t": 63.547000000000004,
+          "kind": "props"
+        },
+        {
+          "t": 65.708,
+          "kind": "t"
+        },
+        {
+          "t": 65.708,
+          "kind": "actors"
+        },
+        {
+          "t": 65.708,
+          "kind": "props"
+        },
+        {
+          "t": 68.108,
+          "kind": "t"
+        },
+        {
+          "t": 68.108,
+          "kind": "actors"
+        },
+        {
+          "t": 68.108,
+          "kind": "props"
+        },
+        {
+          "t": 68.9457,
+          "kind": "t"
+        },
+        {
+          "t": 68.9457,
+          "kind": "actors"
+        },
+        {
+          "t": 68.9457,
+          "kind": "props"
+        },
+        {
+          "t": 69.8965,
+          "kind": "t"
+        },
+        {
+          "t": 69.8965,
+          "kind": "actors"
+        },
+        {
+          "t": 69.8965,
+          "kind": "props"
+        },
+        {
+          "t": 70.8473,
+          "kind": "t"
+        },
+        {
+          "t": 70.8473,
+          "kind": "actors"
+        },
+        {
+          "t": 70.8473,
+          "kind": "props"
+        },
+        {
+          "t": 71.685,
+          "kind": "t"
+        },
+        {
+          "t": 71.685,
+          "kind": "actors"
+        },
+        {
+          "t": 71.685,
+          "kind": "props"
+        }
+      ],
+      "semanticMatch": true,
+      "semanticBefore": {
+        "actors": {
+          "masha": {
+            "holding": [
+              null,
+              "pancakes",
+              null
+            ],
+            "posture": [
+              "stand",
+              "sit",
+              "stand"
+            ]
+          },
+          "bear": {
+            "holding": [
+              null,
+              "frying_pan",
+              null,
+              "pancakes",
+              null
+            ],
+            "posture": [
+              "stand"
+            ]
+          }
+        },
+        "props": {
+          "pantry_honey": [
+            [
+              null,
+              true
+            ]
+          ],
+          "frying_pan": [
+            [
+              null,
+              true
+            ],
+            [
+              "bear",
+              true
+            ],
+            [
+              null,
+              true
+            ]
+          ],
+          "pancakes": [
+            [
+              null,
+              false
+            ],
+            [
+              null,
+              true
+            ],
+            [
+              "bear",
+              true
+            ],
+            [
+              "masha",
+              true
+            ],
+            [
+              null,
+              false
+            ]
+          ],
+          "fishing_rod": [
+            [
+              null,
+              true
+            ]
+          ],
+          "fish": [
+            [
+              null,
+              false
+            ]
+          ],
+          "ball": [
+            [
+              null,
+              true
+            ]
+          ]
+        }
+      },
+      "semanticAfter": {
+        "actors": {
+          "masha": {
+            "holding": [
+              null,
+              "pancakes",
+              null
+            ],
+            "posture": [
+              "stand",
+              "sit",
+              "stand"
+            ]
+          },
+          "bear": {
+            "holding": [
+              null,
+              "frying_pan",
+              null,
+              "pancakes",
+              null
+            ],
+            "posture": [
+              "stand"
+            ]
+          }
+        },
+        "props": {
+          "pantry_honey": [
+            [
+              null,
+              true
+            ]
+          ],
+          "frying_pan": [
+            [
+              null,
+              true
+            ],
+            [
+              "bear",
+              true
+            ],
+            [
+              null,
+              true
+            ]
+          ],
+          "pancakes": [
+            [
+              null,
+              false
+            ],
+            [
+              null,
+              true
+            ],
+            [
+              "bear",
+              true
+            ],
+            [
+              "masha",
+              true
+            ],
+            [
+              null,
+              false
+            ]
+          ],
+          "fishing_rod": [
+            [
+              null,
+              true
+            ]
+          ],
+          "fish": [
+            [
+              null,
+              false
+            ]
+          ],
+          "ball": [
+            [
+              null,
+              true
+            ]
+          ]
+        }
+      }
+    },
+    "childCooking": {
+      "samples": 45,
+      "durationBefore": 28.303,
+      "durationAfter": 26.653,
+      "strictParity": false,
+      "differences": [
+        {
+          "t": 14.9634,
+          "kind": "t"
+        },
+        {
+          "t": 14.9634,
+          "kind": "actors"
+        },
+        {
+          "t": 16.181,
+          "kind": "t"
+        },
+        {
+          "t": 16.181,
+          "kind": "actors"
+        },
+        {
+          "t": 17.398600000000002,
+          "kind": "t"
+        },
+        {
+          "t": 17.398600000000002,
+          "kind": "actors"
+        },
+        {
+          "t": 18.102999999999998,
+          "kind": "t"
+        },
+        {
+          "t": 18.102999999999998,
+          "kind": "actors"
+        },
+        {
+          "t": 18.102999999999998,
+          "kind": "props"
+        },
+        {
+          "t": 19.703,
+          "kind": "t"
+        },
+        {
+          "t": 19.703,
+          "kind": "actors"
+        },
+        {
+          "t": 19.703,
+          "kind": "props"
+        },
+        {
+          "t": 21.303,
+          "kind": "t"
+        },
+        {
+          "t": 21.303,
+          "kind": "actors"
+        },
+        {
+          "t": 21.303,
+          "kind": "props"
+        },
+        {
+          "t": 22.303,
+          "kind": "t"
+        },
+        {
+          "t": 22.303,
+          "kind": "actors"
+        },
+        {
+          "t": 22.303,
+          "kind": "props"
+        },
+        {
+          "t": 22.363,
+          "kind": "t"
+        },
+        {
+          "t": 22.363,
+          "kind": "actors"
+        },
+        {
+          "t": 22.363,
+          "kind": "props"
+        },
+        {
+          "t": 22.603,
+          "kind": "t"
+        },
+        {
+          "t": 22.603,
+          "kind": "actors"
+        },
+        {
+          "t": 22.603,
+          "kind": "props"
+        },
+        {
+          "t": 22.843,
+          "kind": "t"
+        },
+        {
+          "t": 22.843,
+          "kind": "actors"
+        },
+        {
+          "t": 22.843,
+          "kind": "props"
+        },
+        {
+          "t": 23.003000000000004,
+          "kind": "t"
+        },
+        {
+          "t": 23.003000000000004,
+          "kind": "actors"
+        },
+        {
+          "t": 23.003000000000004,
+          "kind": "props"
+        },
+        {
+          "t": 23.403000000000002,
+          "kind": "t"
+        },
+        {
+          "t": 23.403000000000002,
+          "kind": "actors"
+        },
+        {
+          "t": 23.403000000000002,
+          "kind": "props"
+        },
+        {
+          "t": 23.803,
+          "kind": "t"
+        },
+        {
+          "t": 23.803,
+          "kind": "actors"
+        },
+        {
+          "t": 23.803,
+          "kind": "props"
+        },
+        {
+          "t": 23.983,
+          "kind": "t"
+        },
+        {
+          "t": 23.983,
+          "kind": "actors"
+        },
+        {
+          "t": 23.983,
+          "kind": "props"
+        },
+        {
+          "t": 24.303,
+          "kind": "t"
+        },
+        {
+          "t": 24.303,
+          "kind": "actors"
+        },
+        {
+          "t": 24.303,
+          "kind": "props"
+        },
+        {
+          "t": 24.623,
+          "kind": "t"
+        },
+        {
+          "t": 24.623,
+          "kind": "actors"
+        },
+        {
+          "t": 24.623,
+          "kind": "props"
+        },
+        {
+          "t": 24.803,
+          "kind": "t"
+        },
+        {
+          "t": 24.803,
+          "kind": "actors"
+        },
+        {
+          "t": 24.803,
+          "kind": "props"
+        },
+        {
+          "t": 25.203,
+          "kind": "t"
+        },
+        {
+          "t": 25.203,
+          "kind": "actors"
+        },
+        {
+          "t": 25.203,
+          "kind": "props"
+        },
+        {
+          "t": 25.602999999999998,
+          "kind": "t"
+        },
+        {
+          "t": 25.602999999999998,
+          "kind": "actors"
+        },
+        {
+          "t": 25.602999999999998,
+          "kind": "props"
+        },
+        {
+          "t": 25.903,
+          "kind": "t"
+        },
+        {
+          "t": 25.903,
+          "kind": "actors"
+        },
+        {
+          "t": 25.903,
+          "kind": "props"
+        },
+        {
+          "t": 26.703,
+          "kind": "t"
+        },
+        {
+          "t": 26.703,
+          "kind": "actors"
+        },
+        {
+          "t": 26.703,
+          "kind": "props"
+        },
+        {
+          "t": 27.503,
+          "kind": "t"
+        },
+        {
+          "t": 27.503,
+          "kind": "actors"
+        },
+        {
+          "t": 27.503,
+          "kind": "props"
+        },
+        {
+          "t": 28.303,
+          "kind": "t"
+        },
+        {
+          "t": 28.303,
+          "kind": "actors"
+        },
+        {
+          "t": 28.303,
+          "kind": "props"
+        }
+      ],
+      "semanticMatch": true,
+      "semanticBefore": {
+        "actors": {
+          "masha": {
+            "holding": [
+              null,
+              "frying_pan",
+              null,
+              "pancakes"
+            ],
+            "posture": [
+              "stand"
+            ]
+          },
+          "bear": {
+            "holding": [
+              null
+            ],
+            "posture": [
+              "stand"
+            ]
+          }
+        },
+        "props": {
+          "pantry_honey": [
+            [
+              null,
+              true
+            ]
+          ],
+          "frying_pan": [
+            [
+              null,
+              true
+            ],
+            [
+              "masha",
+              true
+            ],
+            [
+              null,
+              true
+            ]
+          ],
+          "pancakes": [
+            [
+              null,
+              false
+            ],
+            [
+              null,
+              true
+            ],
+            [
+              "masha",
+              true
+            ]
+          ],
+          "fishing_rod": [
+            [
+              null,
+              true
+            ]
+          ],
+          "fish": [
+            [
+              null,
+              false
+            ]
+          ],
+          "ball": [
+            [
+              null,
+              true
+            ]
+          ]
+        }
+      },
+      "semanticAfter": {
+        "actors": {
+          "masha": {
+            "holding": [
+              null,
+              "frying_pan",
+              null,
+              "pancakes"
+            ],
+            "posture": [
+              "stand"
+            ]
+          },
+          "bear": {
+            "holding": [
+              null
+            ],
+            "posture": [
+              "stand"
+            ]
+          }
+        },
+        "props": {
+          "pantry_honey": [
+            [
+              null,
+              true
+            ]
+          ],
+          "frying_pan": [
+            [
+              null,
+              true
+            ],
+            [
+              "masha",
+              true
+            ],
+            [
+              null,
+              true
+            ]
+          ],
+          "pancakes": [
+            [
+              null,
+              false
+            ],
+            [
+              null,
+              true
+            ],
+            [
+              "masha",
+              true
+            ]
+          ],
+          "fishing_rod": [
+            [
+              null,
+              true
+            ]
+          ],
+          "fish": [
+            [
+              null,
+              false
+            ]
+          ],
+          "ball": [
+            [
+              null,
+              true
+            ]
+          ]
+        }
+      }
+    }
+  },
+  "errors": [],
+  "info": {
+    "before": {
+      "mode": "before",
+      "physicsInitMs": 78.09999990463257,
+      "carrotResources": {
+        "instances": 9,
+        "materials": 1,
+        "geometries": 1,
+        "textures": 1
+      },
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36",
+      "buffer": [
+        1280,
+        720
+      ],
+      "assets": [
+        {
+          "id": "wolf_b",
+          "source": "procedural",
+          "ok": true
+        },
+        {
+          "id": "wolf_a",
+          "source": "procedural",
+          "ok": true
+        },
+        {
+          "id": "rosie",
+          "source": "gltf",
+          "ok": true
+        },
+        {
+          "id": "hare",
+          "source": "gltf",
+          "ok": true
+        },
+        {
+          "id": "rival_bear",
+          "source": "gltf",
+          "ok": true
+        },
+        {
+          "id": "lady_bear",
+          "source": "gltf",
+          "ok": true
+        },
+        {
+          "id": "masha",
+          "source": "gltf",
+          "ok": true
+        },
+        {
+          "id": "bear",
+          "source": "gltf",
+          "ok": true
+        },
+        {
+          "id": "squirrel",
+          "source": "gltf",
+          "ok": true
+        },
+        {
+          "id": "robot_test",
+          "source": "gltf",
+          "ok": true
+        },
+        {
+          "id": "prop:carrot",
+          "source": "gltf",
+          "ok": true
+        },
+        {
+          "id": "prop:carrot_2",
+          "source": "gltf",
+          "ok": true
+        },
+        {
+          "id": "prop:carrot_3",
+          "source": "gltf",
+          "ok": true
+        },
+        {
+          "id": "prop:carrot_4",
+          "source": "gltf",
+          "ok": true
+        },
+        {
+          "id": "prop:carrot_5",
+          "source": "gltf",
+          "ok": true
+        },
+        {
+          "id": "prop:carrot_6",
+          "source": "gltf",
+          "ok": true
+        },
+        {
+          "id": "prop:carrot_7",
+          "source": "gltf",
+          "ok": true
+        },
+        {
+          "id": "prop:carrot_8",
+          "source": "gltf",
+          "ok": true
+        },
+        {
+          "id": "prop:carrot_9",
+          "source": "gltf",
+          "ok": true
+        },
+        {
+          "id": "set:beehive",
+          "source": "gltf",
+          "ok": true
+        },
+        {
+          "id": "set:house",
+          "source": "gltf",
+          "ok": true
+        }
+      ],
+      "durations": {
+        "kitchen": 38.849,
+        "kitchenRu": 38.849,
+        "bench": 14.797999999999998,
+        "benchRu": 12.597999999999999,
+        "fishing": 46.296,
+        "continuity": 28.551000000000002,
+        "continuityWide": 28.551000000000002,
+        "parsedContinuity": 22.551000000000002,
+        "carrots": 28.408,
+        "carrotsRu": 28.408,
+        "cupboard": 40.857,
+        "entry": 18.53,
+        "regression": 68.166,
+        "cozy": 71.685,
+        "live-carrot-en": 15.685,
+        "live-carrot-ru": 16.699,
+        "live-ball-en": 22.016,
+        "live-ball-ru": 23.673,
+        "live-cupboard-en": 30.857,
+        "live-cupboard-ru": 30.857
+      }
+    },
+    "after": {
+      "mode": "after",
+      "physicsInitMs": 6.700000047683716,
+      "carrotResources": {
+        "instances": 9,
+        "materials": 1,
+        "geometries": 1,
+        "textures": 1
+      },
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36",
+      "buffer": [
+        1280,
+        720
+      ],
+      "assets": [
+        {
+          "id": "wolf_a",
+          "source": "procedural",
+          "ok": true
+        },
+        {
+          "id": "wolf_b",
+          "source": "procedural",
+          "ok": true
+        },
+        {
+          "id": "rosie",
+          "source": "gltf",
+          "ok": true
+        },
+        {
+          "id": "hare",
+          "source": "gltf",
+          "ok": true
+        },
+        {
+          "id": "masha",
+          "source": "gltf",
+          "ok": true
+        },
+        {
+          "id": "lady_bear",
+          "source": "gltf",
+          "ok": true
+        },
+        {
+          "id": "rival_bear",
+          "source": "gltf",
+          "ok": true
+        },
+        {
+          "id": "squirrel",
+          "source": "gltf",
+          "ok": true
+        },
+        {
+          "id": "bear",
+          "source": "gltf",
+          "ok": true
+        },
+        {
+          "id": "robot_test",
+          "source": "gltf",
+          "ok": true
+        },
+        {
+          "id": "set:beehive",
+          "source": "gltf",
+          "ok": true
+        },
+        {
+          "id": "prop:carrot",
+          "source": "gltf",
+          "ok": true
+        },
+        {
+          "id": "prop:carrot_2",
+          "source": "gltf",
+          "ok": true
+        },
+        {
+          "id": "prop:carrot_3",
+          "source": "gltf",
+          "ok": true
+        },
+        {
+          "id": "prop:carrot_4",
+          "source": "gltf",
+          "ok": true
+        },
+        {
+          "id": "prop:carrot_5",
+          "source": "gltf",
+          "ok": true
+        },
+        {
+          "id": "prop:carrot_6",
+          "source": "gltf",
+          "ok": true
+        },
+        {
+          "id": "prop:carrot_7",
+          "source": "gltf",
+          "ok": true
+        },
+        {
+          "id": "prop:carrot_8",
+          "source": "gltf",
+          "ok": true
+        },
+        {
+          "id": "prop:carrot_9",
+          "source": "gltf",
+          "ok": true
+        },
+        {
+          "id": "set:house",
+          "source": "gltf",
+          "ok": true
+        }
+      ],
+      "durations": {
+        "kitchen": 55.050999999999995,
+        "kitchenRu": 55.050999999999995,
+        "bench": 25.317999999999998,
+        "benchRu": 25.317999999999998,
+        "fishing": 46.296,
+        "continuity": 28.689,
+        "continuityWide": 28.689,
+        "parsedContinuity": 22.689,
+        "carrots": 28.408,
+        "carrotsRu": 28.408,
+        "cupboard": 39.199,
+        "entry": 18.53,
+        "regression": 68.166,
+        "cozy": 71.521,
+        "live-carrot-en": 15.685,
+        "live-carrot-ru": 16.699,
+        "live-ball-en": 22.177,
+        "live-ball-ru": 23.834,
+        "live-cupboard-en": 29.198,
+        "live-cupboard-ru": 29.198
+      }
+    }
+  },
+  "kitchenRoute": [
+    {
+      "t": 43.20660465116279,
+      "clip": 4,
+      "k": 0.627906976744186,
+      "pos": [
+        -9.053363869338023,
+        0,
+        -11.477590378562692
+      ],
+      "yaw": -1.5660423811488042,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 43.30444186046511,
+      "clip": 4,
+      "k": 0.6511627906976745,
+      "pos": [
+        -9.165713513937927,
+        0,
+        -11.477056270435284
+      ],
+      "yaw": -1.5660423811488042,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 43.40227906976744,
+      "clip": 4,
+      "k": 0.6744186046511628,
+      "pos": [
+        -9.278063158537842,
+        0,
+        -11.476522162307878
+      ],
+      "yaw": -1.5660423811488042,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 43.500116279069765,
+      "clip": 4,
+      "k": 0.6976744186046512,
+      "pos": [
+        -9.390412803137755,
+        0,
+        -11.475988054180473
+      ],
+      "yaw": -1.5660423811488042,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 43.59795348837209,
+      "clip": 4,
+      "k": 0.7209302325581395,
+      "pos": [
+        -9.50276244773767,
+        0,
+        -11.475453946053067
+      ],
+      "yaw": -1.5660423811488042,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 43.69579069767442,
+      "clip": 4,
+      "k": 0.7441860465116279,
+      "pos": [
+        -9.615112092337583,
+        0,
+        -11.47491983792566
+      ],
+      "yaw": -1.5660423811488042,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 43.793627906976745,
+      "clip": 4,
+      "k": 0.7674418604651163,
+      "pos": [
+        -9.727461736937498,
+        0,
+        -11.474385729798254
+      ],
+      "yaw": -1.5660423811488042,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 43.891465116279065,
+      "clip": 4,
+      "k": 0.7906976744186046,
+      "pos": [
+        -9.839811381537404,
+        0,
+        -11.473851621670848
+      ],
+      "yaw": -1.5660423811488042,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 43.98930232558139,
+      "clip": 4,
+      "k": 0.813953488372093,
+      "pos": [
+        -9.952161026137317,
+        0,
+        -11.47331751354344
+      ],
+      "yaw": -1.5660423811488042,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 44.08713953488372,
+      "clip": 4,
+      "k": 0.8372093023255814,
+      "pos": [
+        -10.064510670737231,
+        0,
+        -11.472783405416035
+      ],
+      "yaw": -1.5660423811488042,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 44.184976744186045,
+      "clip": 4,
+      "k": 0.8604651162790697,
+      "pos": [
+        -10.176860315337144,
+        0,
+        -11.472249297288629
+      ],
+      "yaw": -1.5660423811488042,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 44.28281395348837,
+      "clip": 4,
+      "k": 0.8837209302325582,
+      "pos": [
+        -10.28920995993706,
+        0,
+        -11.471715189161221
+      ],
+      "yaw": -1.5660423811488042,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 44.3806511627907,
+      "clip": 4,
+      "k": 0.9069767441860465,
+      "pos": [
+        -10.401559604536972,
+        0,
+        -11.471181081033816
+      ],
+      "yaw": -1.5660423811488042,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 44.47848837209302,
+      "clip": 4,
+      "k": 0.9302325581395349,
+      "pos": [
+        -10.50867459822304,
+        0,
+        -11.4706718583398
+      ],
+      "yaw": -1.5660423811488027,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 44.576325581395345,
+      "clip": 4,
+      "k": 0.9534883720930233,
+      "pos": [
+        -10.587188710321353,
+        0,
+        -11.470298603706578
+      ],
+      "yaw": -1.5660423811488036,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 44.67416279069767,
+      "clip": 4,
+      "k": 0.9767441860465116,
+      "pos": [
+        -10.634297177580338,
+        0,
+        -11.470074650926644
+      ],
+      "yaw": -1.566042381148803,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 44.7715793,
+      "clip": 4,
+      "k": 0.9999,
+      "pos": [
+        -10.649999709654814,
+        0,
+        -11.470000001380296
+      ],
+      "yaw": -1.566042381148803,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 47.440471099999996,
+      "clip": 7,
+      "k": 0.0001,
+      "pos": [
+        -10.65,
+        0,
+        -11.47
+      ],
+      "yaw": -0.6500057664642809,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 47.53814583333333,
+      "clip": 7,
+      "k": 0.020833333333333332,
+      "pos": [
+        -10.65,
+        0,
+        -11.47
+      ],
+      "yaw": -0.8698687532405498,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 47.636291666666665,
+      "clip": 7,
+      "k": 0.041666666666666664,
+      "pos": [
+        -10.65,
+        0,
+        -11.47
+      ],
+      "yaw": -1.4072410318193316,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 47.7344375,
+      "clip": 7,
+      "k": 0.0625,
+      "pos": [
+        -10.65,
+        0,
+        -11.47
+      ],
+      "yaw": -2.0787658640220434,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 47.83258333333333,
+      "clip": 7,
+      "k": 0.08333333333333333,
+      "pos": [
+        -10.65,
+        0,
+        -11.47
+      ],
+      "yaw": -2.701092278134385,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 47.930729166666666,
+      "clip": 7,
+      "k": 0.10416666666666667,
+      "pos": [
+        -10.65,
+        0,
+        -11.47
+      ],
+      "yaw": -3.0908693024420533,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 48.028875,
+      "clip": 7,
+      "k": 0.125,
+      "pos": [
+        -10.65,
+        0,
+        -11.47488122875115
+      ],
+      "yaw": 3.141592653589793,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 48.12702083333333,
+      "clip": 7,
+      "k": 0.14583333333333334,
+      "pos": [
+        -10.65,
+        0,
+        -11.510021004338943
+      ],
+      "yaw": 3.141592653589793,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 48.22516666666667,
+      "clip": 7,
+      "k": 0.16666666666666666,
+      "pos": [
+        -10.65,
+        0,
+        -11.579057940390532
+      ],
+      "yaw": 3.141592653589793,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 48.3233125,
+      "clip": 7,
+      "k": 0.1875,
+      "pos": [
+        -10.65,
+        0,
+        -11.681992036905914
+      ],
+      "yaw": 3.141592653589793,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 48.421458333333334,
+      "clip": 7,
+      "k": 0.20833333333333334,
+      "pos": [
+        -10.65,
+        0,
+        -11.802858728250122
+      ],
+      "yaw": 3.141592653589793,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 48.51960416666667,
+      "clip": 7,
+      "k": 0.22916666666666666,
+      "pos": [
+        -10.65,
+        0,
+        -11.92374013257866
+      ],
+      "yaw": 3.141592653589793,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 48.61775,
+      "clip": 7,
+      "k": 0.25,
+      "pos": [
+        -10.65,
+        0,
+        -12.044621536907199
+      ],
+      "yaw": 3.141592653589793,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 48.715895833333335,
+      "clip": 7,
+      "k": 0.2708333333333333,
+      "pos": [
+        -10.65,
+        0,
+        -12.165502941235738
+      ],
+      "yaw": -3.0139315669102205,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 48.81404166666667,
+      "clip": 7,
+      "k": 0.2916666666666667,
+      "pos": [
+        -10.65,
+        0,
+        -12.286384345564276
+      ],
+      "yaw": -2.5227163064315414,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 48.912187499999995,
+      "clip": 7,
+      "k": 0.3125,
+      "pos": [
+        -10.737265749892806,
+        0,
+        -12.32
+      ],
+      "yaw": -1.944767553699192,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 49.01033333333333,
+      "clip": 7,
+      "k": 0.3333333333333333,
+      "pos": [
+        -10.858147154221346,
+        0,
+        -12.32
+      ],
+      "yaw": -1.5707963267948966,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 49.10847916666666,
+      "clip": 7,
+      "k": 0.3541666666666667,
+      "pos": [
+        -10.979028558549883,
+        0,
+        -12.32
+      ],
+      "yaw": -1.5707963267948966,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 49.206624999999995,
+      "clip": 7,
+      "k": 0.375,
+      "pos": [
+        -11.099909962878423,
+        0,
+        -12.32
+      ],
+      "yaw": -1.5707963267948966,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 49.30477083333333,
+      "clip": 7,
+      "k": 0.3958333333333333,
+      "pos": [
+        -11.22079136720696,
+        0,
+        -12.32
+      ],
+      "yaw": -1.5707963267948966,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 49.40291666666666,
+      "clip": 7,
+      "k": 0.4166666666666667,
+      "pos": [
+        -11.3416727715355,
+        0,
+        -12.32
+      ],
+      "yaw": -1.5707963267948966,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 49.501062499999996,
+      "clip": 7,
+      "k": 0.4375,
+      "pos": [
+        -11.462554175864037,
+        0,
+        -12.32
+      ],
+      "yaw": -1.5707963267948966,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 49.59920833333333,
+      "clip": 7,
+      "k": 0.4583333333333333,
+      "pos": [
+        -11.583435580192576,
+        0,
+        -12.32
+      ],
+      "yaw": -1.5707963267948966,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 49.69735416666666,
+      "clip": 7,
+      "k": 0.4791666666666667,
+      "pos": [
+        -11.704316984521116,
+        0,
+        -12.32
+      ],
+      "yaw": -1.5707963267948966,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 49.7955,
+      "clip": 7,
+      "k": 0.5,
+      "pos": [
+        -11.825198388849653,
+        0,
+        -12.32
+      ],
+      "yaw": -1.5707963267948966,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 49.89364583333333,
+      "clip": 7,
+      "k": 0.5208333333333334,
+      "pos": [
+        -11.946079793178193,
+        0,
+        -12.32
+      ],
+      "yaw": -1.5707963267948966,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 49.991791666666664,
+      "clip": 7,
+      "k": 0.5416666666666666,
+      "pos": [
+        -12.066961197506732,
+        0,
+        -12.32
+      ],
+      "yaw": -1.5707963267948966,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 50.0899375,
+      "clip": 7,
+      "k": 0.5625,
+      "pos": [
+        -12.18784260183527,
+        0,
+        -12.32
+      ],
+      "yaw": -1.5707963267948966,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 50.18808333333333,
+      "clip": 7,
+      "k": 0.5833333333333334,
+      "pos": [
+        -12.308724006163809,
+        0,
+        -12.32
+      ],
+      "yaw": -1.5707963267948966,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 50.286229166666665,
+      "clip": 7,
+      "k": 0.6041666666666666,
+      "pos": [
+        -12.429605410492348,
+        0,
+        -12.32
+      ],
+      "yaw": -1.5707963267948966,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 50.384375,
+      "clip": 7,
+      "k": 0.625,
+      "pos": [
+        -12.550486814820886,
+        0,
+        -12.32
+      ],
+      "yaw": -1.5707963267948966,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 50.48252083333333,
+      "clip": 7,
+      "k": 0.6458333333333334,
+      "pos": [
+        -12.671368219149425,
+        0,
+        -12.32
+      ],
+      "yaw": -1.5707963267948966,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 50.580666666666666,
+      "clip": 7,
+      "k": 0.6666666666666666,
+      "pos": [
+        -12.792249623477964,
+        0,
+        -12.32
+      ],
+      "yaw": -1.5707963267948966,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 50.6788125,
+      "clip": 7,
+      "k": 0.6875,
+      "pos": [
+        -12.913131027806502,
+        0,
+        -12.32
+      ],
+      "yaw": -1.5707963267948966,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 50.77695833333333,
+      "clip": 7,
+      "k": 0.7083333333333334,
+      "pos": [
+        -13.034012432135041,
+        0,
+        -12.32
+      ],
+      "yaw": -1.5707963267948966,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 50.87510416666667,
+      "clip": 7,
+      "k": 0.7291666666666666,
+      "pos": [
+        -13.154893836463579,
+        0,
+        -12.32
+      ],
+      "yaw": -1.9123131432919438,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 50.97325,
+      "clip": 7,
+      "k": 0.75,
+      "pos": [
+        -13.25,
+        0,
+        -12.345775240792118
+      ],
+      "yaw": -2.4843642163806354,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 51.071395833333334,
+      "clip": 7,
+      "k": 0.7708333333333334,
+      "pos": [
+        -13.25,
+        0,
+        -12.466656645120656
+      ],
+      "yaw": -2.988910739909368,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 51.16954166666667,
+      "clip": 7,
+      "k": 0.7916666666666666,
+      "pos": [
+        -13.25,
+        0,
+        -12.587538049449195
+      ],
+      "yaw": 3.141592653589793,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 51.2676875,
+      "clip": 7,
+      "k": 0.8125,
+      "pos": [
+        -13.25,
+        0,
+        -12.708419453777733
+      ],
+      "yaw": 3.141592653589793,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 51.365833333333335,
+      "clip": 7,
+      "k": 0.8333333333333334,
+      "pos": [
+        -13.25,
+        0,
+        -12.829300858106272
+      ],
+      "yaw": 3.141592653589793,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 51.46397916666666,
+      "clip": 7,
+      "k": 0.8541666666666666,
+      "pos": [
+        -13.25,
+        0,
+        -12.950182262434803
+      ],
+      "yaw": -3.1411694663458225,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 51.562124999999995,
+      "clip": 7,
+      "k": 0.875,
+      "pos": [
+        -13.25,
+        0,
+        -13.07106366676334
+      ],
+      "yaw": -2.8075595941053173,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 51.66027083333333,
+      "clip": 7,
+      "k": 0.8958333333333334,
+      "pos": [
+        -13.288945020806334,
+        0,
+        -13.165578008322534
+      ],
+      "yaw": -2.405399567962802,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 51.75841666666666,
+      "clip": 7,
+      "k": 0.9166666666666666,
+      "pos": [
+        -13.40118058708686,
+        0,
+        -13.210472234834745
+      ],
+      "yaw": -2.042687882962187,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 51.856562499999995,
+      "clip": 7,
+      "k": 0.9375,
+      "pos": [
+        -13.508372744799763,
+        0,
+        -13.253349097919905
+      ],
+      "yaw": -1.9513027039072588,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 51.95470833333333,
+      "clip": 7,
+      "k": 0.9583333333333334,
+      "pos": [
+        -13.58705455324434,
+        0,
+        -13.284821821297736
+      ],
+      "yaw": -1.951302703907264,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 52.05285416666666,
+      "clip": 7,
+      "k": 0.9791666666666666,
+      "pos": [
+        -13.634263638311085,
+        0,
+        -13.303705455324435
+      ],
+      "yaw": -1.951302703907263,
+      "vertices": 16965,
+      "intersections": []
+    },
+    {
+      "t": 52.1505289,
+      "clip": 7,
+      "k": 0.9999,
+      "pos": [
+        -13.649999637434227,
+        0,
+        -13.309999854973691
+      ],
+      "yaw": -1.9513027039072663,
+      "vertices": 16965,
+      "intersections": []
+    }
+  ],
+  "childCookingSupport": {
+    "before": [
+      {
+        "t": 18.102999999999998,
+        "expectedHeight": 0.8,
+        "root": [
+          -10.96,
+          0.8,
+          -10.7
+        ],
+        "leftFoot": [
+          -10.951023207197728,
+          0.8925756823204432,
+          -10.596175309859412
+        ],
+        "rightFoot": [
+          -10.951050806092486,
+          0.8713965334091517,
+          -10.795874761941619
+        ]
+      },
+      {
+        "t": 19.703,
+        "expectedHeight": 0.8,
+        "root": [
+          -10.96,
+          0.8,
+          -10.7
+        ],
+        "leftFoot": [
+          -10.949039329378786,
+          0.8801789283273365,
+          -10.618783951505787
+        ],
+        "rightFoot": [
+          -10.950146307695903,
+          0.8718699752439681,
+          -10.819052036476359
+        ]
+      },
+      {
+        "t": 21.303,
+        "expectedHeight": 0.8,
+        "root": [
+          -10.96,
+          0.8,
+          -10.7
+        ],
+        "leftFoot": [
+          -10.949652666034579,
+          0.894449204413247,
+          -10.591819512418704
+        ],
+        "rightFoot": [
+          -10.949531258928902,
+          0.8709295256805517,
+          -10.791346950845503
+        ]
+      }
+    ],
+    "after": [
+      {
+        "t": 16.453,
+        "expectedHeight": 0.8,
+        "root": [
+          -10.96,
+          0.8,
+          -10.15
+        ],
+        "leftFoot": [
+          -10.951272581914415,
+          0.892662649350831,
+          -10.043136204317664
+        ],
+        "rightFoot": [
+          -10.950617721007056,
+          0.8706315673112758,
+          -10.24305394580266
+        ]
+      },
+      {
+        "t": 18.053,
+        "expectedHeight": 0.8,
+        "root": [
+          -10.96,
+          0.8,
+          -10.15
+        ],
+        "leftFoot": [
+          -10.94902029683671,
+          0.8797774864050587,
+          -10.07093033426906
+        ],
+        "rightFoot": [
+          -10.949679648196955,
+          0.8723515655255141,
+          -10.271695759869676
+        ]
+      },
+      {
+        "t": 19.653000000000002,
+        "expectedHeight": 0.8,
+        "root": [
+          -10.96,
+          0.8,
+          -10.15
+        ],
+        "leftFoot": [
+          -10.951155438651025,
+          0.8945550612029305,
+          -10.04081321297081
+        ],
+        "rightFoot": [
+          -10.951028659195492,
+          0.8707810120263264,
+          -10.239843533031749
+        ]
+      }
+    ]
+  },
+  "shots": {
+    "before": [
+      {
+        "name": "before-regression-0-bear-4-sleep",
+        "file": "docs/kitchen-bench/regression/before-regression-0-bear-4-sleep.png",
+        "t": 12.745,
+        "actor": "bear",
+        "verb": "sleep",
+        "camera": {
+          "pos": [
+            -8.47835876762308,
+            1.5635379036980317,
+            9.929553128237467
+          ],
+          "quat": [
+            -0.03629442288030868,
+            0.01011402485069921,
+            0.0003673435488815774,
+            0.9992898910865766
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "physicsReason": "paired choreography"
+      },
+      {
+        "name": "before-regression-1-bear-1-sleep",
+        "file": "docs/kitchen-bench/regression/before-regression-1-bear-1-sleep.png",
+        "t": 19.345,
+        "actor": "bear",
+        "verb": "sleep",
+        "camera": {
+          "pos": [
+            -6.07611111111111,
+            2.4,
+            5.719333333333331
+          ],
+          "quat": [
+            -0.15082130410903802,
+            0.2845699781635569,
+            0.045386982573965264,
+            0.9456283009553345
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "physicsReason": "paired choreography"
+      },
+      {
+        "name": "before-regression-2-bear-3-hug",
+        "file": "docs/kitchen-bench/regression/before-regression-2-bear-3-hug.png",
+        "t": 36.851,
+        "actor": "bear",
+        "verb": "hug",
+        "camera": {
+          "pos": [
+            -8.55752995407127,
+            2.34,
+            -3.1
+          ],
+          "quat": [
+            -0.03526970551435255,
+            0.9442610069429019,
+            0.10776015814325957,
+            0.3090549254696442
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "physicsReason": "paired choreography"
+      },
+      {
+        "name": "before-regression-2-bear-5-carry",
+        "file": "docs/kitchen-bench/regression/before-regression-2-bear-5-carry.png",
+        "t": 40.951,
+        "actor": "bear",
+        "verb": "carry",
+        "camera": {
+          "pos": [
+            -9.283000000000001,
+            2.1189999999999998,
+            -3.1
+          ],
+          "quat": [
+            -0.025341289888121035,
+            0.9585823043596763,
+            0.09033048821162407,
+            0.268920411450579
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "physicsReason": "paired choreography"
+      },
+      {
+        "name": "before-entry-0-bear-2-open",
+        "file": "docs/kitchen-bench/regression/before-entry-0-bear-2-open.png",
+        "t": 7.154,
+        "actor": "bear",
+        "verb": "open",
+        "camera": {
+          "pos": [
+            -1,
+            3.5,
+            3.7
+          ],
+          "quat": [
+            -0.09492866485221568,
+            0.29130874794197553,
+            0.02906422245250113,
+            0.9514636267010346
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "physicsReason": "Masha is not in this story"
+      },
+      {
+        "name": "before-entry-1-bear-2-close",
+        "file": "docs/kitchen-bench/regression/before-entry-1-bear-2-close.png",
+        "t": 15.829999999999998,
+        "actor": "bear",
+        "verb": "close",
+        "camera": {
+          "pos": [
+            -9.6,
+            2.7,
+            -8.9
+          ],
+          "quat": [
+            -0.09750575709720073,
+            -0.5139159494137925,
+            -0.05893596052632143,
+            0.8502408934107215
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "physicsReason": "Masha is not in this story"
+      },
+      {
+        "name": "before-cupboard-0-bear-2-open",
+        "file": "docs/kitchen-bench/regression/before-cupboard-0-bear-2-open.png",
+        "t": 7.154,
+        "actor": "bear",
+        "verb": "open",
+        "camera": {
+          "pos": [
+            -1,
+            3.5,
+            3.7
+          ],
+          "quat": [
+            -0.09492866485221568,
+            0.29130874794197553,
+            0.02906422245250113,
+            0.9514636267010346
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "physicsReason": "authored choreography: wave"
+      },
+      {
+        "name": "before-cupboard-1-bear-2-open",
+        "file": "docs/kitchen-bench/regression/before-cupboard-1-bear-2-open.png",
+        "t": 25.957,
+        "actor": "bear",
+        "verb": "open",
+        "camera": {
+          "pos": [
+            -13.2,
+            3.7,
+            -14.1
+          ],
+          "quat": [
+            -0.06254921953526178,
+            0.9370582072332418,
+            0.2565135122781789,
+            0.2284957973597436
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "physicsReason": "authored choreography: wave"
+      },
+      {
+        "name": "before-cupboard-1-bear-3-take",
+        "file": "docs/kitchen-bench/regression/before-cupboard-1-bear-3-take.png",
+        "t": 28.557000000000002,
+        "actor": "bear",
+        "verb": "take",
+        "camera": {
+          "pos": [
+            -13.2,
+            3.7,
+            -14.1
+          ],
+          "quat": [
+            -0.06254921953526178,
+            0.9370582072332418,
+            0.2565135122781789,
+            0.2284957973597436
+          ]
+        },
+        "contacts": {
+          "mode": "pickup",
+          "prop": "pantry_honey",
+          "strength": 1,
+          "reachError": 9.349142064490965e-9,
+          "attachmentError": 4.827496314869425e-8,
+          "targetError": 4.827496314869425e-8,
+          "contactPoint": [
+            -14.944499977299653,
+            2.2299999575676837,
+            -11.400000003829463
+          ],
+          "targetPoint": [
+            -14.944500000000001,
+            2.23,
+            -11.4
+          ],
+          "withdrawal": 1.1842378929335002e-15,
+          "surfaceGrip": true,
+          "releaseGap": 4.827496314869425e-8
+        },
+        "physicsReason": "authored choreography: wave"
+      },
+      {
+        "name": "before-cupboard-1-bear-4-close",
+        "file": "docs/kitchen-bench/regression/before-cupboard-1-bear-4-close.png",
+        "t": 31.157000000000004,
+        "actor": "bear",
+        "verb": "close",
+        "camera": {
+          "pos": [
+            -13.2,
+            3.7,
+            -14.1
+          ],
+          "quat": [
+            -0.06254921953526178,
+            0.9370582072332418,
+            0.2565135122781789,
+            0.2284957973597436
+          ]
+        },
+        "contacts": {
+          "mode": "prop",
+          "carryTarget": [
+            -14.65443278048996,
+            1.58,
+            -11.690072195306053
+          ],
+          "reachError": 0.000015034844963058657,
+          "prop": "pantry_honey",
+          "contactPoint": [
+            -14.654441864067119,
+            1.579993724488711,
+            -11.690069618035581
+          ],
+          "gripPoint": [
+            -14.759941861878902,
+            1.579993724488711,
+            -11.69009110555857
+          ],
+          "radius": 0.105
+        },
+        "physicsReason": "authored choreography: wave"
+      },
+      {
+        "name": "before-cozy-0-bear-1-take",
+        "file": "docs/kitchen-bench/regression/before-cozy-0-bear-1-take.png",
+        "t": 4.633,
+        "actor": "bear",
+        "verb": "take",
+        "camera": {
+          "pos": [
+            -5.611612685669792,
+            2.193,
+            0.542835050112427
+          ],
+          "quat": [
+            -0.06478876211857496,
+            -0.6023599151106898,
+            -0.04914690144016233,
+            0.794071489886028
+          ]
+        },
+        "contacts": {
+          "mode": "prop",
+          "prop": "frying_pan",
+          "contactPoint": [
+            1.4771523342260298,
+            0.7746673313531319,
+            0.4281636341355561
+          ],
+          "gripPoint": [
+            1.4811160549689046,
+            0.7746673313531319,
+            0.4410686299849356
+          ],
+          "radius": 0.013
+        },
+        "physicsReason": "paired choreography"
+      },
+      {
+        "name": "before-cozy-0-bear-4-open",
+        "file": "docs/kitchen-bench/regression/before-cozy-0-bear-4-open.png",
+        "t": 12.388,
+        "actor": "bear",
+        "verb": "open",
+        "camera": {
+          "pos": [
+            -1,
+            3.5,
+            3.7
+          ],
+          "quat": [
+            -0.09492866485221568,
+            0.29130874794197553,
+            0.02906422245250113,
+            0.9514636267010346
+          ]
+        },
+        "contacts": {
+          "mode": "prop",
+          "prop": "frying_pan",
+          "contactPoint": [
+            -6.033689507485222,
+            1.0095690778556128,
+            -4.6285910026879975
+          ],
+          "gripPoint": [
+            -6.033689507485222,
+            1.0095690778556128,
+            -4.642091002687997
+          ],
+          "radius": 0.013
+        },
+        "physicsReason": "paired choreography"
+      },
+      {
+        "name": "before-cozy-0-bear-10-cook",
+        "file": "docs/kitchen-bench/regression/before-cozy-0-bear-10-cook.png",
+        "t": 26.917,
+        "actor": "bear",
+        "verb": "cook",
+        "camera": {
+          "pos": [
+            -10.375,
+            2.866,
+            -5.725
+          ],
+          "quat": [
+            -0.12573823015593966,
+            -0.05878070504282987,
+            -0.007463433903694223,
+            0.9902923928549008
+          ]
+        },
+        "contacts": {
+          "mode": "prop",
+          "prop": "frying_pan",
+          "contactPoint": [
+            -11.93988709817528,
+            1.450764381971227,
+            -13.300335691676775
+          ],
+          "gripPoint": [
+            -11.953085438986053,
+            1.450764381971227,
+            -13.297497769929668
+          ],
+          "radius": 0.013
+        },
+        "physicsReason": "paired choreography"
+      },
+      {
+        "name": "before-cozy-1-masha-6-take",
+        "file": "docs/kitchen-bench/regression/before-cozy-1-masha-6-take.png",
+        "t": 47.05500000000001,
+        "actor": "masha",
+        "verb": "take",
+        "camera": {
+          "pos": [
+            -9.882422250043508,
+            2.3697706208388927,
+            -11.611762631310551
+          ],
+          "quat": [
+            -0.1617810227259577,
+            -0.4490113908394368,
+            -0.08303538001337678,
+            0.8748261525858789
+          ]
+        },
+        "contacts": {
+          "mode": "prop",
+          "prop": "pancakes",
+          "contactPoint": [
+            -7.4541308602231755,
+            0.5729957341295632,
+            -13.815508795485322
+          ],
+          "gripPoint": [
+            -7.4541308602231755,
+            0.5734957341295631,
+            -13.815508795485322
+          ],
+          "radius": 0
+        },
+        "physicsReason": "paired choreography"
+      },
+      {
+        "name": "before-cozy-1-bear-2-take",
+        "file": "docs/kitchen-bench/regression/before-cozy-1-bear-2-take.png",
+        "t": 35.805,
+        "actor": "bear",
+        "verb": "take",
+        "release": {
+          "item": "frying_pan",
+          "at": "house_kitchen",
+          "jump": 0.00002482275823829566,
+          "beforeOwner": "bear",
+          "afterOwner": null,
+          "beforePosition": [
+            -11.470004200451692,
+            1.2000045163165194,
+            -10.69997595569886
+          ],
+          "afterPosition": [
+            -11.47,
+            1.2,
+            -10.7
+          ],
+          "rootBefore": [
+            -11,
+            0,
+            -10
+          ],
+          "rootAfter": [
+            -11,
+            0,
+            -10
+          ]
+        },
+        "camera": {
+          "pos": [
+            -14.314222222222222,
+            2.032,
+            -8.226333333333335
+          ],
+          "quat": [
+            -0.07874968696287092,
+            -0.5117137925201163,
+            -0.047173401642021474,
+            0.8542377605359351
+          ]
+        },
+        "contacts": {
+          "mode": "putDown",
+          "prop": "frying_pan",
+          "strength": 1,
+          "reachError": 0.000023603132637160614,
+          "releaseGap": 0.00002490595793633783,
+          "contactPoint": [
+            -11.216504248243897,
+            1.230004512922222,
+            -10.699975877547853
+          ],
+          "targetPoint": [
+            -11.2165,
+            1.23,
+            -10.7
+          ],
+          "radius": 0.013
+        },
+        "physicsReason": "paired choreography"
+      },
+      {
+        "name": "before-cozy-1-bear-4-take",
+        "file": "docs/kitchen-bench/regression/before-cozy-1-bear-4-take.png",
+        "t": 41.347,
+        "actor": "bear",
+        "verb": "take",
+        "camera": {
+          "pos": [
+            -13.762784786669297,
+            2.943142885450569,
+            -9.468601670930946
+          ],
+          "quat": [
+            -0.17210843706833662,
+            -0.3907978168269097,
+            -0.07463688779980283,
+            0.9011576372826094
+          ]
+        },
+        "contacts": {
+          "mode": "pickup",
+          "prop": "pancakes",
+          "strength": 1,
+          "reachError": 2.505901769305402e-9,
+          "attachmentError": 4.308768108452114e-7,
+          "targetError": 4.308768108452114e-7,
+          "contactPoint": [
+            -11.318062323160746,
+            1.2154996426928881,
+            -11.639629417013124
+          ],
+          "targetPoint": [
+            -11.31806209417314,
+            1.2154999999999998,
+            -11.639629342507215
+          ],
+          "withdrawal": 3.552713678800501e-15,
+          "surfaceGrip": true,
+          "releaseGap": 4.308768108452114e-7
+        },
+        "physicsReason": "paired choreography"
+      },
+      {
+        "name": "before-fishing-0-masha-4-take",
+        "file": "docs/kitchen-bench/regression/before-fishing-0-masha-4-take.png",
+        "t": 5.679,
+        "actor": "masha",
+        "verb": "take",
+        "camera": {
+          "pos": [
+            -2.487,
+            1.65,
+            0.9019999999999998
+          ],
+          "quat": [
+            -0.11400206563255229,
+            -0.7306731148658097,
+            -0.12597086457905632,
+            0.6612500809232553
+          ]
+        },
+        "contacts": {
+          "mode": "pickup",
+          "prop": "ball",
+          "strength": 1,
+          "reachError": 0.0000046370036333682855,
+          "attachmentError": 0.000005552255099573592,
+          "targetError": 0.000005552255099573592,
+          "contactPoint": [
+            0.39999708666915657,
+            0.2855022015511511,
+            0.9999958175111935
+          ],
+          "targetPoint": [
+            0.4,
+            0.28550000000000003,
+            1
+          ],
+          "withdrawal": 4.037174635000569e-16,
+          "surfaceGrip": true,
+          "releaseError": 0.000005552255099573592
+        },
+        "physicsReason": "paired choreography"
+      },
+      {
+        "name": "before-fishing-0-bear-6-take",
+        "file": "docs/kitchen-bench/regression/before-fishing-0-bear-6-take.png",
+        "t": 8.964,
+        "actor": "bear",
+        "verb": "take",
+        "camera": {
+          "pos": [
+            -2.062,
+            2.4,
+            11.74
+          ],
+          "quat": [
+            -0.1498642305128518,
+            0.3033762735320346,
+            0.04837925411064039,
+            0.9397675227641702
+          ]
+        },
+        "contacts": {
+          "mode": "prop",
+          "prop": "fishing_rod",
+          "contactPoint": [
+            -5.600523859951697,
+            0.7420995984711324,
+            8.920446251651208
+          ],
+          "gripPoint": [
+            -5.609970952117673,
+            0.7299580313719064,
+            8.922339607925803
+          ],
+          "radius": 0.015
+        },
+        "physicsReason": "paired choreography"
+      },
+      {
+        "name": "before-fishing-2-bear-1-fish",
+        "file": "docs/kitchen-bench/regression/before-fishing-2-bear-1-fish.png",
+        "t": 22.264000000000003,
+        "actor": "bear",
+        "verb": "fish",
+        "camera": {
+          "pos": [
+            -10.3955,
+            1.408,
+            11.789
+          ],
+          "quat": [
+            -0.0676394326078594,
+            -0.535133547602142,
+            -0.04304172373279664,
+            0.8409544597689832
+          ]
+        },
+        "contacts": {
+          "mode": "prop",
+          "primaryReachError": 0.00002072355961921324,
+          "strength": 1,
+          "prop": "fishing_rod",
+          "contactPoint": [
+            -5.657561298432004,
+            0.8889135846092767,
+            9.41032667861686
+          ],
+          "gripPoint": [
+            -5.654515429210895,
+            0.8889723435968437,
+            9.425524350414516
+          ],
+          "radius": 0.015,
+          "secondaryReachError": 0.000016438405912728106,
+          "secondaryContact": [
+            -5.820637860035034,
+            1.0257815047015333,
+            9.473606318418765
+          ]
+        },
+        "physicsReason": "paired choreography"
+      },
+      {
+        "name": "before-fishing-2-bear-6-take",
+        "file": "docs/kitchen-bench/regression/before-fishing-2-bear-6-take.png",
+        "t": 30.160000000000004,
+        "actor": "bear",
+        "verb": "take",
+        "release": {
+          "item": "fish",
+          "at": "pier",
+          "jump": 0.00001202842443276422,
+          "beforeOwner": "bear",
+          "afterOwner": null,
+          "beforePosition": [
+            -5.350005044702665,
+            0.2800063228967886,
+            9.249991097475327
+          ],
+          "afterPosition": [
+            -5.35,
+            0.28,
+            9.25
+          ],
+          "rootBefore": [
+            -5.5,
+            0.28,
+            9.5
+          ],
+          "rootAfter": [
+            -5.5,
+            0.28,
+            9.5
+          ]
+        },
+        "camera": {
+          "pos": [
+            -8.64145846215315,
+            1.433,
+            8.339237606609945
+          ],
+          "quat": [
+            -0.012790563840859274,
+            -0.820341480910615,
+            -0.018361864052547864,
+            0.5714359965232572
+          ]
+        },
+        "contacts": {
+          "mode": "putDown",
+          "prop": "fish",
+          "strength": 1,
+          "reachError": 0.000008112755593328219,
+          "releaseGap": 0.000012083378241543502,
+          "contactPoint": [
+            -5.463443771034349,
+            0.050006393179620585,
+            9.296702151529127
+          ],
+          "targetPoint": [
+            -5.463438656860735,
+            0.05,
+            9.296711038627208
+          ],
+          "radius": 0.025
+        },
+        "physicsReason": "paired choreography"
+      },
+      {
+        "name": "before-fishing-2-bear-9-hug",
+        "file": "docs/kitchen-bench/regression/before-fishing-2-bear-9-hug.png",
+        "t": 32.510000000000005,
+        "actor": "bear",
+        "verb": "hug",
+        "camera": {
+          "pos": [
+            -9.349530612244898,
+            1.293,
+            8.665514739229025
+          ],
+          "quat": [
+            -0.048751858738087225,
+            -0.7392420712084953,
+            -0.053829363796386476,
+            0.6695123718186482
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "physicsReason": "paired choreography"
+      },
+      {
+        "name": "before-childCooking-0-masha-2-open",
+        "file": "docs/kitchen-bench/regression/before-childCooking-0-masha-2-open.png",
+        "t": 7.013,
+        "actor": "masha",
+        "verb": "open",
+        "camera": {
+          "pos": [
+            -1,
+            3.5,
+            3.7
+          ],
+          "quat": [
+            -0.09492866485221568,
+            0.29130874794197553,
+            0.02906422245250113,
+            0.9514636267010346
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "physicsReason": "travel outside the trial yard"
+      },
+      {
+        "name": "before-childCooking-0-masha-8-cook",
+        "file": "docs/kitchen-bench/regression/before-childCooking-0-masha-8-cook.png",
+        "t": 19.703,
+        "actor": "masha",
+        "verb": "cook",
+        "camera": {
+          "pos": [
+            -14.175,
+            2.723,
+            -10.111
+          ],
+          "quat": [
+            -0.1779294279192838,
+            -0.6228216381308059,
+            -0.14829342616468708,
+            0.7472906967925631
+          ]
+        },
+        "contacts": {
+          "mode": "prop",
+          "prop": "frying_pan",
+          "contactPoint": [
+            -11.187363071017803,
+            0.4922956578499347,
+            -10.781106617571076
+          ],
+          "gripPoint": [
+            -11.200863070737794,
+            0.4922956578499347,
+            -10.781109367159326
+          ],
+          "radius": 0.013
+        },
+        "physicsReason": "travel outside the trial yard"
+      },
+      {
+        "name": "before-childCooking-1-masha-1-take",
+        "file": "docs/kitchen-bench/regression/before-childCooking-1-masha-1-take.png",
+        "t": 23.403000000000002,
+        "actor": "masha",
+        "verb": "take",
+        "release": {
+          "item": "frying_pan",
+          "at": "house_kitchen",
+          "jump": 0.00001668192486331052,
+          "beforeOwner": "masha",
+          "afterOwner": null,
+          "beforePosition": [
+            -11.469988123724702,
+            1.1999928062658256,
+            -10.699990753871576
+          ],
+          "afterPosition": [
+            -11.47,
+            1.2,
+            -10.7
+          ],
+          "rootBefore": [
+            -11.22,
+            0.8,
+            -10.7
+          ],
+          "rootAfter": [
+            -11.22,
+            0.8,
+            -10.7
+          ]
+        },
+        "camera": {
+          "pos": [
+            -13.807,
+            2.723,
+            -9.05
+          ],
+          "quat": [
+            -0.19954934287986578,
+            -0.48586164635873336,
+            -0.11498996359820306,
+            0.8431463862375731
+          ]
+        },
+        "contacts": {
+          "mode": "putDown",
+          "prop": "frying_pan",
+          "strength": 1,
+          "reachError": 0.00001574259205601075,
+          "releaseError": 0.000016681846235598602
+        },
+        "physicsReason": "travel outside the trial yard"
+      },
+      {
+        "name": "before-childCooking-1-masha-3-take",
+        "file": "docs/kitchen-bench/regression/before-childCooking-1-masha-3-take.png",
+        "t": 25.203,
+        "actor": "masha",
+        "verb": "take",
+        "camera": {
+          "pos": [
+            -14.435,
+            2.723,
+            -10.79148611111111
+          ],
+          "quat": [
+            -0.17792942791928382,
+            -0.6228216381308056,
+            -0.14829342616468696,
+            0.7472906967925632
+          ]
+        },
+        "contacts": {
+          "mode": "pickup",
+          "prop": "pancakes",
+          "strength": 1,
+          "reachError": 0.000031278473763501866,
+          "attachmentError": 0.000029343704422473745,
+          "targetError": 0.000029343704422473745,
+          "contactPoint": [
+            -11.254993689186723,
+            0.41548654488422304,
+            -11.519974698093264
+          ],
+          "targetPoint": [
+            -11.255,
+            0.4154999999999999,
+            -11.52
+          ],
+          "withdrawal": 0,
+          "surfaceGrip": true,
+          "releaseError": 0.000029343704422473745
+        },
+        "physicsReason": "travel outside the trial yard"
+      }
+    ],
+    "after": [
+      {
+        "name": "after-regression-0-bear-4-sleep",
+        "file": "docs/kitchen-bench/regression/after-regression-0-bear-4-sleep.png",
+        "t": 12.745,
+        "actor": "bear",
+        "verb": "sleep",
+        "camera": {
+          "pos": [
+            -8.47835876762308,
+            1.5635379036980317,
+            9.929553128237467
+          ],
+          "quat": [
+            -0.03629442288030868,
+            0.01011402485069921,
+            0.0003673435488815774,
+            0.9992898910865766
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "physicsReason": "paired choreography"
+      },
+      {
+        "name": "after-regression-1-bear-1-sleep",
+        "file": "docs/kitchen-bench/regression/after-regression-1-bear-1-sleep.png",
+        "t": 19.345,
+        "actor": "bear",
+        "verb": "sleep",
+        "camera": {
+          "pos": [
+            -6.07611111111111,
+            2.4,
+            5.719333333333331
+          ],
+          "quat": [
+            -0.15082130410903802,
+            0.2845699781635569,
+            0.045386982573965264,
+            0.9456283009553345
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "physicsReason": "paired choreography"
+      },
+      {
+        "name": "after-regression-2-bear-3-hug",
+        "file": "docs/kitchen-bench/regression/after-regression-2-bear-3-hug.png",
+        "t": 36.851,
+        "actor": "bear",
+        "verb": "hug",
+        "camera": {
+          "pos": [
+            -8.55752995407127,
+            2.34,
+            -3.1
+          ],
+          "quat": [
+            -0.03526970551435255,
+            0.9442610069429019,
+            0.10776015814325957,
+            0.3090549254696442
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "physicsReason": "paired choreography"
+      },
+      {
+        "name": "after-regression-2-bear-5-carry",
+        "file": "docs/kitchen-bench/regression/after-regression-2-bear-5-carry.png",
+        "t": 40.951,
+        "actor": "bear",
+        "verb": "carry",
+        "camera": {
+          "pos": [
+            -9.283000000000001,
+            2.1189999999999998,
+            -3.1
+          ],
+          "quat": [
+            -0.025341289888121035,
+            0.9585823043596763,
+            0.09033048821162407,
+            0.268920411450579
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "physicsReason": "paired choreography"
+      },
+      {
+        "name": "after-entry-0-bear-2-open",
+        "file": "docs/kitchen-bench/regression/after-entry-0-bear-2-open.png",
+        "t": 7.154,
+        "actor": "bear",
+        "verb": "open",
+        "camera": {
+          "pos": [
+            -1,
+            3.5,
+            3.7
+          ],
+          "quat": [
+            -0.09492866485221568,
+            0.29130874794197553,
+            0.02906422245250113,
+            0.9514636267010346
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "physicsReason": "Masha is not in this story"
+      },
+      {
+        "name": "after-entry-1-bear-2-close",
+        "file": "docs/kitchen-bench/regression/after-entry-1-bear-2-close.png",
+        "t": 15.829999999999998,
+        "actor": "bear",
+        "verb": "close",
+        "camera": {
+          "pos": [
+            -9.6,
+            2.7,
+            -8.9
+          ],
+          "quat": [
+            -0.09750575709720073,
+            -0.5139159494137925,
+            -0.05893596052632143,
+            0.8502408934107215
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "physicsReason": "Masha is not in this story"
+      },
+      {
+        "name": "after-cupboard-0-bear-2-open",
+        "file": "docs/kitchen-bench/regression/after-cupboard-0-bear-2-open.png",
+        "t": 7.154,
+        "actor": "bear",
+        "verb": "open",
+        "camera": {
+          "pos": [
+            -1,
+            3.5,
+            3.7
+          ],
+          "quat": [
+            -0.09492866485221568,
+            0.29130874794197553,
+            0.02906422245250113,
+            0.9514636267010346
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "physicsReason": "authored choreography: wave"
+      },
+      {
+        "name": "after-cupboard-1-bear-2-open",
+        "file": "docs/kitchen-bench/regression/after-cupboard-1-bear-2-open.png",
+        "t": 24.299000000000003,
+        "actor": "bear",
+        "verb": "open",
+        "camera": {
+          "pos": [
+            -13.2,
+            3.7,
+            -14.1
+          ],
+          "quat": [
+            -0.06254921953526178,
+            0.9370582072332418,
+            0.2565135122781789,
+            0.2284957973597436
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "physicsReason": "authored choreography: wave"
+      },
+      {
+        "name": "after-cupboard-1-bear-3-take",
+        "file": "docs/kitchen-bench/regression/after-cupboard-1-bear-3-take.png",
+        "t": 26.899,
+        "actor": "bear",
+        "verb": "take",
+        "camera": {
+          "pos": [
+            -13.2,
+            3.7,
+            -14.1
+          ],
+          "quat": [
+            -0.06254921953526178,
+            0.9370582072332418,
+            0.2565135122781789,
+            0.2284957973597436
+          ]
+        },
+        "contacts": {
+          "mode": "pickup",
+          "prop": "pantry_honey",
+          "strength": 1,
+          "reachError": 0.000022706265575229027,
+          "attachmentError": 0.000014424728362374878,
+          "targetError": 0.000014424728362374878,
+          "contactPoint": [
+            -14.944505841904085,
+            2.2299974532847275,
+            -11.39998705939776
+          ],
+          "targetPoint": [
+            -14.944500000000001,
+            2.23,
+            -11.4
+          ],
+          "withdrawal": 0,
+          "surfaceGrip": true,
+          "releaseGap": 0.000014424728362374878
+        },
+        "physicsReason": "authored choreography: wave"
+      },
+      {
+        "name": "after-cupboard-1-bear-4-close",
+        "file": "docs/kitchen-bench/regression/after-cupboard-1-bear-4-close.png",
+        "t": 29.499000000000002,
+        "actor": "bear",
+        "verb": "close",
+        "camera": {
+          "pos": [
+            -13.2,
+            3.7,
+            -14.1
+          ],
+          "quat": [
+            -0.06254921953526178,
+            0.9370582072332418,
+            0.2565135122781789,
+            0.2284957973597436
+          ]
+        },
+        "contacts": {
+          "mode": "prop",
+          "carryTarget": [
+            -14.65443278048996,
+            1.58,
+            -11.690072195306053
+          ],
+          "reachError": 0.000020892396602587864,
+          "prop": "pantry_honey",
+          "contactPoint": [
+            -14.654443967457745,
+            1.5799845914978048,
+            -11.6900703186222
+          ],
+          "gripPoint": [
+            -14.759943965269528,
+            1.5799845914978048,
+            -11.690091806145189
+          ],
+          "radius": 0.105
+        },
+        "physicsReason": "authored choreography: wave"
+      },
+      {
+        "name": "after-cozy-0-bear-1-take",
+        "file": "docs/kitchen-bench/regression/after-cozy-0-bear-1-take.png",
+        "t": 4.633,
+        "actor": "bear",
+        "verb": "take",
+        "camera": {
+          "pos": [
+            -5.611612685669792,
+            2.193,
+            0.542835050112427
+          ],
+          "quat": [
+            -0.06478876211857496,
+            -0.6023599151106898,
+            -0.04914690144016233,
+            0.794071489886028
+          ]
+        },
+        "contacts": {
+          "mode": "prop",
+          "prop": "frying_pan",
+          "contactPoint": [
+            1.4771523342260298,
+            0.7746673313531319,
+            0.4281636341355561
+          ],
+          "gripPoint": [
+            1.4811160549689046,
+            0.7746673313531319,
+            0.4410686299849356
+          ],
+          "radius": 0.013
+        },
+        "physicsReason": "outside supported standing yard motion"
+      },
+      {
+        "name": "after-cozy-0-bear-4-open",
+        "file": "docs/kitchen-bench/regression/after-cozy-0-bear-4-open.png",
+        "t": 12.388,
+        "actor": "bear",
+        "verb": "open",
+        "camera": {
+          "pos": [
+            -1,
+            3.5,
+            3.7
+          ],
+          "quat": [
+            -0.09492866485221568,
+            0.29130874794197553,
+            0.02906422245250113,
+            0.9514636267010346
+          ]
+        },
+        "contacts": {
+          "mode": "prop",
+          "prop": "frying_pan",
+          "contactPoint": [
+            -6.033689507485222,
+            1.0095690778556128,
+            -4.6285910026879975
+          ],
+          "gripPoint": [
+            -6.033689507485222,
+            1.0095690778556128,
+            -4.642091002687997
+          ],
+          "radius": 0.013
+        },
+        "physicsReason": "outside supported standing yard motion"
+      },
+      {
+        "name": "after-cozy-0-bear-10-cook",
+        "file": "docs/kitchen-bench/regression/after-cozy-0-bear-10-cook.png",
+        "t": 26.917,
+        "actor": "bear",
+        "verb": "cook",
+        "camera": {
+          "pos": [
+            -10.375,
+            2.866,
+            -5.725
+          ],
+          "quat": [
+            -0.12573823015593966,
+            -0.05878070504282987,
+            -0.007463433903694223,
+            0.9902923928549008
+          ]
+        },
+        "contacts": {
+          "mode": "prop",
+          "prop": "frying_pan",
+          "contactPoint": [
+            -11.93988709817528,
+            1.450764381971227,
+            -13.300335691676775
+          ],
+          "gripPoint": [
+            -11.953085438986053,
+            1.450764381971227,
+            -13.297497769929668
+          ],
+          "radius": 0.013
+        },
+        "physicsReason": "outside supported standing yard motion"
+      },
+      {
+        "name": "after-cozy-1-masha-6-take",
+        "file": "docs/kitchen-bench/regression/after-cozy-1-masha-6-take.png",
+        "t": 46.891000000000005,
+        "actor": "masha",
+        "verb": "take",
+        "camera": {
+          "pos": [
+            -9.637923611111116,
+            2.368055555555556,
+            -11.730496527777781
+          ],
+          "quat": [
+            -0.17523429532876061,
+            -0.4440850628524678,
+            -0.08902133185496477,
+            0.8741605122440161
+          ]
+        },
+        "contacts": {
+          "mode": "prop",
+          "prop": "pancakes",
+          "contactPoint": [
+            -7.452369972690551,
+            0.5726476649021401,
+            -13.817361560523839
+          ],
+          "gripPoint": [
+            -7.452369972690551,
+            0.5731476649021401,
+            -13.817361560523839
+          ],
+          "radius": 0
+        },
+        "physicsReason": "outside supported standing yard motion"
+      },
+      {
+        "name": "after-cozy-1-bear-2-take",
+        "file": "docs/kitchen-bench/regression/after-cozy-1-bear-2-take.png",
+        "t": 36.099,
+        "actor": "bear",
+        "verb": "take",
+        "release": {
+          "item": "frying_pan",
+          "at": "house_kitchen",
+          "jump": 0.00002503848179934757,
+          "beforeOwner": "bear",
+          "afterOwner": null,
+          "beforePosition": [
+            -11.470004772300491,
+            1.200004070092516,
+            -10.149975759846004
+          ],
+          "afterPosition": [
+            -11.47,
+            1.2,
+            -10.15
+          ],
+          "rootBefore": [
+            -11,
+            0,
+            -9.45
+          ],
+          "rootAfter": [
+            -11,
+            0,
+            -9.45
+          ]
+        },
+        "camera": {
+          "pos": [
+            -14.50970833333334,
+            2.032,
+            -7.810361111111121
+          ],
+          "quat": [
+            -0.07519867933680582,
+            -0.5348623025820265,
+            -0.047869317231555464,
+            0.8402237823166147
+          ]
+        },
+        "contacts": {
+          "mode": "putDown",
+          "prop": "frying_pan",
+          "strength": 1,
+          "reachError": 0.000023978745306824425,
+          "releaseGap": 0.00002512354682990179,
+          "contactPoint": [
+            -11.216504819935697,
+            1.2300040656137223,
+            -10.149975680633021
+          ],
+          "targetPoint": [
+            -11.2165,
+            1.23,
+            -10.15
+          ],
+          "radius": 0.013
+        },
+        "physicsReason": "outside supported standing yard motion"
+      },
+      {
+        "name": "after-cozy-1-bear-4-take",
+        "file": "docs/kitchen-bench/regression/after-cozy-1-bear-4-take.png",
+        "t": 41.372,
+        "actor": "bear",
+        "verb": "take",
+        "camera": {
+          "pos": [
+            -12.383348320787928,
+            2.94085650845737,
+            -7.772866500143004
+          ],
+          "quat": [
+            -0.18036869742345113,
+            -0.2253534158593402,
+            -0.04249559720962836,
+            0.9564920779431955
+          ]
+        },
+        "contacts": {
+          "mode": "pickup",
+          "prop": "pancakes",
+          "strength": 1,
+          "reachError": 0.000006895765506166832,
+          "attachmentError": 0.000008973959036719736,
+          "targetError": 0.000008973959036719736,
+          "contactPoint": [
+            -11.296089570836914,
+            1.215503943839554,
+            -10.801142764632445
+          ],
+          "targetPoint": [
+            -11.29609345667278,
+            1.2154999999999998,
+            -10.801135702171827
+          ],
+          "withdrawal": 0,
+          "surfaceGrip": true,
+          "releaseGap": 0.000008973959036719736
+        },
+        "physicsReason": "outside supported standing yard motion"
+      },
+      {
+        "name": "after-fishing-0-masha-4-take",
+        "file": "docs/kitchen-bench/regression/after-fishing-0-masha-4-take.png",
+        "t": 5.679,
+        "actor": "masha",
+        "verb": "take",
+        "camera": {
+          "pos": [
+            -2.487,
+            1.65,
+            0.9019999999999998
+          ],
+          "quat": [
+            -0.11400206563255229,
+            -0.7306731148658097,
+            -0.12597086457905632,
+            0.6612500809232553
+          ]
+        },
+        "contacts": {
+          "mode": "pickup",
+          "prop": "ball",
+          "strength": 1,
+          "reachError": 0.0000046370036333682855,
+          "attachmentError": 0.000005552255099573592,
+          "targetError": 0.000005552255099573592,
+          "contactPoint": [
+            0.39999708666915657,
+            0.2855022015511511,
+            0.9999958175111935
+          ],
+          "targetPoint": [
+            0.4,
+            0.28550000000000003,
+            1
+          ],
+          "withdrawal": 4.037174635000569e-16,
+          "surfaceGrip": true,
+          "releaseError": 0.000005552255099573592
+        },
+        "physicsReason": "paired choreography"
+      },
+      {
+        "name": "after-fishing-0-bear-6-take",
+        "file": "docs/kitchen-bench/regression/after-fishing-0-bear-6-take.png",
+        "t": 8.964,
+        "actor": "bear",
+        "verb": "take",
+        "camera": {
+          "pos": [
+            -2.062,
+            2.4,
+            11.74
+          ],
+          "quat": [
+            -0.1498642305128518,
+            0.3033762735320346,
+            0.04837925411064039,
+            0.9397675227641702
+          ]
+        },
+        "contacts": {
+          "mode": "prop",
+          "prop": "fishing_rod",
+          "contactPoint": [
+            -5.600523859951697,
+            0.7420995984711324,
+            8.920446251651208
+          ],
+          "gripPoint": [
+            -5.609970952117673,
+            0.7299580313719064,
+            8.922339607925803
+          ],
+          "radius": 0.015
+        },
+        "physicsReason": "paired choreography"
+      },
+      {
+        "name": "after-fishing-2-bear-1-fish",
+        "file": "docs/kitchen-bench/regression/after-fishing-2-bear-1-fish.png",
+        "t": 22.264000000000003,
+        "actor": "bear",
+        "verb": "fish",
+        "camera": {
+          "pos": [
+            -10.3955,
+            1.408,
+            11.789
+          ],
+          "quat": [
+            -0.0676394326078594,
+            -0.535133547602142,
+            -0.04304172373279664,
+            0.8409544597689832
+          ]
+        },
+        "contacts": {
+          "mode": "prop",
+          "primaryReachError": 0.00002072355961921324,
+          "strength": 1,
+          "prop": "fishing_rod",
+          "contactPoint": [
+            -5.657561298432004,
+            0.8889135846092767,
+            9.41032667861686
+          ],
+          "gripPoint": [
+            -5.654515429210895,
+            0.8889723435968437,
+            9.425524350414516
+          ],
+          "radius": 0.015,
+          "secondaryReachError": 0.000016438405912728106,
+          "secondaryContact": [
+            -5.820637860035034,
+            1.0257815047015333,
+            9.473606318418765
+          ]
+        },
+        "physicsReason": "paired choreography"
+      },
+      {
+        "name": "after-fishing-2-bear-6-take",
+        "file": "docs/kitchen-bench/regression/after-fishing-2-bear-6-take.png",
+        "t": 30.160000000000004,
+        "actor": "bear",
+        "verb": "take",
+        "release": {
+          "item": "fish",
+          "at": "pier",
+          "jump": 0.00001202842443276422,
+          "beforeOwner": "bear",
+          "afterOwner": null,
+          "beforePosition": [
+            -5.350005044702665,
+            0.2800063228967886,
+            9.249991097475327
+          ],
+          "afterPosition": [
+            -5.35,
+            0.28,
+            9.25
+          ],
+          "rootBefore": [
+            -5.5,
+            0.28,
+            9.5
+          ],
+          "rootAfter": [
+            -5.5,
+            0.28,
+            9.5
+          ]
+        },
+        "camera": {
+          "pos": [
+            -8.64145846215315,
+            1.433,
+            8.339237606609945
+          ],
+          "quat": [
+            -0.012790563840859274,
+            -0.820341480910615,
+            -0.018361864052547864,
+            0.5714359965232572
+          ]
+        },
+        "contacts": {
+          "mode": "putDown",
+          "prop": "fish",
+          "strength": 1,
+          "reachError": 0.000008112755593328219,
+          "releaseGap": 0.000012083378241543502,
+          "contactPoint": [
+            -5.463443771034349,
+            0.050006393179620585,
+            9.296702151529127
+          ],
+          "targetPoint": [
+            -5.463438656860735,
+            0.05,
+            9.296711038627208
+          ],
+          "radius": 0.025
+        },
+        "physicsReason": "paired choreography"
+      },
+      {
+        "name": "after-fishing-2-bear-9-hug",
+        "file": "docs/kitchen-bench/regression/after-fishing-2-bear-9-hug.png",
+        "t": 32.510000000000005,
+        "actor": "bear",
+        "verb": "hug",
+        "camera": {
+          "pos": [
+            -9.349530612244898,
+            1.293,
+            8.665514739229025
+          ],
+          "quat": [
+            -0.048751858738087225,
+            -0.7392420712084953,
+            -0.053829363796386476,
+            0.6695123718186482
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "physicsReason": "paired choreography"
+      },
+      {
+        "name": "after-childCooking-0-masha-2-open",
+        "file": "docs/kitchen-bench/regression/after-childCooking-0-masha-2-open.png",
+        "t": 7.013,
+        "actor": "masha",
+        "verb": "open",
+        "camera": {
+          "pos": [
+            -1,
+            3.5,
+            3.7
+          ],
+          "quat": [
+            -0.09492866485221568,
+            0.29130874794197553,
+            0.02906422245250113,
+            0.9514636267010346
+          ]
+        },
+        "contacts": {
+          "mode": "free"
+        },
+        "physicsReason": "outside supported standing yard motion"
+      },
+      {
+        "name": "after-childCooking-0-masha-8-cook",
+        "file": "docs/kitchen-bench/regression/after-childCooking-0-masha-8-cook.png",
+        "t": 18.053,
+        "actor": "masha",
+        "verb": "cook",
+        "camera": {
+          "pos": [
+            -13.66,
+            2.723,
+            -8.254
+          ],
+          "quat": [
+            -0.20390604600283482,
+            -0.448808251129305,
+            -0.10597181873797296,
+            0.8635759675645859
+          ]
+        },
+        "contacts": {
+          "mode": "prop",
+          "prop": "frying_pan",
+          "contactPoint": [
+            -11.18065726827037,
+            0.47611909948030906,
+            -10.229544966908792
+          ],
+          "gripPoint": [
+            -11.194157267990361,
+            0.47611909948030906,
+            -10.229547716497041
+          ],
+          "radius": 0.013
+        },
+        "physicsReason": "outside supported standing yard motion"
+      },
+      {
+        "name": "after-childCooking-1-masha-1-take",
+        "file": "docs/kitchen-bench/regression/after-childCooking-1-masha-1-take.png",
+        "t": 21.753,
+        "actor": "masha",
+        "verb": "take",
+        "release": {
+          "item": "frying_pan",
+          "at": "house_kitchen",
+          "jump": 0.000016506336266160463,
+          "beforeOwner": "masha",
+          "afterOwner": null,
+          "beforePosition": [
+            -11.469988482419522,
+            1.1999928776547373,
+            -10.149990561955986
+          ],
+          "afterPosition": [
+            -11.47,
+            1.2,
+            -10.15
+          ],
+          "rootBefore": [
+            -11.22,
+            0.8,
+            -10.15
+          ],
+          "rootAfter": [
+            -11.22,
+            0.8,
+            -10.15
+          ]
+        },
+        "camera": {
+          "pos": [
+            -13.807,
+            2.723,
+            -8.5
+          ],
+          "quat": [
+            -0.1995493428798658,
+            -0.48586164635873313,
+            -0.11498996359820302,
+            0.8431463862375733
+          ]
+        },
+        "contacts": {
+          "mode": "putDown",
+          "prop": "frying_pan",
+          "strength": 1,
+          "reachError": 0.000015555361653556243,
+          "releaseError": 0.000016506443393891563
+        },
+        "physicsReason": "outside supported standing yard motion"
+      },
+      {
+        "name": "after-childCooking-1-masha-3-take",
+        "file": "docs/kitchen-bench/regression/after-childCooking-1-masha-3-take.png",
+        "t": 23.552999999999997,
+        "actor": "masha",
+        "verb": "take",
+        "camera": {
+          "pos": [
+            -14.435,
+            2.723,
+            -10.017423611111111
+          ],
+          "quat": [
+            -0.1779294279192838,
+            -0.6228216381308059,
+            -0.14829342616468708,
+            0.7472906967925631
+          ]
+        },
+        "contacts": {
+          "mode": "pickup",
+          "prop": "pancakes",
+          "strength": 1,
+          "reachError": 0.00003140569559643293,
+          "attachmentError": 0.000029438420262466414,
+          "targetError": 0.000029438420262466414,
+          "contactPoint": [
+            -11.254992830777628,
+            0.4154866458428874,
+            -10.6999747633337
+          ],
+          "targetPoint": [
+            -11.255,
+            0.4154999999999999,
+            -10.7
+          ],
+          "withdrawal": 0,
+          "surfaceGrip": true,
+          "releaseError": 0.000029438420262466414
+        },
+        "physicsReason": "outside supported standing yard motion"
+      },
+      {
+        "name": "after-kitchen-route-7-0.500",
+        "file": "docs/kitchen-bench/regression/after-kitchen-route-7-0.500.png",
+        "t": 49.7955,
+        "actor": "bear",
+        "verb": "walk_to",
+        "camera": {
+          "pos": [
+            -8.7,
+            3.5,
+            -8.9
+          ],
+          "quat": [
+            -0.18961967498127474,
+            0.3719486164504878,
+            0.07790359853603379,
+            0.9053339908098558
+          ]
+        },
+        "contacts": {
+          "mode": "prop",
+          "carryTarget": [
+            -12.279698388849654,
+            1.5899999999999999,
+            -12.52
+          ],
+          "reachError": 8.096661354795245e-9,
+          "prop": "carrot_2",
+          "contactPoint": [
+            -12.279696630957723,
+            1.5900169351301991,
+            -12.519974752136523
+          ],
+          "gripPoint": [
+            -12.305196630957722,
+            1.5900169351301991,
+            -12.519974752136523
+          ],
+          "radius": 0.025
+        },
+        "physicsReason": "outside supported standing yard motion"
+      }
+    ]
+  },
+  "comparisonNote": "Exact visible actor/skeleton/hand/foot poses, object states and visible props. Stale contact diagnostic objects and transforms of hidden props are excluded. Kitchen routes/furniture intentionally changed; unchanged yard/door/fishing must match exactly."
+}

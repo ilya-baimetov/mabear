@@ -11,13 +11,14 @@ import { PROPS } from "../shared/bible/props";
 import { FISHING_WATER_TARGET, isInsideHouse, isInteriorMark, MARKS, OBSTACLES, sceneLocationAt, SEAT_HEIGHT } from "../shared/bible/set";
 import { GRAMMAR, LOCOMOTION_VERBS, SPEEDS, VERB_HOME_MARK, VERB_IMPLIED_PROP, isWolf } from "../shared/grammar";
 import { ACTOR_IDS, CARROT_IDS, isCarrot } from "../shared/schema";
-import {propPlacementAtMark,propPlacementInState,propGripWorld} from '../shared/propPlacement';
+import {propPlacementAtMark,propPlacementInState,propGripWorld,BENCH_BALL_FALLBACK} from '../shared/propPlacement';
 import {PROP_CONTACTS} from '../shared/propContacts';
+import {KITCHEN_CONTAINERS,isKitchenContainer,kitchenContainerApproach} from '../shared/kitchenContainers';
 import {CHARACTER_REACH} from '../shared/characterReach';
 import {armchairMountMotion,avoidHammock,hammockExitPoint,hammockTiming,hammockTravelProgress,hugSpacing,interactionRadius} from '../shared/physicalInteractions';
 import {carryLiftHeadHeight} from '../shared/carrySupport';
 import {COOKING_STATION,cookingSupportHeightAt} from '../shared/cookingStation';
-import {HOUSE_COOKING_HELPER,HOUSE_CHILD_COOK_POSITION,HOUSE_STOVE,housePickupPosition,houseLocal,houseWorld} from '../shared/houseLayout';
+import {HOUSE_COOKING_HELPER,HOUSE_CHILD_COOK_POSITION,HOUSE_STOVE,HOUSE_PREP_TABLE,HOUSE_KITCHEN_WORK_SHIFT,houseWorkPropZ,housePickupPosition,houseLocal,houseWorld} from '../shared/houseLayout';
 import {HOUSE_DOOR,INTERIOR_THRESHOLD,INTERIOR_APPROACH,KITCHEN_CUPBOARD,CUPBOARD_JAR_POSITION} from '../shared/interactiveObjects';
 import type {
   ActorClip, ActorId, Beat, BeatScript, Emotion, FxCue, FxId, LightingCue, MarkId, Posture, PropId, SfxId,
@@ -85,6 +86,7 @@ interface BeatTiming {
  *  (behind the table facing the camera, behind the tree/bush when hiding, on the shore side of the pond). */
 export function standPos(mark: MarkId): Vec2 {
   const m = MARKS[mark];
+  if(isKitchenContainer(mark))return [...KITCHEN_CONTAINERS[mark].approaches.bear.position];
   if (mark === "door" || mark === "pier" || isInteriorMark(mark)) return v2(m.pos);
   if (mark === "pond_shore") {
     const c = OBSTACLES.circles.find((o) => o.id === "pond")!;
@@ -124,6 +126,7 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
   const preparationCameras:CameraBeatInfo[]=[];
   const objectCues:NonNullable<Segment['objectCues']>=[];
   let cupboardFree=0;
+  let kitchenContainerFree=0;
   let lastCupboardShot:CameraCue|undefined;
   let lastCarrotShot:{cue:CameraCue;actor:ActorId;end:number}|undefined;
   const doorShots:CameraCue[]=[];
@@ -241,6 +244,7 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
   }
   /** Where to stand to reach a target. */
   function approachPoint(a: ActorId, id: string, t: number, gap = 0.9): Vec2 | null {
+    if(isKitchenContainer(id)){const contact=kitchenContainerApproach(id,a);return contact?[...contact.position]:null;}
     if(id==='cupboard'||isProp(id)&&ws.props[id]?.at==='cupboard')return [...KITCHEN_CUPBOARD.approach];
     if(id==='house_living'&&(a==='masha'||a==='bear')&&ws.actors[a].posture!=='sit')return armchairApproach(a);
     if (isMark(id)) return spread(a, standPos(id), t);
@@ -272,7 +276,7 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
           const surface=propPlacementAtMark(id,at).pos,target:Vec2=[surface[0],surface[2]],me=posAt(a,t);
           if(a==='masha'&&at==='house_kitchen')return housePickupPosition(id);
           if(at==='house_kitchen'){
-            const candidate=houseWorld([-2.90,.75]),path=planPath(me,candidate);
+            const candidate=houseWorld([-2.65,houseWorkPropZ(id)-.73]),path=planPath(me,candidate);
             if(dist(path[path.length-1],candidate)<.03)return candidate;
           }
           const angle=Math.atan2(me[0]-target[0],me[1]-target[1]);
@@ -289,12 +293,14 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
     return null;
   }
   function carrotApproach(a:ActorId,item:PropId,mark:MarkId,planted=false):Vec2{
-    const placement=propPlacementInState(item,{at:mark,planted}),grip=propGripWorld(placement.pos,placement.rot,PROP_CONTACTS[item].point),reach=CHARACTER_REACH[a];
+    if(isKitchenContainer(mark)){const contact=kitchenContainerApproach(mark,a);if(contact)return [...contact.position];}
+    const placement=propPlacementInState(item,{...(ws.props[item]?.at===mark?ws.props[item]:{}),at:mark,planted}),grip=propGripWorld(placement.pos,placement.rot,item==='ball'?[0,.15,0]:PROP_CONTACTS[item].point),reach=CHARACTER_REACH[a];
+    if(item==='ball')grip[1]-=.15;
     const me=ws.actors[a].pos;
     const yaw=isCarrot(item)||item==='ball'?Math.PI:yawTo(me,[grip[0],grip[2]],ws.actors[a].facing);
     const lead=reach.shoulder[1]<.9?.15:reach.length*.35,c=Math.cos(yaw),s=Math.sin(yaw);
     let dest:Vec2=[grip[0]-c*reach.shoulder[0]-s*(reach.shoulder[2]+lead),grip[2]+s*reach.shoulder[0]-c*(reach.shoulder[2]+lead)];
-    if(mark==='bench')dest[1]=yaw===0?Math.min(dest[1],2.73):Math.max(dest[1],3.24);
+    if(mark==='bench')dest[1]=yaw===0?Math.min(dest[1],2.73):Math.max(dest[1],item==='ball'?3.46:3.24);
     if(mark==='garden'&&planted)dest[1]=Math.max(dest[1],reach.shoulder[1]<.45?-5.35:-5.29); // feet stay outside the raised bed's front board
     return dest;
   }
@@ -346,6 +352,12 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
     // A carried carrot approaches the bench's front, never its occupied seat centre.
     if(carrotBenchContext&&target==='bench'&&Math.abs(dest[1]-3)<.12)dest=[dest[0],3.55];
     let path = path0 ?? planPath(from, dest);
+    if(!direct&&a==='bear'&&isCarrot(st.holding)&&st.mark==='kitchen_bowl'&&target==='kitchen_pot'){
+      // The adult carries close to his chest through the middle of the aisle.
+      // Generic corner nodes clear a root point but clip Bear's broad paws.
+      const aisleZ=(HOUSE_PREP_TABLE.position[1]-HOUSE_PREP_TABLE.depth/2+houseWorld([0,.17])[1])/2-.05;
+      path=[from,[-10.65,aisleZ],[-13.25,aisleZ],[-13.25,-13.15],dest];
+    }
     if(carrotBenchContext&&!direct&&!isInsideHouse(...from)&&!isInsideHouse(...dest)){
       const front=(p:Vec2)=>p[0]>.9&&p[0]<3.1&&p[1]>=3.19&&p[1]<=3.65;
       const corner:Vec2=[.75,3.55],fromFront=front(from),toFront=front(dest);
@@ -368,10 +380,16 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
     // the yard through its cloth and end branches, especially with a rider.
     path=avoidHammock(path,a,a==='bear'&&ws.actors.masha.posture==='carried'?1.2:0);
     const len = pathLength(path);
+    const kitchenTravel=isInsideHouse(...from)&&isInsideHouse(...dest)&&(isKitchenContainer(target)||isProp(target)&&isKitchenContainer(ws.props[target]?.at));
     const fromScene=sceneLocationAt(...from),toScene=sceneLocationAt(...dest);
     const sceneCut=fromScene!==toScene;
     const dur = sceneCut ? .9 : len < 0.3 ? 0.6 : Math.min(MAX_LOCO_S, Math.max(len / speed(a, verb), 0.8));
     const yaw = pathEndYaw(path, st.facing);
+    if(kitchenTravel){
+      const xs=path.map(p=>p[0]),zs=path.map(p=>p[1]),midX=(Math.min(...xs)+Math.max(...xs))/2,midZ=(Math.min(...zs)+Math.max(...zs))/2;
+      const key:CamKey={pos:[-8.7,3.5,-8.9],look:[midX,a==='masha'?1.15:1.35,midZ],fov:midX>-10.5?70:60,location:'house'};
+      doorShots.push({start:t,dur,shot:'wide',from:key,to:key,overridden:true});
+    }
     addClip(a, t, dur, verb, emotion, {
       from, to: v2(path[path.length - 1]), path: path.map((p) => [r3(p[0]), r3(p[1])] as Vec2),
       facing: r3(yawTo(from, path[1] ?? dest, st.facing)), posture: "stand", item: st.holding ?? undefined, target: target ?? undefined,
@@ -412,13 +430,26 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
     return t+dur;
   }
   function objectInteractionShot(a:ActorId,item:PropId,start:number,end:number,mark:MarkId,pickup=false):void{
+    if(isKitchenContainer(mark)){
+      // The settled turn belongs to the contact shot. Leaving it to the generic
+      // planner inserted a brief exterior-wall view between two clear shots.
+      const turn=tracks[a].clips.filter(c=>c.verb==='look_at'&&!c.params.ambient&&Math.abs(c.start+c.dur-start)<.002).at(-1);
+      if(turn)start=turn.start;
+      // Actor clips are millisecond-rounded; authored camera intervals retain
+      // full precision. Join the preceding safe shot instead of leaving a seam.
+      const preceding=doorShots.map(c=>c.start+c.dur).filter(t=>Math.abs(t-start)<.002);
+      if(preceding.length)start=Math.min(start,...preceding);
+    }
     const p=ws.actors[a].pos,large=CHARACTER_REACH[a].shoulder[1]>1;
-    const key:CamKey=mark==='garden'
+    const key:CamKey=isKitchenContainer(mark)
+      ?mark==='kitchen_bowl'?{pos:a==='masha'?[-13.6,2.65,-12.2]:[-13.5,2.8,-9.5],look:a==='masha'?[-11.35,1.4,-11.42]:[-11.35,1.5,-11.2],fov:a==='masha'?48:46,location:'house'}:{pos:[-13,2.85,-14.78],look:[-13.6,1.6,-13.70],fov:58,location:'house'}
+      :mark==='garden'
       ?{pos:[p[0]+3.0,large?2.6:1.65,p[1]+.6],look:[p[0]+.12,large?1:.48,p[1]-.1],fov:38,location:'yard'}
       :{pos:[p[0]+3.0,large?2.6:1.65,p[1]+.65],look:[p[0],large?1.05:.65,p[1]-.12],fov:38,location:'yard'};
     // The first ground ball lies west of the picnic table. View its pickup
     // from that open side so the samovar cannot hide the hand and ball.
     if(item==='ball'&&pickup&&mark==='clearing')key.pos=[p[0]-2.8,1.65,p[1]-.4];
+    if(item==='ball'&&mark==='bench'){key.pos=[p[0]+2.65,1.5,p[1]-1.1];key.look=[p[0],.58,3.13];}
     if(item==='ball')key.followActor=a;
     const cue:CameraCue={start,dur:end-start,shot:'medium',from:key,to:key,overridden:true};
     doorShots.push(cue);objectInteractionShots.push(cue);lastCarrotShot={cue,actor:a,end};
@@ -448,13 +479,19 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
     const threshold=entering?HOUSE_DOOR.exterior.threshold:INTERIOR_THRESHOLD;
     const arrival=entering?INTERIOR_THRESHOLD:HOUSE_DOOR.exterior.threshold;
     const exit=entering?INTERIOR_APPROACH:HOUSE_DOOR.exterior.approach;
+    const followCarrot=entering&&isCarrot(st.holding),walkFrom=v2(st.pos),walkStart=t;
     if(dist(st.pos,approach)>.05)t=locomote(a,t,'walk_to',approach,emotion,null,undefined,undefined,true);
+    let passageStart=start;
+    if(followCarrot&&t>walkStart){
+      const key=(p:Vec2):CamKey=>({pos:[p[0]+2.8,3,p[1]+3.8],look:[p[0],a==='masha'?.65:1.25,p[1]],fov:60,location:'yard'});
+      doorShots.push({start:walkStart,dur:t-walkStart,shot:'tracking',from:key(walkFrom),to:key(v2(st.pos)),overridden:true});passageStart=t;
+    }
     if((ws.objects?.house_door??0)<.999)t=doorAction(a,t,1,emotion);
     t=locomote(a,t,'walk_to',threshold,emotion,null,undefined,[v2(st.pos),threshold],true);
     const cut=t+.05,yaw=entering?HOUSE_DOOR.interior.yaw:0;
     addClip(a,t,.1,'walk_to',emotion,{from:threshold,to:arrival,path:[threshold,arrival],facing:st.facing,arrivalYaw:yaw,posture:'stand',item:st.holding??undefined,sceneCut:true,portal:true});
     st.pos=v2(arrival);st.facing=yaw;st.mark=null;record(a,t+.1);t+=.1;
-    doorShot(start,cut,!entering);
+    doorShot(passageStart,cut,!entering);
     t=locomote(a,t,'walk_to',exit,emotion,null,yaw,[arrival,exit],true);
     doorFree=t;
     doorShot(cut,t,entering);
@@ -509,7 +546,7 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
     };
     if(mark!=='house_kitchen')return finish(putAsideForHug(a,t,emotion));
     const placement=propPlacementAtMark(item,mark),grip=propGripWorld(placement.pos,placement.rot,PROP_CONTACTS[item].point);
-    const destination=a==='masha'?housePickupPosition(item):houseWorld(item==='frying_pan'?[-3,3.00]:[-2.90,.75]);
+    const destination=a==='masha'?housePickupPosition(item):houseWorld(item==='frying_pan'?[-3,3.00+HOUSE_KITCHEN_WORK_SHIFT]:[-2.90,.75]);
     if(dist(st.pos,destination)>.04){
       const start=t;t=locomote(a,t,'walk_to',destination,emotion,mark);
       events.push({actor:a,verb:'walk_to',start,dur:t-start,emote:null,hasLine:false,sfx:null,sfxAt:start,pos:v2(st.pos),main:false});
@@ -630,14 +667,27 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
       repairs.push(`The ${b.item} has already been eaten; it does not regrow.`);b.verb='look_at';b.target='garden';b.item=null;
     }
     if(b.verb==='drop'&&b.item&&isCarrot(b.item)){b.verb='put_down';b.target=st.mark??nearestMark(st.pos);repairs.push('Carrot drop uses a gentle authored placement at the current place; carrots are not simulated rigid bodies.');}
-    if(b.verb==='put_down'&&b.target==='bench'&&Object.entries(ws.props).some(([id,p])=>id!==b.item&&isCarrot(id)&&p.at==='bench')){
+    if(b.verb==='put_down'&&isCarrot(b.item)&&b.target==='bench'&&Object.entries(ws.props).some(([id,p])=>id!==b.item&&isCarrot(id)&&p.at==='bench')){
       repairs.push('The bench carrot slot is occupied. The new carrot stays held; pick up the resting carrot or choose the garden path.');b.verb='shrug';b.target=null;b.item=null;
     }
-    if(b.verb==='put_down'&&(!b.item||!isCarrot(b.item)||st.holding!==b.item)){
-      repairs.push('Put down needs the specific garden carrot in this actor’s hand.');b.verb='shrug';b.target=null;b.item=null;
+    if(b.verb==='put_down'&&(!b.item||!(isCarrot(b.item)||b.item==='ball'&&a==='masha'&&b.target==='bench')||st.holding!==b.item)){
+      repairs.push('Put down needs the specific carrot (or Masha’s bench ball) in this actor’s hand.');b.verb='shrug';b.target=null;b.item=null;
     }
-    if(b.verb==='put_down'&&!['garden','bench','clearing','table'].includes(b.target??'')){
-      repairs.push('This carrot can be placed on the garden path, bench, table or clearing.');b.verb='shrug';b.target=null;b.item=null;
+    if(b.verb==='put_down'&&!['garden','bench','clearing','table','kitchen_bowl','kitchen_pot'].includes(b.target??'')){
+      repairs.push('This carrot can be placed on the garden path, bench, table, clearing, kitchen bowl or pot.');b.verb='shrug';b.target=null;b.item=null;
+    }
+    const container=b.verb==='put_down'&&isKitchenContainer(b.target)?b.target:b.verb==='take'&&b.item&&isKitchenContainer(ws.props[b.item]?.at)?ws.props[b.item].at:null;
+    if(b.item&&isCarrot(b.item)&&ws.props[b.item]?.at==='kitchen_pot'&&['take','eat','give','throw','drop'].includes(b.verb)){
+      repairs.push('Bear can put a carrot into the pot, but cannot take it out yet. The carrot stays in the pot.');b.verb='point_at';b.target='kitchen_pot';b.item=null;
+    }
+    if(isKitchenContainer(container)&&!kitchenContainerApproach(container,a)){
+      repairs.push(`${a} cannot safely reach ${container}; the object stays where it is.`);b.verb='point_at';b.target=container;b.item=null;
+    }
+    if(b.verb==='put_down'&&isKitchenContainer(b.target)&&Object.entries(ws.props).some(([id,p])=>id!==b.item&&p.at===b.target)){
+      repairs.push('This kitchen container already holds a carrot. The new carrot stays held.');b.verb='shrug';b.target=null;b.item=null;
+    }
+    if(b.verb==='nudge'&&(a!=='masha'||b.item!=='ball'||b.target!=='bench'||ws.props.ball?.at!=='bench'||st.holding)){
+      repairs.push('Nudge needs Masha’s free hand and the ball resting on the bench.');b.verb='look_at';b.target='bench';b.item=null;
     }
     if(b.item&&isCarrot(b.item)&&st.holding&&st.holding!==b.item&&['eat','give','throw','drop'].includes(b.verb)){
       repairs.push('The actor needs a free hand before acquiring this carrot. The held item stays in the hand.');b.verb='shrug';b.target=null;b.item=null;
@@ -692,7 +742,7 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
     const anchor = prevTiming ? (b.with_previous ? prevTiming.start : prevTiming.end) : 0;
     // The doorway shot has exclusive staging until its traveller clears the
     // steps; do not perform another actor's cooking/hug unseen behind that cut.
-    let t = Math.max(anchor + b.delay_s, tracks[a].free, doorFree, cupboardFree);
+    let t = Math.max(anchor + b.delay_s, tracks[a].free, doorFree, cupboardFree, isKitchenContainer(container)?kitchenContainerFree:0);
     const interacts = (b.verb === "hug" || b.verb === "carry" || b.verb === "give") && isActor(b.target);
     if (interacts && isActor(b.target)) t = Math.max(t, tracks[b.target].free);
     const beatStart = t;
@@ -738,7 +788,7 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
       ? "house_kitchen" : VERB_HOME_MARK[b.verb] as MarkId | undefined;
     const cookingStation=b.verb==='cook'&&a==='masha'&&(home==='table'||home==='house_kitchen');
     const cookingSupport=home==='house_kitchen'?HOUSE_COOKING_HELPER:COOKING_STATION;
-    if(b.verb==='put_down'&&b.item&&isMark(b.target)){walkDest=carrotApproach(a,b.item,b.target);walkTarget=b.target;}
+    if((b.verb==='put_down'||b.verb==='nudge')&&b.item&&isMark(b.target)){walkDest=carrotApproach(a,b.item,b.target);if(b.verb==='nudge')walkDest[0]+=.075;walkTarget=b.target;}
     else if (home) { walkDest = cookingStation?(home==='house_kitchen'?[...HOUSE_CHILD_COOK_POSITION]:[...cookingSupport.position]):spread(a, standPos(home), t); walkTarget = home; }
     else if (b.verb === "take" && b.item && ws.props[b.item]?.at !== "hidden" && ws.props[b.item]?.at !== a) { walkDest = approachPoint(a, b.item, t); walkTarget = b.item; }
     else if (interacts && b.target) {
@@ -768,7 +818,7 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
       }
     }
     let walkInfo: BeatTiming["walk"] = null;
-    if (walkDest && dist(walkDest, st.pos) > (b.verb==='hug'?.004:b.item&&(isCarrot(b.item)||b.item==='ball')&&['take','put_down'].includes(b.verb)?.04:cookingStation||b.verb==='take'&&isInsideHouse(...walkDest)||b.verb==='sit'&&b.target==='house_living' ? .04 : .8) && st.posture !== "carried") {
+    if (walkDest && dist(walkDest, st.pos) > (b.verb==='hug'?.004:b.item&&(isCarrot(b.item)||b.item==='ball')&&['take','put_down','nudge'].includes(b.verb)?.04:cookingStation||b.verb==='take'&&isInsideHouse(...walkDest)||b.verb==='sit'&&b.target==='house_living' ? .04 : .8) && st.posture !== "carried") {
       const d = dist(walkDest, st.pos);
       const verb: Verb = a === "masha" ? (b.emotion === "mischievous" && d < 6 ? "tiptoe_to" : d > 3 ? "run_to" : "walk_to")
         : isWolf(a) ? (b.emotion === "mischievous" && d < 8 ? "tiptoe_to" : b.emotion === "scared" || d > 5 ? "run_to" : "walk_to")
@@ -781,15 +831,18 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
       walkInfo = { start: s0, dur: t - s0, verb, from: wFrom, to: v2(st.pos) };
     }
 
+    if((b.verb==='take'||b.verb==='put_down')&&isKitchenContainer(container)&&walkDest&&dist(st.pos,walkDest)>.06){
+      repairs.push('The kitchen container approach is blocked. The prop stays in its previous owner or container.');b.verb='shrug';b.target=null;b.item=null;
+    }
     if(b.verb==='sleep'&&b.target==='hammock'&&st.posture==='stand')t=facePartner(a,t,[st.pos[0]+Math.sin(MARKS.hammock.facing),st.pos[1]+Math.cos(MARKS.hammock.facing)],b.emotion);
     if(b.verb==='sit'&&b.target==='house_living'&&st.posture!=='sit'&&(a==='masha'||a==='bear'))t=facePartner(a,t,[st.pos[0],st.pos[1]+1],b.emotion);
     if(b.verb==='hug'&&isActor(b.target)&&['stand','sit'].includes(ws.actors[b.target].posture)){
       const start=t;t=Math.max(facePartner(a,start,ws.actors[b.target].pos,b.emotion),facePartner(b.target,start,st.pos,b.emotion));
     }
 
-    if(b.item&&(isCarrot(b.item)||b.item==='ball')&&['take','put_down'].includes(b.verb)){
-      const mark=b.verb==='put_down'?b.target:ws.props[b.item]?.at;
-      if(isMark(mark)){const placement=propPlacementInState(b.item,{at:mark,planted:b.verb==='take'&&ws.props[b.item].planted}),grip=propGripWorld(placement.pos,placement.rot,PROP_CONTACTS[b.item].point);const yaw=isCarrot(b.item)||b.item==='ball'?Math.PI:yawTo(st.pos,[grip[0],grip[2]],st.facing);t=facePartner(a,t,[st.pos[0]+Math.sin(yaw),st.pos[1]+Math.cos(yaw)],b.emotion);}
+    if(b.item&&(isCarrot(b.item)||b.item==='ball')&&['take','put_down','nudge'].includes(b.verb)){
+      const mark=b.verb==='put_down'||b.verb==='nudge'?b.target:ws.props[b.item]?.at;
+      if(isMark(mark)){const placement=propPlacementInState(b.item,{at:mark,planted:b.verb==='take'&&ws.props[b.item].planted}),grip=propGripWorld(placement.pos,placement.rot,PROP_CONTACTS[b.item].point);const yaw=isKitchenContainer(mark)?kitchenContainerApproach(mark,a)!.yaw:isCarrot(b.item)||b.item==='ball'?Math.PI:yawTo(st.pos,[grip[0],grip[2]],st.facing);t=facePartner(a,t,[st.pos[0]+Math.sin(yaw),st.pos[1]+Math.cos(yaw)],b.emotion);}
     }
     if(b.verb==='take'&&b.item&&ws.props[b.item]?.at==='cupboard'){
       if((ws.objects?.kitchen_cupboard??0)<.999){repairs.push('Opened the cupboard before reaching inside.');t=cupboardAction(a,t,1,b.emotion);}
@@ -915,13 +968,15 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
         case "throw":
           facing = b.target ? facingTo(b.target) : st.facing;
           break;
+        case "nudge":
+          item=b.item??undefined;mainDur=1.8;facing=st.facing;break;
         case "put_down":
           item=b.item??undefined;mainDur=2.0;break;
         case "take":
           item = b.item ?? undefined;
           if(item&&(isCarrot(item)||item==='ball')){mainDur=2.2;facing=st.facing;}
           if(b.item&&ws.props[b.item]?.at==='cupboard'){facing=-Math.PI/2;mainDur=3.0;}
-          else if(b.item&&isInteriorMark(ws.props[b.item]?.at))facing=facingTo(b.item);
+          else if(b.item&&isInteriorMark(ws.props[b.item]?.at)&&!isKitchenContainer(ws.props[b.item]?.at))facing=facingTo(b.item);
           break;
         case "cook": case "fish": case "water_plants":
           item = (VERB_IMPLIED_PROP[b.verb] as PropId | undefined) ?? item;
@@ -952,19 +1007,27 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
       const exactPickup=pickUpAt&&item&&(isCarrot(item)||item==='ball')?propPlacementInState(item,{...ws.props[item],at:pickUpAt}):null;
       const putDown=b.verb==='put_down'&&item&&isMark(b.target)?b.target:undefined;
       const exactPlacement=putDown&&item?propPlacementAtMark(item,putDown):null;
-      const contactPlacement=exactPickup??exactPlacement;
-      const contact=contactPlacement&&item?propGripWorld(contactPlacement.pos,contactPlacement.rot,PROP_CONTACTS[item].point):null;
-      addClip(a, mainStart, mainDur, b.verb, b.emotion, { ...baseParams(), facing: r3(facing), posture, item, lookAt: contact??lookAt ?? undefined,...(pickUpAt?{pickUpAt}:{}),...(exactPickup?{pickUpPosition:exactPickup.pos,pickUpRotation:exactPickup.rot}:{}),...(exactPlacement?{putDown,putDownPosition:exactPlacement.pos,putDownRotation:exactPlacement.rot}:{}),...(b.verb==='drop'?{dropAt:st.mark??nearestMark(st.pos)}:{}),...(b.verb==='fish'?{catchesFish:ws.props.fish?.at==='hidden'}:{}),...exit,...mount });
+      // Release into the pot from above its rim; a broad paw must not follow
+      // the carrot to the bottom. The evaluator supplies the short free fall.
+      if(exactPlacement&&putDown==='kitchen_pot')exactPlacement.pos[1]+=.32;
+      const nudgePlacement=b.verb==='nudge'&&item?propPlacementAtMark(item,'bench'):null;
+      const contactPlacement=exactPickup??exactPlacement??nudgePlacement;
+      const contact=contactPlacement&&item?propGripWorld(contactPlacement.pos,contactPlacement.rot,item==='ball'?[0,.15,0]:PROP_CONTACTS[item].point):null;
+      if(contact&&item==='ball'&&pickUpAt!=='bench'&&putDown!=='bench'&&!nudgePlacement)contact[1]-=.15;
+      addClip(a, mainStart, mainDur, b.verb, b.emotion, { ...baseParams(), facing: r3(facing), posture, item, lookAt: contact??lookAt ?? undefined,...(pickUpAt?{pickUpAt}:{}),...(exactPickup?{pickUpPosition:exactPickup.pos,pickUpRotation:exactPickup.rot}:{}),...(exactPlacement?{putDown,putDownPosition:exactPlacement.pos,putDownRotation:exactPlacement.rot}:{}),...(nudgePlacement?{nudgeAt:'bench' as const,nudgePosition:nudgePlacement.pos,nudgeRotation:nudgePlacement.rot}:{}),...(b.verb==='drop'?{dropAt:st.mark??nearestMark(st.pos)}:{}),...(b.verb==='fish'?{catchesFish:ws.props.fish?.at==='hidden'}:{}),...exit,...mount });
       if(exit){st.pos=v2(exit.to);st.mark=null;}
       if(mount){st.pos=v2(mount.to);st.mark=mount.target;}
       st.facing = r3(facing);
       t = mainStart + mainDur;
       if(pickUpAt==='cupboard'){cupboardFree=t;cupboardShot(mainStart,t);}
+      if(isKitchenContainer(pickUpAt)||isKitchenContainer(putDown))kitchenContainerFree=t;
       if(item&&isCarrot(item)&&(pickUpAt||putDown))objectInteractionShot(a,item,mainStart,t,(pickUpAt??putDown)!);
-      if(item==='ball'&&(pickUpAt||b.verb==='drop'))objectInteractionShot(a,item,mainStart,t,pickUpAt??st.mark??'clearing',!!pickUpAt);
+      if(item==='ball'&&(pickUpAt||putDown||nudgePlacement||b.verb==='drop'))objectInteractionShot(a,item,mainStart,t,pickUpAt??putDown??(nudgePlacement?'bench':st.mark)??'clearing',!!pickUpAt);
 
       // --- world-state effects ---
       switch (b.verb) {
+        case "nudge":
+          ws.props.ball={at:"clearing",position:[...BENCH_BALL_FALLBACK.position],rotation:[...BENCH_BALL_FALLBACK.rotation]};break;
         case "put_down":
           if(b.item&&putDown){ws.props[b.item]={at:putDown,planted:false};st.holding=null;}
           break;

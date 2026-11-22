@@ -1,0 +1,721 @@
+{
+  "testedAt": "2026-11-22T06:38:05.091Z",
+  "origin": "https://mabear-storybook.ilya-baimetov.workers.dev",
+  "baselineCommit": "0a81ce43861dd3bc1a1fce2f751940d6f31dcbad",
+  "maxRequests": 6,
+  "next": 4,
+  "results": [
+    {
+      "id": "ball-en",
+      "request": {
+        "lang": "en",
+        "paragraph": "Masha takes the ball, walks to the bench, drops it and waits. Then she walks to the clearing, returns and picks up the ball.",
+        "previous": [],
+        "worldState": {
+          "timeOfDay": "day",
+          "actors": {
+            "lady_bear": {
+              "pos": [
+                -3.5,
+                0.8
+              ],
+              "facing": 0.2,
+              "mark": "clearing",
+              "holding": null,
+              "posture": "stand"
+            },
+            "hare": {
+              "pos": [
+                4.1,
+                -4.6
+              ],
+              "facing": 0.1,
+              "mark": "garden",
+              "holding": null,
+              "posture": "stand"
+            },
+            "rosie": {
+              "pos": [
+                4,
+                -1.1
+              ],
+              "facing": -0.3,
+              "mark": "garden",
+              "holding": null,
+              "posture": "stand"
+            },
+            "squirrel": {
+              "pos": [
+                7.2,
+                1.1
+              ],
+              "facing": -0.5,
+              "mark": "swing",
+              "holding": null,
+              "posture": "stand"
+            },
+            "rival_bear": {
+              "pos": [
+                -8.6,
+                -0.5
+              ],
+              "facing": 0.3,
+              "mark": "clearing",
+              "holding": null,
+              "posture": "stand"
+            },
+            "masha": {
+              "pos": [
+                0.25,
+                0.5
+              ],
+              "facing": 0,
+              "mark": "clearing",
+              "holding": null,
+              "posture": "stand"
+            },
+            "bear": {
+              "pos": [
+                -1.65,
+                -0.25
+              ],
+              "facing": 0.12,
+              "mark": "clearing",
+              "holding": null,
+              "posture": "stand"
+            },
+            "wolf_a": {
+              "pos": [
+                12.1,
+                0.3
+              ],
+              "facing": -1.5707963267948966,
+              "mark": "van",
+              "holding": null,
+              "posture": "stand"
+            },
+            "wolf_b": {
+              "pos": [
+                12,
+                -1.9
+              ],
+              "facing": -1.5707963267948966,
+              "mark": "van",
+              "holding": null,
+              "posture": "stand"
+            }
+          },
+          "props": {
+            "jam_jar": {
+              "at": "table"
+            },
+            "honey_pot": {
+              "at": "beehive"
+            },
+            "pancakes": {
+              "at": "hidden"
+            },
+            "frying_pan": {
+              "at": "table"
+            },
+            "ball": {
+              "at": "clearing"
+            },
+            "fishing_rod": {
+              "at": "pier"
+            },
+            "fish": {
+              "at": "hidden"
+            },
+            "lollipop": {
+              "at": "hidden"
+            },
+            "flowers": {
+              "at": "garden"
+            },
+            "carrot": {
+              "at": "garden",
+              "planted": true
+            },
+            "broom": {
+              "at": "porch"
+            },
+            "book": {
+              "at": "bench"
+            },
+            "pillow": {
+              "at": "hammock"
+            },
+            "bucket": {
+              "at": "pier"
+            },
+            "watering_can": {
+              "at": "garden"
+            },
+            "flour_bag": {
+              "at": "table"
+            },
+            "cake": {
+              "at": "hidden"
+            },
+            "teapot": {
+              "at": "table"
+            },
+            "pantry_honey": {
+              "at": "cupboard"
+            },
+            "carrot_2": {
+              "at": "garden",
+              "planted": true
+            },
+            "carrot_3": {
+              "at": "garden",
+              "planted": true
+            },
+            "carrot_4": {
+              "at": "garden",
+              "planted": true
+            },
+            "carrot_5": {
+              "at": "garden",
+              "planted": true
+            },
+            "carrot_6": {
+              "at": "garden",
+              "planted": true
+            },
+            "carrot_7": {
+              "at": "garden",
+              "planted": true
+            },
+            "carrot_8": {
+              "at": "garden",
+              "planted": true
+            },
+            "carrot_9": {
+              "at": "garden",
+              "planted": true
+            }
+          }
+        },
+        "episodeId": "kitchen-bench-live-eval",
+        "paragraphId": "ball-en"
+      },
+      "status": 200,
+      "elapsedMs": 7635,
+      "response": {
+        "beatScript": {
+          "summary": "Masha plays with her ball: drops it by the bench, wanders off, then comes back to scoop it up again",
+          "time_of_day": null,
+          "mood": "playful",
+          "music": {
+            "mood": "playful",
+            "intensity": "soft",
+            "change": "start"
+          },
+          "ambience": [
+            "birds_day"
+          ],
+          "beats": [
+            {
+              "actor": "masha",
+              "verb": "take",
+              "target": "ball",
+              "item": "ball",
+              "line": null,
+              "emote": "giggle",
+              "sfx": null,
+              "emotion": "happy",
+              "with_previous": false,
+              "delay_s": 0,
+              "shot": "medium"
+            },
+            {
+              "actor": "bear",
+              "verb": "look_at",
+              "target": "masha",
+              "item": null,
+              "line": null,
+              "emote": "hum",
+              "sfx": null,
+              "emotion": "curious",
+              "with_previous": true,
+              "delay_s": 0.5,
+              "shot": "auto"
+            },
+            {
+              "actor": "masha",
+              "verb": "walk_to",
+              "target": "bench",
+              "item": null,
+              "line": null,
+              "emote": "hum",
+              "sfx": null,
+              "emotion": "happy",
+              "with_previous": false,
+              "delay_s": 0,
+              "shot": "tracking"
+            },
+            {
+              "actor": "masha",
+              "verb": "drop",
+              "target": null,
+              "item": "ball",
+              "line": null,
+              "emote": "uh_oh",
+              "sfx": "boing",
+              "emotion": "mischievous",
+              "with_previous": false,
+              "delay_s": 0,
+              "shot": "close"
+            },
+            {
+              "actor": "bear",
+              "verb": "shrug",
+              "target": null,
+              "item": null,
+              "line": null,
+              "emote": "grunt",
+              "sfx": null,
+              "emotion": "curious",
+              "with_previous": true,
+              "delay_s": 0.6,
+              "shot": "auto"
+            },
+            {
+              "actor": "masha",
+              "verb": "look_at",
+              "target": "bear",
+              "item": null,
+              "line": "I'm waiting... and waiting...",
+              "emote": null,
+              "sfx": null,
+              "emotion": "mischievous",
+              "with_previous": false,
+              "delay_s": 1.5,
+              "shot": "medium"
+            },
+            {
+              "actor": "masha",
+              "verb": "walk_to",
+              "target": "clearing",
+              "item": null,
+              "line": null,
+              "emote": "hum",
+              "sfx": null,
+              "emotion": "happy",
+              "with_previous": false,
+              "delay_s": 0,
+              "shot": "wide"
+            },
+            {
+              "actor": "masha",
+              "verb": "run_to",
+              "target": "bench",
+              "item": null,
+              "line": null,
+              "emote": "wheee",
+              "sfx": null,
+              "emotion": "excited",
+              "with_previous": false,
+              "delay_s": 0,
+              "shot": "tracking"
+            },
+            {
+              "actor": "masha",
+              "verb": "take",
+              "target": "ball",
+              "item": "ball",
+              "line": "Got you, ball!",
+              "emote": "giggle",
+              "sfx": null,
+              "emotion": "happy",
+              "with_previous": false,
+              "delay_s": 0,
+              "shot": "close"
+            },
+            {
+              "actor": "bear",
+              "verb": "laugh",
+              "target": null,
+              "item": null,
+              "line": null,
+              "emote": "chuckle",
+              "sfx": null,
+              "emotion": "happy",
+              "with_previous": true,
+              "delay_s": 0.5,
+              "shot": "auto"
+            }
+          ],
+          "rule_hits": []
+        },
+        "source": "llm",
+        "latencyMs": 7532,
+        "usage": {
+          "input_tokens": 796,
+          "output_tokens": 938,
+          "cache_read_input_tokens": 19576,
+          "cache_creation_input_tokens": 0
+        },
+        "model": "claude-opus-5-5"
+      }
+    },
+    {
+      "id": "ball-ru",
+      "request": {
+        "lang": "ru",
+        "paragraph": "Маша берёт мяч, идёт к скамейке, роняет мяч и ждёт. Потом она идёт на поляну, возвращается и поднимает мяч.",
+        "previous": [],
+        "worldState": {
+          "timeOfDay": "day",
+          "actors": {
+            "lady_bear": {
+              "pos": [
+                -3.5,
+                0.8
+              ],
+              "facing": 0.2,
+              "mark": "clearing",
+              "holding": null,
+              "posture": "stand"
+            },
+            "hare": {
+              "pos": [
+                4.1,
+                -4.6
+              ],
+              "facing": 0.1,
+              "mark": "garden",
+              "holding": null,
+              "posture": "stand"
+            },
+            "rosie": {
+              "pos": [
+                4,
+                -1.1
+              ],
+              "facing": -0.3,
+              "mark": "garden",
+              "holding": null,
+              "posture": "stand"
+            },
+            "squirrel": {
+              "pos": [
+                7.2,
+                1.1
+              ],
+              "facing": -0.5,
+              "mark": "swing",
+              "holding": null,
+              "posture": "stand"
+            },
+            "rival_bear": {
+              "pos": [
+                -8.6,
+                -0.5
+              ],
+              "facing": 0.3,
+              "mark": "clearing",
+              "holding": null,
+              "posture": "stand"
+            },
+            "masha": {
+              "pos": [
+                0.25,
+                0.5
+              ],
+              "facing": 0,
+              "mark": "clearing",
+              "holding": null,
+              "posture": "stand"
+            },
+            "bear": {
+              "pos": [
+                -1.65,
+                -0.25
+              ],
+              "facing": 0.12,
+              "mark": "clearing",
+              "holding": null,
+              "posture": "stand"
+            },
+            "wolf_a": {
+              "pos": [
+                12.1,
+                0.3
+              ],
+              "facing": -1.5707963267948966,
+              "mark": "van",
+              "holding": null,
+              "posture": "stand"
+            },
+            "wolf_b": {
+              "pos": [
+                12,
+                -1.9
+              ],
+              "facing": -1.5707963267948966,
+              "mark": "van",
+              "holding": null,
+              "posture": "stand"
+            }
+          },
+          "props": {
+            "jam_jar": {
+              "at": "table"
+            },
+            "honey_pot": {
+              "at": "beehive"
+            },
+            "pancakes": {
+              "at": "hidden"
+            },
+            "frying_pan": {
+              "at": "table"
+            },
+            "ball": {
+              "at": "clearing"
+            },
+            "fishing_rod": {
+              "at": "pier"
+            },
+            "fish": {
+              "at": "hidden"
+            },
+            "lollipop": {
+              "at": "hidden"
+            },
+            "flowers": {
+              "at": "garden"
+            },
+            "carrot": {
+              "at": "garden",
+              "planted": true
+            },
+            "broom": {
+              "at": "porch"
+            },
+            "book": {
+              "at": "bench"
+            },
+            "pillow": {
+              "at": "hammock"
+            },
+            "bucket": {
+              "at": "pier"
+            },
+            "watering_can": {
+              "at": "garden"
+            },
+            "flour_bag": {
+              "at": "table"
+            },
+            "cake": {
+              "at": "hidden"
+            },
+            "teapot": {
+              "at": "table"
+            },
+            "pantry_honey": {
+              "at": "cupboard"
+            },
+            "carrot_2": {
+              "at": "garden",
+              "planted": true
+            },
+            "carrot_3": {
+              "at": "garden",
+              "planted": true
+            },
+            "carrot_4": {
+              "at": "garden",
+              "planted": true
+            },
+            "carrot_5": {
+              "at": "garden",
+              "planted": true
+            },
+            "carrot_6": {
+              "at": "garden",
+              "planted": true
+            },
+            "carrot_7": {
+              "at": "garden",
+              "planted": true
+            },
+            "carrot_8": {
+              "at": "garden",
+              "planted": true
+            },
+            "carrot_9": {
+              "at": "garden",
+              "planted": true
+            }
+          }
+        },
+        "episodeId": "kitchen-bench-live-eval",
+        "paragraphId": "ball-ru"
+      },
+      "status": 200,
+      "elapsedMs": 7594,
+      "response": {
+        "beatScript": {
+          "summary": "Маша роняет мяч у скамейки, гуляет по поляне и возвращается за ним",
+          "time_of_day": null,
+          "mood": "playful",
+          "music": {
+            "mood": "playful",
+            "intensity": "soft",
+            "change": "start"
+          },
+          "ambience": [
+            "birds_day"
+          ],
+          "beats": [
+            {
+              "actor": "masha",
+              "verb": "take",
+              "target": "ball",
+              "item": "ball",
+              "line": null,
+              "emote": "giggle",
+              "sfx": null,
+              "emotion": "happy",
+              "with_previous": false,
+              "delay_s": 0,
+              "shot": "medium"
+            },
+            {
+              "actor": "masha",
+              "verb": "walk_to",
+              "target": "bench",
+              "item": null,
+              "line": null,
+              "emote": "hum",
+              "sfx": null,
+              "emotion": "happy",
+              "with_previous": false,
+              "delay_s": 0,
+              "shot": "tracking"
+            },
+            {
+              "actor": "bear",
+              "verb": "look_at",
+              "target": "masha",
+              "item": null,
+              "line": null,
+              "emote": null,
+              "sfx": null,
+              "emotion": "curious",
+              "with_previous": true,
+              "delay_s": 0.8,
+              "shot": "auto"
+            },
+            {
+              "actor": "masha",
+              "verb": "drop",
+              "target": null,
+              "item": "ball",
+              "line": null,
+              "emote": "uh_oh",
+              "sfx": "boing",
+              "emotion": "surprised",
+              "with_previous": false,
+              "delay_s": 0,
+              "shot": "close"
+            },
+            {
+              "actor": "masha",
+              "verb": "look_at",
+              "target": "bear",
+              "item": null,
+              "line": "Мишка, подожди, я сейчас!",
+              "emote": null,
+              "sfx": null,
+              "emotion": "mischievous",
+              "with_previous": false,
+              "delay_s": 1.5,
+              "shot": "medium"
+            },
+            {
+              "actor": "bear",
+              "verb": "shrug",
+              "target": null,
+              "item": null,
+              "line": null,
+              "emote": "grunt",
+              "sfx": null,
+              "emotion": "curious",
+              "with_previous": true,
+              "delay_s": 0.6,
+              "shot": "auto"
+            },
+            {
+              "actor": "masha",
+              "verb": "walk_to",
+              "target": "clearing",
+              "item": null,
+              "line": null,
+              "emote": "hum",
+              "sfx": null,
+              "emotion": "happy",
+              "with_previous": false,
+              "delay_s": 0,
+              "shot": "wide"
+            },
+            {
+              "actor": "masha",
+              "verb": "walk_to",
+              "target": "bench",
+              "item": null,
+              "line": null,
+              "emote": "giggle",
+              "sfx": null,
+              "emotion": "happy",
+              "with_previous": false,
+              "delay_s": 0,
+              "shot": "tracking"
+            },
+            {
+              "actor": "masha",
+              "verb": "take",
+              "target": "ball",
+              "item": "ball",
+              "line": null,
+              "emote": "cheer",
+              "sfx": null,
+              "emotion": "proud",
+              "with_previous": false,
+              "delay_s": 0,
+              "shot": "close"
+            },
+            {
+              "actor": "bear",
+              "verb": "facepalm",
+              "target": null,
+              "item": null,
+              "line": null,
+              "emote": "chuckle",
+              "sfx": null,
+              "emotion": "happy",
+              "with_previous": true,
+              "delay_s": 0.5,
+              "shot": "auto"
+            }
+          ],
+          "rule_hits": []
+        },
+        "source": "llm",
+        "latencyMs": 7550,
+        "usage": {
+          "input_tokens": 815,
+          "output_tokens": 932,
+          "cache_read_input_tokens": 19576,
+          "cache_creation_input_tokens": 0
+        },
+        "model": "claude-opus-5-5"
+      }
+    }
+  ]
+}

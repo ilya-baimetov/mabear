@@ -1,0 +1,1184 @@
+[
+  {
+    "id": "carrot-en",
+    "request": {
+      "lang": "en",
+      "paragraph": "Masha picks carrot number 2 from the garden, walks to the bench and puts it on the bench.",
+      "previous": [],
+      "worldState": {
+        "timeOfDay": "day",
+        "actors": {
+          "lady_bear": {
+            "pos": [
+              -3.5,
+              0.8
+            ],
+            "facing": 0.2,
+            "mark": "clearing",
+            "holding": null,
+            "posture": "stand"
+          },
+          "hare": {
+            "pos": [
+              4.1,
+              -4.6
+            ],
+            "facing": 0.1,
+            "mark": "garden",
+            "holding": null,
+            "posture": "stand"
+          },
+          "rosie": {
+            "pos": [
+              4,
+              -1.1
+            ],
+            "facing": -0.3,
+            "mark": "garden",
+            "holding": null,
+            "posture": "stand"
+          },
+          "squirrel": {
+            "pos": [
+              7.2,
+              1.1
+            ],
+            "facing": -0.5,
+            "mark": "swing",
+            "holding": null,
+            "posture": "stand"
+          },
+          "rival_bear": {
+            "pos": [
+              -8.6,
+              -0.5
+            ],
+            "facing": 0.3,
+            "mark": "clearing",
+            "holding": null,
+            "posture": "stand"
+          },
+          "masha": {
+            "pos": [
+              0.25,
+              0.5
+            ],
+            "facing": 0,
+            "mark": "clearing",
+            "holding": null,
+            "posture": "stand"
+          },
+          "bear": {
+            "pos": [
+              -1.65,
+              -0.25
+            ],
+            "facing": 0.12,
+            "mark": "clearing",
+            "holding": null,
+            "posture": "stand"
+          },
+          "wolf_a": {
+            "pos": [
+              12.1,
+              0.3
+            ],
+            "facing": -1.5707963267948966,
+            "mark": "van",
+            "holding": null,
+            "posture": "stand"
+          },
+          "wolf_b": {
+            "pos": [
+              12,
+              -1.9
+            ],
+            "facing": -1.5707963267948966,
+            "mark": "van",
+            "holding": null,
+            "posture": "stand"
+          }
+        },
+        "props": {
+          "jam_jar": {
+            "at": "table"
+          },
+          "honey_pot": {
+            "at": "beehive"
+          },
+          "pancakes": {
+            "at": "hidden"
+          },
+          "frying_pan": {
+            "at": "table"
+          },
+          "ball": {
+            "at": "clearing"
+          },
+          "fishing_rod": {
+            "at": "pier"
+          },
+          "fish": {
+            "at": "hidden"
+          },
+          "lollipop": {
+            "at": "hidden"
+          },
+          "flowers": {
+            "at": "garden"
+          },
+          "carrot": {
+            "at": "garden",
+            "planted": true
+          },
+          "broom": {
+            "at": "porch"
+          },
+          "book": {
+            "at": "bench"
+          },
+          "pillow": {
+            "at": "hammock"
+          },
+          "bucket": {
+            "at": "pier"
+          },
+          "watering_can": {
+            "at": "garden"
+          },
+          "flour_bag": {
+            "at": "table"
+          },
+          "cake": {
+            "at": "hidden"
+          },
+          "teapot": {
+            "at": "table"
+          },
+          "pantry_honey": {
+            "at": "cupboard"
+          },
+          "carrot_2": {
+            "at": "garden",
+            "planted": true
+          },
+          "carrot_3": {
+            "at": "garden",
+            "planted": true
+          },
+          "carrot_4": {
+            "at": "garden",
+            "planted": true
+          },
+          "carrot_5": {
+            "at": "garden",
+            "planted": true
+          },
+          "carrot_6": {
+            "at": "garden",
+            "planted": true
+          },
+          "carrot_7": {
+            "at": "garden",
+            "planted": true
+          },
+          "carrot_8": {
+            "at": "garden",
+            "planted": true
+          },
+          "carrot_9": {
+            "at": "garden",
+            "planted": true
+          }
+        }
+      },
+      "episodeId": "kitchen-bench-live-eval",
+      "paragraphId": "carrot-en"
+    }
+  },
+  {
+    "id": "carrot-ru",
+    "request": {
+      "lang": "ru",
+      "paragraph": "Маша берёт морковку номер 2 с грядки, идёт к скамейке и кладёт её на скамейку.",
+      "previous": [],
+      "worldState": {
+        "timeOfDay": "day",
+        "actors": {
+          "lady_bear": {
+            "pos": [
+              -3.5,
+              0.8
+            ],
+            "facing": 0.2,
+            "mark": "clearing",
+            "holding": null,
+            "posture": "stand"
+          },
+          "hare": {
+            "pos": [
+              4.1,
+              -4.6
+            ],
+            "facing": 0.1,
+            "mark": "garden",
+            "holding": null,
+            "posture": "stand"
+          },
+          "rosie": {
+            "pos": [
+              4,
+              -1.1
+            ],
+            "facing": -0.3,
+            "mark": "garden",
+            "holding": null,
+            "posture": "stand"
+          },
+          "squirrel": {
+            "pos": [
+              7.2,
+              1.1
+            ],
+            "facing": -0.5,
+            "mark": "swing",
+            "holding": null,
+            "posture": "stand"
+          },
+          "rival_bear": {
+            "pos": [
+              -8.6,
+              -0.5
+            ],
+            "facing": 0.3,
+            "mark": "clearing",
+            "holding": null,
+            "posture": "stand"
+          },
+          "masha": {
+            "pos": [
+              0.25,
+              0.5
+            ],
+            "facing": 0,
+            "mark": "clearing",
+            "holding": null,
+            "posture": "stand"
+          },
+          "bear": {
+            "pos": [
+              -1.65,
+              -0.25
+            ],
+            "facing": 0.12,
+            "mark": "clearing",
+            "holding": null,
+            "posture": "stand"
+          },
+          "wolf_a": {
+            "pos": [
+              12.1,
+              0.3
+            ],
+            "facing": -1.5707963267948966,
+            "mark": "van",
+            "holding": null,
+            "posture": "stand"
+          },
+          "wolf_b": {
+            "pos": [
+              12,
+              -1.9
+            ],
+            "facing": -1.5707963267948966,
+            "mark": "van",
+            "holding": null,
+            "posture": "stand"
+          }
+        },
+        "props": {
+          "jam_jar": {
+            "at": "table"
+          },
+          "honey_pot": {
+            "at": "beehive"
+          },
+          "pancakes": {
+            "at": "hidden"
+          },
+          "frying_pan": {
+            "at": "table"
+          },
+          "ball": {
+            "at": "clearing"
+          },
+          "fishing_rod": {
+            "at": "pier"
+          },
+          "fish": {
+            "at": "hidden"
+          },
+          "lollipop": {
+            "at": "hidden"
+          },
+          "flowers": {
+            "at": "garden"
+          },
+          "carrot": {
+            "at": "garden",
+            "planted": true
+          },
+          "broom": {
+            "at": "porch"
+          },
+          "book": {
+            "at": "bench"
+          },
+          "pillow": {
+            "at": "hammock"
+          },
+          "bucket": {
+            "at": "pier"
+          },
+          "watering_can": {
+            "at": "garden"
+          },
+          "flour_bag": {
+            "at": "table"
+          },
+          "cake": {
+            "at": "hidden"
+          },
+          "teapot": {
+            "at": "table"
+          },
+          "pantry_honey": {
+            "at": "cupboard"
+          },
+          "carrot_2": {
+            "at": "garden",
+            "planted": true
+          },
+          "carrot_3": {
+            "at": "garden",
+            "planted": true
+          },
+          "carrot_4": {
+            "at": "garden",
+            "planted": true
+          },
+          "carrot_5": {
+            "at": "garden",
+            "planted": true
+          },
+          "carrot_6": {
+            "at": "garden",
+            "planted": true
+          },
+          "carrot_7": {
+            "at": "garden",
+            "planted": true
+          },
+          "carrot_8": {
+            "at": "garden",
+            "planted": true
+          },
+          "carrot_9": {
+            "at": "garden",
+            "planted": true
+          }
+        }
+      },
+      "episodeId": "kitchen-bench-live-eval",
+      "paragraphId": "carrot-ru"
+    }
+  },
+  {
+    "id": "ball-en",
+    "request": {
+      "lang": "en",
+      "paragraph": "Masha takes the ball, walks to the bench, drops it and waits. Then she walks to the clearing, returns and picks up the ball.",
+      "previous": [],
+      "worldState": {
+        "timeOfDay": "day",
+        "actors": {
+          "lady_bear": {
+            "pos": [
+              -3.5,
+              0.8
+            ],
+            "facing": 0.2,
+            "mark": "clearing",
+            "holding": null,
+            "posture": "stand"
+          },
+          "hare": {
+            "pos": [
+              4.1,
+              -4.6
+            ],
+            "facing": 0.1,
+            "mark": "garden",
+            "holding": null,
+            "posture": "stand"
+          },
+          "rosie": {
+            "pos": [
+              4,
+              -1.1
+            ],
+            "facing": -0.3,
+            "mark": "garden",
+            "holding": null,
+            "posture": "stand"
+          },
+          "squirrel": {
+            "pos": [
+              7.2,
+              1.1
+            ],
+            "facing": -0.5,
+            "mark": "swing",
+            "holding": null,
+            "posture": "stand"
+          },
+          "rival_bear": {
+            "pos": [
+              -8.6,
+              -0.5
+            ],
+            "facing": 0.3,
+            "mark": "clearing",
+            "holding": null,
+            "posture": "stand"
+          },
+          "masha": {
+            "pos": [
+              0.25,
+              0.5
+            ],
+            "facing": 0,
+            "mark": "clearing",
+            "holding": null,
+            "posture": "stand"
+          },
+          "bear": {
+            "pos": [
+              -1.65,
+              -0.25
+            ],
+            "facing": 0.12,
+            "mark": "clearing",
+            "holding": null,
+            "posture": "stand"
+          },
+          "wolf_a": {
+            "pos": [
+              12.1,
+              0.3
+            ],
+            "facing": -1.5707963267948966,
+            "mark": "van",
+            "holding": null,
+            "posture": "stand"
+          },
+          "wolf_b": {
+            "pos": [
+              12,
+              -1.9
+            ],
+            "facing": -1.5707963267948966,
+            "mark": "van",
+            "holding": null,
+            "posture": "stand"
+          }
+        },
+        "props": {
+          "jam_jar": {
+            "at": "table"
+          },
+          "honey_pot": {
+            "at": "beehive"
+          },
+          "pancakes": {
+            "at": "hidden"
+          },
+          "frying_pan": {
+            "at": "table"
+          },
+          "ball": {
+            "at": "clearing"
+          },
+          "fishing_rod": {
+            "at": "pier"
+          },
+          "fish": {
+            "at": "hidden"
+          },
+          "lollipop": {
+            "at": "hidden"
+          },
+          "flowers": {
+            "at": "garden"
+          },
+          "carrot": {
+            "at": "garden",
+            "planted": true
+          },
+          "broom": {
+            "at": "porch"
+          },
+          "book": {
+            "at": "bench"
+          },
+          "pillow": {
+            "at": "hammock"
+          },
+          "bucket": {
+            "at": "pier"
+          },
+          "watering_can": {
+            "at": "garden"
+          },
+          "flour_bag": {
+            "at": "table"
+          },
+          "cake": {
+            "at": "hidden"
+          },
+          "teapot": {
+            "at": "table"
+          },
+          "pantry_honey": {
+            "at": "cupboard"
+          },
+          "carrot_2": {
+            "at": "garden",
+            "planted": true
+          },
+          "carrot_3": {
+            "at": "garden",
+            "planted": true
+          },
+          "carrot_4": {
+            "at": "garden",
+            "planted": true
+          },
+          "carrot_5": {
+            "at": "garden",
+            "planted": true
+          },
+          "carrot_6": {
+            "at": "garden",
+            "planted": true
+          },
+          "carrot_7": {
+            "at": "garden",
+            "planted": true
+          },
+          "carrot_8": {
+            "at": "garden",
+            "planted": true
+          },
+          "carrot_9": {
+            "at": "garden",
+            "planted": true
+          }
+        }
+      },
+      "episodeId": "kitchen-bench-live-eval",
+      "paragraphId": "ball-en"
+    }
+  },
+  {
+    "id": "ball-ru",
+    "request": {
+      "lang": "ru",
+      "paragraph": "Маша берёт мяч, идёт к скамейке, роняет мяч и ждёт. Потом она идёт на поляну, возвращается и поднимает мяч.",
+      "previous": [],
+      "worldState": {
+        "timeOfDay": "day",
+        "actors": {
+          "lady_bear": {
+            "pos": [
+              -3.5,
+              0.8
+            ],
+            "facing": 0.2,
+            "mark": "clearing",
+            "holding": null,
+            "posture": "stand"
+          },
+          "hare": {
+            "pos": [
+              4.1,
+              -4.6
+            ],
+            "facing": 0.1,
+            "mark": "garden",
+            "holding": null,
+            "posture": "stand"
+          },
+          "rosie": {
+            "pos": [
+              4,
+              -1.1
+            ],
+            "facing": -0.3,
+            "mark": "garden",
+            "holding": null,
+            "posture": "stand"
+          },
+          "squirrel": {
+            "pos": [
+              7.2,
+              1.1
+            ],
+            "facing": -0.5,
+            "mark": "swing",
+            "holding": null,
+            "posture": "stand"
+          },
+          "rival_bear": {
+            "pos": [
+              -8.6,
+              -0.5
+            ],
+            "facing": 0.3,
+            "mark": "clearing",
+            "holding": null,
+            "posture": "stand"
+          },
+          "masha": {
+            "pos": [
+              0.25,
+              0.5
+            ],
+            "facing": 0,
+            "mark": "clearing",
+            "holding": null,
+            "posture": "stand"
+          },
+          "bear": {
+            "pos": [
+              -1.65,
+              -0.25
+            ],
+            "facing": 0.12,
+            "mark": "clearing",
+            "holding": null,
+            "posture": "stand"
+          },
+          "wolf_a": {
+            "pos": [
+              12.1,
+              0.3
+            ],
+            "facing": -1.5707963267948966,
+            "mark": "van",
+            "holding": null,
+            "posture": "stand"
+          },
+          "wolf_b": {
+            "pos": [
+              12,
+              -1.9
+            ],
+            "facing": -1.5707963267948966,
+            "mark": "van",
+            "holding": null,
+            "posture": "stand"
+          }
+        },
+        "props": {
+          "jam_jar": {
+            "at": "table"
+          },
+          "honey_pot": {
+            "at": "beehive"
+          },
+          "pancakes": {
+            "at": "hidden"
+          },
+          "frying_pan": {
+            "at": "table"
+          },
+          "ball": {
+            "at": "clearing"
+          },
+          "fishing_rod": {
+            "at": "pier"
+          },
+          "fish": {
+            "at": "hidden"
+          },
+          "lollipop": {
+            "at": "hidden"
+          },
+          "flowers": {
+            "at": "garden"
+          },
+          "carrot": {
+            "at": "garden",
+            "planted": true
+          },
+          "broom": {
+            "at": "porch"
+          },
+          "book": {
+            "at": "bench"
+          },
+          "pillow": {
+            "at": "hammock"
+          },
+          "bucket": {
+            "at": "pier"
+          },
+          "watering_can": {
+            "at": "garden"
+          },
+          "flour_bag": {
+            "at": "table"
+          },
+          "cake": {
+            "at": "hidden"
+          },
+          "teapot": {
+            "at": "table"
+          },
+          "pantry_honey": {
+            "at": "cupboard"
+          },
+          "carrot_2": {
+            "at": "garden",
+            "planted": true
+          },
+          "carrot_3": {
+            "at": "garden",
+            "planted": true
+          },
+          "carrot_4": {
+            "at": "garden",
+            "planted": true
+          },
+          "carrot_5": {
+            "at": "garden",
+            "planted": true
+          },
+          "carrot_6": {
+            "at": "garden",
+            "planted": true
+          },
+          "carrot_7": {
+            "at": "garden",
+            "planted": true
+          },
+          "carrot_8": {
+            "at": "garden",
+            "planted": true
+          },
+          "carrot_9": {
+            "at": "garden",
+            "planted": true
+          }
+        }
+      },
+      "episodeId": "kitchen-bench-live-eval",
+      "paragraphId": "ball-ru"
+    }
+  },
+  {
+    "id": "cupboard-en",
+    "request": {
+      "lang": "en",
+      "paragraph": "Bear opens the kitchen cupboard, takes out the honey jar and closes the cupboard while holding the jar.",
+      "previous": [],
+      "worldState": {
+        "timeOfDay": "day",
+        "actors": {
+          "lady_bear": {
+            "pos": [
+              -3.5,
+              0.8
+            ],
+            "facing": 0.2,
+            "mark": "clearing",
+            "holding": null,
+            "posture": "stand"
+          },
+          "hare": {
+            "pos": [
+              4.1,
+              -4.6
+            ],
+            "facing": 0.1,
+            "mark": "garden",
+            "holding": null,
+            "posture": "stand"
+          },
+          "rosie": {
+            "pos": [
+              4,
+              -1.1
+            ],
+            "facing": -0.3,
+            "mark": "garden",
+            "holding": null,
+            "posture": "stand"
+          },
+          "squirrel": {
+            "pos": [
+              7.2,
+              1.1
+            ],
+            "facing": -0.5,
+            "mark": "swing",
+            "holding": null,
+            "posture": "stand"
+          },
+          "rival_bear": {
+            "pos": [
+              -8.6,
+              -0.5
+            ],
+            "facing": 0.3,
+            "mark": "clearing",
+            "holding": null,
+            "posture": "stand"
+          },
+          "masha": {
+            "pos": [
+              0.25,
+              0.5
+            ],
+            "facing": 0,
+            "mark": "clearing",
+            "holding": null,
+            "posture": "stand"
+          },
+          "bear": {
+            "pos": [
+              -1.65,
+              -0.25
+            ],
+            "facing": 0.12,
+            "mark": "clearing",
+            "holding": null,
+            "posture": "stand"
+          },
+          "wolf_a": {
+            "pos": [
+              12.1,
+              0.3
+            ],
+            "facing": -1.5707963267948966,
+            "mark": "van",
+            "holding": null,
+            "posture": "stand"
+          },
+          "wolf_b": {
+            "pos": [
+              12,
+              -1.9
+            ],
+            "facing": -1.5707963267948966,
+            "mark": "van",
+            "holding": null,
+            "posture": "stand"
+          }
+        },
+        "props": {
+          "jam_jar": {
+            "at": "table"
+          },
+          "honey_pot": {
+            "at": "beehive"
+          },
+          "pancakes": {
+            "at": "hidden"
+          },
+          "frying_pan": {
+            "at": "table"
+          },
+          "ball": {
+            "at": "clearing"
+          },
+          "fishing_rod": {
+            "at": "pier"
+          },
+          "fish": {
+            "at": "hidden"
+          },
+          "lollipop": {
+            "at": "hidden"
+          },
+          "flowers": {
+            "at": "garden"
+          },
+          "carrot": {
+            "at": "garden",
+            "planted": true
+          },
+          "broom": {
+            "at": "porch"
+          },
+          "book": {
+            "at": "bench"
+          },
+          "pillow": {
+            "at": "hammock"
+          },
+          "bucket": {
+            "at": "pier"
+          },
+          "watering_can": {
+            "at": "garden"
+          },
+          "flour_bag": {
+            "at": "table"
+          },
+          "cake": {
+            "at": "hidden"
+          },
+          "teapot": {
+            "at": "table"
+          },
+          "pantry_honey": {
+            "at": "cupboard"
+          },
+          "carrot_2": {
+            "at": "garden",
+            "planted": true
+          },
+          "carrot_3": {
+            "at": "garden",
+            "planted": true
+          },
+          "carrot_4": {
+            "at": "garden",
+            "planted": true
+          },
+          "carrot_5": {
+            "at": "garden",
+            "planted": true
+          },
+          "carrot_6": {
+            "at": "garden",
+            "planted": true
+          },
+          "carrot_7": {
+            "at": "garden",
+            "planted": true
+          },
+          "carrot_8": {
+            "at": "garden",
+            "planted": true
+          },
+          "carrot_9": {
+            "at": "garden",
+            "planted": true
+          }
+        }
+      },
+      "episodeId": "kitchen-bench-live-eval",
+      "paragraphId": "cupboard-en"
+    }
+  },
+  {
+    "id": "cupboard-ru",
+    "request": {
+      "lang": "ru",
+      "paragraph": "Медведь открывает кухонный шкаф, достаёт банку мёда и закрывает шкаф, держа банку в лапе.",
+      "previous": [],
+      "worldState": {
+        "timeOfDay": "day",
+        "actors": {
+          "lady_bear": {
+            "pos": [
+              -3.5,
+              0.8
+            ],
+            "facing": 0.2,
+            "mark": "clearing",
+            "holding": null,
+            "posture": "stand"
+          },
+          "hare": {
+            "pos": [
+              4.1,
+              -4.6
+            ],
+            "facing": 0.1,
+            "mark": "garden",
+            "holding": null,
+            "posture": "stand"
+          },
+          "rosie": {
+            "pos": [
+              4,
+              -1.1
+            ],
+            "facing": -0.3,
+            "mark": "garden",
+            "holding": null,
+            "posture": "stand"
+          },
+          "squirrel": {
+            "pos": [
+              7.2,
+              1.1
+            ],
+            "facing": -0.5,
+            "mark": "swing",
+            "holding": null,
+            "posture": "stand"
+          },
+          "rival_bear": {
+            "pos": [
+              -8.6,
+              -0.5
+            ],
+            "facing": 0.3,
+            "mark": "clearing",
+            "holding": null,
+            "posture": "stand"
+          },
+          "masha": {
+            "pos": [
+              0.25,
+              0.5
+            ],
+            "facing": 0,
+            "mark": "clearing",
+            "holding": null,
+            "posture": "stand"
+          },
+          "bear": {
+            "pos": [
+              -1.65,
+              -0.25
+            ],
+            "facing": 0.12,
+            "mark": "clearing",
+            "holding": null,
+            "posture": "stand"
+          },
+          "wolf_a": {
+            "pos": [
+              12.1,
+              0.3
+            ],
+            "facing": -1.5707963267948966,
+            "mark": "van",
+            "holding": null,
+            "posture": "stand"
+          },
+          "wolf_b": {
+            "pos": [
+              12,
+              -1.9
+            ],
+            "facing": -1.5707963267948966,
+            "mark": "van",
+            "holding": null,
+            "posture": "stand"
+          }
+        },
+        "props": {
+          "jam_jar": {
+            "at": "table"
+          },
+          "honey_pot": {
+            "at": "beehive"
+          },
+          "pancakes": {
+            "at": "hidden"
+          },
+          "frying_pan": {
+            "at": "table"
+          },
+          "ball": {
+            "at": "clearing"
+          },
+          "fishing_rod": {
+            "at": "pier"
+          },
+          "fish": {
+            "at": "hidden"
+          },
+          "lollipop": {
+            "at": "hidden"
+          },
+          "flowers": {
+            "at": "garden"
+          },
+          "carrot": {
+            "at": "garden",
+            "planted": true
+          },
+          "broom": {
+            "at": "porch"
+          },
+          "book": {
+            "at": "bench"
+          },
+          "pillow": {
+            "at": "hammock"
+          },
+          "bucket": {
+            "at": "pier"
+          },
+          "watering_can": {
+            "at": "garden"
+          },
+          "flour_bag": {
+            "at": "table"
+          },
+          "cake": {
+            "at": "hidden"
+          },
+          "teapot": {
+            "at": "table"
+          },
+          "pantry_honey": {
+            "at": "cupboard"
+          },
+          "carrot_2": {
+            "at": "garden",
+            "planted": true
+          },
+          "carrot_3": {
+            "at": "garden",
+            "planted": true
+          },
+          "carrot_4": {
+            "at": "garden",
+            "planted": true
+          },
+          "carrot_5": {
+            "at": "garden",
+            "planted": true
+          },
+          "carrot_6": {
+            "at": "garden",
+            "planted": true
+          },
+          "carrot_7": {
+            "at": "garden",
+            "planted": true
+          },
+          "carrot_8": {
+            "at": "garden",
+            "planted": true
+          },
+          "carrot_9": {
+            "at": "garden",
+            "planted": true
+          }
+        }
+      },
+      "episodeId": "kitchen-bench-live-eval",
+      "paragraphId": "cupboard-ru"
+    }
+  }
+]

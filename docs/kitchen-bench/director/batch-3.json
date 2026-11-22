@@ -1,0 +1,617 @@
+{
+  "testedAt": "2026-11-22T06:39:09.114Z",
+  "origin": "https://mabear-storybook.ilya-baimetov.workers.dev",
+  "baselineCommit": "0a81ce43861dd3bc1a1fce2f751940d6f31dcbad",
+  "maxRequests": 6,
+  "next": 6,
+  "results": [
+    {
+      "id": "cupboard-en",
+      "request": {
+        "lang": "en",
+        "paragraph": "Bear opens the kitchen cupboard, takes out the honey jar and closes the cupboard while holding the jar.",
+        "previous": [],
+        "worldState": {
+          "timeOfDay": "day",
+          "actors": {
+            "lady_bear": {
+              "pos": [
+                -3.5,
+                0.8
+              ],
+              "facing": 0.2,
+              "mark": "clearing",
+              "holding": null,
+              "posture": "stand"
+            },
+            "hare": {
+              "pos": [
+                4.1,
+                -4.6
+              ],
+              "facing": 0.1,
+              "mark": "garden",
+              "holding": null,
+              "posture": "stand"
+            },
+            "rosie": {
+              "pos": [
+                4,
+                -1.1
+              ],
+              "facing": -0.3,
+              "mark": "garden",
+              "holding": null,
+              "posture": "stand"
+            },
+            "squirrel": {
+              "pos": [
+                7.2,
+                1.1
+              ],
+              "facing": -0.5,
+              "mark": "swing",
+              "holding": null,
+              "posture": "stand"
+            },
+            "rival_bear": {
+              "pos": [
+                -8.6,
+                -0.5
+              ],
+              "facing": 0.3,
+              "mark": "clearing",
+              "holding": null,
+              "posture": "stand"
+            },
+            "masha": {
+              "pos": [
+                0.25,
+                0.5
+              ],
+              "facing": 0,
+              "mark": "clearing",
+              "holding": null,
+              "posture": "stand"
+            },
+            "bear": {
+              "pos": [
+                -1.65,
+                -0.25
+              ],
+              "facing": 0.12,
+              "mark": "clearing",
+              "holding": null,
+              "posture": "stand"
+            },
+            "wolf_a": {
+              "pos": [
+                12.1,
+                0.3
+              ],
+              "facing": -1.5707963267948966,
+              "mark": "van",
+              "holding": null,
+              "posture": "stand"
+            },
+            "wolf_b": {
+              "pos": [
+                12,
+                -1.9
+              ],
+              "facing": -1.5707963267948966,
+              "mark": "van",
+              "holding": null,
+              "posture": "stand"
+            }
+          },
+          "props": {
+            "jam_jar": {
+              "at": "table"
+            },
+            "honey_pot": {
+              "at": "beehive"
+            },
+            "pancakes": {
+              "at": "hidden"
+            },
+            "frying_pan": {
+              "at": "table"
+            },
+            "ball": {
+              "at": "clearing"
+            },
+            "fishing_rod": {
+              "at": "pier"
+            },
+            "fish": {
+              "at": "hidden"
+            },
+            "lollipop": {
+              "at": "hidden"
+            },
+            "flowers": {
+              "at": "garden"
+            },
+            "carrot": {
+              "at": "garden",
+              "planted": true
+            },
+            "broom": {
+              "at": "porch"
+            },
+            "book": {
+              "at": "bench"
+            },
+            "pillow": {
+              "at": "hammock"
+            },
+            "bucket": {
+              "at": "pier"
+            },
+            "watering_can": {
+              "at": "garden"
+            },
+            "flour_bag": {
+              "at": "table"
+            },
+            "cake": {
+              "at": "hidden"
+            },
+            "teapot": {
+              "at": "table"
+            },
+            "pantry_honey": {
+              "at": "cupboard"
+            },
+            "carrot_2": {
+              "at": "garden",
+              "planted": true
+            },
+            "carrot_3": {
+              "at": "garden",
+              "planted": true
+            },
+            "carrot_4": {
+              "at": "garden",
+              "planted": true
+            },
+            "carrot_5": {
+              "at": "garden",
+              "planted": true
+            },
+            "carrot_6": {
+              "at": "garden",
+              "planted": true
+            },
+            "carrot_7": {
+              "at": "garden",
+              "planted": true
+            },
+            "carrot_8": {
+              "at": "garden",
+              "planted": true
+            },
+            "carrot_9": {
+              "at": "garden",
+              "planted": true
+            }
+          }
+        },
+        "episodeId": "kitchen-bench-live-eval",
+        "paragraphId": "cupboard-en"
+      },
+      "status": 200,
+      "elapsedMs": 5212,
+      "response": {
+        "beatScript": {
+          "summary": "Bear fetches his honey jar from the kitchen cupboard and closes it with a happy hum",
+          "time_of_day": null,
+          "mood": "calm",
+          "music": {
+            "mood": "calm",
+            "intensity": "soft",
+            "change": "start"
+          },
+          "ambience": [
+            "birds_day"
+          ],
+          "beats": [
+            {
+              "actor": "bear",
+              "verb": "walk_to",
+              "target": "house_kitchen",
+              "item": null,
+              "line": null,
+              "emote": "hum",
+              "sfx": "door_creak",
+              "emotion": "happy",
+              "with_previous": false,
+              "delay_s": 0,
+              "shot": "wide"
+            },
+            {
+              "actor": "masha",
+              "verb": "look_at",
+              "target": "bear",
+              "item": null,
+              "line": null,
+              "emote": null,
+              "sfx": null,
+              "emotion": "curious",
+              "with_previous": true,
+              "delay_s": 0.8,
+              "shot": "auto"
+            },
+            {
+              "actor": "bear",
+              "verb": "open",
+              "target": "cupboard",
+              "item": null,
+              "line": null,
+              "emote": "hum",
+              "sfx": "door_creak",
+              "emotion": "happy",
+              "with_previous": false,
+              "delay_s": 0,
+              "shot": "medium"
+            },
+            {
+              "actor": "bear",
+              "verb": "take",
+              "target": "pantry_honey",
+              "item": "pantry_honey",
+              "line": null,
+              "emote": "chuckle",
+              "sfx": "glass_clink",
+              "emotion": "happy",
+              "with_previous": false,
+              "delay_s": 0,
+              "shot": "close"
+            },
+            {
+              "actor": "bear",
+              "verb": "close",
+              "target": "cupboard",
+              "item": null,
+              "line": null,
+              "emote": "hum",
+              "sfx": null,
+              "emotion": "proud",
+              "with_previous": false,
+              "delay_s": 0,
+              "shot": "medium"
+            }
+          ],
+          "rule_hits": []
+        },
+        "source": "llm",
+        "latencyMs": 4848,
+        "usage": {
+          "input_tokens": 790,
+          "output_tokens": 528,
+          "cache_read_input_tokens": 19576,
+          "cache_creation_input_tokens": 0
+        },
+        "model": "claude-opus-5-5"
+      }
+    },
+    {
+      "id": "cupboard-ru",
+      "request": {
+        "lang": "ru",
+        "paragraph": "Медведь открывает кухонный шкаф, достаёт банку мёда и закрывает шкаф, держа банку в лапе.",
+        "previous": [],
+        "worldState": {
+          "timeOfDay": "day",
+          "actors": {
+            "lady_bear": {
+              "pos": [
+                -3.5,
+                0.8
+              ],
+              "facing": 0.2,
+              "mark": "clearing",
+              "holding": null,
+              "posture": "stand"
+            },
+            "hare": {
+              "pos": [
+                4.1,
+                -4.6
+              ],
+              "facing": 0.1,
+              "mark": "garden",
+              "holding": null,
+              "posture": "stand"
+            },
+            "rosie": {
+              "pos": [
+                4,
+                -1.1
+              ],
+              "facing": -0.3,
+              "mark": "garden",
+              "holding": null,
+              "posture": "stand"
+            },
+            "squirrel": {
+              "pos": [
+                7.2,
+                1.1
+              ],
+              "facing": -0.5,
+              "mark": "swing",
+              "holding": null,
+              "posture": "stand"
+            },
+            "rival_bear": {
+              "pos": [
+                -8.6,
+                -0.5
+              ],
+              "facing": 0.3,
+              "mark": "clearing",
+              "holding": null,
+              "posture": "stand"
+            },
+            "masha": {
+              "pos": [
+                0.25,
+                0.5
+              ],
+              "facing": 0,
+              "mark": "clearing",
+              "holding": null,
+              "posture": "stand"
+            },
+            "bear": {
+              "pos": [
+                -1.65,
+                -0.25
+              ],
+              "facing": 0.12,
+              "mark": "clearing",
+              "holding": null,
+              "posture": "stand"
+            },
+            "wolf_a": {
+              "pos": [
+                12.1,
+                0.3
+              ],
+              "facing": -1.5707963267948966,
+              "mark": "van",
+              "holding": null,
+              "posture": "stand"
+            },
+            "wolf_b": {
+              "pos": [
+                12,
+                -1.9
+              ],
+              "facing": -1.5707963267948966,
+              "mark": "van",
+              "holding": null,
+              "posture": "stand"
+            }
+          },
+          "props": {
+            "jam_jar": {
+              "at": "table"
+            },
+            "honey_pot": {
+              "at": "beehive"
+            },
+            "pancakes": {
+              "at": "hidden"
+            },
+            "frying_pan": {
+              "at": "table"
+            },
+            "ball": {
+              "at": "clearing"
+            },
+            "fishing_rod": {
+              "at": "pier"
+            },
+            "fish": {
+              "at": "hidden"
+            },
+            "lollipop": {
+              "at": "hidden"
+            },
+            "flowers": {
+              "at": "garden"
+            },
+            "carrot": {
+              "at": "garden",
+              "planted": true
+            },
+            "broom": {
+              "at": "porch"
+            },
+            "book": {
+              "at": "bench"
+            },
+            "pillow": {
+              "at": "hammock"
+            },
+            "bucket": {
+              "at": "pier"
+            },
+            "watering_can": {
+              "at": "garden"
+            },
+            "flour_bag": {
+              "at": "table"
+            },
+            "cake": {
+              "at": "hidden"
+            },
+            "teapot": {
+              "at": "table"
+            },
+            "pantry_honey": {
+              "at": "cupboard"
+            },
+            "carrot_2": {
+              "at": "garden",
+              "planted": true
+            },
+            "carrot_3": {
+              "at": "garden",
+              "planted": true
+            },
+            "carrot_4": {
+              "at": "garden",
+              "planted": true
+            },
+            "carrot_5": {
+              "at": "garden",
+              "planted": true
+            },
+            "carrot_6": {
+              "at": "garden",
+              "planted": true
+            },
+            "carrot_7": {
+              "at": "garden",
+              "planted": true
+            },
+            "carrot_8": {
+              "at": "garden",
+              "planted": true
+            },
+            "carrot_9": {
+              "at": "garden",
+              "planted": true
+            }
+          }
+        },
+        "episodeId": "kitchen-bench-live-eval",
+        "paragraphId": "cupboard-ru"
+      },
+      "status": 200,
+      "elapsedMs": 5695,
+      "response": {
+        "beatScript": {
+          "summary": "Мишка идёт на кухню, достаёт из шкафа банку мёда и довольно урчит",
+          "time_of_day": null,
+          "mood": "calm",
+          "music": {
+            "mood": "calm",
+            "intensity": "soft",
+            "change": "start"
+          },
+          "ambience": [
+            "birds_day"
+          ],
+          "beats": [
+            {
+              "actor": "bear",
+              "verb": "walk_to",
+              "target": "door",
+              "item": null,
+              "line": null,
+              "emote": "hum",
+              "sfx": null,
+              "emotion": "happy",
+              "with_previous": false,
+              "delay_s": 0,
+              "shot": "wide"
+            },
+            {
+              "actor": "masha",
+              "verb": "look_at",
+              "target": "bear",
+              "item": null,
+              "line": null,
+              "emote": null,
+              "sfx": null,
+              "emotion": "curious",
+              "with_previous": true,
+              "delay_s": 0.8,
+              "shot": "auto"
+            },
+            {
+              "actor": "bear",
+              "verb": "open",
+              "target": "door",
+              "item": null,
+              "line": null,
+              "emote": null,
+              "sfx": "door_creak",
+              "emotion": "neutral",
+              "with_previous": false,
+              "delay_s": 0,
+              "shot": "auto"
+            },
+            {
+              "actor": "bear",
+              "verb": "walk_to",
+              "target": "house_kitchen",
+              "item": null,
+              "line": null,
+              "emote": "hum",
+              "sfx": null,
+              "emotion": "happy",
+              "with_previous": false,
+              "delay_s": 0,
+              "shot": "auto"
+            },
+            {
+              "actor": "bear",
+              "verb": "open",
+              "target": "cupboard",
+              "item": null,
+              "line": null,
+              "emote": null,
+              "sfx": "door_creak",
+              "emotion": "curious",
+              "with_previous": false,
+              "delay_s": 0,
+              "shot": "medium"
+            },
+            {
+              "actor": "bear",
+              "verb": "take",
+              "target": "pantry_honey",
+              "item": "pantry_honey",
+              "line": null,
+              "emote": "chuckle",
+              "sfx": "glass_clink",
+              "emotion": "happy",
+              "with_previous": false,
+              "delay_s": 0,
+              "shot": "close"
+            },
+            {
+              "actor": "bear",
+              "verb": "close",
+              "target": "cupboard",
+              "item": null,
+              "line": null,
+              "emote": "hum",
+              "sfx": null,
+              "emotion": "proud",
+              "with_previous": false,
+              "delay_s": 0,
+              "shot": "medium"
+            }
+          ],
+          "rule_hits": []
+        },
+        "source": "llm",
+        "latencyMs": 5640,
+        "usage": {
+          "input_tokens": 803,
+          "output_tokens": 684,
+          "cache_read_input_tokens": 19576,
+          "cache_creation_input_tokens": 0
+        },
+        "model": "claude-opus-5-5"
+      }
+    }
+  ]
+}

@@ -46,9 +46,11 @@ export interface ActorFrame {
   interaction?:{kind:'hug';partner:ActorId};
   riding?:{carrier:ActorId;progress:number};
   /** Authored prop release: world origin/Euler YXZ; release is normalized clip progress. */
-  putDown?: {item:PropId;position:Vec3;rotation:Vec3;release:number};
+  putDown?: {item:PropId;position:Vec3;rotation:Vec3;release:number;container?:"kitchen_bowl"|"kitchen_pot"};
   /** Surface pickup uses the same contact pose at its attachment instant. */
-  pickup?: {item:PropId;position:Vec3;rotation:Vec3;release:number};
+  pickup?: {item:PropId;position:Vec3;rotation:Vec3;release:number;container?:"kitchen_bowl"|"kitchen_pot"};
+  /** Free-hand push of a resting ball; never an attachment. */
+  nudge?:{item:PropId;position:Vec3;rotation:Vec3;release:number;container?:"kitchen_bowl"|"kitchen_pot"};
   objectContact?:{position:Vec3;side:1|-1;strength:number};
   /** secondary-motion drivers 0..1 (hem sway, belly jiggle, ear wiggle) */
   secondary: { sway: number; jiggle: number; breathe: number };

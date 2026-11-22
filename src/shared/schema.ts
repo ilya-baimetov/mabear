@@ -9,7 +9,7 @@ export const ACTOR_IDS = ["masha", "bear", "wolf_a", "wolf_b", "lady_bear", "har
 export const WOLF_IDS = ["wolf_a", "wolf_b"] as const;
 export const MARK_IDS = [
   "clearing", "porch", "door", "garden", "beehive", "swing", "pond_shore", "pier", "table",
-  "bench", "woodpile", "path_entry", "big_tree", "bush", "hammock", "creek", "van", "house_kitchen", "house_living", "cupboard",
+  "bench", "woodpile", "path_entry", "big_tree", "bush", "hammock", "creek", "van", "house_kitchen", "house_living", "cupboard", "kitchen_bowl", "kitchen_pot",
 ] as const;
 export const PROP_IDS = [
   "jam_jar", "honey_pot", "pancakes", "frying_pan", "ball", "fishing_rod", "fish", "lollipop",
@@ -55,7 +55,7 @@ export const VERBS = [
   // Emotion
   "laugh", "cry", "sulk", "surprised", "scared", "angry_stomp", "sneeze", "sigh",
   // Objects
-  "take", "give", "eat", "throw", "cook", "fish", "swing", "carry", "water_plants", "drop", "open", "close", "put_down",
+  "take", "give", "eat", "throw", "cook", "fish", "swing", "carry", "water_plants", "drop", "open", "close", "put_down", "nudge",
 ] as const;
 export const VISEMES = ["rest", "open_small", "open_wide", "o", "e", "frown", "grin"] as const;
 export const FOLEY_IDS = [
@@ -209,7 +209,7 @@ export const WorldStateSchema = z.object({
     if(CARROT_IDS.slice(1).every(id=>!(id in props))&&oldCarrot?.at==='garden'&&oldCarrot.planted===undefined)props.carrot={...oldCarrot,planted:true};
     for(const id of CARROT_IDS)props[id]??={at:'garden',planted:true};
     return props;
-  }, z.record(PropIdSchema, z.object({ at: PropLocationSchema, planted:z.boolean().optional() }))),
+  }, z.record(PropIdSchema, z.object({ at: PropLocationSchema, planted:z.boolean().optional(), position:Vec3Schema.optional(), rotation:Vec3Schema.optional() }))),
 });
 export type WorldState = z.infer<typeof WorldStateSchema>;
 
@@ -237,6 +237,10 @@ export const ActorClipSchema = z.object({
     pickUpAt: MarkIdSchema.optional(), // explicit surface contact before an indoor prop attaches to the hand
     pickUpPosition: Vec3Schema.optional(), // exact object origin; authored or reconciled by physics
     pickUpRotation: Vec3Schema.optional(),
+    nudgeAt: z.literal("bench").optional(),
+    nudgePosition: Vec3Schema.optional(),
+    nudgeRotation: Vec3Schema.optional(),
+    nudgeImpulse: Vec3Schema.optional(),
     putDownPosition: Vec3Schema.optional(),
     putDownRotation: Vec3Schema.optional(),
     catchesFish: z.boolean().optional(), // ownership at the catch, independent of a later put-down in the same scene

@@ -3,6 +3,7 @@ import type { MarkId, Surface, Vec2 } from "../schema";
 import {COOKING_STATION} from '../cookingStation';
 import {pondWaterAt,pondPierAt} from '../pond';
 import {HOUSE_KITCHEN_MARK,HOUSE_KITCHEN_FACING,HOUSE_LIVING_MARK,HOUSE_LIVING_SEAT_HEIGHT,isHousePoint} from '../houseLayout';
+import {KITCHEN_CONTAINERS} from '../kitchenContainers';
 import {KITCHEN_CUPBOARD} from '../interactiveObjects';
 
 export interface MarkDef {
@@ -16,6 +17,8 @@ export interface MarkDef {
 }
 
 export const MARKS: Record<MarkId, MarkDef> = {
+  kitchen_bowl:{id:"kitchen_bowl",pos:[...KITCHEN_CONTAINERS.kitchen_bowl.position],facing:-Math.PI/2,cluster:"interior",description:"One open bowl on the kitchen preparation table. Masha or Bear may place and take one identified carrot; Masha uses the existing helper."},
+  kitchen_pot:{id:"kitchen_pot",pos:[...KITCHEN_CONTAINERS.kitchen_pot.position],facing:-2.45,cluster:"interior",description:"The existing enamel pot on the rear kitchen counter. Bear may put one identified carrot into it; taking it back out is not supported yet."},
   cupboard:{id:'cupboard',pos:[...KITCHEN_CUPBOARD.approach],facing:-Math.PI/2,cluster:'interior',description:'Bear’s upper kitchen cupboard. Bear can open/close it and take the single pantry_honey jar from its shelf.'},
   clearing: { id: "clearing", pos: [0, 0], facing: 0, cluster: "yard", description: "Open grass in front of the house" },
   porch: { id: "porch", pos: [-6, -2.6], facing: 0, cluster: "house", description: "Wooden porch with three steps in front of Bear's house" },
@@ -41,7 +44,7 @@ export const MARKS: Record<MarkId, MarkDef> = {
 /** Water contact shared by fishing animation, its float, and the cast splash. */
 export const FISHING_WATER_TARGET: readonly [number, number, number] = [-8, .035, 10];
 
-export const isInteriorMark = (mark: string | null | undefined): mark is "house_kitchen" | "house_living" | 'cupboard' => mark === "house_kitchen" || mark === "house_living" || mark==='cupboard';
+export const isInteriorMark = (mark: string | null | undefined): mark is "house_kitchen" | "house_living" | 'cupboard' | 'kitchen_bowl' | 'kitchen_pot' => mark === "house_kitchen" || mark === "house_living" || mark==='cupboard'||mark==='kitchen_bowl'||mark==='kitchen_pot';
 /** Floor footprint; shared by semantic routing and physical interior rendering. */
 export const isInsideHouse = isHousePoint;
 
