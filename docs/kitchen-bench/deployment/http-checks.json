@@ -1,0 +1,127 @@
+{
+  "checkedAt": "2026-11-22T08:39:48.410036+00:00",
+  "url": "https://mabear-storybook.ilya-baimetov.workers.dev",
+  "anonymous": true,
+  "checks": [
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "status": 200,
+      "expectedStatus": 200,
+      "headers": {
+        "location": null,
+        "cache-control": "private, no-store",
+        "x-robots-tag": "noindex, nofollow",
+        "x-content-type-options": "nosniff",
+        "referrer-policy": "same-origin"
+      },
+      "body": {
+        "ok": true,
+        "service": "mabear-storybook",
+        "edition": "codex"
+      },
+      "passed": true
+    },
+    {
+      "method": "GET",
+      "path": "/",
+      "status": 302,
+      "expectedStatus": 302,
+      "headers": {
+        "location": "/login",
+        "cache-control": "private, no-store",
+        "x-robots-tag": "noindex, nofollow",
+        "x-content-type-options": "nosniff",
+        "referrer-policy": "same-origin"
+      },
+      "passed": true
+    },
+    {
+      "method": "GET",
+      "path": "/assets/studio-BPo7yYgf.js",
+      "status": 302,
+      "expectedStatus": 302,
+      "headers": {
+        "location": "/login",
+        "cache-control": "private, no-store",
+        "x-robots-tag": "noindex, nofollow",
+        "x-content-type-options": "nosniff",
+        "referrer-policy": "same-origin"
+      },
+      "passed": true
+    },
+    {
+      "method": "GET",
+      "path": "/assets/replayWorker-BZcvSGew.js",
+      "status": 302,
+      "expectedStatus": 302,
+      "headers": {
+        "location": "/login",
+        "cache-control": "private, no-store",
+        "x-robots-tag": "noindex, nofollow",
+        "x-content-type-options": "nosniff",
+        "referrer-policy": "same-origin"
+      },
+      "passed": true
+    },
+    {
+      "method": "GET",
+      "path": "/login",
+      "status": 200,
+      "expectedStatus": 200,
+      "headers": {
+        "location": null,
+        "cache-control": "private, no-store",
+        "x-robots-tag": "noindex, nofollow",
+        "x-content-type-options": "nosniff",
+        "referrer-policy": "same-origin"
+      },
+      "passed": true
+    },
+    {
+      "method": "GET",
+      "path": "/robots.txt",
+      "status": 200,
+      "expectedStatus": 200,
+      "headers": {
+        "location": null,
+        "cache-control": "private, no-store",
+        "x-robots-tag": "noindex, nofollow",
+        "x-content-type-options": "nosniff",
+        "referrer-policy": "same-origin"
+      },
+      "body": "User-agent: *\nDisallow: /\n",
+      "passed": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/direct",
+      "status": 401,
+      "expectedStatus": 401,
+      "headers": {
+        "location": null,
+        "cache-control": "private, no-store",
+        "x-robots-tag": "noindex, nofollow",
+        "x-content-type-options": "nosniff",
+        "referrer-policy": "same-origin"
+      },
+      "passed": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/speech",
+      "status": 401,
+      "expectedStatus": 401,
+      "headers": {
+        "location": null,
+        "cache-control": "private, no-store",
+        "x-robots-tag": "noindex, nofollow",
+        "x-content-type-options": "nosniff",
+        "referrer-policy": "same-origin"
+      },
+      "passed": true
+    }
+  ],
+  "passed": true,
+  "paidGenerationCalls": 0
+}

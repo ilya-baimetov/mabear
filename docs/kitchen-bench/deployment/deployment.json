@@ -1,0 +1,52 @@
+{
+  "deployedAt": "2026-11-22T08:39:03.886Z",
+  "recordedAt": "2026-11-22T08:42:12.212069+00:00",
+  "version": "eba1d7c0-5b93-46df-8e07-84fa2b22178d",
+  "previousVersion": "258bc27c-fdfd-4feb-92e2-a7514af8094c",
+  "trafficPercent": 100,
+  "url": "https://mabear-storybook.ilya-baimetov.workers.dev",
+  "releaseSourceCommit": "884b6201cf59421a25dfe87108ebf6bc5cc224f2",
+  "repository": "https://github.com/ilya-baimetov/mabear",
+  "releasePushedBranches": [
+    "main"
+  ],
+  "deploymentRecordBranch": "main",
+  "sourceFingerprint": "6b059a3ed328acb504fc5d48d2729ddcbaa7ae2846857d2907ddf27599bf2fea",
+  "features": [
+    "Carrot identity through garden, doorway, bowl, Bear and pot",
+    "Bench placement, nudge, physical fall/settling and actual-location retrieval",
+    "Worker preparation with deterministic playback, cancellation and animation fallback"
+  ],
+  "validation": {
+    "reviewedTests": 895,
+    "testFiles": 75,
+    "reviewedEvidence": "../validation/summary.json",
+    "sourceMatchesReviewedRecordings": true,
+    "freshProductionBuild": "passed",
+    "appAndWorkerTypecheck": "passed",
+    "liveHealth": "200; ok true",
+    "anonymousAccess": "App, studio and physics Worker assets redirect to login; director and speech return401; noindex and private/no-store preserved",
+    "authenticatedLivePlayback": "Actual full-story editor: bench placement/nudge/pickup, kitchen carrot2 ownership and eight untouched carrots, pause/resume, backward/forward seek, replay, edits, scene deletion and reload passed",
+    "liveBundleHashes": "All24 loaded JavaScript bundles match the committed release asset manifest",
+    "liveBrowserErrors": 0,
+    "liveAssetErrors": 0,
+    "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+    "liveDirectorBoundary": "API calls blocked during story tests; deployed paid AI directing and speech generation not exercised",
+    "authIsolation": "Separate context; game-origin cookies copied only in memory; user saved stories untouched"
+  },
+  "limitations": [
+    "Kitchen remains authored; one carrot per container; pot deposit-only",
+    "Physics remains bounded to supported Masha/ball/yard stories; unsupported stories, other actor transfers, hugs and rides retain authored fallback",
+    "Small accepted pot-rim grazing: head fur up to2.094mm and shoulder up to0.107mm; strict zero-intersection was not claimed"
+  ],
+  "evidence": {
+    "preflight": "preflight.json",
+    "liveBrowser": "live-browser.json",
+    "publicChecks": "http-checks.json",
+    "assets": "asset-hashes.json",
+    "deployLog": "deploy.log",
+    "cloudflareVersions": "releases.log"
+  },
+  "paidGenerationCalls": 0,
+  "authChanged": false
+}

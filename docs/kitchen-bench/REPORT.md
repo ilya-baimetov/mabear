@@ -1,6 +1,6 @@
 # Kitchen and bench continuity
 
-Validated local build; **not deployed, committed or pushed**. Branch: `codex/kitchen-bench-continuity`. Runtime fingerprint: `6b059a3ed328acb504fc5d48d2729ddcbaa7ae2846857d2907ddf27599bf2fea`. Baseline: previously deployed source `0a81ce43861dd3bc1a1fce2f751940d6f31dcbad` (runtime `3d10dddc3e0be55fb5ea1c5262e70e6bb962606867671021f34bdfac35cd3a08`).
+**Deployed 22 November 2026** after explicit authorization. Release source `884b620` was committed and pushed to `main` before deployment; Worker version `eba1d7c0-5b93-46df-8e07-84fa2b22178d`. Authenticated live story/transport/edit checks and all 24 loaded JavaScript bundle hashes passed. See the [deployment record](deployment/deployment.json). Runtime fingerprint: `6b059a3ed328acb504fc5d48d2729ddcbaa7ae2846857d2907ddf27599bf2fea`. Baseline: previously deployed source `0a81ce43861dd3bc1a1fce2f751940d6f31dcbad` (runtime `3d10dddc3e0be55fb5ea1c5262e70e6bb962606867671021f34bdfac35cd3a08`).
 
 ## Visible changes
 
@@ -57,7 +57,7 @@ First worker preparation takes longer overall, while removing the large synchron
 
 ## Live director and spending
 
-Six bounded live requests (EN/RU carrot, ball, cupboard) returned HTTP 200 and real LLM plans. Their recorded plans retain the expected identities; harmless spectator reactions no longer disable ball physics. The live server still uses the **previous deployed contract**. New bowl/pot/nudge language is locally verified, not claimed as deployed live behavior. [Requests, responses and provider token usage](director/summary.json).
+Six bounded live requests during development (EN/RU carrot, ball, cupboard) returned HTTP 200 and real LLM plans using the **previous deployed contract**. Their recorded plans retain the expected identities; harmless spectator reactions no longer disable ball physics. The new bowl/pot/nudge contract is now deployed. Live release verification exercised its offline parser and rendered stories with API calls blocked; it did not make another paid AI directing request. [Requests, responses and provider token usage](director/summary.json).
 
 No Fal/media-generation calls or asset purchases. All checks after those six requests replay saved responses or block APIs.
 

@@ -2,7 +2,7 @@
 
 The private repository at https://github.com/ilya-baimetov/mabear contains the game source, Cloudflare Worker, dependency lockfile, runtime assets under `public/`, tests, development tools, capture scripts, final review recordings and reports. The Storybook edition is at the repository root.
 
-The latest deployed game is recorded in [parallel-interactions/deployment/deployment.json](parallel-interactions/deployment/deployment.json). Its release source is committed on `main`; a fresh clone includes the game, runtime assets and verification evidence. Pushing to GitHub does not deploy it; deployment remains an explicit separate step.
+The latest deployed game is recorded in [kitchen-bench/deployment/deployment.json](kitchen-bench/deployment/deployment.json). Its release source (`884b620`) is committed on `main`; a fresh clone includes the game, runtime assets and verification evidence. Pushing to GitHub does not deploy it; deployment remains an explicit separate step.
 
 ## Local-only material
 
@@ -12,6 +12,7 @@ Production secrets are configured on Cloudflare, never stored here. A fresh chec
 
 ## Evidence
 
+- [Garden-to-kitchen continuity, bench physics and responsive preparation](kitchen-bench/REPORT.md)
 - [Ball continuity and individual carrots](parallel-interactions/README.md)
 - [Bear's cupboard interaction](cupboard/README.md)
 - [Default physics and interactive door](interactive-objects/README.md)
@@ -19,4 +20,4 @@ Production secrets are configured on Cloudflare, never stored here. A fresh chec
 - [Revised house interior](interior-integration/README.md)
 - [Camera and physical interactions](staging-interactions/README.md)
 
-Deployment records describe what was checked at each release. The current release passed 851 tests, TypeScript checks and a fresh production build. The packaged app passed typed ball/carrot stories and a cupboard regression. Authenticated live ball/carrot playback, pause/resume, seeking, exact bundle hashes, public health and anonymous access restrictions passed. Live story tests used the offline director with API calls blocked; no paid generation was performed.
+Deployment records describe what was checked at each release. The current release passed 895 tests, TypeScript checks and a fresh production build. Authenticated live bench/kitchen stories, pause/resume, seeking, replay, edits, scene deletion, reload, all 24 loaded JavaScript bundle hashes, public health and anonymous access restrictions passed. Existing interactions passed the local regression review. Live story tests used the offline director with API calls blocked; no paid generation was performed during deployment verification. The report preserves the bounded physics scope and small accepted fur/rim contacts.

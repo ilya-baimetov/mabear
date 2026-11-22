@@ -1,10 +1,10 @@
 # Kitchen and bench continuity
 
-Status: **complete and locally validated**, including independent review → updates, final actual-story recordings and decoded-media inspection. **No deployment, commits or pushes.** No further paid API calls are needed or authorized by this checkpoint.
+Status: **complete and deployed after explicit authorization**, including independent review → updates, final recordings and authenticated live verification. Release source `884b6201cf59421a25dfe87108ebf6bc5cc224f2` was pushed to `main` before deployment. Worker version: `eba1d7c0-5b93-46df-8e07-84fa2b22178d`. See [deployment/deployment.json](deployment/deployment.json). No paid generation calls were made during deployment verification.
 
 ## Source and ownership
 
-- Branch: `codex/kitchen-bench-continuity`.
+- Release branch: `main` (developed in `codex/kitchen-bench-continuity`).
 - Baseline release: `0a81ce43861dd3bc1a1fce2f751940d6f31dcbad`, runtime fingerprint `3d10dddc3e0be55fb5ea1c5262e70e6bb962606867671021f34bdfac35cd3a08`.
 - Frozen final runtime: **`6b059a3ed328acb504fc5d48d2729ddcbaa7ae2846857d2907ddf27599bf2fea`**.
 - Implementation owners `kitchen_objects`, `bench_physics` and `physics_preparation` finished. Independent reviewer `kitchen_bench_adversarial` finished and handed back the browser. Root completed final evidence/media/report. No required work remains for this batch.
