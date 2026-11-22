@@ -11,7 +11,7 @@ import { reactionTimeline } from "../react";
 import { publishStoryboardFrames } from "../storyboardFrames";
 import { storyboardTime } from "../storyboardTime";
 import { castCloseup } from "../castCamera";
-import { MapPin, Maximize, Hand, LoaderCircle, Trees, ChevronRight, Users } from "lucide-react";
+import { MapPin, Maximize, Minimize, Hand, LoaderCircle, Trees, ChevronRight, Users, VolumeX } from "lucide-react";
 
 declare global {
   interface Window {
@@ -40,6 +40,7 @@ export function Stage({ exploring = false }: { exploring?: boolean }) {
   const capturedTimeline = useRef<string | null>(null);
   const storyboardKey = useMemo(() => JSON.stringify(s.timeline), [s.timeline]);
   const [focus, setFocus] = useState<ActorId | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [location, setLocation] = useState<NonNullable<CamKey["location"]>>("yard");
   const locationRef = useRef(location);
   const placeNames = {
@@ -48,6 +49,54 @@ export function Stage({ exploring = false }: { exploring?: boolean }) {
     pond: { en: "The forest pond", ru: "Лесной пруд" },
     wolves: { en: "The wolves’ camp", ru: "Лагерь волков" },
   };
+  useEffect(() => {
+    const sync = () => {
+      const stageCol = wrap.current?.closest(".stage-col") ?? null;
+      setIsFullscreen(Boolean(stageCol && document.fullscreenElement === stageCol));
+    };
+    sync();
+    document.addEventListener("fullscreenchange", sync);
+    return () => document.removeEventListener("fullscreenchange", sync);
+  }, []);
+  const activeCue = useMemo(() => {
+    if (!s.captions || !ready || s.waiting) return null;
+    for (const seg of s.timeline.segments) {
+      const cue = seg.segment.dialogue.find((c) => {
+        const start = seg.offset + c.start;
+        return s.t >= start && s.t <= start + c.dur && c.text.trim().length > 0;
+      });
+      if (cue) return cue;
+    }
+    return null;
+  }, [s.captions, ready, s.waiting, s.timeline, s.t]);
+  const waitingLabel = useMemo(() => {
+    if (s.preparingVoice) {
+      return s.lang === "en" ? "Preparing Masha’s voice…" : "Готовим голос Маши…";
+    }
+    const scope = s.previewScope;
+    const scopeEnd = scope?.kind === "moment"
+      ? s.paragraphs.findIndex((p) => p.id === scope.id)
+      : s.paragraphs.length - 1;
+    const scoped = scopeEnd >= 0
+      ? s.paragraphs.slice(0, scopeEnd + 1).filter((p) => p.text.trim().length > 0)
+      : [];
+    const pendingCount = scoped.filter(
+      (p) => p.pendingVersion !== null || p.status === "directing" || store.isRedirectQueued(p.id),
+    ).length;
+    if (pendingCount > 0 && scoped.length > 0) {
+      const doneCount = scoped.filter(
+        (p) => p.pendingVersion === null && p.status !== "directing" && !store.isRedirectQueued(p.id) && p.status !== "draft",
+      ).length;
+      const current = Math.min(scoped.length, doneCount + 1);
+      if (scoped.length > 1) {
+        return s.lang === "en"
+          ? `Directing scene ${current} of ${scoped.length}…`
+          : `Готовим сцену ${current} из ${scoped.length}…`;
+      }
+      return s.lang === "en" ? "Directing scene 1 of 1…" : "Готовим сцену 1 из 1…";
+    }
+    return t.gettingReady;
+  }, [s.preparingVoice, s.previewScope, s.paragraphs, s.lang, t.gettingReady]);
   useEffect(() => { if (s.playing) setFocus(null); }, [s.playing]);
   useEffect(() => {
     setFocus(null);
@@ -235,6 +284,8 @@ export function Stage({ exploring = false }: { exploring?: boolean }) {
       <canvas
         ref={canvas}
         data-testid="stage-canvas"
+        role="img"
+        aria-label={s.lang === "en" ? "Masha and Bear 3D stage" : "3D-сцена с Машей и Медведем"}
         onPointerDown={(e) => {
           down.current = { x: e.clientX, y: e.clientY };
         }}
@@ -260,21 +311,72 @@ export function Stage({ exploring = false }: { exploring?: boolean }) {
           else playReaction();
         }}
       />
-      <div className="stage-label"><span><MapPin size={12}/>{s.lang === "en" ? "THE LITTLE FOREST" : "МАЛЕНЬКИЙ ЛЕС"}</span><strong>{focus ? CHARACTERS[focus].name[s.lang] : placeNames[location][s.lang]}</strong></div>
-      <button className="fullscreen-btn" title={s.lang === "en" ? "Fullscreen" : "На весь экран"} aria-label={s.lang === "en" ? "Fullscreen" : "На весь экран"} onClick={() => { const el = wrap.current?.closest<HTMLElement>(".stage-col"); if (document.fullscreenElement) void document.exitFullscreen().catch(() => {}); else void el?.requestFullscreen?.().catch(() => {}); }}><Maximize size={18}/></button>
+      <div className="stage-label"><span><MapPin size={12} aria-hidden="true"/>{s.lang === "en" ? "THE LITTLE FOREST" : "МАЛЕНЬКИЙ ЛЕС"}</span><strong>{focus ? CHARACTERS[focus].name[s.lang] : placeNames[location][s.lang]}</strong></div>
+      <button
+        type="button"
+        className="fullscreen-btn"
+        title={isFullscreen ? (s.lang === "en" ? "Exit fullscreen (F)" : "Выйти из полноэкранного режима (F)") : (s.lang === "en" ? "Fullscreen (F)" : "На весь экран (F)")}
+        aria-label={s.lang === "en" ? "Fullscreen" : "На весь экран"}
+        aria-pressed={isFullscreen}
+        onClick={() => {
+          const el = wrap.current?.closest<HTMLElement>(".stage-col");
+          if (document.fullscreenElement) void document.exitFullscreen().catch(() => {});
+          else void el?.requestFullscreen?.().catch(() => {});
+        }}
+      >
+        {isFullscreen ? <Minimize size={18} aria-hidden="true"/> : <Maximize size={18} aria-hidden="true"/>}
+      </button>
+      {ready && !s.waiting && s.playing && (s.muted || s.volume === 0) && (
+        <button
+          type="button"
+          className="stage-muted-pill"
+          onClick={() => {
+            void playback.audio?.unlock();
+            store.setMuted(false);
+            if (store.getState().volume === 0) store.setVolume(0.8);
+          }}
+        >
+          <VolumeX size={14} aria-hidden="true"/>
+          <span>{s.lang === "en" ? "Muted — tap for sound" : "Без звука — нажми"}</span>
+        </button>
+      )}
       {ready && !s.waiting && <div className="stage-scope"><span className={s.playing ? "scope-live" : ""}/>{s.previewScope?.kind !== "moment" ? (s.lang === "en" ? `Entire story${activeMoment >= 0 ? ` · scene ${activeMoment + 1}` : ""}` : `Просмотр всей истории${activeMoment >= 0 ? ` · сцена ${activeMoment + 1}` : ""}`) : (s.lang === "en" ? `Scene ${Math.max(0, s.paragraphs.findIndex(p => p.id === (s.previewScope?.kind === "moment" ? s.previewScope.id : s.selectedId))) + 1} preview` : `Просмотр сцены ${Math.max(0, s.paragraphs.findIndex(p => p.id === (s.previewScope?.kind === "moment" ? s.previewScope.id : s.selectedId))) + 1}`)}</div>}
-      {s.waiting && <div className="getting-ready" data-testid="getting-ready" role="status"><LoaderCircle size={17} className="spin"/> {t.gettingReady}</div>}
-      {exploring && ready && !s.playing && !s.waiting && (s.timeline.duration === 0 || s.t >= s.timeline.duration - 0.05) && <div className="tap-hint"><Hand size={14}/> {t.tapToReact}</div>}
-      {!ready && !failed && <div className="stage-loading" role="status"><span className="loading-mark"><Trees size={43} strokeWidth={1.2}/></span><strong>{t.loading}</strong><span>{s.lang === "en" ? "A little world is waking up." : "Маленький мир просыпается."}</span><LoaderCircle size={20} className="spin"/></div>}
-      {failed && <div className="stage-error">{t.stageError}</div>}
+      <div className="stage-caption-region" aria-live="polite" aria-atomic="true">
+        {activeCue && (
+          <div className="stage-caption" data-testid="stage-caption">
+            <img className="stage-caption-avatar" src={PORTRAITS[activeCue.actor]} alt="" aria-hidden="true"/>
+            <strong>{CHARACTERS[activeCue.actor].name[s.lang]}</strong>
+            <span>{activeCue.text}</span>
+          </div>
+        )}
+      </div>
+      {s.waiting && <div className="getting-ready" data-testid="getting-ready" role="status"><LoaderCircle size={17} className="spin" aria-hidden="true"/> {waitingLabel}</div>}
+      {exploring && ready && !s.playing && !s.waiting && (s.timeline.duration === 0 || s.t >= s.timeline.duration - 0.05) && <div className="tap-hint"><Hand size={14} aria-hidden="true"/> {t.tapToReact}</div>}
+      {!ready && !failed && (
+        <div className="stage-loading" role="status">
+          <span className="loading-mark" aria-hidden="true"><Trees size={43} strokeWidth={1.2}/></span>
+          <strong>{t.loading}</strong>
+          <span>{s.lang === "en" ? "Masha and Bear are getting the forest ready for you!" : "Маша и Мишка уже готовят лесную полянку!"}</span>
+          <progress className="stage-progress" aria-label={t.loading}/>
+          <LoaderCircle size={20} className="spin" aria-hidden="true"/>
+        </div>
+      )}
+      {failed && (
+        <div className="stage-error" role="alert">
+          <p>{t.stageError}</p>
+          <button type="button" className="btn" onClick={() => window.location.reload()}>
+            {s.lang === "en" ? "Try again" : "Попробовать снова"}
+          </button>
+        </div>
+      )}
     </div>
     {exploring && <div className="cast-deck">
-      <div className="cast-heading"><span><Users size={13}/>{s.lang === "en" ? "THE CAST" : "ГЕРОИ"}</span><small>{s.lang === "en" ? "Use their names in your story" : "Добавь их имена в историю"}</small></div>
+      <div className="cast-heading"><span><Users size={13} aria-hidden="true"/>{s.lang === "en" ? "THE CAST" : "ГЕРОИ"}</span><small>{s.lang === "en" ? "Use their names in your story" : "Добавь их имена в историю"}</small></div>
       <div className="cast-bar" ref={cast}>
-        <button className={`cast-friend cast-world ${!focus ? "selected" : ""}`} aria-pressed={!focus} aria-label={s.lang === "en" ? "Story view" : "История"} onClick={() => { setFocus(null); window.__mabear?.closeup(null); }}><span className="cast-portrait"><Trees size={25} strokeWidth={1.5}/></span><span>{s.lang === "en" ? "Story view" : "История"}</span></button>
-        {ACTOR_IDS.map(id => <button key={id} className={`cast-friend ${focus === id ? "selected" : ""}`} aria-pressed={focus === id} aria-label={CHARACTERS[id].name[s.lang]} title={CHARACTERS[id].name[s.lang]} disabled={!ready || s.playing || s.waiting} onClick={() => { setFocus(id); window.__mabear?.closeup(id, .18); }}><span className="cast-portrait"><img src={PORTRAITS[id]} alt="" width={44} height={44} loading="lazy"/></span><span>{CHARACTERS[id].name[s.lang]}</span></button>)}
+        <button type="button" className={`cast-friend cast-world ${!focus ? "selected" : ""}`} aria-pressed={!focus} aria-label={s.lang === "en" ? "Story view" : "История"} onClick={() => { setFocus(null); window.__mabear?.closeup(null); }}><span className="cast-portrait"><Trees size={25} strokeWidth={1.5} aria-hidden="true"/></span><span>{s.lang === "en" ? "Story view" : "История"}</span></button>
+        {ACTOR_IDS.map(id => <button type="button" key={id} className={`cast-friend ${focus === id ? "selected" : ""}`} aria-pressed={focus === id} aria-label={CHARACTERS[id].name[s.lang]} title={CHARACTERS[id].name[s.lang]} disabled={!ready || s.playing || s.waiting} onClick={() => { setFocus(id); window.__mabear?.closeup(id, .18); }}><span className="cast-portrait"><img src={PORTRAITS[id]} alt="" width={44} height={44} loading="lazy"/></span><span>{CHARACTERS[id].name[s.lang]}</span></button>)}
       </div>
-      <button className="cast-next" aria-label={s.lang === "en" ? "More friends" : "Другие герои"} onClick={() => { const row = cast.current; if (row) row.scrollTo({ left: row.scrollLeft + row.clientWidth >= row.scrollWidth - 5 ? 0 : row.scrollLeft + row.clientWidth * .7, behavior: "smooth" }); }}><ChevronRight size={17}/></button>
+      <button type="button" className="cast-next" aria-label={s.lang === "en" ? "More friends" : "Другие герои"} onClick={() => { const row = cast.current; if (row) row.scrollTo({ left: row.scrollLeft + row.clientWidth >= row.scrollWidth - 5 ? 0 : row.scrollLeft + row.clientWidth * .7, behavior: "smooth" }); }}><ChevronRight size={17} aria-hidden="true"/></button>
     </div>}
     </div>
   );

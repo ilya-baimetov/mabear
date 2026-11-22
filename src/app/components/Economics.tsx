@@ -10,7 +10,7 @@ import {
   diffusionCostPerParagraph,
   scaleRow,
 } from "../../shared/pricing";
-import { useStrings } from "../useStore";
+import { useStore, useStrings } from "../useStore";
 
 export function usd(n: number): string {
   if (n === 0) return "$0";
@@ -27,30 +27,58 @@ export function bytes(n: number): string {
   return `${(n / 1e15).toFixed(1)} PB`;
 }
 
+function nonNegative(value: string): number {
+  const n = Number(value);
+  return Number.isFinite(n) && n >= 0 ? n : 0;
+}
+
 export function Economics({ durationS, planBytes, directorCost, costNote }: { durationS: number; planBytes: number; directorCost: number; costNote: string }) {
+  const s = useStore();
   const t = useStrings();
   const [users, setUsers] = useState(SCALE_DEFAULTS.users);
   const [ppd, setPpd] = useState(SCALE_DEFAULTS.paragraphsPerUserPerDay);
   const [videoPrice, setVideoPrice] = useState(VIDEO_PRICE.default);
   const [prodCost, setProdCost] = useState(PRODUCTION_COST_PER_PARAGRAPH.value);
   const dur = durationS || 8;
+  const videoPriceLabel = s.lang === "en"
+    ? VIDEO_PRICE.label
+    : `Veo 3.1 видео+звук 1080p в Vertex AI, $0.40 за секунду (Lite 720p $${VIDEO_PRICE.low}, 4k $${VIDEO_PRICE.high})`;
+  const prodLabel = s.lang === "en"
+    ? PRODUCTION_COST_PER_PARAGRAPH.label
+    : "допущение: небольшая дистиллированная модель текст→таймлайн (~1 млрд параметров) на обычных GPU";
+  const bitrateLabel = s.lang === "en" ? VIDEO_BITRATE_LABEL : "H.264 1080p @ ~8 Мбит/с ≈ 1 МБ/с";
+  const egressLabel = s.lang === "en" ? EGRESS_PER_GB.label : "Cloudflare Workers static/egress: без платы за трафик";
+
   const cols = [
-    { key: "video", name: t.bts.colVideo, per: diffusionCostPerParagraph(dur, videoPrice), bytesPer: dur * VIDEO_BYTES_PER_SECOND, note: `${dur.toFixed(1)} s × $${videoPrice}/s (${VIDEO_PRICE.label})`, render: t.bts.gpuCloud },
+    {
+      key: "video",
+      name: t.bts.colVideo,
+      per: diffusionCostPerParagraph(dur, videoPrice),
+      bytesPer: dur * VIDEO_BYTES_PER_SECOND,
+      note: s.lang === "en"
+        ? `${dur.toFixed(1)} s × $${videoPrice}/s (${videoPriceLabel})`
+        : `${dur.toFixed(1)} с × $${videoPrice}/с (${videoPriceLabel})`,
+      render: t.bts.gpuCloud,
+    },
     { key: "proto", name: t.bts.colProto, per: directorCost, bytesPer: planBytes, note: costNote, render: t.bts.onDevice },
-    { key: "prod", name: t.bts.colProd, per: prodCost, bytesPer: planBytes, note: PRODUCTION_COST_PER_PARAGRAPH.label, render: t.bts.onDevice },
+    { key: "prod", name: t.bts.colProd, per: prodCost, bytesPer: planBytes, note: prodLabel, render: t.bts.onDevice },
   ].map((c) => ({ ...c, scale: scaleRow(c.per, c.bytesPer, users, ppd) }));
+
   return (
     <section className="bts-sec" data-testid="economics">
       <h3>{t.bts.economics}</h3>
       <div className="scale-inputs">
-        <label>{t.bts.users} <input type="number" value={users} min={1} onChange={(e) => setUsers(Number(e.target.value) || 0)} /></label>
-        <label>{t.bts.perUserDay} <input type="number" value={ppd} min={1} onChange={(e) => setPpd(Number(e.target.value) || 0)} /></label>
-        <label>{t.bts.videoPerS} <input type="number" step={0.05} value={videoPrice} onChange={(e) => setVideoPrice(Number(e.target.value) || 0)} /></label>
-        <label>{t.bts.prodPerP} <span className="assume">{t.bts.assumption}</span><input type="number" step={0.0001} value={prodCost} onChange={(e) => setProdCost(Number(e.target.value) || 0)} /></label>
+        <label>{t.bts.users} <input type="number" value={users} min={0} onChange={(e) => setUsers(nonNegative(e.target.value))} /></label>
+        <label>{t.bts.perUserDay} <input type="number" value={ppd} min={0} onChange={(e) => setPpd(nonNegative(e.target.value))} /></label>
+        <label>{t.bts.videoPerS} <input type="number" min={0} step={0.05} value={videoPrice} onChange={(e) => setVideoPrice(nonNegative(e.target.value))} /></label>
+        <label>{t.bts.prodPerP} <span className="assume">{t.bts.assumption}</span><input type="number" min={0} step={0.0001} value={prodCost} onChange={(e) => setProdCost(nonNegative(e.target.value))} /></label>
       </div>
       <table className="econ">
         <thead>
-          <tr><th />{cols.map((c) => <th key={c.key}>{c.name}</th>)}</tr>
+          <tr>
+            <th scope="col"><span className="visually-hidden">{s.lang === "en" ? "Metric" : "Показатель"}</span></th>
+            {cols.map((c) => <th scope="col" key={c.key}>{c.name}</th>)}
+          </tr>
         </thead>
         <tbody>
           <tr><td>{t.bts.perParagraph}</td>{cols.map((c) => <td key={c.key} data-testid={`econ-per-${c.key}`}>{usd(c.per)}</td>)}</tr>
@@ -62,7 +90,9 @@ export function Economics({ durationS, planBytes, directorCost, costNote }: { du
         </tbody>
       </table>
       <p className="note">
-        Video price: {VIDEO_PRICE.label} (${VIDEO_PRICE.low}–${VIDEO_PRICE.high}/s); source: {VIDEO_PRICE.source}; as of {VIDEO_PRICE.asOf}. Video payload: {VIDEO_BITRATE_LABEL}. Egress: {EGRESS_PER_GB.label} ({EGRESS_PER_GB.source}).
+        {s.lang === "en"
+          ? `Video price: ${VIDEO_PRICE.label} ($${VIDEO_PRICE.low}–$${VIDEO_PRICE.high}/s); source: ${VIDEO_PRICE.source}; as of ${VIDEO_PRICE.asOf}. Video payload: ${bitrateLabel}. Egress: ${egressLabel} (${EGRESS_PER_GB.source}).`
+          : `Цена видео: ${videoPriceLabel} ($${VIDEO_PRICE.low}–$${VIDEO_PRICE.high}/с); источник: ${VIDEO_PRICE.source}; на ${VIDEO_PRICE.asOf}. Поток видео: ${bitrateLabel}. Трафик: ${egressLabel} (${EGRESS_PER_GB.source}).`}
       </p>
     </section>
   );

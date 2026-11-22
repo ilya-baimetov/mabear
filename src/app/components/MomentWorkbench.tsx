@@ -1,45 +1,128 @@
-import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, Check, ChevronDown, CircleAlert, Clock3, LoaderCircle, MapPin, Pause, Play, Plus, RotateCcw, SlidersHorizontal, Sparkles, Trash2, Users, X } from "lucide-react";
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { ArrowLeft, ArrowRight, Check, ChevronDown, CircleAlert, Clock3, Copy, LoaderCircle, MapPin, Pause, Play, Plus, RotateCcw, SlidersHorizontal, Sparkles, Trash2, Undo2, Users, X, Zap } from "lucide-react";
 import { ACTOR_IDS, MAX_PARAGRAPH_CHARS, type ActorId, type MarkId } from "../../shared/schema";
 import { CHARACTERS } from "../../shared/bible/characters";
 import { PROPS } from "../../shared/bible/props";
 import { store } from "../store";
 import { playback } from "../playback";
-import { earlierChanges, insertMoment, moveMoment, selectMoment, selectedMoment } from "../storyFlow";
+import { deleteMomentWithUndo, discardMomentDraft, duplicateMoment, earlierChanges, insertMoment, moveMoment, revertMoment, selectMoment, selectedMoment } from "../storyFlow";
 import { useStore } from "../useStore";
 import { PORTRAITS } from "./castPortraits";
 import { RemixButtons } from "./RemixButtons";
 import { revealStage } from "./studioView";
 
 const PLACES: Record<MarkId, { en: string; ru: string }> = {
-  cupboard:{en:'cupboard',ru:'шкаф'},
+  cupboard: { en: "cupboard", ru: "шкаф" },
   house_kitchen: { en: "kitchen", ru: "кухня" }, house_living: { en: "living room", ru: "гостиная" },
   clearing: { en: "yard", ru: "двор" }, porch: { en: "porch", ru: "крыльцо" }, door: { en: "door", ru: "дверь" }, garden: { en: "garden", ru: "огород" }, beehive: { en: "beehive", ru: "улей" }, swing: { en: "swing", ru: "качели" }, pond_shore: { en: "pond", ru: "пруд" }, pier: { en: "pier", ru: "причал" }, table: { en: "table", ru: "стол" }, bench: { en: "bench", ru: "скамейка" }, woodpile: { en: "woodpile", ru: "поленница" }, path_entry: { en: "forest path", ru: "лесная тропинка" }, big_tree: { en: "big tree", ru: "большое дерево" }, bush: { en: "bush", ru: "куст" }, hammock: { en: "hammock", ru: "гамак" }, creek: { en: "creek", ru: "ручей" }, van: { en: "ambulance", ru: "скорая помощь" },
 };
+
+const ACTIONS = [
+  { id: "waves", en: "waves to", ru: "машет" },
+  { id: "runs", en: "runs to", ru: "бежит к" },
+  { id: "jumps", en: "jumps", ru: "прыгает" },
+  { id: "laughs", en: "laughs", ru: "смеётся" },
+  { id: "dances", en: "dances", ru: "танцует" },
+  { id: "swings", en: "swings", ru: "качается" },
+  { id: "cooks_pancakes", en: "cooks pancakes", ru: "печёт блины" },
+  { id: "goes_fishing", en: "goes fishing", ru: "идёт на рыбалку" },
+  { id: "sings", en: "sings", ru: "поёт" },
+  { id: "plays_ball", en: "plays with ball", ru: "играет в мяч" },
+  { id: "hugs", en: "hugs", ru: "обнимает" },
+  { id: "naps", en: "takes a nap", ru: "ложится спать" },
+] as const;
+
 const SEEDS = [
   { title: { en: "A little hello", ru: "Привет, Мишка!" }, text: { en: "Masha waves to Bear. Bear waves back.", ru: "Маша машет Медведю. Медведь машет в ответ." } },
   { title: { en: "Off to the garden", ru: "Бегом в огород" }, text: { en: "Masha runs to the garden. Bear looks at Masha.", ru: "Маша бежит в огород. Медведь смотрит на Машу." } },
   { title: { en: "Let's play!", ru: "Давай играть!" }, text: { en: 'Masha says, "Let\'s play!" Bear claps.', ru: 'Маша говорит: «Давай играть!» Медведь хлопает.' } },
 ];
 
+const ACTOR_MENTION_PATTERNS: Record<ActorId, RegExp> = {
+  masha: /(?<![\p{L}])(?:masha|маш(?:[аиеу]|ей|ой|еньк[аиеу]?))(?![\p{L}])/iu,
+  bear: /(?<![\p{L}])(?:(?<!lady\s)(?<!rival\s)(?<!himalayan\s)bear|медвед(?:[ьяюе]|ем)(?![-\s]*спортсмен)|мишк[аиеуой]*|миш[аиеу])(?![\p{L}])/iu,
+  lady_bear: /(?<![\p{L}])(?:lady\s+bear|медведиц[аыеуой]?|медведицей|медведицею)(?![\p{L}])/iu,
+  rival_bear: /(?<![\p{L}])(?:(?:rival|himalayan)\s+bear|(?:гималайск[а-яё]*|спортивн[а-яё]*)\s+медвед[а-яё]*|медвед[а-яё]*[-\s]+спортсмен[а-яё]*)(?![\p{L}])/iu,
+  hare: /(?<![\p{L}])(?:hare|rabbit|заяц|зайц[ауем]+|зайчик[ауоме]*|зайк[аиеуой]+)(?![\p{L}])/iu,
+  rosie: /(?<![\p{L}])(?:rosie|pig|свинк[аиеуой]+|свинь[иеюяёй]+|хрюш[аиеуой]+|розочк[аиеуой]+)(?![\p{L}])/iu,
+  squirrel: /(?<![\p{L}])(?:squirrel|бел(?:оч)?к[аиеуой]*)(?![\p{L}])/iu,
+  wolf_a: /(?<![\p{L}])(?:big\s+wolf|(?:the\s+)?wolves|(?<!little\s)wolf|больш[а-яё]+\s+волк[а-яё]*|(?<!маленьк[а-яё]+\s)волк(?:[ауе]|ом)?|волки|волк(?:ов|ам|ами|ах))(?![\p{L}])/iu,
+  wolf_b: /(?<![\p{L}])(?:little\s+wolf|(?:the\s+)?wolves|маленьк[а-яё]+\s+волк[а-яё]*|волч(?:ок|к[ауоме]+|онок|онк[ауоме]+)|волки|волк(?:ов|ам|ами|ах))(?![\p{L}])/iu,
+};
+
+function isActorMentioned(id: ActorId, body: string): boolean {
+  if (ACTOR_MENTION_PATTERNS[id].test(body)) return true;
+  const lower = body.toLocaleLowerCase();
+  return Object.values(CHARACTERS[id].name).some(name => lower.includes(name.toLocaleLowerCase()));
+}
+
+function isOutsideDialog(event: ReactPointerEvent<HTMLDialogElement>, dialog: HTMLDialogElement): boolean {
+  const r = dialog.getBoundingClientRect();
+  return event.clientX < r.left || event.clientX > r.right || event.clientY < r.top || event.clientY > r.bottom;
+}
+
+const IS_MAC = typeof navigator !== "undefined" && /Mac|iPhone|iPad|iPod/i.test(navigator.platform || navigator.userAgent || "");
+
 export function MomentWorkbench({ onExamples }: { onExamples: () => void }) {
   const s = useStore();
   const p = selectedMoment(s);
   const text = useRef<HTMLTextAreaElement>(null);
   const toolbar = useRef<HTMLDivElement>(null);
-  const [panel, setPanel] = useState<"cast" | "places" | "context" | "options" | "polish" | "ideas" | null>(null);
-  const [removeOpen, setRemoveOpen] = useState(false);
   const removeDialog = useRef<HTMLDialogElement>(null);
+  const keepBtn = useRef<HTMLButtonElement>(null);
+  const pressedOutside = useRef(false);
+  const insertFlashTimer = useRef<number | null>(null);
+  const [panel, setPanel] = useState<"cast" | "actions" | "places" | "context" | "options" | "polish" | "ideas" | null>(null);
+  const [removeOpen, setRemoveOpen] = useState(false);
   const [orderNote, setOrderNote] = useState(false);
   const [insertionBlocked, setInsertionBlocked] = useState(false);
-  useEffect(() => { if (removeOpen && !removeDialog.current?.open) removeDialog.current?.showModal(); else if (!removeOpen && removeDialog.current?.open) removeDialog.current?.close(); }, [removeOpen]);
-  useEffect(() => { if (s.playing && s.previewScope?.kind === "moment" && s.previewScope.id === p?.id) setOrderNote(false); }, [s.playing, s.previewScope, p?.id]);
-  useEffect(() => { setPanel(null); setRemoveOpen(false); setOrderNote(false); }, [p?.id]);
+  const [insertedFlash, setInsertedFlash] = useState(false);
+
+  const clearFlashTimer = () => {
+    if (insertFlashTimer.current !== null) {
+      window.clearTimeout(insertFlashTimer.current);
+      insertFlashTimer.current = null;
+    }
+  };
+
+  useEffect(() => () => clearFlashTimer(), []);
+
+  useEffect(() => {
+    const dialog = removeDialog.current;
+    if (!dialog) return;
+    if (removeOpen && !dialog.open) {
+      setPanel(null);
+      dialog.showModal();
+      keepBtn.current?.focus({ preventScroll: true });
+    } else if (!removeOpen && dialog.open) {
+      dialog.close();
+    }
+  }, [removeOpen]);
+
+  useEffect(() => {
+    if (s.playing && s.previewScope?.kind === "moment" && s.previewScope.id === p?.id) setOrderNote(false);
+  }, [s.playing, s.previewScope, p?.id]);
+
+  useEffect(() => {
+    setPanel(null);
+    setRemoveOpen(false);
+    setOrderNote(false);
+    setInsertedFlash(false);
+    clearFlashTimer();
+  }, [p?.id]);
+
+  useEffect(() => {
+    setInsertedFlash(false);
+    clearFlashTimer();
+  }, [panel]);
+
   useEffect(() => { setInsertionBlocked(false); }, [p?.id, p?.text]);
+
   useEffect(() => {
     if (panel === "ideas" && p?.text.trim()) setPanel(null);
     if (panel === "polish" && p && ((p.status !== "ready" && p.status !== "adjusted") || earlierChanges(s, p.id).length > 0)) setPanel(null);
   }, [panel, p, s]);
+
   useEffect(() => {
     if (!panel) return;
     const onPointerDown = (event: PointerEvent) => {
@@ -58,6 +141,7 @@ export function MomentWorkbench({ onExamples }: { onExamples: () => void }) {
       document.removeEventListener("keydown", onKeyDown);
     };
   }, [panel]);
+
   if (!p) return null;
   const index = s.paragraphs.findIndex(x => x.id === p.id);
   const previous = s.paragraphs[index - 1], next = s.paragraphs[index + 1];
@@ -72,24 +156,37 @@ export function MomentWorkbench({ onExamples }: { onExamples: () => void }) {
   const range = store.segmentRange(p.id);
   const playingThis = ownPreview && (s.playing || s.waiting);
   const start = store.startStateFor(index);
-  const mentioned = ACTOR_IDS.filter(id => Object.values(CHARACTERS[id].name).some(name => p.text.toLocaleLowerCase().includes(name.toLocaleLowerCase())));
+  const mentioned = ACTOR_IDS.filter(id => isActorMentioned(id, p.text));
   const relevant = [...new Set<ActorId>([
     ...(changed || !version ? mentioned : version.beatScript.beats.map(b => b.actor)),
     ...(previous?.versions[previous.current]?.beatScript.beats.map(b => b.actor) ?? []),
   ])];
   const actors: ActorId[] = relevant.length ? relevant : ["masha", "bear"];
+
   const preview = () => {
     if (error) store.retry(p.id);
     revealStage();
     playback.playParagraph(p.id);
   };
-  const insert = (word: string) => {
+
+  const applySeed = (value: string) => {
+    store.editText(p.id, value);
+    setPanel(null);
+    requestAnimationFrame(() => {
+      const el = text.current;
+      if (!el?.isConnected || el.dataset.pid !== p.id) return;
+      el.focus({ preventScroll: true });
+      el.setSelectionRange(value.length, value.length);
+    });
+  };
+
+  const insert = (word: string, keepOpen = false) => {
     const el = text.current;
     const from = el?.selectionStart ?? p.text.length, to = el?.selectionEnd ?? from;
     const left = p.text.slice(0, from), right = p.text.slice(to);
     const token = `${left && !/\s$/.test(left) ? " " : ""}${word}${right && !/^\s/.test(right) ? " " : ""}`;
     const value = `${left}${token}${right}`;
-    setPanel(null);
+    if (!keepOpen) setPanel(null);
     if (value.length > MAX_PARAGRAPH_CHARS) {
       setInsertionBlocked(true);
       el?.focus({ preventScroll: true });
@@ -97,16 +194,30 @@ export function MomentWorkbench({ onExamples }: { onExamples: () => void }) {
     }
     setInsertionBlocked(false);
     store.editText(p.id, value);
+    if (keepOpen) {
+      setInsertedFlash(true);
+      clearFlashTimer();
+      insertFlashTimer.current = window.setTimeout(() => {
+        setInsertedFlash(false);
+        insertFlashTimer.current = null;
+      }, 1100);
+    }
     requestAnimationFrame(() => {
       if (!el?.isConnected || el.dataset.pid !== p.id) return;
       el.focus({ preventScroll: true });
       el.setSelectionRange(from + token.length, from + token.length);
     });
   };
+
   const addNext = () => {
     const id = insertMoment(p.id);
     requestAnimationFrame(() => document.querySelector<HTMLTextAreaElement>(`[data-pid="${id}"]`)?.focus());
   };
+
+  const focusEditor = () => {
+    requestAnimationFrame(() => text.current?.focus({ preventScroll: true }));
+  };
+
   const statusDetail = working
     ? (s.lang === "en" ? "Preparing this scene. Your writing is safe to keep editing." : "Готовим эту сцену. Можно продолжать редактировать.")
     : error
@@ -114,11 +225,18 @@ export function MomentWorkbench({ onExamples }: { onExamples: () => void }) {
       : changed
         ? (s.lang === "en" ? "Preview to see your latest direction." : "Посмотри сцену с последними изменениями.")
         : (s.lang === "en" ? "Ready. Refine the action, or add what happens next." : "Готово. Уточни действие или придумай продолжение.");
-  const continuityDetail = s.lang === "en" ? `Scene ${upstream[0] + 1} changed. Preview will refresh the starting scene first, then play only this scene. Your later writing stays.` : `Сцена ${upstream[0] + 1} изменена. Сначала обновим начало, затем покажем только эту сцену. Дальнейший текст сохранится.`;
-  const orderDetail = s.lang === "en" ? "Scene moved. The starting scene has been updated; preview to check the new transition." : "Сцена перемещена. Начальная сцена обновлена; посмотри, как теперь связаны действия.";
-  const insertDetail = s.lang === "en" ? `Adds after scene ${index + 1}, before ${index + 2}. Later writing stays.` : `Добавим после сцены ${index + 1}, перед ${index + 2}. Дальнейший текст сохранится.`;
+  const continuityDetail = s.lang === "en"
+    ? `Scene ${upstream[0] + 1} changed. Preview will refresh the starting scene first, then play only this scene. Your later writing stays.`
+    : `Сцена ${upstream[0] + 1} изменена. Сначала обновим начало, затем покажем только эту сцену. Дальнейший текст сохранится.`;
+  const orderDetail = s.lang === "en"
+    ? "Scene moved. The starting scene has been updated; preview to check the new transition."
+    : "Сцена перемещена. Начальная сцена обновлена; посмотри, как теперь связаны действия.";
+  const insertDetail = s.lang === "en"
+    ? `Adds after scene ${index + 1}, before ${index + 2}. Later writing stays.`
+    : `Добавим после сцены ${index + 1}, перед ${index + 2}. Дальнейший текст сохранится.`;
   const panelTitles = {
     cast: s.lang === "en" ? "Add a character" : "Добавь героя",
+    actions: s.lang === "en" ? "Add an action" : "Добавь действие",
     places: s.lang === "en" ? "Add a location" : "Добавь место",
     context: s.lang === "en" ? "Starting context" : "В начале сцены",
     options: s.lang === "en" ? "Scene options" : "Действия со сценой",
@@ -129,68 +247,123 @@ export function MomentWorkbench({ onExamples }: { onExamples: () => void }) {
     toolbar.current?.querySelector<HTMLButtonElement>('[aria-expanded="true"]')?.focus({ preventScroll: true });
     setPanel(null);
   };
+
   return <aside className="moment-workbench" data-testid="moment-workbench" aria-label={s.lang === "en" ? "Direct this scene" : "Создай эту сцену"}>
     <header className="moment-header">
       <div className="scene-title-row">
         <h1>{s.lang === "en" ? `Scene ${index + 1}` : `Сцена ${index + 1}`}</h1>
         <div className="scene-header-actions">
-          <div className="moment-position"><div><button className="btn icon" aria-label={s.lang === "en" ? "Previous scene" : "Предыдущая сцена"} disabled={!previous} onClick={() => selectMoment(previous.id)}><ArrowLeft size={15}/></button><span>{String(index + 1).padStart(2, "0")} <i>/ {String(s.paragraphs.length).padStart(2, "0")}</i></span><button className="btn icon" aria-label={s.lang === "en" ? "Next scene" : "Следующая сцена"} disabled={!next} onClick={() => selectMoment(next.id)}><ArrowRight size={15}/></button></div></div>
-          <button className="scene-delete" data-testid="request-remove-moment" onClick={() => setRemoveOpen(true)}><Trash2 size={15}/>{s.lang === "en" ? "Delete scene" : "Удалить сцену"}</button>
+          <div className="moment-position"><div><button type="button" className="btn icon" aria-label={s.lang === "en" ? "Previous scene" : "Предыдущая сцена"} disabled={!previous} onClick={() => selectMoment(previous.id)}><ArrowLeft size={15} aria-hidden="true"/></button><span>{String(index + 1).padStart(2, "0")} <i>/ {String(s.paragraphs.length).padStart(2, "0")}</i></span><button type="button" className="btn icon" aria-label={s.lang === "en" ? "Next scene" : "Следующая сцена"} disabled={!next} onClick={() => selectMoment(next.id)}><ArrowRight size={15} aria-hidden="true"/></button></div></div>
+          <button type="button" className="scene-delete" data-testid="request-remove-moment" onClick={() => setRemoveOpen(true)}><Trash2 size={15} aria-hidden="true"/>{s.lang === "en" ? "Delete scene" : "Удалить сцену"}</button>
         </div>
       </div>
     </header>
     <div className="scene-toolbar" ref={toolbar}>
       <div className="scene-action-buttons">
-        {playingThis ? <button className="btn moment-preview" data-testid="moment-pause" onClick={() => playback.pause()}><Pause size={16}/>{s.lang === "en" ? "Pause preview" : "Пауза просмотра"}</button> : <button className={`btn moment-preview ${ready && !upstream.length ? "has-preview" : ""}`} data-testid="preview-moment" disabled={blank || !s.stageReady || working} onClick={preview}>{working ? <LoaderCircle size={16} className="spin"/> : error ? <RotateCcw size={16}/> : <Play size={16} fill="currentColor"/>}{error ? (s.lang === "en" ? "Try this scene again" : "Попробовать ещё раз") : upstream.length ? (s.lang === "en" ? "Preview with earlier changes" : "Смотреть с изменениями") : ready ? (s.lang === "en" ? "Replay scene" : "Повторить") : (s.lang === "en" ? "Preview scene" : "Посмотреть")}</button>}
-        <button className={`btn next-moment ${ready ? "next-ready" : ""}`} data-testid="add-next-moment" disabled={blank || working} onClick={addNext} title={next ? insertDetail : undefined} aria-describedby={next ? "scene-insert-position" : undefined}><Plus size={16}/>{s.lang === "en" ? "Add scene" : "Добавить сцену"}</button>
+        {playingThis ? <button type="button" className="btn moment-preview" data-testid="moment-pause" onClick={() => playback.pause()}><Pause size={16} aria-hidden="true"/>{s.lang === "en" ? "Pause preview" : "Пауза просмотра"}</button> : <button type="button" className={`btn moment-preview ${ready && !upstream.length ? "has-preview" : ""}`} data-testid="preview-moment" disabled={blank || !s.stageReady || working} onClick={preview}>{working ? <LoaderCircle size={16} className="spin" aria-hidden="true"/> : error ? <RotateCcw size={16} aria-hidden="true"/> : <Play size={16} fill="currentColor" aria-hidden="true"/>}{error ? (s.lang === "en" ? "Try this scene again" : "Попробовать ещё раз") : upstream.length ? (s.lang === "en" ? "Preview with earlier changes" : "Смотреть с изменениями") : ready ? (s.lang === "en" ? "Replay scene" : "Повторить") : (s.lang === "en" ? "Preview scene" : "Посмотреть")}<kbd className="preview-kbd" aria-hidden="true">{IS_MAC ? "⌘↵" : "Ctrl+↵"}</kbd></button>}
+        <button type="button" className={`btn next-moment ${ready ? "next-ready" : ""}`} data-testid="add-next-moment" disabled={blank || working} onClick={addNext} title={next ? insertDetail : undefined} aria-describedby={next ? "scene-insert-position" : undefined}><Plus size={16} aria-hidden="true"/>{s.lang === "en" ? "What happens next?" : "Что будет дальше?"}</button>
         {next && <span className="sr-only" id="scene-insert-position" data-testid="insert-position">{insertDetail}</span>}
       </div>
       <div className="scene-status-row" role="status" data-testid="moment-state">
-        <span data-testid="moment-feedback" title={statusDetail}>{working ? <LoaderCircle size={13} className="spin"/> : error ? <CircleAlert size={13}/> : ready ? <Check size={13}/> : <Sparkles size={13}/>}{working ? (s.lang === "en" ? "Preparing preview…" : "Готовим просмотр…") : error ? (version ? (s.lang === "en" ? "Simpler preview · try again" : "Упрощённо · попробуй ещё") : (s.lang === "en" ? "Preview failed · try again" : "Не удалось · попробуй ещё")) : ready ? (s.lang === "en" ? "Scene ready" : "Сцена готова") : blank ? (s.lang === "en" ? "Start with one action" : "Начни с одного действия") : (s.lang === "en" ? "Changes to preview" : "Есть изменения")}</span>
-        {range && !changed && !working && <small><Clock3 size={11}/>{(range.end - range.start).toFixed(1)}{s.lang === "en" ? "s" : "с"}</small>}
-        {upstream.length > 0 && <span className="scene-status-warning" data-testid="continuity-warning" title={continuityDetail} aria-label={continuityDetail}><CircleAlert size={12}/>{s.lang === "en" ? "Earlier scene changed" : "Начало изменилось"}</span>}
+        <span data-testid="moment-feedback" className={error ? "feedback-error" : working ? "feedback-working" : undefined} title={statusDetail}>{working ? <LoaderCircle size={13} className="spin" aria-hidden="true"/> : error ? <CircleAlert size={13} aria-hidden="true"/> : ready ? <Check size={13} aria-hidden="true"/> : <Sparkles size={13} aria-hidden="true"/>}{working ? (s.lang === "en" ? "Preparing preview…" : "Готовим просмотр…") : error ? (version ? (s.lang === "en" ? "Simpler preview · try again" : "Упрощённо · попробуй ещё") : (s.lang === "en" ? "Preview failed · try again" : "Не удалось · попробуй ещё")) : ready ? (s.lang === "en" ? "Scene ready" : "Сцена готова") : blank ? (s.lang === "en" ? "Start with one action" : "Начни с одного действия") : (s.lang === "en" ? "Changes to preview" : "Есть изменения")}</span>
+        {(p.text.length >= 420 || insertionBlocked) && <span className={`scene-char-count ${p.text.length >= MAX_PARAGRAPH_CHARS || insertionBlocked ? "at-limit" : ""}`}>{p.text.length}/{MAX_PARAGRAPH_CHARS}</span>}
+        {range && !changed && !working && <small><Clock3 size={11} aria-hidden="true"/>{(range.end - range.start).toFixed(1)}{s.lang === "en" ? "s" : "с"}</small>}
+        {upstream.length > 0 && <span className="scene-status-warning" data-testid="continuity-warning" title={continuityDetail} aria-label={continuityDetail}><CircleAlert size={12} aria-hidden="true"/>{s.lang === "en" ? "Earlier scene changed" : "Раньше были правки"}</span>}
         {orderNote && <span className="scene-status-warning" data-testid="order-change-note" title={orderDetail} aria-label={orderDetail}>{s.lang === "en" ? "Scene moved" : "Сцена перемещена"}</span>}
-        {insertionBlocked && <span className="scene-status-warning" data-testid="insertion-limit-note" title={s.lang === "en" ? "There is not enough room to insert the complete name. Shorten your scene or select text to replace." : "Недостаточно места для полного названия. Сократи сцену или выдели текст для замены."}>{s.lang === "en" ? "No room to insert" : "Не хватает места"}</span>}
       </div>
+      {insertionBlocked && <p className="scene-limit-note" data-testid="insertion-limit-note" role="status"><CircleAlert size={13} aria-hidden="true"/><span>{s.lang === "en" ? `Scene reached ${MAX_PARAGRAPH_CHARS} characters — shorten it or select text to replace` : `В сцене уже ${MAX_PARAGRAPH_CHARS} символов — сократи текст или выдели слово`}</span></p>}
+      {!!version?.ruleHits.length && <details className="moment-adjustments"><summary><Sparkles size={13} aria-hidden="true"/><span>{s.lang === "en" ? "We gently adjusted your scene" : "Мы бережно поправили сцену"}</span><ChevronDown size={13} aria-hidden="true"/></summary>{version.ruleHits.map((hit, i) => <p key={i}>{hit.kid_message}</p>)}</details>}
       <div className="scene-picker-row">
-        <button id="scene-cast-toggle" className={panel === "cast" ? "on" : ""} aria-expanded={panel === "cast"} aria-controls="scene-toolbar-panel" data-testid="direction-tools" onClick={() => setPanel(panel === "cast" ? null : "cast")}><Users size={13}/>{s.lang === "en" ? "Characters" : "Герои"}<span>{ACTOR_IDS.length}</span></button>
-        <button id="scene-places-toggle" className={panel === "places" ? "on" : ""} aria-expanded={panel === "places"} aria-controls="scene-toolbar-panel" data-testid="place-tools" onClick={() => setPanel(panel === "places" ? null : "places")}><MapPin size={13}/>{s.lang === "en" ? "Locations" : "Места"}<span>{Object.keys(PLACES).length}</span></button>
-        <button id="scene-context-toggle" className={panel === "context" ? "on" : ""} aria-expanded={panel === "context"} aria-controls="scene-toolbar-panel" data-testid="context-tools" onClick={() => setPanel(panel === "context" ? null : "context")}>{s.lang === "en" ? "Context" : "Контекст"}</button>
-        <button id="scene-options-toggle" className={panel === "options" ? "on" : ""} aria-expanded={panel === "options"} aria-controls="scene-toolbar-panel" data-testid="scene-options" onClick={() => setPanel(panel === "options" ? null : "options")}>{s.lang === "en" ? "Scene options" : "Действия"}<ChevronDown size={12}/></button>
-        {ready && !upstream.length && <button id="scene-polish-toggle" className={panel === "polish" ? "on" : ""} aria-expanded={panel === "polish"} aria-controls="scene-toolbar-panel" data-testid="polish-moment" onClick={() => setPanel(panel === "polish" ? null : "polish")}><SlidersHorizontal size={13}/>{s.lang === "en" ? "Fine-tune" : "Настроить"}</button>}
-        {blank && <button id="scene-ideas-toggle" className={panel === "ideas" ? "on" : ""} aria-expanded={panel === "ideas"} aria-controls="scene-toolbar-panel" data-testid="scene-ideas" onClick={() => setPanel(panel === "ideas" ? null : "ideas")}><Sparkles size={13}/>{s.lang === "en" ? "Ideas" : "Идеи"}</button>}
+        <button type="button" id="scene-cast-toggle" className={panel === "cast" ? "on" : ""} aria-expanded={panel === "cast"} aria-controls={panel === "cast" ? "scene-toolbar-panel" : undefined} data-testid="direction-tools" onClick={() => setPanel(panel === "cast" ? null : "cast")}><Users size={13} aria-hidden="true"/>{s.lang === "en" ? "Characters" : "Герои"}<span>{ACTOR_IDS.length}</span></button>
+        <button type="button" id="scene-actions-toggle" className={panel === "actions" ? "on" : ""} aria-expanded={panel === "actions"} aria-controls={panel === "actions" ? "scene-toolbar-panel" : undefined} data-testid="action-tools" onClick={() => setPanel(panel === "actions" ? null : "actions")}><Zap size={13} aria-hidden="true"/>{s.lang === "en" ? "Actions" : "Действия"}<span>{ACTIONS.length}</span></button>
+        <button type="button" id="scene-places-toggle" className={panel === "places" ? "on" : ""} aria-expanded={panel === "places"} aria-controls={panel === "places" ? "scene-toolbar-panel" : undefined} data-testid="place-tools" onClick={() => setPanel(panel === "places" ? null : "places")}><MapPin size={13} aria-hidden="true"/>{s.lang === "en" ? "Locations" : "Места"}<span>{Object.keys(PLACES).length}</span></button>
+        <button type="button" id="scene-context-toggle" className={panel === "context" ? "on" : ""} aria-expanded={panel === "context"} aria-controls={panel === "context" ? "scene-toolbar-panel" : undefined} data-testid="context-tools" onClick={() => setPanel(panel === "context" ? null : "context")}>{s.lang === "en" ? "Context" : "Контекст"}{upstream.length > 0 && <span className="context-alert-dot" aria-hidden="true">!</span>}</button>
+        <button type="button" id="scene-options-toggle" className={panel === "options" ? "on" : ""} aria-expanded={panel === "options"} aria-controls={panel === "options" ? "scene-toolbar-panel" : undefined} data-testid="scene-options" onClick={() => setPanel(panel === "options" ? null : "options")}>{s.lang === "en" ? "Scene options" : "Опции сцены"}<ChevronDown size={12} aria-hidden="true"/></button>
+        {ready && !upstream.length && <button type="button" id="scene-polish-toggle" className={panel === "polish" ? "on" : ""} aria-expanded={panel === "polish"} aria-controls={panel === "polish" ? "scene-toolbar-panel" : undefined} data-testid="polish-moment" onClick={() => setPanel(panel === "polish" ? null : "polish")}><SlidersHorizontal size={13} aria-hidden="true"/>{s.lang === "en" ? "Fine-tune" : "Настроить"}</button>}
+        {blank && <button type="button" id="scene-ideas-toggle" className={panel === "ideas" ? "on" : ""} aria-expanded={panel === "ideas"} aria-controls={panel === "ideas" ? "scene-toolbar-panel" : undefined} data-testid="scene-ideas" onClick={() => setPanel(panel === "ideas" ? null : "ideas")}><Sparkles size={13} aria-hidden="true"/>{s.lang === "en" ? "Ideas" : "Идеи"}</button>}
       </div>
-      {panel && <div className="scene-toolbar-panel" id="scene-toolbar-panel" data-testid="scene-toolbar-panel" role="region" aria-labelledby={`scene-${panel}-toggle`}>
-        <div className="scene-panel-heading"><strong>{panelTitles[panel]}</strong><button className="btn icon" aria-label={s.lang === "en" ? "Close panel" : "Закрыть панель"} onClick={closePanel}><X size={16}/></button></div>
-        {panel === "cast" && <div className="author-cast">{ACTOR_IDS.map(id => <button key={id} data-testid={`insert-cast-${id}`} onClick={() => insert(CHARACTERS[id].name[s.lang])}><img src={PORTRAITS[id]} alt=""/><span>{CHARACTERS[id].name[s.lang]}</span></button>)}</div>}
-        {panel === "places" && <div className="author-places">{(Object.keys(PLACES) as MarkId[]).map(id => <button key={id} data-testid={`insert-place-${id}`} onClick={() => insert(PLACES[id][s.lang])}>{PLACES[id][s.lang]}</button>)}</div>}
+      {panel && <div className="scene-toolbar-panel" id="scene-toolbar-panel" data-testid="scene-toolbar-panel" role="region" aria-labelledby="scene-panel-title">
+        <div className="scene-panel-heading"><strong id="scene-panel-title">{panelTitles[panel]}</strong>{insertedFlash && <span className="panel-inserted-pill" role="status"><Check size={11} aria-hidden="true"/>{s.lang === "en" ? "Inserted!" : "Добавлено!"}</span>}<button type="button" className="btn icon" aria-label={s.lang === "en" ? "Close panel" : "Закрыть панель"} onClick={closePanel}><X size={16} aria-hidden="true"/></button></div>
+        {panel === "cast" && <div className="author-cast">{ACTOR_IDS.map(id => <button type="button" key={id} data-testid={`insert-cast-${id}`} onClick={() => insert(CHARACTERS[id].name[s.lang], true)}><img src={PORTRAITS[id]} alt=""/><span>{CHARACTERS[id].name[s.lang]}</span></button>)}</div>}
+        {panel === "actions" && <div className="author-places author-actions">{ACTIONS.map(a => <button type="button" key={a.id} data-testid={`insert-action-${a.id}`} onClick={() => insert(a[s.lang], true)}>{a[s.lang]}</button>)}</div>}
+        {panel === "places" && <div className="author-places">{(Object.keys(PLACES) as MarkId[]).map(id => <button type="button" key={id} data-testid={`insert-place-${id}`} onClick={() => insert(PLACES[id][s.lang], true)}>{PLACES[id][s.lang]}</button>)}</div>}
         {panel === "context" && <section className="moment-continuity" aria-label={s.lang === "en" ? "Starting context" : "Что было до этого"}>
-          <div className="context-label"><MapPin size={12}/>{upstream.length > 0 ? (s.lang === "en" ? "LAST PREVIEW CONTEXT · WILL REFRESH" : "КОНТЕКСТ ПРОШЛОГО ПРОСМОТРА · ОБНОВИМ") : previous ? (s.lang === "en" ? `PICKS UP AFTER SCENE ${index}` : `ПРОДОЛЖАЕТ СЦЕНУ ${index}`) : (s.lang === "en" ? "WE BEGIN IN BEAR'S FOREST" : "НАЧИНАЕМ В МИШКИНОМ ЛЕСУ")}</div>
+          <div className="context-label"><MapPin size={12} aria-hidden="true"/>{upstream.length > 0 ? (s.lang === "en" ? "LAST PREVIEW CONTEXT · WILL REFRESH" : "КОНТЕКСТ ПРОШЛОГО ПРОСМОТРА · ОБНОВИМ") : previous ? (s.lang === "en" ? `PICKS UP AFTER SCENE ${index}` : `ПРОДОЛЖАЕТ СЦЕНУ ${index}`) : (s.lang === "en" ? "WE BEGIN IN BEAR'S FOREST" : "НАЧИНАЕМ В МИШКИНОМ ЛЕСУ")}</div>
           {previous && <p className="previous-moment">{previous.text || (s.lang === "en" ? "The previous scene is still empty." : "Предыдущая сцена пока пуста.")}</p>}
           <div className="context-actors" aria-label={s.lang === "en" ? "At scene start" : "В начале сцены"}>{actors.map(id => {
             const actor = start.actors[id];
             return <span className="context-actor" key={id}><img src={PORTRAITS[id]} alt=""/><span><b>{CHARACTERS[id].name[s.lang]}</b><small>{actor.holding ? PROPS[actor.holding].name[s.lang] : actor.posture === "sleep" ? (s.lang === "en" ? "asleep" : "спит") : actor.mark ? PLACES[actor.mark][s.lang] : (s.lang === "en" ? "in the forest" : "в лесу")}</small></span></span>;
           })}</div>
           {upstream.length > 0 && <p className="scene-context-note">{continuityDetail}</p>}
-          {!!version?.ruleHits.length && <details className="moment-adjustments"><summary><Sparkles size={13}/>{s.lang === "en" ? "A small adjustment to your direction" : "Немного поправили замысел"}<ChevronDown size={13}/></summary>{version.ruleHits.map((hit, i) => <p key={i}>{hit.kid_message}</p>)}</details>}
         </section>}
         {panel === "options" && <div className="scene-option-list">
-          <button data-testid="move-moment-earlier" disabled={index === 0 || working} onClick={() => { moveMoment(p.id, -1); setOrderNote(true); }}><ArrowLeft size={13}/>{s.lang === "en" ? "Move earlier" : "Переместить раньше"}</button>
-          <button data-testid="move-moment-later" disabled={!next || working} onClick={() => { moveMoment(p.id, 1); setOrderNote(true); }}><ArrowRight size={13}/>{s.lang === "en" ? "Move later" : "Переместить дальше"}</button>
-          <button disabled={p.current <= 0 || working} onClick={() => store.revert(p.id)}><RotateCcw size={13}/>{s.lang === "en" ? "Restore previous version" : "Вернуть прошлую версию"}</button>
+          <button type="button" data-testid="move-moment-earlier" disabled={index === 0 || working} onClick={() => { moveMoment(p.id, -1); setOrderNote(true); }}><ArrowLeft size={13} aria-hidden="true"/>{s.lang === "en" ? "Move earlier" : "Переместить раньше"}</button>
+          <button type="button" data-testid="move-moment-later" disabled={!next || working} onClick={() => { moveMoment(p.id, 1); setOrderNote(true); }}><ArrowRight size={13} aria-hidden="true"/>{s.lang === "en" ? "Move later" : "Переместить дальше"}</button>
+          <button type="button" data-testid="duplicate-moment" disabled={working} onClick={() => { setPanel(null); duplicateMoment(p.id); focusEditor(); }}><Copy size={13} aria-hidden="true"/>{s.lang === "en" ? "Duplicate scene" : "Сделать копию сцены"}</button>
+          <button type="button" data-testid="discard-draft" disabled={!changed || p.current < 0 || working} onClick={() => { setPanel(null); discardMomentDraft(p.id); focusEditor(); }}><Undo2 size={13} aria-hidden="true"/>{s.lang === "en" ? "Discard edits" : "Отменить правки"}</button>
+          <button type="button" disabled={p.current <= 0 || working} onClick={() => { setPanel(null); revertMoment(p.id); focusEditor(); }}><RotateCcw size={13} aria-hidden="true"/>{s.lang === "en" ? "Restore previous version" : "Вернуть прошлую версию"}</button>
         </div>}
         {panel === "polish" && ready && !upstream.length && <div className="moment-polish-body"><p>{s.lang === "en" ? "Change camera, light, or music. Only this scene replays." : "Измени камеру, свет или музыку. Повторится только эта сцена."}</p><RemixButtons p={p}/></div>}
-        {panel === "ideas" && <div className="moment-seeds">{SEEDS.map((seed, i) => <button key={i} data-testid={`moment-seed-${i}`} onClick={() => { store.editText(p.id, seed.text[s.lang]); setPanel(null); text.current?.focus(); }}>{seed.title[s.lang]}<ArrowRight size={13}/></button>)}<button className="seed-examples" onClick={() => { setPanel(null); onExamples(); }}>{s.lang === "en" ? "Or explore a complete story" : "Или открой готовую историю"}<ArrowRight size={13}/></button></div>}
+        {panel === "ideas" && <div className="moment-seeds">{SEEDS.map((seed, i) => <button type="button" key={i} data-testid={`moment-seed-${i}`} onClick={() => applySeed(seed.text[s.lang])}>{seed.title[s.lang]}<ArrowRight size={13} aria-hidden="true"/></button>)}<button type="button" className="seed-examples" onClick={() => { setPanel(null); onExamples(); }}>{s.lang === "en" ? "Or explore a complete story" : "Или открой готовую историю"}<ArrowRight size={13} aria-hidden="true"/></button></div>}
       </div>}
     </div>
     <div className={`scene-writing-area ${working ? "working" : ""}`}>
       <label className="sr-only" htmlFor="moment-direction">{index === 0 ? (s.lang === "en" ? "What happens first?" : "Что случится сначала?") : (s.lang === "en" ? "What happens now?" : "Что происходит теперь?")}</label>
-      <textarea ref={text} id="moment-direction" data-testid="moment-text" data-pid={p.id} value={p.text} maxLength={MAX_PARAGRAPH_CHARS} placeholder={s.lang === "en" ? "Masha peeks around the tree. Bear turns and waves." : "Маша выглядывает из-за дерева. Медведь оборачивается и машет."} onChange={e => store.editText(p.id, e.target.value)} onKeyDown={e => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && !e.nativeEvent.isComposing && p.text.trim() && !working && s.stageReady) { e.preventDefault(); preview(); } }}/>
+      <textarea
+        ref={text}
+        id="moment-direction"
+        data-testid="moment-text"
+        data-pid={p.id}
+        value={p.text}
+        maxLength={MAX_PARAGRAPH_CHARS}
+        placeholder={s.lang === "en" ? "Masha peeks around the tree. Bear turns and waves." : "Маша выглядывает из-за дерева. Медведь оборачивается и машет."}
+        onChange={e => store.editText(p.id, e.target.value)}
+        onKeyDown={e => {
+          if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && !e.nativeEvent.isComposing && e.keyCode !== 229 && p.text.trim() && !working && s.stageReady) {
+            e.preventDefault();
+            preview();
+          }
+        }}
+      />
+      {blank && <div className="blank-starters" data-testid="blank-starters">
+        <span className="blank-starters-title">{s.lang === "en" ? "Need an idea? Tap to begin:" : "Нужна идея? Нажми, чтобы начать:"}</span>
+        <div className="blank-starters-grid">
+          {SEEDS.map((seed, i) => <button type="button" key={i} className="blank-seed" data-testid={`blank-seed-${i}`} onClick={() => applySeed(seed.text[s.lang])}>
+            <strong>{seed.title[s.lang]}</strong>
+            <small>{seed.text[s.lang]}</small>
+          </button>)}
+        </div>
+        <button type="button" className="seed-examples blank-examples" onClick={onExamples}>{s.lang === "en" ? "Browse ready stories" : "Готовые истории"}<ArrowRight size={13} aria-hidden="true"/></button>
+      </div>}
     </div>
-    <dialog ref={removeDialog} className="replace-story-dialog" data-testid="remove-moment-dialog" aria-labelledby="remove-moment-title" onCancel={() => setRemoveOpen(false)} onClick={e => { if (e.target === e.currentTarget) setRemoveOpen(false); }}>
-      <h2 id="remove-moment-title">{s.lang === "en" ? `Delete scene ${index + 1}?` : `Удалить сцену ${index + 1}?`}</h2>
-      <p>{s.paragraphs.length === 1 ? (s.lang === "en" ? "This deletes its writing and preview. You’ll start with an empty scene." : "Её текст и предпросмотр будут удалены. Останется пустая сцена для новой истории.") : (s.lang === "en" ? "This deletes its writing and preview. All other scenes stay in the story." : "Её текст и предпросмотр будут удалены. Все остальные сцены останутся в истории.")}</p>
-      <footer><button className="btn" data-testid="keep-moment" onClick={() => setRemoveOpen(false)}>{s.lang === "en" ? "Keep scene" : "Оставить сцену"}</button><button className="btn start-writing" data-testid="remove-moment" onClick={() => { playback.pause(); const adjacent = previous ?? next; setRemoveOpen(false); store.deleteParagraph(p.id); if (adjacent) selectMoment(adjacent.id); else { const id = store.addParagraph(); playback.setScope({ kind: "moment", id }); } }}>{s.lang === "en" ? "Delete scene" : "Удалить сцену"}</button></footer>
+    <dialog
+      ref={removeDialog}
+      className="replace-story-dialog"
+      data-testid="remove-moment-dialog"
+      aria-labelledby="remove-moment-title"
+      {...({ closedby: "any" } as Record<string, unknown>)}
+      onCancel={() => setRemoveOpen(false)}
+      onClose={() => setRemoveOpen(false)}
+      onPointerDown={e => {
+        if ("closedBy" in HTMLDialogElement.prototype) return;
+        if (e.button !== 0) return;
+        pressedOutside.current = isOutsideDialog(e, e.currentTarget);
+      }}
+      onPointerUp={e => {
+        if ("closedBy" in HTMLDialogElement.prototype) return;
+        const wasOutside = pressedOutside.current;
+        pressedOutside.current = false;
+        if (wasOutside && isOutsideDialog(e, e.currentTarget)) setRemoveOpen(false);
+      }}
+    >
+      <div className="dialog-surface">
+        <h2 id="remove-moment-title">{s.lang === "en" ? `Delete scene ${index + 1}?` : `Удалить сцену ${index + 1}?`}</h2>
+        <p>{s.paragraphs.length === 1 ? (s.lang === "en" ? "This deletes its writing and preview. You’ll start with an empty scene." : "Её текст и предпросмотр будут удалены. Останется пустая сцена для новой истории.") : (s.lang === "en" ? "This deletes its writing and preview. All other scenes stay in the story." : "Её текст и предпросмотр будут удалены. Все остальные сцены останутся в истории.")}</p>
+        <footer>
+          <button ref={keepBtn} type="button" className="btn" data-testid="keep-moment" autoFocus onClick={() => setRemoveOpen(false)}>{s.lang === "en" ? "Keep scene" : "Оставить сцену"}</button>
+          <button type="button" className="btn start-writing" data-testid="remove-moment" onClick={() => { setRemoveOpen(false); deleteMomentWithUndo(p.id); }}>{s.lang === "en" ? "Delete scene" : "Удалить сцену"}</button>
+        </footer>
+      </div>
     </dialog>
   </aside>;
 }

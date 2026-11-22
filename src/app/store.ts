@@ -58,6 +58,14 @@ export interface Paragraph {
   /** set while a director call for the latest version is in flight */
   pendingVersion: number | null;
   lastRemixMs: number | null;
+  /** carried remix preset when duplicating a remixed scene as a fresh draft */
+  pendingRemix?: Remix;
+}
+
+export interface ToastMessage {
+  id: number;
+  message: { en: string; ru: string };
+  undoable?: boolean;
 }
 
 export interface AppState {
@@ -77,6 +85,12 @@ export interface AppState {
   t: number;
   volume: number;
   muted: boolean;
+  captions: boolean;
+  loop: boolean;
+  canUndo: boolean;
+  canRedo: boolean;
+  saveError: boolean;
+  toast: ToastMessage | null;
   pitch: boolean;
   model: DirectorModel | null;
   directorCalls: number;
@@ -99,6 +113,7 @@ const LS = {
   cache: "mabear.cache",
   episode: "mabear.episode",
   volume: "mabear.volume",
+  captions: "mabear.captions",
 };
 
 function lsGet(key: string): string | null {
@@ -108,11 +123,13 @@ function lsGet(key: string): string | null {
     return null;
   }
 }
-function lsSet(key: string, v: string): void {
+function lsSet(key: string, v: string): boolean {
   try {
     localStorage.setItem(key, v);
+    return true;
   } catch {
     /* quota or disabled */
+    return false;
   }
 }
 
@@ -202,6 +219,25 @@ function hasPitchParam(): boolean {
   }
 }
 
+interface HistoryEntry {
+  title: string;
+  paragraphs: Paragraph[];
+  selectedId: string | null;
+  fixtureId: FixtureEpisode["id"] | null;
+}
+
+const HISTORY_LIMIT = 40;
+const EDIT_COALESCE_MS = 900;
+
+function cloneParagraphs(paragraphs: Paragraph[]): Paragraph[] {
+  return paragraphs.map((p) => ({
+    ...p,
+    pendingVersion: null,
+    status: p.status === "directing" ? "draft" : p.status,
+    versions: [...p.versions],
+  }));
+}
+
 // ---------- the store ----------
 class Store {
   state: AppState;
@@ -214,12 +250,19 @@ class Store {
   private runActive = false;
   /** paragraphs whose re-direct is queued for the next microtask (they count as pending) */
   private redirectQueue = new Set<string>();
+  private historyPast: HistoryEntry[] = [];
+  private historyFuture: HistoryEntry[] = [];
+  private historyBatchDepth = 0;
+  private lastEditId: string | null = null;
+  private lastEditAt = 0;
+  private toastCounter = 0;
   /** recompile() calls so far (e2e: typing must not compile) */
   compileCount = 0;
   private speechDurations: Record<string, number> = Object.fromEntries((recordings as SpeechRecording[]).map(r => [speechKey(r.text,r.lang),r.duration]));
 
   constructor() {
     const vol = Number(lsGet(LS.volume) ?? "0.8");
+    const captions = lsGet(LS.captions) !== "0";
     this.state = {
       stageReady: false,
       previewScope: null,
@@ -235,6 +278,12 @@ class Store {
       t: 0,
       volume: Number.isFinite(vol) ? vol : 0.8,
       muted: false,
+      captions,
+      loop: false,
+      canUndo: false,
+      canRedo: false,
+      saveError: false,
+      toast: null,
       pitch: hasPitchParam(),
       model: null,
       directorCalls: 0,
@@ -264,18 +313,140 @@ class Store {
     this.setParagraphs(this.state.paragraphs.map((p) => (p.id === id ? { ...p, ...patch } : p)));
   }
 
+  private makeSnapshot(): HistoryEntry {
+    return {
+      title: this.state.title,
+      paragraphs: cloneParagraphs(this.state.paragraphs),
+      selectedId: this.state.selectedId,
+      fixtureId: this.state.fixtureId,
+    };
+  }
+
+  private pushHistory(coalesceKey?: string): void {
+    if (this.historyBatchDepth > 0) return;
+    const now = Date.now();
+    if (coalesceKey && coalesceKey === this.lastEditId && now - this.lastEditAt < EDIT_COALESCE_MS) {
+      this.lastEditAt = now;
+      if (this.historyFuture.length) {
+        this.historyFuture = [];
+        this.set({ canUndo: this.historyPast.length > 0, canRedo: false });
+      }
+      return;
+    }
+    this.historyPast.push(this.makeSnapshot());
+    while (this.historyPast.length > HISTORY_LIMIT) this.historyPast.shift();
+    this.historyFuture = [];
+    this.lastEditId = coalesceKey ?? null;
+    this.lastEditAt = coalesceKey ? now : 0;
+    const canUndo = this.historyPast.length > 0;
+    if (this.state.canUndo !== canUndo || this.state.canRedo) {
+      this.set({ canUndo, canRedo: false });
+    }
+  }
+
+  runHistoryBatch<T>(fn: () => T): T {
+    if (this.historyBatchDepth === 0) this.pushHistory();
+    this.historyBatchDepth += 1;
+    try {
+      return fn();
+    } finally {
+      this.historyBatchDepth -= 1;
+    }
+  }
+
+  clearHistory(): void {
+    this.historyPast = [];
+    this.historyFuture = [];
+    this.lastEditId = null;
+    this.lastEditAt = 0;
+    if (this.state.canUndo || this.state.canRedo) this.set({ canUndo: false, canRedo: false });
+  }
+
+  undo(): boolean {
+    const prev = this.historyPast.pop();
+    if (!prev) return false;
+    for (const c of this.inflight.values()) c.abort();
+    this.inflight.clear();
+    this.redirectQueue.clear();
+    this.historyFuture.push(this.makeSnapshot());
+    this.lastEditId = null;
+    this.lastEditAt = 0;
+    const paragraphs = cloneParagraphs(prev.paragraphs);
+    const selectedId = prev.selectedId && paragraphs.some((p) => p.id === prev.selectedId) ? prev.selectedId : (paragraphs[0]?.id ?? null);
+    this.set({
+      title: prev.title,
+      paragraphs,
+      selectedId,
+      fixtureId: prev.fixtureId,
+      waiting: false,
+      playing: false,
+      toast: null,
+      canUndo: this.historyPast.length > 0,
+      canRedo: this.historyFuture.length > 0,
+    });
+    this.recompile({ redirectBroken: "mark" });
+    this.persist();
+    return true;
+  }
+
+  redo(): boolean {
+    const next = this.historyFuture.pop();
+    if (!next) return false;
+    for (const c of this.inflight.values()) c.abort();
+    this.inflight.clear();
+    this.redirectQueue.clear();
+    this.historyPast.push(this.makeSnapshot());
+    this.lastEditId = null;
+    this.lastEditAt = 0;
+    const paragraphs = cloneParagraphs(next.paragraphs);
+    const selectedId = next.selectedId && paragraphs.some((p) => p.id === next.selectedId) ? next.selectedId : (paragraphs[0]?.id ?? null);
+    this.set({
+      title: next.title,
+      paragraphs,
+      selectedId,
+      fixtureId: next.fixtureId,
+      waiting: false,
+      playing: false,
+      toast: null,
+      canUndo: this.historyPast.length > 0,
+      canRedo: this.historyFuture.length > 0,
+    });
+    this.recompile({ redirectBroken: "mark" });
+    this.persist();
+    return true;
+  }
+
   private persist(): void {
     const s = this.state;
-    lsSet(LS.episode, JSON.stringify({ episodeId: s.episodeId, title: s.title, paragraphs: s.paragraphs.map((p) => ({ ...p, pendingVersion: null, status: p.status === "directing" ? "draft" : p.status })) }));
+    const ok = lsSet(
+      LS.episode,
+      JSON.stringify({
+        episodeId: s.episodeId,
+        title: s.title,
+        fixtureId: s.fixtureId,
+        selectedId: s.selectedId,
+        paragraphs: s.paragraphs.map((p) => ({ ...p, pendingVersion: null, status: p.status === "directing" ? "draft" : p.status })),
+      }),
+    );
+    if (!ok && !this.state.saveError) this.set({ saveError: true });
+    else if (ok && this.state.saveError) this.set({ saveError: false });
   }
 
   private restore(): void {
     try {
       const raw = lsGet(LS.episode);
       if (!raw) return;
-      const saved = JSON.parse(raw) as { episodeId: string; title: string; paragraphs: Paragraph[] };
+      const saved = JSON.parse(raw) as { episodeId: string; title: string; fixtureId?: FixtureEpisode["id"] | null; selectedId?: string | null; paragraphs: Paragraph[] };
       if (!Array.isArray(saved.paragraphs)) return;
-      this.state = { ...this.state, episodeId: saved.episodeId, title: saved.title ?? "", paragraphs: saved.paragraphs };
+      const selectedId = saved.selectedId && saved.paragraphs.some((p) => p.id === saved.selectedId) ? saved.selectedId : (saved.paragraphs[0]?.id ?? null);
+      this.state = {
+        ...this.state,
+        episodeId: saved.episodeId,
+        title: saved.title ?? "",
+        fixtureId: saved.fixtureId ?? null,
+        selectedId,
+        paragraphs: saved.paragraphs,
+      };
       this.recompile();
     } catch {
       /* ignore corrupt state */
@@ -296,9 +467,11 @@ class Store {
         && v.remix.cameraSeed === DEFAULT_REMIX.cameraSeed && v.remix.timeOfDay === DEFAULT_REMIX.timeOfDay && v.remix.musicMood === DEFAULT_REMIX.musicMood;
     });
     this.set({ lang });
-    if (untouched && fid) this.loadFixtureById(fid);
+    if (untouched && fid) this.loadFixtureById(fid, false);
   }
   setTitle(title: string): void {
+    if (title === this.state.title) return;
+    if (this.state.paragraphs.length) this.pushHistory("__title__");
     this.set({ title });
     this.persist();
   }
@@ -308,6 +481,23 @@ class Store {
   }
   setMuted(muted: boolean): void {
     this.set({ muted });
+  }
+  setCaptions(captions: boolean): void {
+    lsSet(LS.captions, captions ? "1" : "0");
+    this.set({ captions });
+  }
+  setLoop(loop: boolean): void {
+    this.set({ loop });
+  }
+  showToast(message: { en: string; ru: string }, undoable = false): void {
+    this.toastCounter += 1;
+    this.set({ toast: { id: this.toastCounter, message, undoable } });
+  }
+  clearToast(): void {
+    if (this.state.toast) this.set({ toast: null });
+  }
+  dismissVoiceError(): void {
+    if (this.state.voiceError) this.set({ voiceError: null });
   }
   setPitch(pitch: boolean): void {
     this.set({ pitch });
@@ -339,14 +529,39 @@ class Store {
     for (const l of this.listeners) l();
   }
 
-  newStory(): void {
+  newStory(recordHistory = true): void {
+    const hasContent = Boolean(this.state.title.trim() || this.state.paragraphs.some((p) => p.text.trim() || p.current >= 0));
+    if (recordHistory && hasContent) this.pushHistory();
+    else if (!hasContent) {
+      this.historyPast = [];
+      this.historyFuture = [];
+      this.lastEditId = null;
+      this.lastEditAt = 0;
+    }
     for (const c of this.inflight.values()) c.abort();
     this.inflight.clear();
-    this.set({ episodeId: newId("e"), title: "", paragraphs: [], selectedId: null, previewScope: null, timeline: emptyTimeline(), results: [], segmentIds: [], t: 0, playing: false, fixtureId: null, waiting: false });
+    this.set({
+      episodeId: newId("e"),
+      title: "",
+      paragraphs: [],
+      selectedId: null,
+      previewScope: null,
+      timeline: emptyTimeline(),
+      results: [],
+      segmentIds: [],
+      t: 0,
+      playing: false,
+      fixtureId: null,
+      waiting: false,
+      toast: null,
+      canUndo: this.historyPast.length > 0,
+      canRedo: this.historyFuture.length > 0,
+    });
     this.persist();
   }
 
   addParagraph(afterId?: string): string {
+    if (this.state.paragraphs.length > 0) this.pushHistory();
     const p: Paragraph = { id: newId(), text: "", versions: [], current: -1, status: "draft", error: null, pendingVersion: null, lastRemixMs: null };
     const list = [...this.state.paragraphs];
     const i = afterId ? list.findIndex((x) => x.id === afterId) : -1;
@@ -356,7 +571,33 @@ class Store {
     return p.id;
   }
 
+  duplicateParagraph(id: string): string | null {
+    const idx = this.state.paragraphs.findIndex((x) => x.id === id);
+    if (idx < 0) return null;
+    this.pushHistory();
+    const orig = this.state.paragraphs[idx];
+    const curRemix = orig.versions[orig.current]?.remix ?? orig.pendingRemix;
+    const isCustomRemix = curRemix && (curRemix.cameraSeed !== DEFAULT_REMIX.cameraSeed || curRemix.timeOfDay !== DEFAULT_REMIX.timeOfDay || curRemix.musicMood !== DEFAULT_REMIX.musicMood);
+    const clone: Paragraph = {
+      id: newId(),
+      text: orig.text,
+      versions: [],
+      current: -1,
+      status: "draft",
+      error: null,
+      pendingVersion: null,
+      lastRemixMs: null,
+      ...(isCustomRemix ? { pendingRemix: { ...curRemix } } : {}),
+    };
+    const list = [...this.state.paragraphs];
+    list.splice(idx + 1, 0, clone);
+    this.setParagraphs(list, { selectedId: clone.id });
+    this.recompile({ redirectBroken: "mark" });
+    return clone.id;
+  }
+
   deleteParagraph(id: string): void {
+    this.pushHistory();
     this.inflight.get(id)?.abort();
     this.setParagraphs(this.state.paragraphs.filter((p) => p.id !== id));
     this.recompile({ redirectBroken: "mark" });
@@ -367,6 +608,7 @@ class Store {
     const i = list.findIndex((p) => p.id === id);
     const j = i + dir;
     if (i < 0 || j < 0 || j >= list.length) return;
+    this.pushHistory();
     [list[i], list[j]] = [list[j], list[i]];
     this.setParagraphs(list);
     this.recompile({ redirectBroken: "mark" });
@@ -375,14 +617,27 @@ class Store {
   revert(id: string): void {
     const p = this.state.paragraphs.find((x) => x.id === id);
     if (!p || p.current <= 0 || p.pendingVersion !== null) return;
+    this.pushHistory();
     const prev = p.versions[p.current - 1];
     this.patchParagraph(id, { current: p.current - 1, text: prev.text, status: prev.ruleHits.length ? "adjusted" : "ready", error: null });
     this.recompile({ redirectBroken: "mark" });
   }
 
+  discardDraft(id: string): boolean {
+    const p = this.state.paragraphs.find((x) => x.id === id);
+    if (!p || p.pendingVersion !== null || p.status !== "draft" || p.current < 0) return false;
+    const cur = p.versions[p.current];
+    if (!cur) return false;
+    this.pushHistory();
+    this.patchParagraph(id, { text: cur.text, status: cur.ruleHits.length ? "adjusted" : "ready", error: null });
+    this.recompile({ redirectBroken: "mark" });
+    return true;
+  }
+
   editText(id: string, text: string): void {
     const p = this.state.paragraphs.find((x) => x.id === id);
-    if (!p) return;
+    if (!p || p.text === text) return;
+    this.pushHistory(id);
     const cur = p.versions[p.current];
     const changed = !cur || normalizeText(cur.text) !== normalizeText(text);
     if (p.pendingVersion !== null) {
@@ -437,7 +692,7 @@ class Store {
       const p = paras[i];
       const text = normalizeText(p.text).slice(0, MAX_PARAGRAPH_CHARS);
       let bs: BeatScript | null = null;
-      let remix: Remix = p.versions[p.current]?.remix ?? { ...DEFAULT_REMIX };
+      let remix: Remix = p.versions[p.current]?.remix ?? p.pendingRemix ?? { ...DEFAULT_REMIX };
       if (this.isDirty(p)) {
         const version = this.nextVersion(p, text);
         const previous = paras.slice(Math.max(0, i - 3), i).map((x) => normalizeText(x.text)).filter(Boolean);
@@ -548,7 +803,7 @@ class Store {
       usage: res.usage,
       model: res.model,
       ruleHits: res.beatScript.rule_hits,
-      remix: p.versions[p.current]?.remix ?? { ...DEFAULT_REMIX },
+      remix: p.pendingRemix ?? p.versions[p.current]?.remix ?? { ...DEFAULT_REMIX },
       cached,
       startKey: materialDigest(start),
     };
@@ -562,7 +817,7 @@ class Store {
     // current; the paragraph waits for the next ▶ Play
     const stale = normalizeText(p.text) !== text;
     const status: ParagraphStatus = stale ? "draft" : res.error ? "error" : nv.ruleHits.length ? "adjusted" : "ready";
-    this.patchParagraph(id, { versions, current: stale ? p.current : nvIndex, status, error: res.error ?? null, pendingVersion: null });
+    this.patchParagraph(id, { versions, current: stale ? p.current : nvIndex, status, error: res.error ?? null, pendingVersion: null, pendingRemix: undefined });
     appendLog({ episodeId: this.state.episodeId, paragraphId: id, version, text: nv.text, lang: nv.lang, beatScript: nv.beatScript, source: nv.source, latencyMs: nv.latencyMs, usage: nv.usage, ruleHits: nv.ruleHits, ts: Date.now() });
     // directed against `start`: re-directing against the same start state can't help (§6.5.4)
     this.redirected.add(`${id}:${directorCacheKey(nv.text, nv.lang, start, this.state.model)}`);
@@ -579,6 +834,7 @@ class Store {
   setRemix(id: string, patch: Partial<Remix>): void {
     const p = this.state.paragraphs.find((x) => x.id === id);
     if (!p || p.current < 0) return;
+    this.pushHistory();
     const t0 = performance.now();
     const versions = [...p.versions];
     versions[p.current] = { ...versions[p.current], remix: { ...versions[p.current].remix, ...patch } };
@@ -588,28 +844,59 @@ class Store {
     this.patchParagraph(id, { lastRemixMs: ms });
   }
 
-  loadFixture(fx: FixtureEpisode): void {
+  loadFixture(fx: FixtureEpisode, recordHistory = true): void {
+    const hasContent = Boolean(this.state.title.trim() || this.state.paragraphs.some((p) => p.text.trim() || p.current >= 0));
+    if (recordHistory && hasContent) this.pushHistory();
     for (const c of this.inflight.values()) c.abort();
     this.inflight.clear();
     const paragraphs: Paragraph[] = fx.paragraphs.map((fp) => {
       const v: ParagraphVersion = { version: 1, text: fp.text, lang: fx.lang, beatScript: fp.beatScript, source: "fixture", latencyMs: 0, usage: null, model: "fixture", ruleHits: fp.beatScript.rule_hits, remix: { ...DEFAULT_REMIX } };
       return { id: newId(), text: fp.text, versions: [v], current: 0, status: fp.beatScript.rule_hits.length ? "adjusted" : "ready", error: null, pendingVersion: null, lastRemixMs: null };
     });
-    this.set({ episodeId: newId("e"), title: fx.title, paragraphs, selectedId: paragraphs[0]?.id ?? null, previewScope: null, t: 0, playing: false, fixtureId: fx.id, waiting: false });
+    this.set({
+      episodeId: newId("e"),
+      title: fx.title,
+      paragraphs,
+      selectedId: paragraphs[0]?.id ?? null,
+      previewScope: null,
+      t: 0,
+      playing: false,
+      fixtureId: fx.id,
+      waiting: false,
+      toast: null,
+      canUndo: this.historyPast.length > 0,
+      canRedo: this.historyFuture.length > 0,
+    });
     this.recompile();
     this.persist();
   }
 
-  /** true when the story has paragraphs the player wrote (not just an unchanged example) */
+  /** true when the story has user authoring/customization beyond a blank draft or untouched example */
   hasOwnWriting(): boolean {
-    return this.state.paragraphs.some(
+    const fid = this.state.fixtureId;
+    if (fid) {
+      const fx = FIXTURES.find((f) => f.id === fid && f.lang === this.state.lang) ?? FIXTURES.find((f) => f.id === fid);
+      if (fx) {
+        if (this.state.title !== fx.title || this.state.paragraphs.length !== fx.paragraphs.length) return true;
+        return this.state.paragraphs.some((p, i) => {
+          const v = p.versions[p.current];
+          const orig = fx.paragraphs[i];
+          return !v || v.source !== "fixture"
+            || normalizeText(p.text) !== normalizeText(orig.text)
+            || v.remix.cameraSeed !== DEFAULT_REMIX.cameraSeed
+            || v.remix.timeOfDay !== DEFAULT_REMIX.timeOfDay
+            || v.remix.musicMood !== DEFAULT_REMIX.musicMood;
+        });
+      }
+    }
+    return this.state.title.trim().length > 0 || this.state.paragraphs.some(
       (p) => p.text.trim() && (p.versions[p.current]?.source !== "fixture" || normalizeText(p.text) !== normalizeText(p.versions[p.current]?.text ?? "")),
     );
   }
 
-  loadFixtureById(id: FixtureEpisode["id"]): void {
+  loadFixtureById(id: FixtureEpisode["id"], recordHistory = true): void {
     const fx = FIXTURES.find((f) => f.id === id && f.lang === this.state.lang) ?? FIXTURES.find((f) => f.id === id);
-    if (fx) this.loadFixture(fx);
+    if (fx) this.loadFixture(fx, recordHistory);
   }
 
   // ---------- compile ----------
