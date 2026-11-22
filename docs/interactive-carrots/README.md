@@ -1,6 +1,6 @@
 # Individually addressable garden carrots
 
-Implemented locally on 21 November 2026. **Not deployed.** No external-service credits or new generated assets were used. The shared comparison, actual-story recordings and device measurements are in [parallel-interactions](../parallel-interactions/).
+Implemented and deployed on 21 November 2026 after explicit authorization; see the [deployment record](../parallel-interactions/deployment/deployment.json). No external-service credits or new generated assets were used. The shared comparison, actual-story recordings and device measurements are in [parallel-interactions](../parallel-interactions/).
 
 ## What changed
 

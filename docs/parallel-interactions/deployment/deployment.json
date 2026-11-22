@@ -1,0 +1,47 @@
+{
+  "deployedAt": "2026-11-22T06:19:16.058Z",
+  "recordedAt": "2026-11-22T06:25:11.698Z",
+  "version": "258bc27c-fdfd-4feb-92e2-a7514af8094c",
+  "previousVersion": "47cf2f59-4418-4594-a5e3-91c95117a5fe",
+  "trafficPercent": 100,
+  "url": "https://mabear-storybook.ilya-baimetov.workers.dev",
+  "releaseSourceCommit": "f1a184807857279e285e1b640c74a46f3c5fc8aa",
+  "repository": "https://github.com/ilya-baimetov/mabear",
+  "releasePushedBranches": [
+    "main",
+    "codex/storybook-upgrade"
+  ],
+  "deploymentRecordBranch": "main",
+  "sourceFingerprint": "3d10dddc3e0be55fb5ea1c5262e70e6bb962606867671021f34bdfac35cd3a08",
+  "features": [
+    "Masha drops, detours and retrieves the settled ball at its physical landing position",
+    "Nine individually addressable carrots with persistent harvest, placement and retrieval"
+  ],
+  "defaultPhysicsEnabled": true,
+  "animationFallback": "Unsupported or unsafe stories, other actors, hugs and shoulder rides; carrots remain animation-owned",
+  "validation": {
+    "tests": 851,
+    "testFiles": 71,
+    "typecheck": "passed",
+    "freshProductionBuild": "passed",
+    "sourceMatchesReviewedRecordings": true,
+    "productionBuildStoryCheck": "Typed ball continuity, carrot2 identity, pause/resume and seeking; cupboard regression passed with APIs blocked",
+    "liveHealth": "200; ok true",
+    "anonymousAccess": "App and static assets redirect to login; director and speech return401; private/no-store and noindex preserved",
+    "authenticatedLivePlayback": "Ball drop/settle/detour/retrieval and carrot2 pick/place/retrieval passed; pause/resume and backward/forward seeking passed; other8 carrots unchanged",
+    "liveBundleHashes": "Studio and Rapier bundle bytes exactly match the committed production asset manifest",
+    "liveBrowserErrors": 0,
+    "liveAssetErrors": 0,
+    "liveDirectorBoundary": "Deterministic offline director; all live API requests blocked during story checks; paid AI directing and speech generation not exercised",
+    "authIsolation": "User session cookies copied only in memory to a new browser context; original tab and saved stories untouched"
+  },
+  "evidence": {
+    "preflight": "preflight.json",
+    "productionBuild": "packaged-app.json",
+    "liveBrowser": "live-browser.json",
+    "publicChecks": "http-checks.json",
+    "assets": "asset-hashes.json"
+  },
+  "paidGenerationCalls": 0,
+  "authChanged": false
+}

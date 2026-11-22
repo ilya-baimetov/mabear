@@ -1,6 +1,6 @@
 # Interactive objects after the Rapier trial
 
-**Status: stages 1 and 2 deployed; stage 3 implemented locally, not deployed.** Stage 1 was deployed on 9 November 2026 after a separate explicit request; see [results and evidence](README.md) and [deployment record](deployment/deployment.json). The 11 November cupboard implementation was reviewed locally, then deployed after the user requested it. See [cupboard results and recordings](../cupboard/README.md) and the [deployment record](../cupboard/deployment/deployment.json). The 21 November request authorized individual carrots alongside Rapier continuity; see [carrot behavior and boundaries](../interactive-carrots/README.md) and [shared evidence](../parallel-interactions/). Stage 4 remains a future proposal.
+**Status: stages 1, 2 and 3 deployed.** Stage 1 was deployed on 9 November 2026 after a separate explicit request; see [results and evidence](README.md) and [deployment record](deployment/deployment.json). The 11 November cupboard implementation was reviewed locally, then deployed after the user requested it. See [cupboard results and recordings](../cupboard/README.md) and the [deployment record](../cupboard/deployment/deployment.json). Individual carrots and Rapier continuity were deployed on 21 November after explicit authorization; see [carrot behavior and boundaries](../interactive-carrots/README.md), [shared evidence](../parallel-interactions/), and the [deployment record](../parallel-interactions/deployment/deployment.json). Stage 4 remains a future proposal.
 
 This phase builds on the [Rapier trial results](../rapier-trial/README.md) and [ownership/replay design](../rapier-trial/ARCHITECTURE.md). The original [trial checkpoint](../rapier-trial/CHECKPOINT.md) records its separate completion. The 9 November instruction authorizes stage 1 implementation; further objects and paid services remain separate. Deployment was subsequently authorized and completed.
 
@@ -83,4 +83,4 @@ Stage 2 covers Bear, the kitchen's upper cupboard and one honey jar. Stage 3 cov
 3. Behavioral regression evidence and actual before/after recordings, including timeline controls and an edited scene.
 4. Adversarial findings, applied fixes, remaining limitations, and a recommendation for the next object family.
 
-**Next action: review the local carrot and Rapier continuity recordings.** Deployment remains a separate user-requested step; this implementation does not authorize publishing.
+**Next action: review the deployed carrot and Rapier continuity interactions.** Stage 4 remains unimplemented. Every further deployment remains a separate user-requested step.

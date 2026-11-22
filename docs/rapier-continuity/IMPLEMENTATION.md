@@ -1,6 +1,6 @@
-# Rapier continuity — local implementation
+# Rapier continuity
 
-No deployment or external-service calls. Before source is commit `d260fe2`.
+Deployed on 21 November 2026 after explicit authorization; see the [deployment record](../parallel-interactions/deployment/deployment.json). No external-service credits were spent. Before source is commit `d260fe2`.
 
 The eligible story chain is Masha taking a ball, releasing it in the central
 yard, moving around furniture, returning to its simulated resting position,

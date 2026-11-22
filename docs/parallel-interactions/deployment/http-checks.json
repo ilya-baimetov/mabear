@@ -1,0 +1,77 @@
+{
+  "checkedAt": "2026-11-22T06:20:39.956Z",
+  "origin": "https://mabear-storybook.ilya-baimetov.workers.dev",
+  "anonymous": true,
+  "checks": [
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "status": 200,
+      "expected": 200,
+      "location": null,
+      "cacheControl": "private, no-store",
+      "robots": "noindex, nofollow",
+      "body": {
+        "ok": true,
+        "service": "mabear-storybook",
+        "edition": "codex"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/",
+      "status": 302,
+      "expected": 302,
+      "location": "/login",
+      "cacheControl": "private, no-store",
+      "robots": "noindex, nofollow"
+    },
+    {
+      "method": "GET",
+      "path": "/login",
+      "status": 200,
+      "expected": 200,
+      "location": null,
+      "cacheControl": "private, no-store",
+      "robots": "noindex, nofollow"
+    },
+    {
+      "method": "GET",
+      "path": "/assets/studio-CXr0x0iL.js",
+      "status": 302,
+      "expected": 302,
+      "location": "/login",
+      "cacheControl": "private, no-store",
+      "robots": "noindex, nofollow"
+    },
+    {
+      "method": "GET",
+      "path": "/assets/generated/carrot.glb",
+      "status": 302,
+      "expected": 302,
+      "location": "/login",
+      "cacheControl": "private, no-store",
+      "robots": "noindex, nofollow"
+    },
+    {
+      "method": "POST",
+      "path": "/api/direct",
+      "status": 401,
+      "expected": 401,
+      "location": null,
+      "cacheControl": "private, no-store",
+      "robots": "noindex, nofollow"
+    },
+    {
+      "method": "POST",
+      "path": "/api/speech",
+      "status": 401,
+      "expected": 401,
+      "location": null,
+      "cacheControl": "private, no-store",
+      "robots": "noindex, nofollow"
+    }
+  ],
+  "result": "passed",
+  "paidGenerationCalls": 0
+}

@@ -2,7 +2,7 @@
 
 The private repository at https://github.com/ilya-baimetov/mabear contains the game source, Cloudflare Worker, dependency lockfile, runtime assets under `public/`, tests, development tools, capture scripts, final review recordings and reports. The Storybook edition is at the repository root.
 
-The latest deployed game is recorded in [interactive-objects/deployment/deployment.json](interactive-objects/deployment/deployment.json). Pushing to GitHub does not deploy it; deployment remains an explicit separate step.
+The latest deployed game is recorded in [parallel-interactions/deployment/deployment.json](parallel-interactions/deployment/deployment.json). Its release source is committed on `main`; a fresh clone includes the game, runtime assets and verification evidence. Pushing to GitHub does not deploy it; deployment remains an explicit separate step.
 
 ## Local-only material
 
@@ -12,9 +12,11 @@ Production secrets are configured on Cloudflare, never stored here. A fresh chec
 
 ## Evidence
 
+- [Ball continuity and individual carrots](parallel-interactions/README.md)
+- [Bear's cupboard interaction](cupboard/README.md)
 - [Default physics and interactive door](interactive-objects/README.md)
 - [Bounded Rapier trial](rapier-trial/README.md)
 - [Revised house interior](interior-integration/README.md)
 - [Camera and physical interactions](staging-interactions/README.md)
 
-Deployment records describe what was checked at each release. The current release passed 798 local tests; its live health and authentication boundary were checked, while authenticated live playback was not repeated after the browser session signed out.
+Deployment records describe what was checked at each release. The current release passed 851 tests, TypeScript checks and a fresh production build. The packaged app passed typed ball/carrot stories and a cupboard regression. Authenticated live ball/carrot playback, pause/resume, seeking, exact bundle hashes, public health and anonymous access restrictions passed. Live story tests used the offline director with API calls blocked; no paid generation was performed.

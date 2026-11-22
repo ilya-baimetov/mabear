@@ -1,6 +1,6 @@
 # Story continuity and individual carrots
 
-Local implementation and review; **not deployed**. No paid generation or external-service credits used.
+**Deployed on 21 November 2026 after explicit authorization.** Release source `f1a1848` was pushed to `main` before publication; see the [deployment and live verification record](deployment/deployment.json). No paid generation or external-service credits were used.
 
 Reviewed runtime source fingerprint: `3d10dddc3e0be55fb5ea1c5262e70e6bb962606867671021f34bdfac35cd3a08`. Final project validation: 851 tests across 71 files, TypeScript checks and production build passed; see the review record for the exact checks.
 

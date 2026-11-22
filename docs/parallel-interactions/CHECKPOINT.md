@@ -1,6 +1,6 @@
 # Rapier continuity and individual carrots
 
-Status: **complete locally, reviewed and verified; not deployed.** Implementation, adversarial updates, actual-editor checks, recordings and full-story performance measurements are complete. Decoded-video review found an obstructed initial ball pickup; its camera-only correction has been inspected and accepted in the final recording. No external-service credits were spent.
+Status: **complete, reviewed, verified and deployed on 21 November 2026 after explicit authorization.** Implementation, adversarial updates, actual-editor checks, recordings and full-story performance measurements are complete. Decoded-video review found an obstructed initial ball pickup; its camera-only correction has been inspected and accepted in the final recording. No external-service credits were spent. See the [deployment record](deployment/deployment.json).
 
 Baseline: clean repository commit `d260fe27aad4109461fc023f474d29d3eab6959b`. A runnable source snapshot was preserved at `/tmp/mabear-parallel-before-ne19gsu8`; unchanged runtime assets and installed dependencies are shared with the working checkout.
 
@@ -60,4 +60,4 @@ Full-story playback on Apple M1 Max / Chrome 157 / 1280 × 720 averaged **59.3 f
 
 Recommendation: extend this approach selectively to other loose props and persistent object interactions. Keep deliberate hand actions authored, retain whole-story fallback for unsupported combinations, and improve preparation responsiveness before substantially expanding the physics scope. The current limits include one eligible yard actor/ball, a 60-second continuity cap, one interactive carrot bed, one bench carrot slot, and approximate secondary-character grips.
 
-No deployment, commit or push has been performed for this change. Deployment requires a separate explicit request.
+Release source commit `f1a184807857279e285e1b640c74a46f3c5fc8aa` was pushed to `main` before deploying Worker version `258bc27c-fdfd-4feb-92e2-a7514af8094c`. Fresh production-bundle checks and authenticated live ball/carrot checks passed, including exact bundle hashes; public health and access restrictions passed. The deployment record and updated documentation are maintained on `main`. Every future deployment still requires a separate explicit request.
