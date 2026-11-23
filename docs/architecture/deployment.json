@@ -1,0 +1,17 @@
+{
+  "deployedAt": "2026-11-23T03:37:01Z",
+  "branch": "main",
+  "releaseCommit": "d2ba8594965113d27ecfb7889fcd7a482a65d684",
+  "workerName": "mabear-storybook",
+  "workerUrl": "https://mabear-storybook.ilya-baimetov.workers.dev",
+  "versionId": "dfbbd713-2b83-42b2-9f0e-83caa2637b93",
+  "verification": {
+    "typecheck": "passed (0 errors)",
+    "unitTests": "75/75 files, 899/899 tests passed in 20.45s",
+    "build": "vite build succeeded in 388ms",
+    "endpoints": {
+      "/": "HTTP/2 302 -> /login (Cloudflare Worker auth gate active)",
+      "/physics/": "HTTP/2 302 -> /login (Cloudflare Worker auth gate active)"
+    }
+  }
+}
