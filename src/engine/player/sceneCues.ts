@@ -6,7 +6,7 @@ import { clamp01, easeInOut, lerp, smooth } from "../../shared/math";
 import { ACTOR_IDS, type ActorClip, type CamKey, type PropId, type Segment, type TimeOfDay, type Vec2 } from "../../shared/schema";
 import { initialWorldState } from "../../shared/worldState";
 import { qaxis, qrot } from "../motion/blend";
-import type { Resolved } from "./kinematics";
+import { hashNum, hashStr, type Resolved } from "./kinematics";
 
 /** Default wide camera of the yard (empty timeline, or a segment without camera cues). */
 export const DEFAULT_CAMERA: CamKey = { pos: [1.4, 2.4, 7.8], look: [-0.8, 1.1, 0.15], fov: 43 };
@@ -30,12 +30,30 @@ export function cameraAt(seg: Segment, lt: number): CamKey {
   };
 }
 
+const lightingCache = new WeakMap<Segment, { stamp: number; cues: Segment["lighting"] }>();
+
+function sortedLightingCues(seg: Segment): Segment["lighting"] {
+  const raw = seg.lighting;
+  if (raw.length <= 1) return raw;
+  let stamp = hashNum(0x811c9dc5 | 0, raw.length);
+  for (let i = 0; i < raw.length; i++) {
+    const c = raw[i];
+    stamp = hashStr(hashNum(hashNum(stamp, c.start), c.transition), c.timeOfDay);
+  }
+  const hit = lightingCache.get(seg);
+  if (hit && hit.stamp === stamp) return hit.cues;
+  const cues = [...raw].sort((a, b) => a.start - b.start);
+  lightingCache.set(seg, { stamp, cues });
+  return cues;
+}
+
 export function lightingAt(seg: Segment, lt: number): FrameState["lighting"] {
   let from: TimeOfDay = seg.startState.timeOfDay;
   let to: TimeOfDay = from;
   let k = 1;
-  const cues = [...seg.lighting].sort((a, b) => a.start - b.start);
-  for (const c of cues) {
+  const cues = sortedLightingCues(seg);
+  for (let i = 0; i < cues.length; i++) {
+    const c = cues[i];
     if (c.start > lt) break;
     from = k >= 1 ? to : from;
     to = c.timeOfDay;

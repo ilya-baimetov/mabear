@@ -294,7 +294,14 @@ export class Trajectory {
     }
   }
 
-  private updateActorBlockers(frame: FrameState): void {
+  private hasAwakeProps(): boolean {
+    for (const active of this.activeProps.values()) {
+      if (!active.body.isSleeping() || !active.releaserCleared) return true;
+    }
+    return false;
+  }
+
+  private updateActorBlockers(frame: FrameState, wakeUp = true): void {
     for (const [actor, blocker] of this.actorBlockers) {
       const { enabled, pos } = this.actorCenterPos(actor, frame);
       if (!enabled) {
@@ -305,8 +312,8 @@ export class Trajectory {
         continue;
       }
       const dist = Math.hypot(pos[0] - blocker.lastPos[0], pos[1] - blocker.lastPos[1], pos[2] - blocker.lastPos[2]);
-      if (!blocker.enabled || dist > 1.0) {
-        blocker.body.setTranslation({ x: pos[0], y: pos[1], z: pos[2] }, true);
+      if (!blocker.enabled || dist > 1.0 || !wakeUp) {
+        blocker.body.setTranslation({ x: pos[0], y: pos[1], z: pos[2] }, wakeUp);
         blocker.collider.setEnabled(true);
       } else {
         blocker.body.setNextKinematicTranslation({ x: pos[0], y: pos[1], z: pos[2] });
@@ -385,7 +392,8 @@ export class Trajectory {
       this.stride += (ratio - this.stride) * Math.min(1, dt * 18);
     }
 
-    if (this.actorBlockers.size > 0) this.updateActorBlockers(frame);
+    const awakeProps = this.hasAwakeProps();
+    if (this.actorBlockers.size > 0) this.updateActorBlockers(frame, awakeProps);
 
     for (const active of this.activeProps.values()) {
       if (!active.releaserCleared && t >= active.releaseTime + THROW_RELEASE_CLEARANCE_S) {
@@ -510,7 +518,7 @@ export class Trajectory {
       const release = this.releases[this.releaseIndex]?.t ?? Infinity;
       const handoff = this.handoffs[this.handoffIndex] ?? Infinity;
       const boundary = this.view.segments[this.boundaryIndex]?.offset ?? Infinity;
-      const needSubsteps = !!this.masha || this.activeProps.size > 0;
+      const needSubsteps = !!this.masha || this.hasAwakeProps();
       const next = Math.min(
         needSubsteps ? (this.tick + 1) * PHYSICS_DT : Infinity,
         release,

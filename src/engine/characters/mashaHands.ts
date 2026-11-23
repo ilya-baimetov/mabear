@@ -17,7 +17,7 @@ export const MASHA_HAND = {
  * merely positioning the wrist socket near a visibly intersecting stick. */
 export function createMashaHands(meshes:THREE.SkinnedMesh[],hands:HandFrame[]){
  const roots:THREE.Group[]=[],geometries:THREE.BufferGeometry[]=[],updates:((grip:number,relax:number)=>void)[]=[];
- const material=new THREE.MeshStandardMaterial({color:'#d1b49a',roughness:.72}),cuffMaterial=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.9,side:THREE.DoubleSide,forceSinglePass:true});
+ const material=new THREE.MeshStandardMaterial({color:'#d1b49a',roughness:.72,transparent:true}),cuffMaterial=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.9,side:THREE.DoubleSide,forceSinglePass:true,transparent:true});
  const sssColor=new THREE.Color('#FF6A48');
  material.onBeforeCompile=shader=>{
   shader.uniforms.handSssColor={value:sssColor};
@@ -36,7 +36,8 @@ export function createMashaHands(meshes:THREE.SkinnedMesh[],hands:HandFrame[]){
   const origin=hand.wrist.getWorldPosition(new THREE.Vector3()),at=([u,v,n]:P)=>origin.clone().addScaledVector(hand.long,u).addScaledVector(hand.width,v).addScaledVector(hand.normal,n);
   for(const mesh of meshes){
    const joint=mesh.skeleton.bones.indexOf(hand.wrist),si=mesh.geometry.attributes.skinIndex,sw=mesh.geometry.attributes.skinWeight,remove=new Uint8Array(si.count),p=new THREE.Vector3();
-   for(let i=0;i<si.count;i++){let weight=0;for(let k=0;k<4;k++)if(si.getComponent(i,k)===joint)weight+=sw.getComponent(i,k);if(weight<.35)continue;mesh.getVertexPosition(i,p).applyMatrix4(mesh.matrixWorld).sub(origin);if(p.dot(hand.long)>-.004)remove[i]=1;}
+   const cached=mesh.userData.bindWorldPositions as Float64Array|Float32Array|undefined;
+   for(let i=0;i<si.count;i++){let weight=0;for(let k=0;k<4;k++)if(si.getComponent(i,k)===joint)weight+=sw.getComponent(i,k);if(weight<.35)continue;if(cached)p.set(cached[i*3],cached[i*3+1],cached[i*3+2]).sub(origin);else mesh.getVertexPosition(i,p).applyMatrix4(mesh.matrixWorld).sub(origin);if(p.dot(hand.long)>-.004)remove[i]=1;}
    const indices=mesh.geometry.index!.array,keep:number[]=[];for(let i=0;i<indices.length;i+=3){const a=indices[i],b=indices[i+1],c=indices[i+2];if(remove[a]+remove[b]+remove[c]>=2)continue;keep.push(a,b,c);}mesh.geometry.setIndex(keep);
   }
   const root=new THREE.Group();root.name=`masha:${hand.side.toLowerCase()}-hand-articulated`;root.matrixAutoUpdate=false;root.matrix.copy(hand.wrist.matrixWorld).invert();hand.wrist.add(root);roots.push(root);
@@ -51,15 +52,22 @@ export function createMashaHands(meshes:THREE.SkinnedMesh[],hands:HandFrame[]){
    const rings=28,sides=20,positions=new Float32Array((rings+1)*(sides+1)*3),indices:number[]=[];
    for(let j=0;j<rings;j++)for(let i=0;i<sides;i++){const a=j*(sides+1)+i,b=a+sides+1;indices.push(a,a+1,b,a+1,b+1,b);}
    const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.BufferAttribute(positions,3));geometry.setIndex(indices);add(geometry,name);
-   const local=new THREE.Vector3();
+   const local=new THREE.Vector3(),pt=new THREE.Vector3(),tangent=new THREE.Vector3(),radial=new THREE.Vector3(),normal=new THREE.Vector3(),v=new THREE.Vector3();
    return (grip:number,relax:number)=>{
     const points=open.map((p,i)=>at(p.map((x,k)=>THREE.MathUtils.lerp(THREE.MathUtils.lerp(x,relaxed[i][k],relax),closed[i][k],grip)) as P)),curve=new THREE.CatmullRomCurve3(points,false,'centripetal');
     for(let j=0;j<=rings;j++){
-     const t=j/rings,p=curve.getPoint(t),tangent=curve.getTangent(t).normalize(),radial=hand.width.clone().addScaledVector(tangent,-hand.width.dot(tangent));if(radial.lengthSq()<.01)radial.copy(hand.normal).addScaledVector(tangent,-hand.normal.dot(tangent));radial.normalize();const normal=new THREE.Vector3().crossVectors(tangent,radial).normalize();
+     const t=j/rings;
+     curve.getPoint(t,pt);
+     curve.getTangent(t,tangent).normalize();
+     radial.copy(hand.width).addScaledVector(tangent,-hand.width.dot(tangent));
+     if(radial.lengthSq()<.01)radial.copy(hand.normal).addScaledVector(tangent,-hand.normal.dot(tangent));
+     radial.normalize();
+     normal.crossVectors(tangent,radial).normalize();
      // Rounded pads with a little proximal fullness; no tubular flat ends.
      const cap=t>.79?Math.sqrt(Math.max(0,1-((t-.79)/.21)**2)):1,r=radius*(1-.16*t+.055*Math.sin(t*Math.PI*2))*cap;
      for(let i=0;i<=sides;i++){
-      const a=i/sides*Math.PI*2,v=p.clone().addScaledVector(radial,Math.cos(a)*r).addScaledVector(normal,Math.sin(a)*r*.94);
+      const a=i/sides*Math.PI*2;
+      v.copy(pt).addScaledVector(radial,Math.cos(a)*r).addScaledVector(normal,Math.sin(a)*r*.94);
       if(grip>.98){
        local.copy(v).sub(origin);const u=local.dot(hand.long)-MASHA_HAND.gripLong,n=local.dot(hand.normal)-MASHA_HAND.gripNormal,dist=Math.hypot(u,n),clearance=MASHA_HAND.stemRadius+.00018;
        if(dist<clearance&&dist>1e-8)v.addScaledVector(hand.long,u*(clearance/dist-1)).addScaledVector(hand.normal,n*(clearance/dist-1));
@@ -83,5 +91,5 @@ export function createMashaHands(meshes:THREE.SkinnedMesh[],hands:HandFrame[]){
    [[.017,.015,-.001],[.028,.029,.003],[.041,.030,.016],[.0535,.025,.029],[.058,.018,.032]],.009,'thumb'));
   let lastGrip=-1,lastRelax=-1;updates.push((grip,relax)=>{if(grip===lastGrip&&relax===lastRelax)return;lastGrip=grip;lastRelax=relax;fingers.forEach(f=>f(grip,relax));});
  }
- return {update(grip:number,opacity:number,relax=1){for(const m of [material,cuffMaterial]){m.opacity=opacity;m.transparent=opacity<1;m.depthWrite=opacity>.98;}updates.forEach((f,i)=>f(i===1?grip:0,relax));},dispose(){roots.forEach(r=>r.removeFromParent());geometries.forEach(g=>g.dispose());material.dispose();cuffMaterial.dispose();}};
+ return {update(grip:number,opacity:number,relax=1){for(const m of [material,cuffMaterial]){m.opacity=opacity;m.depthWrite=opacity>.98;}updates.forEach((f,i)=>f(i===1?grip:0,relax));},dispose(){roots.forEach(r=>r.removeFromParent());geometries.forEach(g=>g.dispose());material.dispose();cuffMaterial.dispose();}};
 }

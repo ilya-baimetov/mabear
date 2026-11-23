@@ -172,6 +172,10 @@ export function Stage({ exploring = false }: { exploring?: boolean }) {
 
     (async () => {
       try {
+        // Supported stories use physics by default; keep a diagnostic animation control.
+        const trial = new URLSearchParams(window.location.search).get("physics") !== "off";
+        const stageReplayPromise = trial ? import("../../engine/physics/stageReplay") : null;
+        stageReplayPromise?.catch(() => {});
         const [{ createStage }, { Player }, audioMod, { pickActor }] = await Promise.all([
           import("../../engine/stage"),
           import("../../engine/player/player"),
@@ -184,16 +188,9 @@ export function Stage({ exploring = false }: { exploring?: boolean }) {
           cleanupResources();
           return;
         }
-        // Supported stories use physics by default; keep a diagnostic animation control.
-        const trial = new URLSearchParams(window.location.search).get("physics") !== "off";
-        if (trial) {
+        if (stageReplayPromise) {
           try {
-            await stage.assetsReady;
-            if (disposed) {
-              cleanupResources();
-              return;
-            }
-            const { createStageReplay } = await import("../../engine/physics/stageReplay");
+            const [, { createStageReplay }] = await Promise.all([stage.assetsReady, stageReplayPromise]);
             if (disposed) {
               cleanupResources();
               return;

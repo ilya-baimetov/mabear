@@ -1,7 +1,6 @@
 // Authored CC0 vegetation by Quaternius, Stylized Nature MegaKit Standard.
 // Primary source / license: public/assets/nature/LICENSE.txt and docs/upgrade/environment.md.
 import * as THREE from "three";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { assetUrl } from "./textures";
 
 export type NatureId = "BirchTree_1" | "BirchTree_3" | "Pine_1" | "Pine_2" | "Pine_3" | "Pine_5" | "CommonTree_1" | "CommonTree_2" | "CommonTree_4" | "Bush_Common" | "Fern_1";
@@ -106,7 +105,7 @@ function disposeLoadedScene(scene: THREE.Object3D): void {
 
 /** Per-stage asset owner. Shared prototypes/materials, instanced draws, complete cleanup including late responses. */
 export class NatureAssets {
-  private loader = new GLTFLoader();
+  private loaderPromise: Promise<import("three/examples/jsm/loaders/GLTFLoader.js").GLTFLoader> | null = null;
   private cache = new Map<NatureId, Promise<Part[]>>();
   private materials = new Map<string, THREE.MeshStandardMaterial>();
   private disposables = new Set<{ dispose(): void }>();
@@ -115,10 +114,22 @@ export class NatureAssets {
   readonly loaded: string[] = [];
   readonly failed: string[] = [];
 
+  private getLoader(): Promise<import("three/examples/jsm/loaders/GLTFLoader.js").GLTFLoader> {
+    if (!this.loaderPromise) {
+      this.loaderPromise = import("three/examples/jsm/loaders/GLTFLoader.js")
+        .then(({ GLTFLoader }) => new GLTFLoader())
+        .catch((err) => {
+          this.loaderPromise = null;
+          throw err;
+        });
+    }
+    return this.loaderPromise;
+  }
+
   private load(id: NatureId): Promise<Part[]> {
     const prev = this.cache.get(id);
     if (prev) return prev;
-    const promise = this.loader.loadAsync(assetUrl(`assets/nature/${id}.gltf`)).then((gltf) => {
+    const promise = this.getLoader().then((loader) => loader.loadAsync(assetUrl(`assets/nature/${id}.gltf`))).then((gltf) => {
       if (this.dead) {
         disposeLoadedScene(gltf.scene);
         return [];

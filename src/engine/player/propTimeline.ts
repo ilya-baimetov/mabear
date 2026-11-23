@@ -6,7 +6,7 @@ import { propPlacementAtMark, propRestPosition as restPos } from "../../shared/p
 import { ACTOR_IDS, MARK_IDS, PROP_IDS, type ActorId, type PropId, type PropLocation, type Segment, type Vec3 } from "../../shared/schema";
 import { qaxis, qrot } from "../motion/blend";
 import { STYLES } from "../motion/library";
-import { clipsOf, isActor, isMark, stOf, type Resolved } from "./kinematics";
+import { actorClipStamp, clipsOf, hashNum, hashStr, isActor, isMark, stOf, type Resolved } from "./kinematics";
 
 export interface PropEvent {
   t: number;
@@ -15,12 +15,46 @@ export interface PropEvent {
   flight?: { t0: number; t1: number; from: ActorId; to: Vec3 };
 }
 
-export function propLocationsAt(seg: Segment, localT: number): { at: Record<PropId, PropLocation>; flights: Map<PropId, PropEvent["flight"]> } {
-  const at = {} as Record<PropId, PropLocation>;
-  for (const id of PROP_IDS) at[id] = seg.startState.props[id]?.at ?? "hidden";
+interface CachedPropSchedule {
+  stamp: number;
+  startAt: Record<PropId, PropLocation>;
+  events: PropEvent[];
+}
+
+const propScheduleCache = new WeakMap<Segment, CachedPropSchedule>();
+
+function propScheduleStamp(seg: Segment): number {
+  let h = (seg.duration * 1024) | 0;
+  for (let i = 0; i < ACTOR_IDS.length; i++) {
+    const a = ACTOR_IDS[i];
+    const clips = clipsOf(seg, a);
+    const st = stOf(seg.startState, a);
+    if (st.holding) h = hashStr(h, st.holding);
+    for (let j = 0; j < clips.length; j++) {
+      const c = clips[j];
+      const item = c.params.item;
+      if (item || c.verb === "cook" || c.verb === "fish") {
+        h = (Math.imul(h, 31) + ((c.start * 1024) | 0) + ((c.dur * 1024) | 0) + c.verb.charCodeAt(0) + (item ? item.charCodeAt(0) : 0)) | 0;
+        if (item) {
+          h = hashStr(h, seg.startState.props[item]?.at);
+          h = hashStr(h, seg.endState.props[item]?.at);
+        }
+      }
+    }
+  }
+  return h;
+}
+
+function getPropSchedule(seg: Segment): CachedPropSchedule {
+  const stamp = propScheduleStamp(seg);
+  const hit = propScheduleCache.get(seg);
+  if (hit && hit.stamp === stamp) return hit;
+
+  const startAt = {} as Record<PropId, PropLocation>;
+  for (const id of PROP_IDS) startAt[id] = seg.startState.props[id]?.at ?? "hidden";
   for (const a of ACTOR_IDS) {
     const h = stOf(seg.startState, a).holding;
-    if (h) at[h] = a;
+    if (h) startAt[h] = a;
   }
   const events: PropEvent[] = [];
   const touched = new Map<PropId, number>();
@@ -42,7 +76,7 @@ export function propLocationsAt(seg: Segment, localT: number): { at: Record<Prop
       } else if (c.verb === "cook") {
         if (item) events.push({ t: c.start, prop: item, at: a });
         const pc = seg.endState.props.pancakes?.at;
-        if (pc && pc !== at.pancakes) events.push({ t: c.start + c.dur * 0.85, prop: "pancakes", at: pc });
+        if (pc && pc !== startAt.pancakes) events.push({ t: c.start + c.dur * 0.85, prop: "pancakes", at: pc });
       } else if (c.verb === "fish") {
         if (item) events.push({ t: c.start, prop: item, at: a });
         const f = c.params.catchesFish === true ? a : c.params.catchesFish === false ? undefined : seg.endState.props.fish?.at;
@@ -52,7 +86,7 @@ export function propLocationsAt(seg: Segment, localT: number): { at: Record<Prop
   }
   events.sort((x, y) => x.t - y.t);
   // reconcile with the compiled end state: anything still different switches when its last clip ends
-  const sim = { ...at };
+  const sim = { ...startAt };
   const setDown: PropEvent[] = [];
   for (const e of events) {
     if (isActor(e.at)) {
@@ -69,12 +103,21 @@ export function propLocationsAt(seg: Segment, localT: number): { at: Record<Prop
     if (target !== undefined && sim[id] !== target) events.push({ t: Math.min(touched.get(id) ?? seg.duration, seg.duration), prop: id, at: target });
   }
   events.sort((x, y) => x.t - y.t);
+  const entry: CachedPropSchedule = { stamp, startAt, events };
+  propScheduleCache.set(seg, entry);
+  return entry;
+}
+
+export function propLocationsAt(seg: Segment, localT: number): { at: Record<PropId, PropLocation>; flights: Map<PropId, PropEvent["flight"]> } {
+  const { startAt, events } = getPropSchedule(seg);
+  const at = { ...startAt };
   const flights = new Map<PropId, PropEvent["flight"]>();
-  for (const e of events) {
+  for (let i = 0; i < events.length; i++) {
+    const e = events[i];
     if (e.t > localT) break;
     at[e.prop] = e.at;
     if (e.flight && localT < e.flight.t1) flights.set(e.prop, e.flight);
-    else flights.delete(e.prop);
+    else if (flights.size > 0) flights.delete(e.prop);
   }
   return { at, flights };
 }

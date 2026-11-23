@@ -8,7 +8,7 @@ import { applyLookAt, lookAtPose, qaxis, qmul, qrot } from "../motion/blend";
 import { emotionBlendSeconds, emotionWeights, type EmotionWeights } from "../motion/emotion";
 import { evaluatePose, STYLES, type VerbCtx } from "../motion/library";
 import { byPersona, hash1 } from "../motion/verbs/common";
-import { clipsOf, derivedPosture, stOf } from "./kinematics";
+import { clipsOf, derivedPosture, hashNum, hashStr, stOf } from "./kinematics";
 
 /** Seconds to blend a viseme in ahead of its audio. */
 const VISEME_LEAD = 0.06;
@@ -109,16 +109,34 @@ export function applyLook(frame: ActorFrame, actor: ActorId, target: Vec3 | null
 }
 
 interface EmotionCue { time: number; emotion: Emotion }
-const emotionCueCache = new WeakMap<Segment, Partial<Record<ActorId, { signature: string; cues: EmotionCue[] }>>>();
+const EMPTY_CUES: EmotionCue[] = [];
+const IDLE_NEUTRAL_CUES: EmotionCue[] = [{ time: 0, emotion: "neutral" }];
+const IDLE_SLEEPY_CUES: EmotionCue[] = [{ time: 0, emotion: "sleepy" }];
+const emotionCueCache = new WeakMap<Segment, Partial<Record<ActorId, { stamp: number; cues: EmotionCue[] }>>>();
+
+function emotionCueStamp(seg: Segment, actor: ActorId, rawClips: ActorClip[]): number {
+  let h = (seg.duration * 1024) | 0;
+  for (let i = 0; i < rawClips.length; i++) {
+    const c = rawClips[i];
+    h = (Math.imul(h, 31) + c.emotion.charCodeAt(0) + (c.verb.charCodeAt(0) << 8) + ((c.start * 1024) | 0)) | 0;
+  }
+  return h;
+}
 
 /** Expression intent is evaluated independently of the body's enum-switching
  * crossfade. Cache only semantic inputs; edits to a saved segment invalidate it. */
 function emotionCues(seg: Segment, actor: ActorId): EmotionCue[] {
-  const clips = [...clipsOf(seg, actor)].sort((a, b) => a.start - b.start);
-  const signature = JSON.stringify([stOf(seg.startState, actor).posture, seg.duration, clips.map((c) => [c.start, c.dur, c.verb, c.emotion, c.params.posture])]);
+  const rawClips = clipsOf(seg, actor);
+  if (rawClips.length === 0) {
+    if (seg.duration <= 0) return EMPTY_CUES;
+    return stOf(seg.startState, actor).posture === "sleep" ? IDLE_SLEEPY_CUES : IDLE_NEUTRAL_CUES;
+  }
+  const stamp = emotionCueStamp(seg, actor, rawClips);
   let cache = emotionCueCache.get(seg);
   if (!cache) { cache = {}; emotionCueCache.set(seg, cache); }
-  if (cache[actor]?.signature === signature) return cache[actor]!.cues;
+  const hit = cache[actor];
+  if (hit && hit.stamp === stamp) return hit.cues;
+  const clips = rawClips.length > 1 ? [...rawClips].sort((a, b) => a.start - b.start) : rawClips;
   let posture = stOf(seg.startState, actor).posture;
   const states = clips.map((clip) => { const from = posture; posture = derivedPosture(clip, from); return { clip, from, posture }; });
   const breaks = new Set([0]);
@@ -134,31 +152,100 @@ function emotionCues(seg: Segment, actor: ActorId): EmotionCue[] {
     for (const s of states) if (s.clip.start <= time) state = s;
     const active = state && time < state.clip.start + state.clip.dur, clip = active ? state!.clip : null;
     const from = active ? state!.from : state?.posture ?? stOf(seg.startState, actor).posture;
-    const ctx: VerbCtx = { actor, style: STYLES[actor], dur: clip?.dur ?? 1, emotion: clip?.emotion ?? "neutral", t: time, dist: 0, turned: 0, speed: 0, fromPosture: from, posture: state?.posture ?? from, targetLocal: null, seat: 0 };
-    const emotion = evaluatePose(clip?.verb ?? "idle", clip ? time - clip.start + 1e-8 : 0, clip?.params ?? {}, ctx).layer.face?.emotion ?? clip?.emotion ?? "neutral";
+    let emotion: Emotion;
+    if (!clip) {
+      emotion = from === "sleep" ? "sleepy" : "neutral";
+    } else {
+      const ctx: VerbCtx = { actor, style: STYLES[actor], dur: clip.dur, emotion: clip.emotion, t: time, dist: 0, turned: 0, speed: 0, fromPosture: from, posture: state?.posture ?? from, targetLocal: null, seat: 0 };
+      emotion = evaluatePose(clip.verb, time - clip.start + 1e-8, clip.params, ctx).layer.face?.emotion ?? clip.emotion;
+    }
     if (!cues.length || cues[cues.length - 1].emotion !== emotion) cues.push({ time, emotion });
   }
-  cache[actor] = { signature, cues };
+  cache[actor] = { stamp, cues };
   return cues;
+}
+
+interface TimelineEmotionEpisode {
+  at: number;
+  target: Emotion;
+  from: Emotion;
+  source: EmotionWeights;
+  blendDur: number;
+}
+
+const timelineEmotionCache = new WeakMap<Timeline, Partial<Record<ActorId, { stamp: number; episodes: TimelineEmotionEpisode[] }>>>();
+
+function getTimelineEmotionEpisodes(timeline: Timeline, actor: ActorId): TimelineEmotionEpisode[] {
+  const segs = timeline.segments;
+  let stamp = hashNum(0x811c9dc5 | 0, segs.length);
+  for (let i = 0; i < segs.length; i++) {
+    const { offset, segment } = segs[i];
+    const rawClips = clipsOf(segment, actor);
+    stamp = hashNum(stamp, offset);
+    if (rawClips.length === 0) {
+      stamp = hashStr(stamp, stOf(segment.startState, actor).posture);
+    } else {
+      stamp = hashNum(stamp, emotionCueStamp(segment, actor, rawClips));
+    }
+  }
+  let actorMap = timelineEmotionCache.get(timeline);
+  if (!actorMap) {
+    actorMap = {};
+    timelineEmotionCache.set(timeline, actorMap);
+  }
+  const hit = actorMap[actor];
+  if (hit && hit.stamp === stamp) return hit.episodes;
+
+  const episodes: TimelineEmotionEpisode[] = [];
+  let target: Emotion = "neutral";
+  let source: EmotionWeights = { neutral: 1 };
+  let start = -Infinity;
+  for (let i = 0; i < segs.length; i++) {
+    const { segment, offset } = segs[i];
+    const cues = emotionCues(segment, actor);
+    for (let j = 0; j < cues.length; j++) {
+      const cue = cues[j];
+      const at = offset + cue.time;
+      if (cue.emotion === target) continue;
+      source = emotionWeights({
+        emotion: target,
+        emotionTransition: { from: "neutral", fromWeights: source, progress: (at - start) / emotionBlendSeconds(target) },
+      });
+      target = cue.emotion;
+      start = at;
+      let bestKey: Emotion = "neutral";
+      let bestVal = -Infinity;
+      for (const k in source) {
+        const v = source[k as Emotion] ?? 0;
+        if (v > bestVal) {
+          bestVal = v;
+          bestKey = k as Emotion;
+        }
+      }
+      episodes.push({
+        at,
+        target,
+        from: bestKey,
+        source,
+        blendDur: emotionBlendSeconds(target),
+      });
+    }
+  }
+  actorMap[actor] = { stamp, episodes };
+  return episodes;
 }
 
 /** Replay only expression targets, never renderer state. This keeps a reaction
  * continuous through short beats, gaps, paragraph cuts and arbitrary seeks. */
 export function storyEmotion(timeline: Timeline, actor: ActorId, time: number): Pick<FaceParams, "emotion" | "emotionTransition"> {
-  let target: Emotion = "neutral", source: EmotionWeights = { neutral: 1 }, start = -Infinity;
-  for (const { segment, offset } of timeline.segments) {
-    if (offset > time) break;
-    for (const cue of emotionCues(segment, actor)) {
-      const at = offset + cue.time;
-      if (at > time) break;
-      if (cue.emotion === target) continue;
-      source = emotionWeights({ emotion: target, emotionTransition: { from: "neutral", fromWeights: source, progress: (at - start) / emotionBlendSeconds(target) } });
-      target = cue.emotion;
-      start = at;
-    }
+  const episodes = getTimelineEmotionEpisodes(timeline, actor);
+  let active: TimelineEmotionEpisode | null = null;
+  for (let i = 0; i < episodes.length; i++) {
+    if (episodes[i].at <= time) active = episodes[i];
+    else break;
   }
-  const progress = clamp01((time - start) / emotionBlendSeconds(target));
-  if (progress >= 1) return { emotion: target };
-  const from = (Object.entries(source).sort((a, b) => (b[1] ?? 0) - (a[1] ?? 0))[0]?.[0] ?? "neutral") as Emotion;
-  return { emotion: target, emotionTransition: { from, fromWeights: source, progress } };
+  if (!active) return { emotion: "neutral" };
+  const progress = clamp01((time - active.at) / active.blendDur);
+  if (progress >= 1) return { emotion: active.target };
+  return { emotion: active.target, emotionTransition: { from: active.from, fromWeights: active.source, progress } };
 }

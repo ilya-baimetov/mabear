@@ -18,14 +18,56 @@ export const GENERATED_FACE_PROFILES:Partial<Record<ActorId,Profile>>={
  rival_bear:{eyes:[{x:-.0533,y:2.2671,z:.3233,rx:.027,ry:.022},{x:.0506,y:2.2671,z:.3238,rx:.027,ry:.022}],mouth:{x:.0064,y:2.0107,z:.4006,rx:.108,ry:.070},browY:.034,jaw:.027},
 };
 type Point={p:THREE.Vector3;uv:THREE.Vector2};
-function sampler(mesh:THREE.SkinnedMesh,points:Point[],eye:Eye){
- const idx=mesh.geometry.index!,cells=new Map<string,number[]>(),step=eye.rx*.6;
- for(let n=0;n<idx.count;n+=3){const p=[0,1,2].map(k=>points[idx.getX(n+k)].p);
-  if(p.some(v=>v.z<eye.z-eye.rx*2)||Math.min(...p.map(v=>v.x))>eye.x+eye.rx*1.8||Math.max(...p.map(v=>v.x))<eye.x-eye.rx*1.8||Math.min(...p.map(v=>v.y))>eye.y+eye.ry*2.2||Math.max(...p.map(v=>v.y))<eye.y-eye.ry*1.6)continue;
-  for(let x=Math.floor(Math.min(...p.map(v=>v.x))/step);x<=Math.floor(Math.max(...p.map(v=>v.x))/step);x++)for(let y=Math.floor(Math.min(...p.map(v=>v.y))/step);y<=Math.floor(Math.max(...p.map(v=>v.y))/step);y++){const key=`${x},${y}`,a=cells.get(key)??[];a.push(n);cells.set(key,a);}
+type EyeSampler=(x:number,y:number)=>Point;
+const _lidPt=new THREE.Vector3();
+function sampler(mesh:THREE.SkinnedMesh,points:Point[],facePoints:Point[],eye:Eye):EyeSampler{
+ const idx=mesh.geometry.index!,cells=new Map<number,number[]>(),step=eye.rx*.6;
+ const minZ=eye.z-eye.rx*2,minX=eye.x-eye.rx*1.8,maxX=eye.x+eye.rx*1.8,minY=eye.y-eye.ry*1.6,maxY=eye.y+eye.ry*2.2;
+ for(let n=0;n<idx.count;n+=3){
+  const i0=idx.getX(n),i1=idx.getX(n+1),i2=idx.getX(n+2);
+  const a=points[i0].p,b=points[i1].p,c=points[i2].p;
+  if(a.z<minZ||b.z<minZ||c.z<minZ)continue;
+  const x0=Math.min(a.x,b.x,c.x),x1=Math.max(a.x,b.x,c.x);
+  if(x0>maxX||x1<minX)continue;
+  const y0=Math.min(a.y,b.y,c.y),y1=Math.max(a.y,b.y,c.y);
+  if(y0>maxY||y1<minY)continue;
+  const gx0=Math.floor(x0/step),gx1=Math.floor(x1/step),gy0=Math.floor(y0/step),gy1=Math.floor(y1/step);
+  for(let x=gx0;x<=gx1;x++)for(let y=gy0;y<=gy1;y++){const key=((x&0xffff)<<16)|(y&0xffff);let list=cells.get(key);if(!list){list=[];cells.set(key,list);}list.push(n);}
  }
- return (x:number,y:number):Point=>{let best:Point|undefined;for(const n of cells.get(`${Math.floor(x/step)},${Math.floor(y/step)}`)??[]){const[a,b,c]=[0,1,2].map(k=>points[idx.getX(n+k)]),den=(b.p.y-c.p.y)*(a.p.x-c.p.x)+(c.p.x-b.p.x)*(a.p.y-c.p.y);if(Math.abs(den)<1e-12)continue;const u=((b.p.y-c.p.y)*(x-c.p.x)+(c.p.x-b.p.x)*(y-c.p.y))/den,v=((c.p.y-a.p.y)*(x-c.p.x)+(a.p.x-c.p.x)*(y-c.p.y))/den,w=1-u-v;if(Math.min(u,v,w)<-.0001)continue;const z=a.p.z*u+b.p.z*v+c.p.z*w;if(!best||z>best.p.z)best={p:new THREE.Vector3(x,y,z),uv:a.uv.clone().multiplyScalar(u).addScaledVector(b.uv,v).addScaledVector(c.uv,w)};}
-  if(best)return best;let near=points[0],distance=Infinity;for(const p of points){if(p.p.z<eye.z-eye.rx*2)continue;const d=(p.p.x-x)**2+(p.p.y-y)**2;if(d<distance){near=p;distance=d;}}return{p:new THREE.Vector3(x,y,near.p.z),uv:near.uv.clone()};};
+ const checkCell=(list:number[]|undefined,x:number,y:number,current:Point|undefined):Point|undefined=>{
+  if(!list)return current;
+  let best=current;
+  for(let k=0;k<list.length;k++){
+   const n=list[k],a=points[idx.getX(n)],b=points[idx.getX(n+1)],c=points[idx.getX(n+2)];
+   const den=(b.p.y-c.p.y)*(a.p.x-c.p.x)+(c.p.x-b.p.x)*(a.p.y-c.p.y);
+   if(Math.abs(den)<1e-12)continue;
+   const u=((b.p.y-c.p.y)*(x-c.p.x)+(c.p.x-b.p.x)*(y-c.p.y))/den,v=((c.p.y-a.p.y)*(x-c.p.x)+(a.p.x-c.p.x)*(y-c.p.y))/den,w=1-u-v;
+   if(Math.min(u,v,w)<-.0001)continue;
+   const z=a.p.z*u+b.p.z*v+c.p.z*w;
+   if(!best||z>best.p.z)best={p:new THREE.Vector3(x,y,z),uv:a.uv.clone().multiplyScalar(u).addScaledVector(b.uv,v).addScaledVector(c.uv,w)};
+  }
+  return best;
+ };
+ const fallback=facePoints.length?facePoints:points;
+ return (x:number,y:number):Point=>{
+  const cx=Math.floor(x/step),cy=Math.floor(y/step);
+  let best=checkCell(cells.get(((cx&0xffff)<<16)|(cy&0xffff)),x,y,undefined);
+  if(!best){
+   for(let ox=-1;ox<=1;ox++)for(let oy=-1;oy<=1;oy++){
+    if(ox===0&&oy===0)continue;
+    best=checkCell(cells.get((((cx+ox)&0xffff)<<16)|((cy+oy)&0xffff)),x,y,best);
+   }
+  }
+  if(best)return best;
+  let near=fallback[0]??points[0],distance=Infinity;
+  for(let i=0;i<fallback.length;i++){
+   const p=fallback[i];
+   if(p.p.z<minZ)continue;
+   const d=(p.p.x-x)**2+(p.p.y-y)**2;
+   if(d<distance){near=p;distance=d;}
+  }
+  return{p:new THREE.Vector3(x,y,near.p.z),uv:near.uv.clone()};
+ };
 }
 
 function textureColor(source:THREE.MeshStandardMaterial){
@@ -36,13 +78,11 @@ function textureColor(source:THREE.MeshStandardMaterial){
  ctx.drawImage(image,0,0);const pixels=ctx.getImageData(0,0,canvas.width,canvas.height).data;
  return(uv:THREE.Vector2)=>{const x=clamp(Math.round(uv.x*(canvas.width-1)),0,canvas.width-1),y=clamp(Math.round(uv.y*(canvas.height-1)),0,canvas.height-1),n=(y*canvas.width+x)*4;return new THREE.Color().setRGB(pixels[n]/255,pixels[n+1]/255,pixels[n+2]/255,THREE.SRGBColorSpace);};
 }
-function movingLid(eye:Eye,top:boolean,sample:ReturnType<typeof sampler>,material:THREE.Material,colorAt:(uv:THREE.Vector2)=>THREE.Color){
+function movingLid(eye:Eye,top:boolean,sample:EyeSampler,surface:Point[][],material:THREE.Material,colorAt:(uv:THREE.Vector2)=>THREE.Color){
  const columns=40,rows=8,positions=new Float32Array((columns+1)*(rows+1)*3),colors=new Float32Array((columns+1)*(rows+1)*4),indices:number[]=[];
  const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.BufferAttribute(positions,3));geometry.setAttribute('color',new THREE.BufferAttribute(colors,4));
- const surface:(Point[])[]=[];
  const left=colorAt(sample(eye.x-eye.rx*1.55,eye.y+(top?1:-1)*eye.ry*.65).uv),right=colorAt(sample(eye.x+eye.rx*1.55,eye.y+(top?1:-1)*eye.ry*.65).uv);
- for(let i=0;i<=columns;i++){const u=i/columns*2-1,x=eye.x+u*eye.rx*1.22,extent=Math.sqrt(Math.max(0,1-u*u));
-  surface.push(Array.from({length:65},(_,j)=>sample(x,eye.y+eye.ry*1.24*extent*(1-j/32))));
+ for(let i=0;i<=columns;i++){const u=i/columns*2-1;
   for(let j=0;j<=rows;j++){const k=j*(columns+1)+i,color=left.clone().lerp(right,(u+1)/2);color.toArray(colors,k*4);colors[k*4+3]=.22*smooth(j/rows)*Math.sqrt(Math.max(0,1-u*u));if(j<rows&&i<columns){const a=k,b=a+1,c=a+columns+1,d=c+1;indices.push(a,b,c,b,d,c);}}
  }
  geometry.setIndex(indices);const mesh=new THREE.Mesh(geometry,material);mesh.frustumCulled=false;mesh.name=top?'upper-lid':'lower-lid';
@@ -50,15 +90,15 @@ function movingLid(eye:Eye,top:boolean,sample:ReturnType<typeof sampler>,materia
  for(let i=0;i<=columns;i++){const color=left.clone().lerp(right,i/columns).multiplyScalar(.52);color.toArray(edgeColors,i*6);color.toArray(edgeColors,i*6+3);if(i<columns){const k=i*2;edgeIndices.push(k,k+1,k+2,k+1,k+3,k+2);}}
  const edgeGeom=new THREE.BufferGeometry();edgeGeom.setAttribute('position',new THREE.BufferAttribute(edgePos,3));edgeGeom.setAttribute('color',new THREE.BufferAttribute(edgeColors,3));edgeGeom.setIndex(edgeIndices);const edge=new THREE.Mesh(edgeGeom,material);edge.frustumCulled=false;edge.name='lid-crease';mesh.add(edge);
  let priorClose=NaN;
- return{mesh,update(close:number){if(close===priorClose)return;priorClose=close;mesh.visible=close>.001;edge.visible=top&&close>.22;for(let i=0;i<=columns;i++){const u=i/columns*2-1,extent=Math.sqrt(Math.max(0,1-u*u));for(let j=0;j<=rows;j++){const v=j/rows,closed=close*(top?.72:.28),f=top?closed*v:1-closed*v,at=clamp(f*64,0,64),lo=Math.floor(at),p=surface[i][lo].p.clone().lerp(surface[i][Math.min(64,lo+1)].p,at-lo);p.z+=eye.rx*(.018+.05*Math.sin(v*Math.PI))*extent;p.toArray(positions,(j*(columns+1)+i)*3);if(j===rows){const width=eye.ry*.035*extent;p.z+=eye.rx*.018;p.y+=width;p.toArray(edgePos,i*6);p.y-=width*2;p.toArray(edgePos,i*6+3);}}}geometry.attributes.position.needsUpdate=true;geometry.computeVertexNormals();edgeGeom.attributes.position.needsUpdate=true;edgeGeom.computeVertexNormals();},dispose(){geometry.dispose();edgeGeom.dispose();}};
+ return{mesh,update(close:number){if(close===priorClose)return;priorClose=close;mesh.visible=close>.001;edge.visible=top&&close>.22;for(let i=0;i<=columns;i++){const u=i/columns*2-1,extent=Math.sqrt(Math.max(0,1-u*u));for(let j=0;j<=rows;j++){const v=j/rows,closed=close*(top?.72:.28),f=top?closed*v:1-closed*v,at=clamp(f*64,0,64),lo=Math.floor(at),p=_lidPt.copy(surface[i][lo].p).lerp(surface[i][Math.min(64,lo+1)].p,at-lo);p.z+=eye.rx*(.018+.05*Math.sin(v*Math.PI))*extent;p.toArray(positions,(j*(columns+1)+i)*3);if(j===rows){const width=eye.ry*.035*extent;p.z+=eye.rx*.018;p.y+=width;p.toArray(edgePos,i*6);p.y-=width*2;p.toArray(edgePos,i*6+3);}}}geometry.attributes.position.needsUpdate=true;geometry.computeVertexNormals();edgeGeom.attributes.position.needsUpdate=true;edgeGeom.computeVertexNormals();},dispose(){geometry.dispose();edgeGeom.dispose();}};
 }
 
 /** The generated eyes are painted into a continuous textured face. Occlude
  * their source pixels beneath the geometric lids as well, including side views
  * where a shallow lid shell alone cannot hide the original bulging eye surface. */
-function sourceBlink(source:THREE.MeshStandardMaterial,mesh:THREE.SkinnedMesh,points:Point[],profile:Profile,colorAt:(uv:THREE.Vector2)=>THREE.Color,id:ActorId){
+function sourceBlink(source:THREE.MeshStandardMaterial,mesh:THREE.SkinnedMesh,points:Point[],profile:Profile,samplers:readonly EyeSampler[],colorAt:(uv:THREE.Vector2)=>THREE.Color,id:ActorId){
  const position=new Float32Array(points.length*3);points.forEach((p,i)=>p.p.toArray(position,i*3));mesh.geometry.setAttribute('animalFaceBindPosition',new THREE.BufferAttribute(position,3));
- const close={value:0},colors=profile.eyes.flatMap(eye=>{const sample=sampler(mesh,points,eye);return[-1,1].flatMap(y=>[-1,1].map(x=>colorAt(sample(eye.x+x*eye.rx*1.55,eye.y+y*eye.ry*.85).uv)));});
+ const close={value:0},colors=profile.eyes.flatMap((eye,i)=>{const sample=samplers[i];return[-1,1].flatMap(y=>[-1,1].map(x=>colorAt(sample(eye.x+x*eye.rx*1.55,eye.y+y*eye.ry*.85).uv)));});
  const previous=source.onBeforeCompile,previousKey=source.customProgramCacheKey;
  const f=(n:number)=>Number(n).toFixed(8);
  source.onBeforeCompile=(shader,renderer)=>{previous?.call(source,shader,renderer);shader.uniforms.animalBlink=close;colors.forEach((color,i)=>shader.uniforms[`animalLidColor${i}`]={value:color});
@@ -94,12 +134,21 @@ export function createGeneratedFace(id:ActorId,meshes:THREE.SkinnedMesh[],bones:
  const profile=GENERATED_FACE_PROFILES[id];if(!profile)return null;
  const mesh=meshes.reduce((a,b)=>a.geometry.attributes.position.count>b.geometry.attributes.position.count?a:b),pos=mesh.geometry.getAttribute('position'),uv=mesh.geometry.getAttribute('uv');
  const points:Point[]=Array.from({length:pos.count},(_,i)=>({p:mesh.getVertexPosition(i,new THREE.Vector3()).applyMatrix4(mesh.matrixWorld),uv:new THREE.Vector2(uv.getX(i),uv.getY(i))}));
+ const [e0,e1]=profile.eyes,m=profile.mouth;
+ const minEyeZ=Math.min(e0.z-e0.rx*2,e1.z-e1.rx*2),maxEyeRx=Math.max(e0.rx,e1.rx);
+ const facePoints=points.filter(({p})=>p.z>minEyeZ-maxEyeRx*2.5&&p.y>m.y-m.ry*2.5);
+ const minFaceZ=Math.min(minEyeZ,m.z-m.rx*1.6);
+ const minFaceY=Math.min(e0.y+profile.browY-e0.ry*1.55,e1.y+profile.browY-e1.ry*1.55,m.y-m.ry);
+ const maxFaceY=Math.max(e0.y+profile.browY+e0.ry*1.55,e1.y+profile.browY+e1.ry*1.55,m.y+m.ry);
+ const maxFaceX=Math.max(Math.abs(e0.x)+e0.rx*1.75,Math.abs(e1.x)+e1.rx*1.75,Math.abs(m.x)+m.rx);
  const names=['browL','browR','tilt','smile','jaw'] as const,arrays=names.map(()=>new Float32Array(pos.count*3));
  const zero=new THREE.Vector3(),ex=new THREE.Vector3(),ey=new THREE.Vector3(),ez=new THREE.Vector3(),matrix=new THREE.Matrix4(),delta=new THREE.Vector3();let active=0;
  for(let i=0;i<points.length;i++){
-  const p=points[i].p,dy=[0,0,0,0,0],dx=[0,0,0,0,0];
+  const p=points[i].p;
+  if(p.z<minFaceZ||p.y<minFaceY||p.y>maxFaceY||Math.abs(p.x)>maxFaceX)continue;
+  const dy=[0,0,0,0,0],dx=[0,0,0,0,0];
   profile.eyes.forEach((e,side)=>{if(p.z<e.z-e.rx*2)return;const x=(p.x-e.x)/(e.rx*1.75),y=(p.y-e.y-profile.browY)/(e.ry*1.55),mask=smooth(1-Math.hypot(x,y));dy[side===0?1:0]+=mask*e.ry*.65;dy[2]+=-Math.sign(e.x-profile.mouth.x)*x*mask*e.ry*.55;});
-  const m=profile.mouth;if(p.z>m.z-m.rx*1.6){const nx=(p.x-m.x)/m.rx,ny=(p.y-m.y)/m.ry,mask=smooth(1-Math.hypot(nx,ny));dy[3]=mask*Math.abs(nx)*m.ry*.4;dx[3]=mask*nx*m.rx*.10;dy[4]=-mask*profile.jaw*smooth((m.y+m.ry*.3-p.y)/(m.ry*.6));}
+  if(p.z>m.z-m.rx*1.6){const nx=(p.x-m.x)/m.rx,ny=(p.y-m.y)/m.ry,mask=smooth(1-Math.hypot(nx,ny));dy[3]=mask*Math.abs(nx)*m.ry*.4;dx[3]=mask*nx*m.rx*.10;dy[4]=-mask*profile.jaw*smooth((m.y+m.ry*.3-p.y)/(m.ry*.6));}
   if(!dy.some(Boolean)&&!dx.some(Boolean))continue;active++;
   mesh.applyBoneTransform(i,zero.set(0,0,0)).applyMatrix4(mesh.matrixWorld);mesh.applyBoneTransform(i,ex.set(1,0,0)).applyMatrix4(mesh.matrixWorld).sub(zero);mesh.applyBoneTransform(i,ey.set(0,1,0)).applyMatrix4(mesh.matrixWorld).sub(zero);mesh.applyBoneTransform(i,ez.set(0,0,1)).applyMatrix4(mesh.matrixWorld).sub(zero);matrix.makeBasis(ex,ey,ez).invert();
   names.forEach((_,n)=>{delta.set(dx[n],dy[n],0).applyMatrix4(matrix).toArray(arrays[n],i*3);});
@@ -107,8 +156,14 @@ export function createGeneratedFace(id:ActorId,meshes:THREE.SkinnedMesh[],bones:
  const offset=mesh.geometry.morphAttributes.position?.length??0;mesh.geometry.morphAttributes.position=[...(mesh.geometry.morphAttributes.position??[]),...arrays.map(a=>new THREE.BufferAttribute(a,3))];mesh.geometry.morphTargetsRelative=true;mesh.updateMorphTargets();
  const space=new THREE.Group();space.name=`${id}:facial-articulation`;space.matrixAutoUpdate=false;space.matrix.copy(bones.Head.matrixWorld).invert();bones.Head.add(space);
  const source=(Array.isArray(mesh.material)?mesh.material[0]:mesh.material) as THREE.MeshStandardMaterial,material=source.clone();material.side=THREE.DoubleSide;material.forceSinglePass=true;material.map=null;material.vertexColors=true;material.normalMap=null;material.roughnessMap=null;material.aoMap=null;material.transparent=true;material.roughness=.9;
- const colorAt=textureColor(source),blinkSurface=sourceBlink(source,mesh,points,profile,colorAt,id);
- const lids=profile.eyes.flatMap(eye=>{const sample=sampler(mesh,points,eye);return[true,false].map(top=>{const lid=movingLid(eye,top,sample,material,colorAt);space.add(lid.mesh);return lid;});});
+ const samplers=profile.eyes.map(eye=>sampler(mesh,points,facePoints,eye));
+ const colorAt=textureColor(source),blinkSurface=sourceBlink(source,mesh,points,profile,samplers,colorAt,id);
+ const columns=40;
+ const lids=profile.eyes.flatMap((eye,eyeIdx)=>{
+  const sample=samplers[eyeIdx];
+  const surface:Point[][]=Array.from({length:columns+1},(_,i)=>{const u=i/columns*2-1,x=eye.x+u*eye.rx*1.22,extent=Math.sqrt(Math.max(0,1-u*u));return Array.from({length:65},(_,j)=>sample(x,eye.y+eye.ry*1.24*extent*(1-j/32)));});
+  return[true,false].map(top=>{const lid=movingLid(eye,top,sample,surface,material,colorAt);space.add(lid.mesh);return lid;});
+ });
  const metrics={type:'source-preserving animal face',activeVertices:active,lidClose:0,browL:0,browR:0,jaw:0};root.userData.facialPerformance=metrics;
  return{update(frame:ActorFrame){const weights=Object.entries(emotionWeights(frame.face));const blend=(select:(p:typeof EMOTION_PRESETS[Emotion])=>number)=>weights.reduce((n,[emotion,w])=>n+(w??0)*select(EMOTION_PRESETS[emotion as Emotion]),0);const mouth={}as MouthShape;for(const key of Object.keys(EMOTION_PRESETS.neutral.mouth) as (keyof MouthShape)[])mouth[key]=weights.reduce((n,[emotion,w])=>n+(w??0)*mouthShapeFor(emotion as Emotion,frame.face.viseme,frame.face.visemeWeight)[key],0);
   const browL=blend(p=>p.browL)+frame.face.browRaise*.3,browR=blend(p=>p.browR)+frame.face.browRaise*.3,tilt=blend(p=>p.tilt),smile=mouth.smile-.35,jaw=mouth.open*.65;

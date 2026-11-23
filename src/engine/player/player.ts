@@ -42,13 +42,23 @@ export class Player {
   castOverride: ActorId[] | null = null;
   /** debug/screenshot hook: skip rendering (the last frame stays on screen) so headless screenshots aren't starved */
   frozen = false;
+  private dirty = true;
+  private settleFrames = 2;
+  private lastCameraOverride = this.cameraOverride;
+  private lastCastOverride = this.castOverride;
 
   constructor(private opts: PlayerOptions) {
     this.loop = this.loop.bind(this);
     this.raf = requestAnimationFrame(this.loop);
   }
 
+  markDirty(): void {
+    this.dirty = true;
+    this.settleFrames = 2;
+  }
+
   setTimeline(tl: Timeline, lang: Lang): void {
+    this.markDirty();
     this.opts.evaluator?.setTimeline(tl);
     const wasPlaying = this.playing;
     const changed = tl !== this.timeline || lang !== this.lang;
@@ -85,7 +95,9 @@ export class Player {
   }
 
   play(from: number, to?: number): void {
+    this.markDirty();
     this.castOverride = null;
+    this.lastCastOverride = null;
     const resume = this.resumableAudio && !this.playing && Math.abs(from - this.t) < 1e-6 && (to ?? null) === this.previewEnd;
     this.resumableAudio = false;
     this.setPreviewEnd(to);
@@ -103,6 +115,7 @@ export class Player {
   pause(): void {
     if (!this.playing) return;
     this.playing = false;
+    this.markDirty();
     this.resumableAudio = !!this.opts.audio?.pause;
     if (this.opts.audio?.pause) this.opts.audio.pause(); else this.opts.audio?.stop();
     this.opts.onTime?.(this.t, false);
@@ -110,6 +123,7 @@ export class Player {
 
   seek(t: number, boundEnd?: number): void {
     if (this.playing) this.pause();
+    this.markDirty();
     if (this.resumableAudio) this.opts.audio?.stop();
     this.resumableAudio = false;
     this.setPreviewEnd(boundEnd);
@@ -121,6 +135,11 @@ export class Player {
   private loop(now: number): void {
     this.raf = requestAnimationFrame(this.loop);
     if (this.frozen) return;
+    if (this.cameraOverride !== this.lastCameraOverride || this.castOverride !== this.lastCastOverride) {
+      this.lastCameraOverride = this.cameraOverride;
+      this.lastCastOverride = this.castOverride;
+      this.markDirty();
+    }
     const dt = this.lastNow ? Math.min(0.1, Math.max(0, (now - this.lastNow) / 1000)) : 1 / 60;
     this.lastNow = now;
     if (this.playing) {
@@ -130,6 +149,7 @@ export class Player {
         this.playing = false;
         this.opts.audio?.stop();
         this.idleT = 0;
+        this.markDirty();
         this.opts.onTime?.(this.t, false);
       } else {
         this.opts.onTime?.(this.t, true);
@@ -143,6 +163,13 @@ export class Player {
     const last = view.segments.at(-1);
     const atSegmentEnd = last && Math.abs(last.offset + last.segment.duration - view.duration) < 1e-6;
     const atEnd = !this.playing && view.duration > 0 && this.t >= view.duration - 1e-3;
+    if (!this.playing && !(atEnd && atSegmentEnd) && !this.dirty && this.settleFrames <= 0 && this.cameraOverride === null) {
+      return;
+    }
+    if (!this.playing) {
+      this.dirty = false;
+      if (this.settleFrames > 0) this.settleFrames--;
+    }
     const evalT = atEnd && atSegmentEnd ? view.duration + this.idleT : this.t;
     try {
       let frame = this.opts.evaluator ? this.opts.evaluator.evaluate(view, evalT) : evaluate(view, evalT);

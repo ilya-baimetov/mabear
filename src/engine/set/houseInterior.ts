@@ -99,39 +99,138 @@ function synthesizeBoxProjectedUvs(geometry: THREE.BufferGeometry): void {
   geometry.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
 }
 
-/** Batch siblings by material while preserving fixture and cutaway groups.
- * A six-face point-light shadow must not redraw every individual shelf rail. */
-function batchStaticGeometry(group: THREE.Group): void {
-  for (const child of [...group.children]) if (child instanceof THREE.Group) batchStaticGeometry(child);
-  const batches = new Map<THREE.Material, THREE.Mesh[]>();
-  for (const child of group.children) if (child instanceof THREE.Mesh && !Array.isArray(child.material)) {
-    const list = batches.get(child.material) ?? []; list.push(child); batches.set(child.material, list);
-  }
-  for (const [material, meshes] of batches) {
-    if (meshes.length < 2) continue;
-    const geometryParts = meshes.map(mesh => {
-      mesh.updateMatrix();
-      const geometry = mesh.geometry.index ? mesh.geometry.toNonIndexed() : mesh.geometry.clone();
-      for (const name of Object.keys(geometry.attributes)) {
-        if (name !== 'position' && name !== 'normal' && name !== 'uv') geometry.deleteAttribute(name);
+/** Recursively batch static subtrees by material while preserving interactive,
+ * anchor, raycast and cutaway boundary groups. */
+function batchStaticGeometry(root: THREE.Group): void {
+  root.updateMatrixWorld(true);
+  const glossyBatchMat = new THREE.MeshStandardMaterial({color: '#ffffff', roughness: .24, metalness: .04, vertexColors: true});
+  glossyBatchMat.name = 'cream enamel'; glossyBatchMat.userData.setOwned = true;
+  const matteBatchMat = new THREE.MeshStandardMaterial({color: '#ffffff', roughness: .90, metalness: 0, vertexColors: true});
+  matteBatchMat.name = 'deep charcoal'; matteBatchMat.userData.setOwned = true;
+  const ceilingBatchMat = new THREE.MeshStandardMaterial({color: '#ffffff', roughness: .90, metalness: 0, side: THREE.DoubleSide, vertexColors: true});
+  ceilingBatchMat.name = 'ceiling'; ceilingBatchMat.userData.setOwned = true;
+
+  const anchors = root.userData.anchors as Record<string, unknown> | undefined;
+  const wallSectionSet = new Set<THREE.Object3D>((root.userData.wallSections as THREE.Object3D[] | undefined) ?? []);
+  const isBoundaryGroup = (g: THREE.Group): boolean =>
+    g === root ||
+    g.name === 'set:house:wall-shell' ||
+    g.userData.cuttable === true ||
+    g === root.userData.ceiling ||
+    g === root.userData.cookingPot ||
+    g === anchors?.chair ||
+    g === anchors?.prepTable ||
+    g === anchors?.helper ||
+    g.name === 'rounded low checkers table' ||
+    g.name === 'object:kitchen_cupboard';
+
+  const replacedMaterials = new Set<THREE.Material>();
+
+  const mergeBoundary = (boundary: THREE.Group): void => {
+    const subBoundaries: THREE.Group[] = [];
+    const findSubBoundaries = (node: THREE.Object3D) => {
+      for (const child of node.children) {
+        if (child instanceof THREE.Group) {
+          if (isBoundaryGroup(child)) subBoundaries.push(child);
+          else findSubBoundaries(child);
+        }
       }
-      if (!geometry.hasAttribute('normal')) geometry.computeVertexNormals();
-      geometry.applyMatrix4(mesh.matrix);
-      if (!geometry.hasAttribute('uv')) synthesizeBoxProjectedUvs(geometry);
-      geometry.clearGroups();
-      return geometry;
-    });
-    const geometry = mergeGeometries(geometryParts);
-    for (const part of geometryParts) part.dispose();
-    if (!geometry) throw new Error(`Cannot batch house fixture ${group.name}`);
-    const batch = new THREE.Mesh(geometry, material);
-    batch.name = `set:house:batch:${group.name}:${material.name}`;
-    batch.castShadow = meshes.some(mesh => mesh.castShadow);
-    batch.receiveShadow = meshes.some(mesh => mesh.receiveShadow);
-    batch.userData.partNames = meshes.map(mesh => mesh.name);
-    for (const mesh of meshes) {group.remove(mesh); mesh.geometry.dispose();}
-    group.add(batch);
-  }
+    };
+    findSubBoundaries(boundary);
+    for (const sub of subBoundaries) mergeBoundary(sub);
+
+    const collected: THREE.Mesh[] = [];
+    const collectMeshes = (node: THREE.Object3D) => {
+      for (const child of node.children) {
+        if (child instanceof THREE.Group) {
+          if (!isBoundaryGroup(child)) collectMeshes(child);
+        } else if (child instanceof THREE.Mesh && !Array.isArray(child.material) && child.name !== 'set:house:floor') {
+          collected.push(child);
+        }
+      }
+    };
+    collectMeshes(boundary);
+
+    const batches = new Map<THREE.Material, THREE.Mesh[]>();
+    for (const mesh of collected) {
+      const srcMat = mesh.material as THREE.Material;
+      const kind = srcMat.userData.vertexBatch as string | undefined;
+      const targetMat = kind === 'glossy' ? glossyBatchMat : kind === 'matte' ? matteBatchMat : kind === 'ceiling' ? ceilingBatchMat : srcMat;
+      if (targetMat !== srcMat && srcMat.userData.setOwned) replacedMaterials.add(srcMat);
+      const list = batches.get(targetMat) ?? [];
+      list.push(mesh);
+      batches.set(targetMat, list);
+    }
+
+    const boundaryInverse = boundary.matrixWorld.clone().invert();
+    const relMatrix = new THREE.Matrix4();
+
+    for (const [material, meshes] of batches) {
+      if (meshes.length === 1 && material === meshes[0].material && meshes[0].parent === boundary) continue;
+      const useVertexColors = (material as THREE.MeshStandardMaterial).vertexColors === true;
+      const geometryParts = meshes.map(mesh => {
+        relMatrix.multiplyMatrices(boundaryInverse, mesh.matrixWorld);
+        const geometry = mesh.geometry.index ? mesh.geometry.toNonIndexed() : mesh.geometry.clone();
+        for (const name of Object.keys(geometry.attributes)) {
+          if (name !== 'position' && name !== 'normal' && name !== 'uv' && (!useVertexColors || name !== 'color')) {
+            geometry.deleteAttribute(name);
+          }
+        }
+        if (!geometry.hasAttribute('normal')) geometry.computeVertexNormals();
+        geometry.applyMatrix4(relMatrix);
+        if (!geometry.hasAttribute('uv')) synthesizeBoxProjectedUvs(geometry);
+        if (useVertexColors && !geometry.hasAttribute('color')) {
+          const count = geometry.getAttribute('position').count;
+          const colors = new Float32Array(count * 3);
+          const srcMat = mesh.material as THREE.MeshStandardMaterial;
+          const c = (mesh.userData.vertexColor as THREE.Color | undefined) ?? srcMat.color ?? new THREE.Color(1, 1, 1);
+          for (let i = 0; i < count; i++) {
+            colors[i * 3] = c.r;
+            colors[i * 3 + 1] = c.g;
+            colors[i * 3 + 2] = c.b;
+          }
+          geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+        }
+        geometry.clearGroups();
+        return geometry;
+      });
+      const geometry = geometryParts.length === 1 ? geometryParts[0] : mergeGeometries(geometryParts);
+      if (geometryParts.length > 1) for (const part of geometryParts) part.dispose();
+      if (!geometry) throw new Error(`Cannot batch house fixture ${boundary.name}`);
+      const batch = new THREE.Mesh(geometry, material);
+      const allSameName = meshes.every(mesh => mesh.name === meshes[0].name) && meshes[0].name.length > 0;
+      batch.name = allSameName ? meshes[0].name : `set:house:batch:${boundary.name}:${material.name}`;
+      batch.castShadow = meshes.some(mesh => mesh.castShadow);
+      batch.receiveShadow = meshes.some(mesh => mesh.receiveShadow);
+      if (meshes.length === 1) {
+        batch.renderOrder = meshes[0].renderOrder;
+        batch.raycast = meshes[0].raycast;
+      }
+      batch.userData.partNames = meshes.map(mesh => mesh.name);
+      const oldGeometries = new Set<THREE.BufferGeometry>();
+      for (const mesh of meshes) {
+        mesh.parent?.remove(mesh);
+        oldGeometries.add(mesh.geometry);
+      }
+      for (const oldGeo of oldGeometries) oldGeo.dispose();
+      boundary.add(batch);
+    }
+
+    const pruneEmptyGroups = (group: THREE.Group) => {
+      for (const child of [...group.children]) {
+        if (child instanceof THREE.Group) {
+          pruneEmptyGroups(child);
+          if (child.children.length === 0 && !isBoundaryGroup(child) && !wallSectionSet.has(child) && child.name !== 'set:house:kitchen') {
+            group.remove(child);
+          }
+        }
+      }
+    };
+    pruneEmptyGroups(boundary);
+  };
+
+  mergeBoundary(root);
+  for (const mat of replacedMaterials) mat.dispose();
 }
 
 /** The reviewed room is now the actual game set. Semantic marks and physical
@@ -177,9 +276,7 @@ export function buildHouseInterior(_materials: LookMaterials): THREE.Group {
     glass = material('window light', '#a2b7b5', .42);
     glass.side = THREE.DoubleSide;
     glass.userData.windowBaseColor = glass.color.clone();
-    doorLandscape = material('doorway daylight', '#dee3d2', .90);
-    doorLandscape.side = THREE.DoubleSide;
-    doorLandscape.userData.windowBaseColor = doorLandscape.color.clone();
+    doorLandscape = glass;
   }
 
   const m = {
@@ -201,6 +298,11 @@ export function buildHouseInterior(_materials: LookMaterials): THREE.Group {
     figure: material('felt', '#b1ada3', .95),
     ceiling: material('ceiling', '#bfc5ac', .92),
   };
+  m.enamel.userData.vertexBatch = 'glossy';
+  m.blue.userData.vertexBatch = 'glossy';
+  m.chrome.userData.vertexBatch = 'glossy';
+  m.black.userData.vertexBatch = 'matte';
+  m.figure.userData.vertexBatch = 'matte';
 
   const floorGeo = new THREE.ShapeGeometry(roundedRoomOutline(HOUSE_FOOTPRINT));
   const floorPos = floorGeo.getAttribute('position');
@@ -220,16 +322,18 @@ export function buildHouseInterior(_materials: LookMaterials): THREE.Group {
   const pendant = new THREE.Group();
   pendant.name = 'set:house:pendant-lamp';
   pendant.position.set(-.7, 0, 1.15);
+  const pendantIronMat = material('pendant iron', '#4a4e4c', .42, 0);
+  pendantIronMat.userData.vertexBatch = 'ceiling';
   const addPendantPart = (name: string, geometry: THREE.BufferGeometry, mat: THREE.Material, y = 0) => {
     const part = new THREE.Mesh(geometry, mat);
     part.name = name; part.position.y = y; part.castShadow = false; part.receiveShadow = false;
     pendant.add(part);
     return part;
   };
-  addPendantPart('Pendant canopy', new THREE.CylinderGeometry(.09, .12, .05, 18), m.metal, 3.87);
-  addPendantPart('Pendant stem', new THREE.CylinderGeometry(.016, .016, .70, 10), m.metal, 3.51);
+  addPendantPart('Pendant canopy', new THREE.CylinderGeometry(.09, .12, .05, 18), pendantIronMat, 3.87);
+  addPendantPart('Pendant stem', new THREE.CylinderGeometry(.016, .016, .70, 10), pendantIronMat, 3.51);
   const shadeProfile = [[0, 3.17], [.05, 3.17], [.08, 3.15], [.18, 3.10], [.27, 3.04], [.285, 3.01], [.255, 3.01], [.16, 3.08], [.05, 3.14], [0, 3.14]].map(([r, y]) => new THREE.Vector2(r, y));
-  addPendantPart('Pendant wrought-iron shade', new THREE.LatheGeometry(shadeProfile, 24), m.metal);
+  addPendantPart('Pendant wrought-iron shade', new THREE.LatheGeometry(shadeProfile, 24), pendantIronMat);
   const pendantMaterial = new THREE.MeshStandardMaterial({
     color: '#fff4da',
     emissive: new THREE.Color('#ffcf7d'),
@@ -244,6 +348,12 @@ export function buildHouseInterior(_materials: LookMaterials): THREE.Group {
   const {fireplace, furnishings, chair, flameMaterial, emberMaterial} = buildLivingShapes(m);
   const readingTable = furnishings.getObjectByName('rounded low checkers table')!;
   const [tx, tz] = houseLocal(HOUSE_READING_TABLE.position); readingTable.position.set(tx, 0, tz);
+  for (const child of [...readingTable.children]) {
+    if (child instanceof THREE.Mesh && child.name.endsWith('checker piece')) {
+      child.position.add(readingTable.position);
+      furnishings.add(child);
+    }
+  }
   const {kitchen, prepTable, diningChairs, tableSurfaceY, seatY, sunbeamMaterial} = buildKitchenShapes(m);
   // Keep the stove approach open for Bear's full body; the second chair now
   // faces its table from the south side instead of blocking the cooking aisle.
@@ -285,7 +395,7 @@ export function buildHouseInterior(_materials: LookMaterials): THREE.Group {
     description: 'Connected kitchen and living room from the reviewed cartoon shape study',
     wallSections, ceiling, cookingPot,
     windowMaterials: glass === doorLandscape ? [glass] : [glass, doorLandscape],
-    extraDisposables: [panel, paper, kitchen, m.curtain, m.figure],
+    extraDisposables: [panel, paper, m.kitchen, m.curtain, m.figure],
     assetsReady: Promise.all(readyPromises).then(() => undefined),
     anchors: {chair, prepTable, tableSurfaceY, diningSeatY: seatY, helper},
     hearthLight, ceilingLight: warm, kitchenLight, readingLight: reading,

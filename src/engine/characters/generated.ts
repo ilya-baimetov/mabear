@@ -14,6 +14,10 @@ import {createGeneratedFace} from './generatedFace';
 export interface GeneratedOptions { height: number; mashaPerformance?: boolean; animalPerformance?:boolean; }
 interface Sample { mesh: THREE.SkinnedMesh; index: number; }
 const p = new THREE.Vector3(), q = new THREE.Quaternion();
+const _qWorld = new THREE.Quaternion(), _qParent = new THREE.Quaternion(), _qPitch = new THREE.Quaternion(), _qRoll = new THREE.Quaternion(), _qCanon = new THREE.Quaternion(), _qDelta = new THREE.Quaternion();
+const _vDesired = new THREE.Vector3(), _vAdd = new THREE.Vector3(), _vFwd = new THREE.Vector3(), _vLat = new THREE.Vector3(), _vTarget = new THREE.Vector3(), _vHip = new THREE.Vector3(), _vPole = new THREE.Vector3();
+const _eTail = new THREE.Euler(0, 0, 0, 'YXZ');
+const _legScratch = [0, 1].map(() => ({ origFootPos: new THREE.Vector3(), origFootQ: new THREE.Quaternion(), toeDir: new THREE.Vector3(), footLeft: new THREE.Vector3() }));
 
 /** Keep the source's skeleton and materials; map canonical game poses through world-space rest transforms. */
 export function generatedRig(id: ActorId, model: THREE.Group, options: GeneratedOptions): CharacterRig {
@@ -119,6 +123,15 @@ export function generatedRig(id: ActorId, model: THREE.Group, options: Generated
 
   // Repair the split skirt in every version of this asset. Sleeve/hand highlights
   // must retain their arm weights; facial performance remains a separate opt-in.
+  for(const mesh of meshes) {
+    const pos = mesh.geometry.getAttribute('position');
+    const bindWorld = new Float64Array(pos.count * 3);
+    for(let i=0;i<pos.count;i++) {
+      mesh.getVertexPosition(i,p).applyMatrix4(mesh.matrixWorld);
+      bindWorld[i*3]=p.x; bindWorld[i*3+1]=p.y; bindWorld[i*3+2]=p.z;
+    }
+    mesh.userData.bindWorldPositions = bindWorld;
+  }
   let dressVertices = 0;
   if(id === 'masha') for(const mesh of meshes) dressVertices += repairDress(mesh);
   // Facial anchors are authored in metres, then converted through the imported skeleton's centimetre scale.
@@ -137,10 +150,11 @@ export function generatedRig(id: ActorId, model: THREE.Group, options: Generated
   const samples: Sample[] = [];
   for(const mesh of meshes) {
     const pos = mesh.geometry.getAttribute('position');
+    const bindWorld = mesh.userData.bindWorldPositions as Float64Array | undefined;
     const candidates: Sample[] = [];
     for(let i=0;i<pos.count;i++) {
-      mesh.getVertexPosition(i,p).applyMatrix4(mesh.matrixWorld);
-      if(p.y < options.height*.105) candidates.push({mesh,index:i});
+      const py = bindWorld ? bindWorld[i*3+1] : mesh.getVertexPosition(i,p).applyMatrix4(mesh.matrixWorld).y;
+      if(py < options.height*.105) candidates.push({mesh,index:i});
     }
     // Surface sampling is only for sole contact, not a per-frame full-mesh CPU skinning pass.
     const step = Math.max(1,Math.floor(candidates.length/100));
@@ -166,19 +180,20 @@ export function generatedRig(id: ActorId, model: THREE.Group, options: Generated
     const physAirFade=frame.physicsRoot?1-THREE.MathUtils.smoothstep(frame.pos[1]-hRoot,.04*options.height,.10*options.height):1;
     const weight=groundWeight*airFade*physAirFade;
     if(weight<=1e-4)return;
-    const fwdDefault=new THREE.Vector3(Math.sin(frame.yaw),0,Math.cos(frame.yaw));
-    const latDefault=new THREE.Vector3(Math.cos(frame.yaw),0,-Math.sin(frame.yaw));
+    const fwdDefault=_vFwd.set(Math.sin(frame.yaw),0,Math.cos(frame.yaw));
+    const latDefault=_vLat.set(Math.cos(frame.yaw),0,-Math.sin(frame.yaw));
     const span=Math.max(.05,measured.leg.toe*.75),latSpan=Math.max(.03,options.height*.04),maxStep=legLen*.55;
     type LegPlan={sideSign:1|-1;upLeg:THREE.Bone;leg:THREE.Bone;foot:THREE.Bone;origFootPos:THREE.Vector3;origFootQ:THREE.Quaternion;toeDir:THREE.Vector3;footLeft:THREE.Vector3;footLift:number;plant:number;dh:number;slopePitch:number;slopeRoll:number};
     const plans:LegPlan[]=[];
-    for(const side of ['Left','Right'] as const){
+    for(const [sideIdx,side] of (['Left','Right'] as const).entries()){
       const upLeg=bones[`${side}UpLeg`],leg=bones[`${side}Leg`],foot=bones[`${side}Foot`],toe=bones[`${side}ToeBase`];
       if(!upLeg||!leg||!foot)continue;
-      const origFootPos=foot.getWorldPosition(new THREE.Vector3()),origFootQ=foot.getWorldQuaternion(new THREE.Quaternion());
-      const toeDir=toe?toe.getWorldPosition(new THREE.Vector3()).sub(origFootPos):fwdDefault.clone();
+      const sc=_legScratch[sideIdx];
+      const origFootPos=foot.getWorldPosition(sc.origFootPos),origFootQ=foot.getWorldQuaternion(sc.origFootQ);
+      const toeDir=toe?toe.getWorldPosition(sc.toeDir).sub(origFootPos):sc.toeDir.copy(fwdDefault);
       toeDir.y=0;
       if(toeDir.lengthSq()<1e-6)toeDir.copy(fwdDefault);else toeDir.normalize();
-      const footLeft=new THREE.Vector3().crossVectors(UP,toeDir).normalize();
+      const footLeft=sc.footLeft.crossVectors(UP,toeDir).normalize();
       const hRaw=supportAt(origFootPos.x,origFootPos.z),h=Number.isFinite(hRaw)?hRaw:hRoot;
       const footLift=Math.max(0,origFootPos.y-(frame.pos[1]+measured.leg.ankle));
       const plant=1-THREE.MathUtils.smoothstep(footLift,.01*options.height,.08*options.height);
@@ -203,19 +218,19 @@ export function generatedRig(id: ActorId, model: THREE.Group, options: Generated
     for(const l of plans){
       const effectiveDeltaY=l.dh>=0?Math.max(l.dh*l.plant,l.dh-l.footLift):l.dh*l.plant;
       const targetY=l.origFootPos.y+effectiveDeltaY*weight;
-      const target=new THREE.Vector3(l.origFootPos.x,targetY,l.origFootPos.z);
+      const target=_vTarget.set(l.origFootPos.x,targetY,l.origFootPos.z);
       const needsIk=Math.abs(targetY-l.origFootPos.y)>1e-4||Math.abs(pelvisOffset)>1e-4;
       if(needsIk){
-        const hipPos=l.upLeg.getWorldPosition(new THREE.Vector3());
-        const pole=hipPos.clone().lerp(target,.5).addScaledVector(fwdDefault,.35*options.height).addScaledVector(latDefault,l.sideSign*.06*options.height);
+        const hipPos=l.upLeg.getWorldPosition(_vHip);
+        const pole=_vPole.copy(hipPos).lerp(target,.5).addScaledVector(fwdDefault,.35*options.height).addScaledVector(latDefault,l.sideSign*.06*options.height);
         solveArm(l.upLeg,l.leg,l.foot,target,pole);
       }
       const ankleWeight=l.plant*weight;
       if(needsIk||Math.abs(l.slopePitch*ankleWeight)>1e-4||Math.abs(l.slopeRoll*ankleWeight)>1e-4){
-        const pitchQ=new THREE.Quaternion().setFromAxisAngle(l.footLeft,-l.slopePitch*ankleWeight);
-        const rollQ=new THREE.Quaternion().setFromAxisAngle(l.toeDir,l.slopeRoll*ankleWeight);
+        const pitchQ=_qPitch.setFromAxisAngle(l.footLeft,-l.slopePitch*ankleWeight);
+        const rollQ=_qRoll.setFromAxisAngle(l.toeDir,l.slopeRoll*ankleWeight);
         const desiredFootQ=rollQ.multiply(pitchQ).multiply(l.origFootQ);
-        l.foot.quaternion.copy(l.foot.parent!.getWorldQuaternion(new THREE.Quaternion()).invert().multiply(desiredFootQ));
+        l.foot.quaternion.copy(l.foot.parent!.getWorldQuaternion(_qParent).invert().multiply(desiredFootQ));
         l.foot.updateWorldMatrix(false,true);
       }
     }
@@ -260,20 +275,20 @@ export function generatedRig(id: ActorId, model: THREE.Group, options: Generated
         const b = bones[name]; if(!b) continue;
         const delta = qmul(globals[name],qinv(setup.F[name]));
         const world = qmul(qmul(qmul(qinv(setup.C),delta),setup.C),setup.restRot[name]);
-        const parentQ = b.parent!.getWorldQuaternion(q).invert();
-        b.quaternion.copy(parentQ.multiply(new THREE.Quaternion().fromArray(world)));
+        const parentQ = b.parent!.getWorldQuaternion(_qParent).invert();
+        b.quaternion.copy(parentQ.multiply(_qWorld.fromArray(world)));
         b.updateWorldMatrix(false,true);
       }
       const hips = bones.Hips, hp = localRest.get(hips)!.p;
-      const desired = hips.parent!.localToWorld(hp.clone()).add(new THREE.Vector3(...frame.hipsOffset));
+      const desired = hips.parent!.localToWorld(_vDesired.copy(hp)).add(_vAdd.set(frame.hipsOffset[0],frame.hipsOffset[1],frame.hipsOffset[2]));
       hips.position.copy(hips.parent!.worldToLocal(desired));
       if(tailBone&&tailRestWorldQ&&tailRestWorldInv&&frame.spring){
         const sp=frame.spring,sleepScale=frame.posture==='sleep'?.25:1;
         const pitch=THREE.MathUtils.clamp((sp.bounceY*.20+sp.swayZ*.16+.04*Math.cos(sp.time*2.3))*sleepScale,-.32,.32);
         const yaw=THREE.MathUtils.clamp((-sp.yawVel*.14-sp.swayX*.20+.09*Math.sin(sp.time*2.4)+.03*Math.sin(sp.time*4.1+.7))*sleepScale,-.38,.38);
         const roll=THREE.MathUtils.clamp((-sp.swayX*.10-sp.yawVel*.06+.03*Math.sin(sp.time*2.4+.5))*sleepScale,-.22,.22);
-        const canonQ=new THREE.Quaternion().setFromEuler(new THREE.Euler(pitch,yaw,roll,'YXZ'));
-        const localDelta=tailRestWorldInv.clone().multiply(canonQ).multiply(tailRestWorldQ);
+        const canonQ=_qCanon.setFromEuler(_eTail.set(pitch,yaw,roll,'YXZ'));
+        const localDelta=_qDelta.copy(tailRestWorldInv).multiply(canonQ).multiply(tailRestWorldQ);
         tailBone.quaternion.copy(localRest.get(tailBone)!.q).multiply(localDelta);
         tailBone.updateWorldMatrix(false,true);
       }
@@ -329,9 +344,11 @@ function repairDress(mesh:THREE.SkinnedMesh):number {
   const hip=mesh.skeleton.bones.findIndex(b=>b.name==='Hips');if(hip<0)return 0;
   const candidate=new Uint8Array(position.count),cloth=new Uint8Array(position.count);
   const seams=new Map<string,number>(),seamLinks:[number,number][]=[];
+  const bindWorld=mesh.userData.bindWorldPositions as Float64Array|undefined;
   for(let i=0;i<position.count;i++) {
     for(let k=0;k<4;k++){indices[i*4+k]=oldI.getComponent(i,k);weights[i*4+k]=oldW.getComponent(i,k);}
-    mesh.getVertexPosition(i,p).applyMatrix4(mesh.matrixWorld);
+    if(bindWorld)p.set(bindWorld[i*3],bindWorld[i*3+1],bindWorld[i*3+2]);
+    else mesh.getVertexPosition(i,p).applyMatrix4(mesh.matrixWorld);
     // UV/normal seams duplicate vertices. Reconnect coincident rest positions
     // before identifying enclosed texture islands; an index-only flood fill
     // mistakes disconnected pieces of the tights for pale skirt patterns.
@@ -398,8 +415,10 @@ function addMashaFace(mesh:THREE.SkinnedMesh,hipY:number,facial=true):(frame:Act
   const skirt=new Set<number>(mesh.userData.skirtVertices??[]),cloth=new THREE.Vector3(),axis=new THREE.Vector3(1,0,0);
   const world=new THREE.Vector3(),zero=new THREE.Vector3(),ex=new THREE.Vector3(),ey=new THREE.Vector3(),ez=new THREE.Vector3();
   const matrix=new THREE.Matrix4(),delta=new THREE.Vector3();
+  const bindWorld=mesh.userData.bindWorldPositions as Float64Array|undefined;
   for(let i=0;i<positions.count;i++) {
-    mesh.getVertexPosition(i,world).applyMatrix4(mesh.matrixWorld);
+    if(bindWorld)world.set(bindWorld[i*3],bindWorld[i*3+1],bindWorld[i*3+2]);
+    else mesh.getVertexPosition(i,world).applyMatrix4(mesh.matrixWorld);
     let blinkY=0,mouthY=0;
     for(const [cx,cy] of facial?[[.0556,.7374],[-.053,.7449]]:[]) {
       const radius=Math.hypot((world.x-cx)/.036,(world.y-cy)/.038);

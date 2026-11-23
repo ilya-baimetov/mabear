@@ -63,7 +63,7 @@ export function buildKitchenShapes(materials: Record<string, THREE.MeshStandardM
     return result;
   }
   function knob(parent: THREE.Object3D, name: string, x: number, y: number, z: number, material = wood) {
-    mesh(parent, name, new THREE.SphereGeometry(.035, 14, 8), material, x, y, z);
+    mesh(parent, name, new THREE.SphereGeometry(.035, 14, 8), material, x, y, z).castShadow = false;
   }
   function panelDoor(parent: THREE.Object3D, name: string, x: number, y: number, z: number,
     width: number, height: number, knobSide: number) {
@@ -96,15 +96,16 @@ export function buildKitchenShapes(materials: Record<string, THREE.MeshStandardM
   // Keep the left upper leaf as a distinct group through static mesh batching.
   const leaf=group(pantry,'object:kitchen_cupboard',KITCHEN_CUPBOARD.hingeX,KITCHEN_CUPBOARD.frontZ);
   panelDoor(leaf,'Interactive pantry door',.43,2.54,0,.86,.84,1);
+  leaf.traverse(o => {if (o instanceof THREE.Mesh) o.castShadow = false;});
   leaf.getObjectByName('Interactive pantry door knob')!.position.set(.79,2.24,.065);
   leaf.userData.open=0;
   box(pantry, 'Open bay intermediate shelf', 0, 1.58, -.035, 1.79, .055, .51);
   // Four cozy jam, honey and tea canisters resting cleanly on the open middle shelf (y = 1.6075).
   const shelfTopY = 1.6075;
   const jamMat = new THREE.MeshStandardMaterial({color: '#8c2f2b', roughness: .22});
-  jamMat.name = 'berry jam ceramic'; jamMat.userData.setOwned = true;
+  jamMat.name = 'berry jam ceramic'; jamMat.userData = {setOwned: true, vertexBatch: 'glossy'};
   const honeyJarMat = new THREE.MeshStandardMaterial({color: '#c98528', roughness: .26});
-  honeyJarMat.name = 'amber honey stoneware'; honeyJarMat.userData.setOwned = true;
+  honeyJarMat.name = 'amber honey stoneware'; honeyJarMat.userData = {setOwned: true, vertexBatch: 'glossy'};
   const addCanister = (x: number, z: number, profile: number[][], bodyMat: THREE.Material, lidProfile: number[][], lidMat: THREE.Material, knobY?: number) => {
     const body = lathe(pantry, 'Pantry shelf canister', profile, bodyMat, x, shelfTopY, z, 20);
     body.castShadow = false;
@@ -129,7 +130,7 @@ export function buildKitchenShapes(materials: Record<string, THREE.MeshStandardM
   const fridge = group(kitchen, 'Rounded refrigerator', -5.59, -1.62, .59);
   box(fridge, 'Refrigerator shell', 0, 1.37, -.035, 1.10, 2.54, .92, enamel, .18);
   for (const x of [-.35, .35]) for (const z of [-.29, .27]) {
-    box(fridge, 'Refrigerator foot', x, .075, z, .12, .15, .12, dark, .035);
+    box(fridge, 'Refrigerator foot', x, .075, z, .12, .15, .12, dark, .035).castShadow = false;
   }
   function fridgeDoor(name: string, bottom: number, top: number, topRadius: number, bottomRadius: number) {
     const left = -.455, right = .455;
@@ -152,10 +153,10 @@ export function buildKitchenShapes(materials: Record<string, THREE.MeshStandardM
   fridgeDoor('Continuous crowned refrigerator door', .235, 2.545, .20, .10);
   // A projecting lever and mounts give the characteristic long handle silhouette.
   const chrome = materials.chrome ?? metal;
-  box(fridge, 'Refrigerator handle upper mount', -.35, 1.57, .515, .12, .10, .09, chrome, .024);
-  box(fridge, 'Refrigerator handle lower mount', -.35, 1.18, .515, .065, .07, .065, chrome, .018);
+  box(fridge, 'Refrigerator handle upper mount', -.35, 1.57, .515, .12, .10, .09, chrome, .024).castShadow = false;
+  box(fridge, 'Refrigerator handle lower mount', -.35, 1.18, .515, .065, .07, .065, chrome, .018).castShadow = false;
   tube(fridge, 'Refrigerator curved vertical handle', [[-.35, 1.61, .53], [-.35, 1.54, .59],
-    [-.35, 1.31, .59], [-.35, 1.18, .55]], .029, chrome);
+    [-.35, 1.31, .59], [-.35, 1.18, .55]], .029, chrome).castShadow = false;
 
   const window = group(kitchen, 'Framed divided kitchen window', -4.50, -3.27, .367);
   const glazing = box(window, 'Window glazing', 0, 2.27, .04, .82, 1.06, .025, materials.glass);
@@ -173,9 +174,9 @@ export function buildKitchenShapes(materials: Record<string, THREE.MeshStandardM
   window.add(sunbeam);
   for (const x of [-.445, .445]) box(window, 'Window outer jamb', x, 2.27, .105, .09, 1.26, .14);
   for (const y of [1.68, 2.86]) box(window, 'Window outer rail', 0, y, .105, .98, .09, .14);
-  for (const x of [-.365, .365]) box(window, 'Window inset jamb', x, 2.27, .117, .035, 1.05, .065);
-  box(window, 'Window vertical mullion', 0, 2.27, .13, .035, 1.06, .07);
-  box(window, 'Window upper transom', 0, 2.49, .13, .77, .048, .07);
+  for (const x of [-.365, .365]) box(window, 'Window inset jamb', x, 2.27, .117, .035, 1.05, .065).castShadow = false;
+  box(window, 'Window vertical mullion', 0, 2.27, .13, .035, 1.06, .07).castShadow = false;
+  box(window, 'Window upper transom', 0, 2.49, .13, .77, .048, .07).castShadow = false;
   box(window, 'Window sill', 0, 1.665, .18, 1.10, .075, .31, wood, .012);
   box(window, 'Window head casing', 0, 2.90, .11, 1.07, .075, .16, wood, .008);
 
@@ -222,31 +223,34 @@ export function buildKitchenShapes(materials: Record<string, THREE.MeshStandardM
     tube(stove, 'Curved splayed stove foot', [[x * .22, .28, z * .22], [x * .29, .19, z * .29],
       [x * .31, .075, z * .30], [x * .35, .045, z * .32]], .045);
   }
-  mesh(stove, 'Dark stove opening', new THREE.CylinderGeometry(.335, .335, .016, 32), dark, 0, 1.14, 0);
+  mesh(stove, 'Dark stove opening', new THREE.CylinderGeometry(.335, .335, .016, 32), dark, 0, 1.14, 0).castShadow = false;
   for (const angle of [0, Math.PI / 2]) {
-    const grate = box(stove, 'Stove pot support', 0, 1.185, 0, .66, .035, .045, dark, .008); grate.rotation.y = angle;
+    const grate = box(stove, 'Stove pot support', 0, 1.185, 0, .66, .035, .045, dark, .008); grate.rotation.y = angle; grate.castShadow = false;
   }
   box(stove, 'Firebox door', 0, .69, .329, .29, .30, .055, metal, .025);
-  box(stove, 'Firebox recessed face', 0, .69, .36, .225, .23, .018, dark, .014);
-  box(stove, 'Firebox latch', .115, .69, .39, .12, .027, .026, metal, .008);
-  box(stove, 'Lower air shutter', 0, .35, .333, .20, .065, .025, dark, .008);
+  box(stove, 'Firebox recessed face', 0, .69, .36, .225, .23, .018, dark, .014).castShadow = false;
+  box(stove, 'Firebox latch', .115, .69, .39, .12, .027, .026, metal, .008).castShadow = false;
+  box(stove, 'Lower air shutter', 0, .35, .333, .20, .065, .025, dark, .008).castShadow = false;
   // Cast-iron stove flue pipe rising behind the barrel stove at (-2.93, 2.5, -1.95) in kitchen space.
   tube(stove, 'Cast iron stove flue pipe', [
     [0, .88, -.30], [0, 1.12, -.42], [0, 1.48, -.42], [0, 1.85, -.30], [0, 2.50, -.30], [0, 3.85, -.30],
   ], .055, metal);
   for (const collarY of [1.88, 2.85]) {
-    mesh(stove, 'Stove flue pipe collar', new THREE.CylinderGeometry(.070, .070, .035, 18), metal, 0, collarY, -.30);
+    mesh(stove, 'Stove flue pipe collar', new THREE.CylinderGeometry(.070, .070, .035, 18), metal, 0, collarY, -.30).castShadow = false;
   }
 
   // Hollow pot: real inner wall and rolled lip, no lid or painted ornament.
   const pot = group(stove, 'Open enamel cooking pot', 0, 0);
   pot.position.y = 1.205;
+  const potRimMat = new THREE.MeshStandardMaterial({color: '#4a4e4c', roughness: .35});
+  potRimMat.name = 'pot rim iron'; potRimMat.userData = {setOwned: true, vertexBatch: 'glossy'};
   lathe(pot, 'Cooking pot bowl', [[0, 0], [.32, 0], [.385, .025], [.414, .075], [.418, .45],
-    [.43, .47], [.43, .49], [.398, .49], [.394, .075], [.35, .045], [0, .045]], materials.blue);
-  const lip = mesh(pot, 'Rolled pot rim', new THREE.TorusGeometry(.416, .016, 8, 48), metal, 0, .485, 0);
+    [.43, .47], [.43, .49], [.398, .49], [.394, .075], [.35, .045], [0, .045]], materials.blue).castShadow = false;
+  const lip = mesh(pot, 'Rolled pot rim', new THREE.TorusGeometry(.416, .016, 8, 48), potRimMat, 0, .485, 0);
   lip.rotation.x = Math.PI / 2;
+  lip.castShadow = false;
   for (const side of [-1, 1]) tube(pot, 'Pot loop handle', [[side * .40, .35, -.10], [side * .54, .35, -.10],
-    [side * .56, .35, 0], [side * .54, .35, .10], [side * .40, .35, .10]], .026, materials.blue);
+    [side * .56, .35, 0], [side * .54, .35, .10], [side * .40, .35, .10]], .026, materials.blue).castShadow = false;
 
   for (const [x, y, z, radius] of [[-3.60, 2.50, -3.10, .28], [-3.23, 2.43, -2.60, .33], [-2.86, 2.51, -2.10, .24]]) {
     const pan = group(kitchen, 'Hanging bowl-shaped pan', x, z, -.94); pan.position.y = y;
@@ -254,7 +258,7 @@ export function buildKitchenShapes(materials: Record<string, THREE.MeshStandardM
       [radius, .078], [radius, .090], [radius * .945, .090], [radius * .85, .041], [0, .024]], metal);
     bowl.rotation.x = Math.PI / 2;
     box(pan, 'Long pan handle', 0, radius + .13, .005, .048, .34, .035, metal, .012);
-    mesh(pan, 'Pan handle hanging eye', new THREE.TorusGeometry(.027, .010, 6, 16), metal, 0, radius + .315, .005);
+    mesh(pan, 'Pan handle hanging eye', new THREE.TorusGeometry(.027, .010, 6, 16), metal, 0, radius + .315, .005).castShadow = false;
   }
 
   prepTable.position.set(-3.28, 0, .15);

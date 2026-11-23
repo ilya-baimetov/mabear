@@ -78,6 +78,9 @@ interface ActorEval {
   lookScale: number;
 }
 
+const OFFSTAGE_BONES: Record<string, [number, number, number, number]> = {};
+const OFFSTAGE_ACTION = { time: 0, duration: 0 };
+
 function evalActor(
   actor: ActorId,
   inp: ActorCtxIn,
@@ -90,6 +93,38 @@ function evalActor(
 ): ActorEval {
   const { seg, lt, t, track } = inp;
   const st = inp.stateAtStart;
+  const carried = actor === "masha" && carry !== null && bear !== null;
+  if (track.length === 0 && st.posture === "offstage" && !inp.prevLast && !carried && !holding) {
+    const breathe = 0.5 + 0.5 * Math.sin(t * 2 * Math.PI * STYLES[actor].breathRate);
+    const jiggle = clamp01(0.5 + 0.04 * Math.sin(t * 2 * Math.PI * STYLES[actor].breathRate - 0.8));
+    return {
+      frame: {
+        pos: [st.pos[0], 0, st.pos[1]],
+        yaw: st.facing,
+        opacity: 0,
+        bones: OFFSTAGE_BONES,
+        groundWeight: 1,
+        face: {
+          emotion: "neutral",
+          lidClose: 0,
+          viseme: "rest",
+          visemeWeight: 0,
+          lookAt: null,
+          browRaise: 0,
+        },
+        holding: null,
+        posture: "offstage",
+        verb: "idle",
+        action: OFFSTAGE_ACTION,
+        secondary: { sway: 0.5, jiggle, breathe },
+        spring: { swayX: 0, swayZ: 0, bounceY: 0, yawVel: 0, time: t },
+      },
+      carryLift: 0,
+      mark: st.mark,
+      lookW: 0,
+      lookScale: 1,
+    };
+  }
   const idx = activeIndex(track, lt);
   const r = idx >= 0 ? track[idx] : null;
   const inClip = r ? lt < r.end : false;
@@ -136,7 +171,6 @@ function evalActor(
     kin = { ...kin, yaw, turned: 0, turnRate: 0, omega: 0 };
   }
   // Bear's carry lifts Masha onto his shoulders
-  const carried = actor === "masha" && carry !== null && bear !== null;
   if (carried) {
     if (!inClip || !r || !LOCOMOTION_VERBS.includes(r.clip.verb)) {
       fromPosture = carry.k >= 1 ? "carried" : fromPosture;
@@ -283,20 +317,23 @@ export function evaluate(timeline: Timeline, t: number): FrameState {
 
   // facing is chained across segments so yaw stays continuous at paragraph boundaries
   const yaws = startYaws(segs, segmentIndex);
-  const yawMemo = new Map<number, Record<ActorId, number>>([[segmentIndex, yaws]]);
+  const yawMemo: (Record<ActorId, number> | undefined)[] = new Array(segs.length);
+  yawMemo[segmentIndex] = yaws;
   const yawsAt = (sIdx: number): Record<ActorId, number> => {
-    let hit = yawMemo.get(sIdx);
-    if (!hit) { hit = startYaws(segs, sIdx); yawMemo.set(sIdx, hit); }
+    let hit = yawMemo[sIdx];
+    if (!hit) { hit = startYaws(segs, sIdx); yawMemo[sIdx] = hit; }
     return hit;
   };
-  const trackMemo = new Map<string, Resolved[]>();
+  const trackMemo: (Partial<Record<ActorId, Resolved[]>> | undefined)[] = new Array(segs.length);
   const trackFor = (sIdx: number, actor: ActorId): Resolved[] => {
-    const key = `${sIdx}|${actor}`;
-    let tr = trackMemo.get(key);
+    const s = segs[sIdx].segment;
+    if (clipsOf(s, actor).length === 0) return resolveTrack(s, actor, []);
+    let row = trackMemo[sIdx];
+    if (!row) { row = {}; trackMemo[sIdx] = row; }
+    let tr = row[actor];
     if (!tr) {
-      const s = segs[sIdx].segment;
       tr = resolveTrack(s, actor, actor === "masha" ? carryEvents(s) : [], yawsAt(sIdx)[actor]);
-      trackMemo.set(key, tr);
+      row[actor] = tr;
     }
     return tr;
   };
@@ -308,7 +345,13 @@ export function evaluate(timeline: Timeline, t: number): FrameState {
   };
   // Compute prop ownership before actor evaluation so heavy-carry counter-lean and door handle side know held props
   const { at, flights } = segs.length === 0 ? { at: Object.fromEntries(PROP_IDS.map((id) => [id, seg.startState.props[id]?.at ?? "hidden"])) as Record<PropId, PropLocation>, flights: new Map() } : propLocationsAt(seg, Math.min(lt, seg.duration + 1e-6));
-  const heldBy = (a: ActorId): PropId | null => PROP_IDS.find((id) => at[id] === a) ?? null;
+  const heldMap: Partial<Record<ActorId, PropId>> = {};
+  for (let i = 0; i < PROP_IDS.length; i++) {
+    const id = PROP_IDS[i];
+    const loc = at[id];
+    if (isActor(loc) && !heldMap[loc]) heldMap[loc] = id;
+  }
+  const heldBy = (a: ActorId): PropId | null => heldMap[a] ?? null;
 
   const startOf = (a: ActorId) => ({ ...stOf(seg.startState, a), facing: yaws[a] });
   const bear = evalActor("bear", { seg, lt, t, track: tracks.bear, stateAtStart: startOf("bear"), prevLast: lt < CROSSFADE_S ? prevLast("bear") : null }, null, null, heldBy("bear"), segs, segmentIndex, trackFor);
@@ -328,6 +371,7 @@ export function evaluate(timeline: Timeline, t: number): FrameState {
   }
   for (const a of ACTOR_IDS) {
     const f = actors[a];
+    if (f.opacity === 0 && f.posture === "offstage") continue;
     // partner for speaker attention: Masha ↔ Bear; the Wolves watch whoever is talking (else each other)
     const other: ActorId = a === "masha" ? "bear" : a === "bear" ? "masha" : speaker && speaker.actor !== a ? speaker.actor : a === "wolf_a" ? "wolf_b" : a === "wolf_b" ? "wolf_a" : "masha";
     const o = actors[other];

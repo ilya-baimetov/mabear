@@ -10,62 +10,124 @@ import { STYLES } from "../motion/library";
 import { byPersona } from "../motion/verbs/common";
 import { STRIDE_SCALE } from "../motion/verbs/locomotion";
 import { swingAngleAt as clipSwingAngleAt } from "../motion/verbs/objects";
-import { activeIndex, carryState, kinematics, type Kin, type Resolved } from "./kinematics";
+import { activeIndex, carryEvents, carryState, kinematicsMetricsInto, type Kin, type Resolved, type SpringKinMetrics } from "./kinematics";
 
-interface ImpulseSample {
-  aLong: number;
-  aLat: number;
-  omega: number;
-  yEff: number;
-  latStep: number;
-  portalCut: boolean;
-}
+const _kinMetrics: SpringKinMetrics = { dist: 0, speed: 0, moveT: 0, moveDur: 1, aLong: 0, aLat: 0, omega: 0 };
 
-const ZERO_IMPULSE: ImpulseSample = { aLong: 0, aLat: 0, omega: 0, yEff: 0, latStep: 0, portalCut: false };
+const ACTOR_KERNELS = Object.fromEntries(
+  (Object.keys(STYLES) as ActorId[]).map((a) => [a, springKernel(STYLES[a].springFreq, STYLES[a].springDamping)]),
+) as Record<ActorId, Float64Array>;
 
-/**
- * Sample vertical center-of-mass motion and horizontal/rotational acceleration at an arbitrary story time
- * across segment/clip boundaries for the 16-tap causal spring-damper convolution.
- */
-function sampleMotionAt(
+const TOTAL_SAMPLES = SPRING_TAPS + 2;
+const _aLong = new Float64Array(TOTAL_SAMPLES);
+const _aLat = new Float64Array(TOTAL_SAMPLES);
+const _omega = new Float64Array(TOTAL_SAMPLES);
+const _yEff = new Float64Array(TOTAL_SAMPLES);
+const _latStep = new Float64Array(TOTAL_SAMPLES);
+const _portalCut = new Uint8Array(TOTAL_SAMPLES);
+const _latInputs = new Float64Array(SPRING_TAPS);
+const _longInputs = new Float64Array(SPRING_TAPS);
+const _vertInputs = new Float64Array(SPRING_TAPS);
+
+const IMPULSE_VERBS = new Set<ActorClip["verb"]>([
+  ...LOCOMOTION_VERBS,
+  "jump",
+  "fall_down",
+  "angry_stomp",
+  "surprised",
+  "sneeze",
+  "spin",
+  "dance",
+  "laugh",
+  "swing",
+  "sleep",
+  "wake_up",
+  "stand_up",
+]);
+
+function isStationaryWindow(
   segs: Timeline["segments"],
   trackFor: (segIdx: number, actor: ActorId) => Resolved[],
   actor: ActorId,
-  tSample: number,
+  t: number,
   hintSegIdx: number,
-): ImpulseSample {
-  if (segs.length === 0 || tSample < segs[0].offset) return ZERO_IMPULSE;
+): boolean {
+  if (segs.length === 0) return true;
+  const dt = SPRING_WINDOW_S / SPRING_TAPS;
+  const tNewest = t - 0.5 * dt;
+  const tOldest = t - (SPRING_TAPS + 1.5) * dt;
+  if (tNewest < segs[0].offset) return true;
   let sIdx = Math.min(hintSegIdx, segs.length - 1);
-  while (sIdx > 0 && tSample < segs[sIdx].offset) sIdx--;
-  while (sIdx + 1 < segs.length && tSample >= segs[sIdx].offset + segs[sIdx].segment.duration) sIdx++;
-  const { offset, segment: seg } = segs[sIdx];
-  const ltS = tSample - offset;
-  if (ltS < 0 || ltS > seg.duration) return ZERO_IMPULSE;
-  const track = trackFor(sIdx, actor);
-  const idx = activeIndex(track, ltS);
-  const r = idx >= 0 ? track[idx] : null;
-  const inClip = r ? ltS < r.end : false;
-  const style = STYLES[actor];
+  while (sIdx > 0 && tNewest < segs[sIdx].offset) sIdx--;
+  while (sIdx + 1 < segs.length && tNewest >= segs[sIdx].offset + segs[sIdx].segment.duration) sIdx++;
+
+  for (let i = sIdx; i >= 0; i--) {
+    const { offset, segment: seg } = segs[i];
+    if (offset > tNewest) continue;
+    if (offset + seg.duration < tOldest) break;
+    if (actor === "masha" && carryEvents(seg).length > 0) return false;
+    const track = trackFor(i, actor);
+    if (track.length === 0) continue;
+    const ltMin = tOldest - offset;
+    const ltMax = tNewest - offset;
+    for (let k = 0; k < track.length; k++) {
+      const r = track[k];
+      if (r.end <= ltMin || r.clip.start > ltMax) continue;
+      if (
+        IMPULSE_VERBS.has(r.clip.verb) ||
+        r.clip.params.sceneCut ||
+        (r.path !== null && !r.slide) ||
+        (r.fromPosture === "carried" && r.posture !== "carried") ||
+        (r.inPlaceTurnDur > 0 && r.clip.start + r.inPlaceTurnDur > ltMin)
+      ) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+function clearSampleSlot(slot: number, yEff = 0, portalCut = 0): boolean {
+  _aLong[slot] = 0;
+  _aLat[slot] = 0;
+  _omega[slot] = 0;
+  _yEff[slot] = yEff;
+  _latStep[slot] = 0;
+  _portalCut[slot] = portalCut;
+  return yEff !== 0;
+}
+
+function sampleResolvedInto(
+  slot: number,
+  actor: ActorId,
+  style: (typeof STYLES)[ActorId],
+  seg: Timeline["segments"][number]["segment"],
+  track: Resolved[],
+  hasCarry: boolean,
+  ltS: number,
+  r: Resolved | null,
+  inClip: boolean,
+): boolean {
   let carryY = 0;
   let carriedNow = false;
-  if (actor === "masha" && seg.actorClips.bear.some((c) => c.verb === "carry")) {
+  if (hasCarry) {
     const carry = carryState(seg, ltS, track);
     if (carry && (!inClip || !r || !LOCOMOTION_VERBS.includes(r.clip.verb))) {
       carryY = carryLiftRootHeight(easeInOut(carry.k), STYLES.bear.shoulderHeight);
       carriedNow = true;
     }
   }
-  if (!r || !inClip) return { ...ZERO_IMPULSE, yEff: carryY };
-  if (r.clip.params.sceneCut) return { ...ZERO_IMPULSE, yEff: carryY, portalCut: true };
+  if (!r || !inClip) return clearSampleSlot(slot, carryY);
+  if (r.clip.params.sceneCut) return clearSampleSlot(slot, carryY, 1);
 
   const ltClip = ltS - r.clip.start;
   const dur = Math.max(1e-3, r.clip.dur);
   const u = clamp01(ltClip / dur);
   const verb = r.clip.verb;
-  const kin = kinematics(r, ltClip);
-  let aLong = kin.aLong ?? 0;
-  const aLat = kin.aLat ?? 0;
-  let omega = kin.omega ?? kin.turnRate ?? 0;
+  kinematicsMetricsInto(r, ltClip, _kinMetrics);
+  let aLong = _kinMetrics.aLong;
+  const aLat = _kinMetrics.aLat;
+  let omega = _kinMetrics.omega;
   let yEff = carryY;
   let latStep = 0;
 
@@ -75,13 +137,13 @@ function sampleMotionAt(
     yEff += lerp(STYLES.bear.shoulderHeight, 0, s) + 4 * s * (1 - s) * 0.25;
   }
 
-  if (LOCOMOTION_VERBS.includes(verb) && kin.dist > 0.002) {
-    const speed = kin.speed && kin.speed > 0 ? kin.speed : 1;
+  if (LOCOMOTION_VERBS.includes(verb) && _kinMetrics.dist > 0.002) {
+    const speed = _kinMetrics.speed > 0 ? _kinMetrics.speed : 1;
     const gait = verb === "run_to" || verb === "chase" ? "run" : verb === "tiptoe_to" ? "tiptoe" : speed > style.cadence.walk * STRIDE[actor] * 1.7 ? "run" : "walk";
     const stride = STRIDE[actor] * STRIDE_SCALE[gait];
-    const stepPh = (kin.dist / Math.max(0.05, stride)) * Math.PI;
-    const moveT = kin.moveT ?? ltClip;
-    const moveDur = kin.moveDur ?? dur;
+    const stepPh = (_kinMetrics.dist / Math.max(0.05, stride)) * Math.PI;
+    const moveT = _kinMetrics.moveT;
+    const moveDur = _kinMetrics.moveDur;
     const wMove = Math.min(smooth(moveT / 0.25), smooth((moveDur - moveT) / 0.3));
     yEff += (gait === "run" ? 0.045 : 0.018) * style.bounce * Math.abs(Math.sin(stepPh)) * wMove;
     latStep = Math.sin(stepPh) * (gait === "run" ? 0.09 : 0.14) * wMove;
@@ -153,7 +215,13 @@ function sampleMotionAt(
       yEff += 4 * (mount ? 0.47 : 0.25) * q * (1 - q);
     }
   }
-  return { aLong, aLat, omega, yEff, latStep, portalCut: false };
+  _aLong[slot] = aLong;
+  _aLat[slot] = aLat;
+  _omega[slot] = omega;
+  _yEff[slot] = yEff;
+  _latStep[slot] = latStep;
+  _portalCut[slot] = 0;
+  return aLong !== 0 || aLat !== 0 || omega !== 0 || yEff !== 0 || latStep !== 0;
 }
 
 /**
@@ -168,40 +236,65 @@ export function evaluateCausalSpring(
   hintSegIdx: number,
   instantYawVel: number,
 ): ActorSpringState {
+  if (isStationaryWindow(segs, trackFor, actor, t, hintSegIdx)) {
+    return { swayX: 0, swayZ: 0, bounceY: 0, yawVel: instantYawVel, time: t };
+  }
   const style = STYLES[actor];
   const dt = SPRING_WINDOW_S / SPRING_TAPS;
-  const totalSamples = SPRING_TAPS + 2;
-  const samples: ImpulseSample[] = new Array(totalSamples);
+  const firstOffset = segs[0].offset;
+  let sIdx = Math.min(hintSegIdx, segs.length - 1);
+  let curSegIdx = -1;
+  let curOffset = 0;
+  let curSeg = segs[0].segment;
+  let curTrack: Resolved[] = [];
+  let curHasCarry = false;
+  let clipIdx = -1;
   let active = false;
-  for (let j = 0; j < totalSamples; j++) {
-    const s = sampleMotionAt(segs, trackFor, actor, t - (j + 0.5) * dt, hintSegIdx);
-    samples[j] = s;
-    if (s.aLong !== 0 || s.aLat !== 0 || s.omega !== 0 || s.yEff !== 0 || s.latStep !== 0) active = true;
+
+  for (let j = 0; j < TOTAL_SAMPLES; j++) {
+    const tSample = t - (j + 0.5) * dt;
+    if (tSample < firstOffset) {
+      if (clearSampleSlot(j)) active = true;
+      continue;
+    }
+    while (sIdx > 0 && tSample < segs[sIdx].offset) sIdx--;
+    while (sIdx + 1 < segs.length && tSample >= segs[sIdx].offset + segs[sIdx].segment.duration) sIdx++;
+    if (sIdx !== curSegIdx) {
+      curSegIdx = sIdx;
+      curOffset = segs[sIdx].offset;
+      curSeg = segs[sIdx].segment;
+      curTrack = trackFor(sIdx, actor);
+      curHasCarry = actor === "masha" && carryEvents(curSeg).length > 0;
+      clipIdx = curTrack.length - 1;
+    }
+    const ltS = tSample - curOffset;
+    if (ltS < 0 || ltS > curSeg.duration) {
+      if (clearSampleSlot(j)) active = true;
+      continue;
+    }
+    while (clipIdx >= 0 && curTrack[clipIdx].clip.start > ltS) clipIdx--;
+    const r = clipIdx >= 0 ? curTrack[clipIdx] : null;
+    const inClip = r !== null && ltS < r.end;
+    if (sampleResolvedInto(j, actor, style, curSeg, curTrack, curHasCarry, ltS, r, inClip)) active = true;
   }
   if (!active) return { swayX: 0, swayZ: 0, bounceY: 0, yawVel: instantYawVel, time: t };
 
-  const latInputs = new Float64Array(SPRING_TAPS);
-  const longInputs = new Float64Array(SPRING_TAPS);
-  const vertInputs = new Float64Array(SPRING_TAPS);
   const latGain = 0.85 + 0.35 * style.bankGain;
   const longGain = 0.75 + 0.25 * style.bankGain;
   const vertGain = clamp(0.65 + 0.35 * style.bounce, 0.5, 1.35);
 
   for (let k = 0; k < SPRING_TAPS; k++) {
-    const s0 = samples[k];
-    const s1 = samples[k + 1];
-    const s2 = samples[k + 2];
-    latInputs[k] = (-s0.aLat / 9.81) * latGain + s0.latStep;
-    longInputs[k] = (-s0.aLong / 9.81) * longGain;
-    const yAccel = (s0.portalCut || s1.portalCut || s2.portalCut) ? 0 : clamp((s0.yEff - 2 * s1.yEff + s2.yEff) / (dt * dt), -40, 40);
-    vertInputs[k] = (-yAccel / 9.81) * vertGain;
+    _latInputs[k] = (-_aLat[k] / 9.81) * latGain + _latStep[k];
+    _longInputs[k] = (-_aLong[k] / 9.81) * longGain;
+    const yAccel = (_portalCut[k] || _portalCut[k + 1] || _portalCut[k + 2]) ? 0 : clamp((_yEff[k] - 2 * _yEff[k + 1] + _yEff[k + 2]) / (dt * dt), -40, 40);
+    _vertInputs[k] = (-yAccel / 9.81) * vertGain;
   }
 
-  const kernel = springKernel(style.springFreq, style.springDamping);
+  const kernel = ACTOR_KERNELS[actor];
   return {
-    swayX: convolveSpring(latInputs, kernel, 1, 1),
-    swayZ: convolveSpring(longInputs, kernel, 1, 1),
-    bounceY: convolveSpring(vertInputs, kernel, 1, 1),
+    swayX: convolveSpring(_latInputs, kernel, 1, 1),
+    swayZ: convolveSpring(_longInputs, kernel, 1, 1),
+    bounceY: convolveSpring(_vertInputs, kernel, 1, 1),
     yawVel: instantYawVel,
     time: t,
   };

@@ -61,27 +61,38 @@ export function buildArchitectureShapes(m: Materials, footprint: number[][]) {
     geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
     geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
     geometry.setIndex(indices);
-    const faceMaterial = material.clone() as THREE.MeshStandardMaterial;
+    const faceMaterial = material as THREE.MeshStandardMaterial;
     faceMaterial.side = THREE.DoubleSide;
     faceMaterial.vertexColors = false;
     faceMaterial.userData.setOwned = true;
     return mesh(parent, 'Continuous curved wall face', geometry, faceMaterial, 0, 0, 0);
   }
+  const skirtingMat = new THREE.MeshStandardMaterial({color: '#8c6a46', roughness: .68});
+  skirtingMat.name = 'wall skirting'; skirtingMat.userData = {setOwned: true, vertexBatch: 'matte'};
+  const capMat = new THREE.MeshStandardMaterial({color: '#dfd6be', roughness: .90});
+  capMat.name = 'wainscot cap'; capMat.userData = {setOwned: true, vertexBatch: 'matte'};
   const cs = corners(footprint);
   for (let i = 0; i < cs.length; i++) {
     const next = cs[(i + 1) % cs.length];
     const arc = new THREE.QuadraticBezierCurve(next.entry, next.point, next.exit).getPoints(12);
     const path = [cs[i].exit, next.entry, ...arc.slice(1)];
     const isKitchen = i >= 1 && i <= 4;
+    const cuttable = i === 0 || i >= 8;
     const parent = new THREE.Group(); parent.name = `set:house:wall-section:${i}`;
-    parent.userData = {edge: i, start: [...footprint[i]], end: [...footprint[(i + 1) % footprint.length]], cuttable: i === 0 || i >= 8};
+    parent.userData = {edge: i, start: [...footprint[i]], end: [...footprint[(i + 1) % footprint.length]], cuttable};
     (i === cs.length - 1 ? nearWall : envelope).add(parent); wallSections.push(parent);
     // The entry's separate jamb/header assembly provides a genuine open portal.
     if (i !== 9) {
-      wallStrip(parent, path, 0, 1.16, isKitchen ? m.kitchen : m.panel);
-      wallStrip(parent, path, 1.16, 3.84, isKitchen ? m.kitchen : m.paper);
-      tube(parent, 'Low skirting profile', path.map(p => new THREE.Vector3(p.x, .075, p.y)), .045, m.wood);
-      if (!isKitchen) tube(parent, 'Rounded wainscot cap', path.map(p => new THREE.Vector3(p.x, 1.175, p.y)), .045, m.plaster);
+      const lowerFace = wallStrip(parent, path, 0, 1.16, isKitchen ? m.kitchen : m.panel);
+      const upperFace = wallStrip(parent, path, 1.16, 3.84, isKitchen ? m.kitchen : m.paper);
+      lowerFace.castShadow = upperFace.castShadow = !cuttable;
+      const trimTarget = i === cs.length - 1 ? parent : opposite;
+      const skirting = tube(trimTarget, 'Low skirting profile', path.map(p => new THREE.Vector3(p.x, .075, p.y)), .045, skirtingMat);
+      skirting.castShadow = false;
+      if (!isKitchen) {
+        const cap = tube(trimTarget, 'Rounded wainscot cap', path.map(p => new THREE.Vector3(p.x, 1.175, p.y)), .045, capMat);
+        cap.castShadow = false;
+      }
     }
     tube(ceiling, 'Soft ceiling edge', path.map(p => new THREE.Vector3(p.x, 3.72, p.y)), .13, m.ceiling);
   }
@@ -89,9 +100,9 @@ export function buildArchitectureShapes(m: Materials, footprint: number[][]) {
   // The front timber is distinct from the rear corner; later wallpaper curls
   // are intentionally excluded from the clean architecture.
   const front = footprint[5];
-  rounded(envelope,'Foreground timber at flat return',front[0],1.92,front[1],.20,3.84,.20,m.wood,.025);
-  const ceilingMaterial = m.ceiling.clone(); ceilingMaterial.side = THREE.DoubleSide; ceilingMaterial.userData.setOwned = true;
-  const plane = mesh(ceiling, 'Ceiling plane', new THREE.ShapeGeometry(roundedRoomOutline(footprint)), ceilingMaterial, 0, 3.91, 0); plane.rotation.x = -Math.PI / 2;
+  rounded(opposite,'Foreground timber at flat return',front[0],1.92,front[1],.20,3.84,.20,m.wood,.025);
+  m.ceiling.side = THREE.DoubleSide; m.ceiling.userData.setOwned = true; m.ceiling.userData.vertexBatch = 'ceiling';
+  const plane = mesh(ceiling, 'Ceiling plane', new THREE.ShapeGeometry(roundedRoomOutline(footprint)), m.ceiling, 0, 3.91, 0); plane.rotation.x = -Math.PI / 2;
   for (const z of [-1.05, 1.25]) rounded(ceiling, 'Heavy rounded beam', -.9, 3.72, z, 9.7, .23, .29, m.ceiling, .07);
   ceiling.traverse(object => {if (object instanceof THREE.Mesh) object.castShadow = false;});
 
@@ -112,9 +123,11 @@ export function buildArchitectureShapes(m: Materials, footprint: number[][]) {
   cloth.setAttribute('position', new THREE.Float32BufferAttribute(drapePositions, 3));
   cloth.setAttribute('uv', new THREE.Float32BufferAttribute(drapeUvs, 2));
   cloth.setIndex(drapeIndices); cloth.computeVertexNormals();
-  const clothMaterial = m.curtain.clone(); clothMaterial.side = THREE.DoubleSide; clothMaterial.userData.setOwned = true;
-  mesh(curtain, 'Untextured hanging curtain', cloth, clothMaterial, 0, 0, 0);
-  rounded(curtain, 'Curtain rail', 0, 3.27, .08, 1.95, .06, .06, m.wood, .02);
+  m.curtain.side = THREE.DoubleSide; m.curtain.userData.setOwned = true;
+  const curtainMesh = mesh(curtain, 'Untextured hanging curtain', cloth, m.curtain, 0, 0, 0);
+  curtainMesh.castShadow = false;
+  const curtainRail = rounded(curtain, 'Curtain rail', 0, 3.27, .08, 1.95, .06, .06, m.wood, .02);
+  curtainRail.castShadow = false;
 
   const entry = new THREE.Group(); entry.position.set(3.37, 0, 2.57); entry.rotation.y = -2.10; opposite.add(entry);
   for (const x of [-1.24, 1.24]) rounded(entry, 'Blue doorway side wall', x, 1.92, -.07, .67, 3.84, .14, m.blue, .025);
@@ -141,7 +154,7 @@ export function buildArchitectureShapes(m: Materials, footprint: number[][]) {
   logStep('Upper broad log-slice step', 1.83, .69, .16, .16, .83);
   // The large felt boots distinguish the entrance grouping in the source frame.
   // Shape only: no fibers, stitches, branding or surface maps.
-  const felt = m.figure.clone(); felt.color.set('#b7b3a7'); felt.userData.setOwned = true;
+  const felt = m.figure.clone(); felt.color.set('#b7b3a7'); felt.userData.setOwned = true; felt.userData.vertexBatch = 'matte';
   for (const [x, z] of [[.93, .24], [1.04, .64]]) {
     const boot = new THREE.Group(); boot.position.set(x, .48, z); boot.rotation.y = -1.35; entry.add(boot);
     // Continuous foot-to-shaft silhouette: wide toes taper into the ankle and
@@ -163,9 +176,10 @@ export function buildArchitectureShapes(m: Materials, footprint: number[][]) {
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
     geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
     geometry.setIndex(indices); geometry.computeVertexNormals();
-    mesh(boot, 'Continuous felt boot silhouette', geometry, felt);
-    const rim = mesh(boot, 'Soft boot cuff', new THREE.TorusGeometry(.171,.012,8,40), felt, 0,1.055,-.075); rim.rotation.x = -Math.PI / 2;
-    const opening = mesh(boot, 'Boot opening', new THREE.CircleGeometry(.16,32), m.black,0,1.035,-.075); opening.rotation.x = -Math.PI / 2;
+    const bootBody = mesh(boot, 'Continuous felt boot silhouette', geometry, felt);
+    bootBody.castShadow = false;
+    const rim = mesh(boot, 'Soft boot cuff', new THREE.TorusGeometry(.171,.012,8,40), felt, 0,1.055,-.075); rim.rotation.x = -Math.PI / 2; rim.castShadow = false;
+    const opening = mesh(boot, 'Boot opening', new THREE.CircleGeometry(.16,32), m.black,0,1.035,-.075); opening.rotation.x = -Math.PI / 2; opening.castShadow = false;
   }
   return {envelope, nearWall, ceiling, opposite, wallSections};
 }

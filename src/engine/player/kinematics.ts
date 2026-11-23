@@ -38,6 +38,69 @@ export function clipsOf(seg: Segment, a: ActorId): ActorClip[] {
   return seg.actorClips[a] ?? [];
 }
 
+export function hashNum(h: number, x: number | undefined | null): number {
+  if (x === undefined || x === null) return Math.imul(h ^ 0x3333, 0x9e3779b1);
+  const v = (x * 1048576) | 0;
+  return Math.imul(h ^ v ^ ((x * 65.536) | 0), 0x9e3779b1);
+}
+
+export function hashStr(h: number, s: string | undefined | null): number {
+  if (!s) return Math.imul(h ^ 0x5555, 0x9e3779b1);
+  const n = s.length;
+  const v = (n << 24) ^ (s.charCodeAt(0) << 16) ^ (s.charCodeAt(n >> 1) << 8) ^ s.charCodeAt(n - 1);
+  return Math.imul(h ^ v, 0x9e3779b1);
+}
+
+/** Fast zero-allocation structural stamp for an actor's clips and start/end state in a segment. */
+export function actorClipStamp(seg: Segment, actor: ActorId): number {
+  const st = stOf(seg.startState, actor);
+  const endSt = stOf(seg.endState, actor);
+  const clips = clipsOf(seg, actor);
+  let h = hashNum(0x811c9dc5 | 0, seg.duration);
+  h = hashStr(h, st.posture);
+  h = hashStr(h, endSt.posture);
+  h = hashStr(h, st.mark);
+  h = hashStr(h, st.holding);
+  h = hashNum(h, st.facing);
+  h = hashNum(h, st.pos[0]);
+  h = hashNum(h, st.pos[1]);
+  h = hashNum(h, clips.length);
+  for (let i = 0; i < clips.length; i++) {
+    const c = clips[i];
+    const p = c.params;
+    h = hashNum(h, c.start);
+    h = hashNum(h, c.dur);
+    h = hashStr(h, c.verb);
+    h = hashStr(h, c.emotion);
+    h = hashStr(h, p.posture);
+    h = hashStr(h, p.target);
+    h = hashStr(h, p.item);
+    h = hashStr(h, p.putDown);
+    h = hashStr(h, p.pickUpAt);
+    h = hashStr(h, p.dropAt);
+    h = hashNum(h, p.catchesFish === true ? 1 : p.catchesFish === false ? 2 : 0);
+    h = hashNum(h, (p.sceneCut ? 1 : 0) | (p.portal ? 2 : 0) | (p.ambient ? 4 : 0));
+    h = hashNum(h, p.from?.[0]);
+    h = hashNum(h, p.from?.[1]);
+    h = hashNum(h, p.to?.[0]);
+    h = hashNum(h, p.to?.[1]);
+    h = hashNum(h, p.facing);
+    h = hashNum(h, p.arrivalYaw);
+    h = hashNum(h, p.lookAt?.[0]);
+    h = hashNum(h, p.lookAt?.[1]);
+    h = hashNum(h, p.lookAt?.[2]);
+    if (p.path && p.path.length > 0) {
+      h = hashNum(h, p.path.length);
+      h = hashNum(h, p.path[0][0]);
+      h = hashNum(h, p.path[0][1]);
+      const last = p.path[p.path.length - 1];
+      h = hashNum(h, last[0]);
+      h = hashNum(h, last[1]);
+    }
+  }
+  return h;
+}
+
 function wrapAngle(a: number): number {
   return Math.atan2(Math.sin(a), Math.cos(a));
 }
@@ -48,37 +111,80 @@ function yawTo(from: Vec2, to: Vec2, fallback: number): number {
   return Math.hypot(dx, dz) < 1e-4 ? fallback : Math.atan2(dx, dz);
 }
 
-function pathLength(path: Vec2[]): number {
+function buildSegLengths(path: Vec2[] | null): { segLengths: Float64Array | null; length: number; straight: boolean } {
+  if (!path || path.length < 2) return { segLengths: null, length: 0, straight: true };
+  if (path.length === 2) {
+    const len = Math.hypot(path[1][0] - path[0][0], path[1][1] - path[0][1]);
+    return { segLengths: null, length: len, straight: true };
+  }
+  const segLengths = new Float64Array(path.length - 1);
   let L = 0;
-  for (let i = 1; i < path.length; i++) L += Math.hypot(path[i][0] - path[i - 1][0], path[i][1] - path[i - 1][1]);
-  return L;
+  for (let i = 1; i < path.length; i++) {
+    const d = Math.hypot(path[i][0] - path[i - 1][0], path[i][1] - path[i - 1][1]);
+    segLengths[i - 1] = d;
+    L += d;
+  }
+  return { segLengths, length: L, straight: false };
 }
 
-function pointAt(path: Vec2[], s: number): Vec2 {
-  if (path.length === 0) return [0, 0];
-  if (s <= 0) return path[0];
-  for (let i = 1; i < path.length; i++) {
-    const seg = Math.hypot(path[i][0] - path[i - 1][0], path[i][1] - path[i - 1][1]);
+function pointAtResolved(r: Resolved, s: number): Vec2 {
+  const path = r.path;
+  if (!path || path.length === 0) return [0, 0];
+  if (s <= 0 || r.length <= 0) return path[0];
+  if (s >= r.length) return path[path.length - 1];
+  if (path.length === 2 || !r.segLengths) {
+    const k = s / r.length;
+    return [lerp(path[0][0], path[1][0], k), lerp(path[0][1], path[1][1], k)];
+  }
+  const segs = r.segLengths;
+  for (let i = 0; i < segs.length; i++) {
+    const seg = segs[i];
     if (s <= seg) {
       const k = seg > 0 ? s / seg : 0;
-      return [lerp(path[i - 1][0], path[i][0], k), lerp(path[i - 1][1], path[i][1], k)];
+      return [lerp(path[i][0], path[i + 1][0], k), lerp(path[i][1], path[i + 1][1], k)];
     }
     s -= seg;
   }
   return path[path.length - 1];
 }
 
+function pointAtResolvedX(r: Resolved, s: number): number {
+  const path = r.path!;
+  if (s <= 0) return path[0][0];
+  if (s >= r.length) return path[path.length - 1][0];
+  const segs = r.segLengths!;
+  for (let i = 0; i < segs.length; i++) {
+    const seg = segs[i];
+    if (s <= seg) return seg > 0 ? lerp(path[i][0], path[i + 1][0], s / seg) : path[i][0];
+    s -= seg;
+  }
+  return path[path.length - 1][0];
+}
+
+function pointAtResolvedZ(r: Resolved, s: number): number {
+  const path = r.path!;
+  if (s <= 0) return path[0][1];
+  if (s >= r.length) return path[path.length - 1][1];
+  const segs = r.segLengths!;
+  for (let i = 0; i < segs.length; i++) {
+    const seg = segs[i];
+    if (s <= seg) return seg > 0 ? lerp(path[i][1], path[i + 1][1], s / seg) : path[i][1];
+    s -= seg;
+  }
+  return path[path.length - 1][1];
+}
+
 /** Signed horizontal path curvature κ(s) (rad/m, + = turning left) over pointAt(path, s ± 0.25). */
-function curvatureAt(path: Vec2[], s: number, length: number): number {
-  if (length < 0.08 || path.length < 2) return 0;
+function curvatureAtResolved(r: Resolved, s: number): number {
+  if (r.straight || r.length < 0.08 || !r.path) return 0;
   const s0 = Math.max(0, s - 0.25);
-  const s2 = Math.min(length, s + 0.25);
+  const s2 = Math.min(r.length, s + 0.25);
   const s1 = 0.5 * (s0 + s2);
-  const a = pointAt(path, s0);
-  const b = pointAt(path, s1);
-  const c = pointAt(path, s2);
-  const abx = b[0] - a[0], abz = b[1] - a[1];
-  const bcx = c[0] - b[0], bcz = c[1] - b[1];
+  const ax = pointAtResolvedX(r, s0), az = pointAtResolvedZ(r, s0);
+  const bx = pointAtResolvedX(r, s1), bz = pointAtResolvedZ(r, s1);
+  const cx = pointAtResolvedX(r, s2), cz = pointAtResolvedZ(r, s2);
+  const abx = bx - ax, abz = bz - az;
+  const bcx = cx - bx, bcz = cz - bz;
   const l1 = Math.hypot(abx, abz);
   const l2 = Math.hypot(bcx, bcz);
   if (l1 < 1e-4 || l2 < 1e-4) return 0;
@@ -112,8 +218,11 @@ export interface Resolved {
   posture: Posture;
   mark: MarkId | null;
   path: Vec2[] | null;
+  segLengths: Float64Array | null;
+  straight: boolean;
   length: number;
   turnDur: number;
+  inPlaceTurnDur: number;
   firstYaw: number;
   /** in-place verb that still moves the root (dismount hop, carried transfer): no gait, no turning */
   slide: boolean;
@@ -139,12 +248,66 @@ function markPos(id: MarkId): Vec2 {
   return [MARKS[id].pos[0], MARKS[id].pos[1]];
 }
 
+const EMPTY_TRACK: Resolved[] = [];
+
+interface TrackCacheSlot {
+  clipsRef: ActorClip[];
+  len: number;
+  stamp: number;
+  extraLen: number;
+  extraFirstT: number;
+  initYaw: number;
+  track: Resolved[];
+}
+
+interface ActorTrackCache {
+  plain?: TrackCacheSlot;
+  extra?: TrackCacheSlot;
+}
+
+const trackCache = new WeakMap<Segment, Partial<Record<ActorId, ActorTrackCache>>>();
+
 /** Resolve an actor's clips into a kinematic chain (positions, yaw, posture at each clip boundary). */
 export function resolveTrack(seg: Segment, actor: ActorId, extraPosture: { t: number; posture: Posture }[], initYaw?: number): Resolved[] {
+  const rawClips = clipsOf(seg, actor);
+  const len = rawClips.length;
+  if (len === 0) return EMPTY_TRACK;
   const st = stOf(seg.startState, actor);
-  const clips = [...clipsOf(seg, actor)].sort((a, b) => a.start - b.start);
+  const effectiveYaw = initYaw ?? st.facing;
+  let stamp = ((seg.duration * 1024) | 0) ^ ((st.pos[0] * 1024) | 0) ^ ((st.pos[1] * 1024) | 0);
+  for (let i = 0; i < len; i++) {
+    const c = rawClips[i];
+    stamp = (Math.imul(stamp, 31) + ((c.start * 1024) | 0) + ((c.dur * 1024) | 0) + c.verb.charCodeAt(0) + ((c.params.to?.[0] ?? c.params.facing ?? 0) * 256 | 0)) | 0;
+  }
+  const extraLen = extraPosture.length;
+  const extraFirstT = extraLen > 0 ? extraPosture[0].t : 0;
+  const hasExtra = extraLen > 0;
+  let segMap = trackCache.get(seg);
+  if (!segMap) {
+    segMap = {};
+    trackCache.set(seg, segMap);
+  }
+  let actorCache = segMap[actor];
+  if (!actorCache) {
+    actorCache = {};
+    segMap[actor] = actorCache;
+  }
+  const slot = hasExtra ? actorCache.extra : actorCache.plain;
+  if (
+    slot &&
+    slot.clipsRef === rawClips &&
+    slot.len === len &&
+    slot.stamp === stamp &&
+    slot.extraLen === extraLen &&
+    slot.extraFirstT === extraFirstT &&
+    slot.initYaw === effectiveYaw
+  ) {
+    return slot.track;
+  }
+
+  const clips = rawClips.length > 1 ? [...rawClips].sort((a, b) => a.start - b.start) : rawClips;
   let pos: Vec2 = [st.pos[0], st.pos[1]];
-  let yaw = initYaw ?? st.facing;
+  let yaw = effectiveYaw;
   let posture: Posture = st.posture;
   let mark: MarkId | null = st.mark;
   const out: Resolved[] = [];
@@ -156,6 +319,8 @@ export function resolveTrack(seg: Segment, actor: ActorId, extraPosture: { t: nu
     const fromPosture = posture;
     let endPos = pos;
     let path: Vec2[] | null = null;
+    let segLengths: Float64Array | null = null;
+    let straight = true;
     let length = 0;
     let endYaw = yaw;
     let firstYaw = yaw;
@@ -169,14 +334,17 @@ export function resolveTrack(seg: Segment, actor: ActorId, extraPosture: { t: nu
         pts = [from, to];
       }
       path = pts;
-      length = pathLength(pts);
+      const built = buildSegLengths(pts);
+      segLengths = built.segLengths;
+      length = built.length;
+      straight = built.straight;
       endPos = pts[pts.length - 1];
       // heading of the first leg that actually moves
       for (let i = 1; i < pts.length; i++) {
-        if (Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]) > 1e-3) { firstYaw = yawTo(pts[i - 1], pts[i], yaw); break; }
+        if ((segLengths ? segLengths[i - 1] : length) > 1e-3) { firstYaw = yawTo(pts[i - 1], pts[i], yaw); break; }
       }
       for (let i = pts.length - 1; i > 0; i--) {
-        if (Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]) > 1e-3) { endYaw = yawTo(pts[i - 1], pts[i], yaw); break; }
+        if ((segLengths ? segLengths[i - 1] : length) > 1e-3) { endYaw = yawTo(pts[i - 1], pts[i], yaw); break; }
       }
       const dYaw = Math.abs(wrapAngle(firstYaw - yaw));
       // turn in place before moving (scaled by per-actor turn inertia so Lady/Rival Bear share Bear's weight)
@@ -189,7 +357,10 @@ export function resolveTrack(seg: Segment, actor: ActorId, extraPosture: { t: nu
       if (p.to && Math.hypot(p.to[0] - pos[0], p.to[1] - pos[1]) > 0.05) {
         const from: Vec2 = p.from ? [p.from[0], p.from[1]] : pos;
         path = p.path && p.path.length >= 2 ? p.path.map((q) => [q[0], q[1]] as Vec2) : [from, [p.to[0], p.to[1]]];
-        length = pathLength(path);
+        const built = buildSegLengths(path);
+        segLengths = built.segLengths;
+        length = built.length;
+        straight = built.straight;
         endPos = path[path.length - 1];
         slide = true;
       }
@@ -202,9 +373,13 @@ export function resolveTrack(seg: Segment, actor: ActorId, extraPosture: { t: nu
       if (p.to && ((clip.verb === "stand_up" && fromPosture === "sit") || (p.target === "hammock" && (fromPosture === "sleep" || fromPosture === "sit")))) mark = null;
     }
     posture = derivedPosture(clip, fromPosture);
+    const inPlaceYawDelta = !path && endYaw !== yaw ? Math.abs(wrapAngle(endYaw - yaw)) : 0;
+    const inPlaceTurnDur = inPlaceYawDelta > 0
+      ? clamp((inPlaceYawDelta / Math.PI) * (p.ambient ? 1.0 : 0.7) * style.turnScale, 0.2, Math.max(0.2, clip.dur))
+      : 0;
     out.push({
       clip, end: clip.start + clip.dur, startPos: pos, endPos, startYaw: yaw, endYaw,
-      fromPosture, posture, mark, path, length, turnDur, firstYaw, slide,
+      fromPosture, posture, mark, path, segLengths, straight, length, turnDur, inPlaceTurnDur, firstYaw, slide,
       accelRamp: style.accelRamp, turnScale: style.turnScale, childArmchair: style.height < 1.3,
     });
     pos = endPos;
@@ -220,6 +395,17 @@ export function resolveTrack(seg: Segment, actor: ActorId, extraPosture: { t: nu
       if (next) next.fromPosture = "offstage";
     }
   }
+  const newSlot: TrackCacheSlot = {
+    clipsRef: rawClips,
+    len,
+    stamp,
+    extraLen,
+    extraFirstT,
+    initYaw: effectiveYaw,
+    track: out,
+  };
+  if (hasExtra) actorCache.extra = newSlot;
+  else actorCache.plain = newSlot;
   return out;
 }
 
@@ -252,20 +438,20 @@ export function kinematics(r: Resolved, lt: number): Kin {
   if (r.path && r.slide) {
     if (clip.params.target === "house_living" && clip.verb === "sit" && r.fromPosture !== "sit") {
       const motion = armchairMountMotion(r.childArmchair, lt / clip.dur);
-      return { pos: pointAt(r.path, motion.travel * r.length), yaw: lerpAngle(r.startYaw, r.endYaw, smooth(clamp01(lt / 0.2))), dist: 0, turned: 0 };
+      return { pos: pointAtResolved(r, motion.travel * r.length), yaw: lerpAngle(r.startYaw, r.endYaw, smooth(clamp01(lt / 0.2))), dist: 0, turned: 0 };
     }
     if (clip.params.target === "hammock" && clip.verb === "sleep" && r.fromPosture !== "sleep") {
       const u = lt / clip.dur, k = hammockTravelProgress(true, u, clip.dur);
-      return { pos: pointAt(r.path, k * r.length), yaw: lerpAngle(r.startYaw, r.endYaw, smooth(clamp01(lt / Math.max(0.001, hammockTiming(true, clip.dur).launch * 0.75)))), dist: 0, turned: 0 };
+      return { pos: pointAtResolved(r, k * r.length), yaw: lerpAngle(r.startYaw, r.endYaw, smooth(clamp01(lt / Math.max(0.001, hammockTiming(true, clip.dur).launch * 0.75)))), dist: 0, turned: 0 };
     }
     if (clip.params.target === "hammock" && (r.fromPosture === "sleep" || r.fromPosture === "sit")) {
       const u = lt / clip.dur, k = hammockTravelProgress(false, u, clip.dur);
-      return { pos: pointAt(r.path, k * r.length), yaw: lerpAngle(r.startYaw, r.endYaw, smooth(clamp01((lt - 0.38) / Math.max(0.001, hammockTiming(false, clip.dur).launch - 0.48)))), dist: 0, turned: 0 };
+      return { pos: pointAtResolved(r, k * r.length), yaw: lerpAngle(r.startYaw, r.endYaw, smooth(clamp01((lt - 0.38) / Math.max(0.001, hammockTiming(false, clip.dur).launch - 0.48)))), dist: 0, turned: 0 };
     }
     // Clear the furniture before the pelvis lowers to its standing height.
     const moveDur = clip.verb === "stand_up" && r.fromPosture === "sit" ? clip.dur * 0.65 : clip.dur;
     const k = smooth(clamp01(lt / Math.max(moveDur, 1e-3)));
-    return { pos: pointAt(r.path, k * r.length), yaw: lerpAngle(r.startYaw, r.endYaw, smooth(clamp01(lt / 0.4))), dist: 0, turned: 0 };
+    return { pos: pointAtResolved(r, k * r.length), yaw: lerpAngle(r.startYaw, r.endYaw, smooth(clamp01(lt / 0.4))), dist: 0, turned: 0 };
   }
   if (r.path) {
     const u = clamp(lt, 0, clip.dur);
@@ -286,15 +472,17 @@ export function kinematics(r: Resolved, lt: number): Kin {
     const ramp = clamp(r.accelRamp / moveDur, 1e-3, 0.42);
     const tr = travel(tau, ramp);
     const s = tr.s * r.length;
-    const p = pointAt(r.path, s);
-    // smoothed tangent (look a little ahead and behind on the path)
-    const a = pointAt(r.path, Math.max(0, s - 0.2));
-    const b = pointAt(r.path, Math.min(r.length, s + 0.2));
-    let yaw = yawTo(a, b, r.firstYaw);
+    const p = pointAtResolved(r, s);
+    let yaw = r.firstYaw;
+    if (!r.straight) {
+      const a = pointAtResolved(r, Math.max(0, s - 0.2));
+      const b = pointAtResolved(r, Math.min(r.length, s + 0.2));
+      yaw = yawTo(a, b, r.firstYaw);
+    }
     if (r.turnDur === 0) yaw = lerpAngle(r.startYaw, yaw, smooth(u / 0.25)); // small turns blend in while walking
     const vel = r.length > 1e-4 ? tr.v * (r.length / moveDur) : 0;
     const aLong = r.length > 1e-4 ? tr.aLong * (r.length / (moveDur * moveDur)) : 0;
-    const kappa = curvatureAt(r.path, s, r.length);
+    const kappa = curvatureAtResolved(r, s);
     const aLat = vel * vel * kappa;
     const omega = vel * kappa;
     return {
@@ -312,10 +500,64 @@ export function kinematics(r: Resolved, lt: number): Kin {
   return { pos: r.startPos, yaw: lerpAngle(r.startYaw, r.endYaw, k), dist: 0, turned: dYaw * k, turnRate, omega: turnRate };
 }
 
+export interface SpringKinMetrics {
+  dist: number;
+  speed: number;
+  moveT: number;
+  moveDur: number;
+  aLong: number;
+  aLat: number;
+  omega: number;
+}
+
+/** Zero-allocation kinematics evaluator for spring convolution taps (skips pos/yaw interpolation). */
+export function kinematicsMetricsInto(r: Resolved, lt: number, out: SpringKinMetrics): void {
+  const { clip } = r;
+  if (clip.params.sceneCut || (r.path && r.slide)) {
+    out.dist = 0; out.speed = 0; out.moveT = lt; out.moveDur = clip.dur;
+    out.aLong = 0; out.aLat = 0; out.omega = 0;
+    return;
+  }
+  if (r.path) {
+    const u = clamp(lt, 0, clip.dur);
+    const moveDur = Math.max(1e-3, clip.dur - r.turnDur);
+    if (u < r.turnDur) {
+      const x = clamp01(u / r.turnDur);
+      const dYawSigned = wrapAngle(r.firstYaw - r.startYaw);
+      const turnRate = (dYawSigned * 6 * x * (1 - x)) / r.turnDur;
+      out.dist = 0; out.speed = r.length / moveDur; out.moveT = 0; out.moveDur = moveDur;
+      out.aLong = 0; out.aLat = 0; out.omega = turnRate;
+      return;
+    }
+    const moveT = u - r.turnDur;
+    const tau = moveT / moveDur;
+    const ramp = clamp(r.accelRamp / moveDur, 1e-3, 0.42);
+    const tr = travel(tau, ramp);
+    const s = tr.s * r.length;
+    const vel = r.length > 1e-4 ? tr.v * (r.length / moveDur) : 0;
+    const aLong = r.length > 1e-4 ? tr.aLong * (r.length / (moveDur * moveDur)) : 0;
+    const kappa = curvatureAtResolved(r, s);
+    out.dist = s; out.speed = r.length / moveDur; out.moveT = moveT; out.moveDur = moveDur;
+    out.aLong = aLong; out.aLat = vel * vel * kappa; out.omega = vel * kappa;
+    return;
+  }
+  if (r.endYaw === r.startYaw) {
+    out.dist = 0; out.speed = 0; out.moveT = lt; out.moveDur = clip.dur;
+    out.aLong = 0; out.aLat = 0; out.omega = 0;
+    return;
+  }
+  const dYawSigned = wrapAngle(r.endYaw - r.startYaw);
+  const dYaw = Math.abs(dYawSigned);
+  const turnS = clamp((dYaw / Math.PI) * (clip.params.ambient ? 1.0 : 0.7) * r.turnScale, 0.2, Math.max(0.2, clip.dur));
+  const x = clamp01(lt / turnS);
+  const turnRate = (dYawSigned * 6 * x * (1 - x)) / turnS;
+  out.dist = 0; out.speed = 0; out.moveT = lt; out.moveDur = clip.dur;
+  out.aLong = 0; out.aLat = 0; out.omega = turnRate;
+}
+
 export function activeIndex(track: Resolved[], lt: number): number {
-  let idx = -1;
-  for (let i = 0; i < track.length; i++) if (track[i].clip.start <= lt) idx = i;
-  return idx;
+  for (let i = track.length - 1; i >= 0; i--) if (track[i].clip.start <= lt) return i;
+  return -1;
 }
 
 export function makeCtx(
@@ -390,24 +632,74 @@ export function carryState(seg: Segment, lt: number, mashaTrack: Resolved[]): { 
   return k === 0 && lt < since ? null : { k };
 }
 
+const EMPTY_CARRY_EVENTS: { t: number; posture: Posture }[] = [];
+const carryEventsCache = new WeakMap<Segment, { clipsRef: ActorClip[]; len: number; events: { t: number; posture: Posture }[] }>();
+
 export function carryEvents(seg: Segment): { t: number; posture: Posture }[] {
-  return seg.actorClips.bear
-    .filter((c) => c.verb === "carry" && (!c.params.target || c.params.target === "masha"))
-    .map((c) => ({ t: c.start + c.dur * 0.6, posture: "carried" as Posture }));
+  const bearClips = seg.actorClips.bear;
+  if (!bearClips || bearClips.length === 0) return EMPTY_CARRY_EVENTS;
+  const cached = carryEventsCache.get(seg);
+  if (cached && cached.clipsRef === bearClips && cached.len === bearClips.length) return cached.events;
+  const events: { t: number; posture: Posture }[] = [];
+  for (let i = 0; i < bearClips.length; i++) {
+    const c = bearClips[i];
+    if (c.verb === "carry" && (!c.params.target || c.params.target === "masha")) {
+      events.push({ t: c.start + c.dur * 0.6, posture: "carried" });
+    }
+  }
+  const result = events.length > 0 ? events : EMPTY_CARRY_EVENTS;
+  carryEventsCache.set(seg, { clipsRef: bearClips, len: bearClips.length, events: result });
+  return result;
 }
+
+const startYawsCache = new WeakMap<Timeline["segments"], { stamp: number; yaws: Record<ActorId, number>[] }>();
 
 /** Each actor's yaw at the start of segment `index`, chained from the first segment's start state. */
 export function startYaws(segs: Timeline["segments"], index: number): Record<ActorId, number> {
-  const yaw = {} as Record<ActorId, number>;
-  for (const a of ACTOR_IDS) {
-    let y = segs.length ? stOf(segs[0].segment.startState, a).facing : 0;
-    for (let j = 0; j < index; j++) {
-      const tr = resolveTrack(segs[j].segment, a, [], y);
-      if (tr.length) y = tr[tr.length - 1].endYaw;
-    }
-    yaw[a] = y;
+  if (segs.length === 0) {
+    const zero = {} as Record<ActorId, number>;
+    for (let i = 0; i < ACTOR_IDS.length; i++) zero[ACTOR_IDS[i]] = 0;
+    return zero;
   }
-  return yaw;
+  let stamp = segs.length;
+  for (let j = 0; j < segs.length; j++) {
+    const s = segs[j].segment;
+    stamp = hashNum(stamp, s.duration);
+    for (let i = 0; i < ACTOR_IDS.length; i++) {
+      const a = ACTOR_IDS[i];
+      const clips = clipsOf(s, a);
+      if (clips.length > 0) {
+        const last = clips[clips.length - 1];
+        stamp = hashNum(stamp, (clips.length << 4) | i);
+        stamp = hashNum(stamp, last.params.facing ?? last.params.arrivalYaw ?? last.params.to?.[0] ?? last.start);
+      }
+    }
+  }
+  let entry = startYawsCache.get(segs);
+  if (!entry || entry.stamp !== stamp) {
+    const allYaws: Record<ActorId, number>[] = new Array(segs.length);
+    const cur = {} as Record<ActorId, number>;
+    const firstState = segs[0].segment.startState;
+    for (let i = 0; i < ACTOR_IDS.length; i++) {
+      const a = ACTOR_IDS[i];
+      cur[a] = stOf(firstState, a).facing;
+    }
+    allYaws[0] = { ...cur };
+    for (let j = 0; j < segs.length - 1; j++) {
+      const seg = segs[j].segment;
+      for (let i = 0; i < ACTOR_IDS.length; i++) {
+        const a = ACTOR_IDS[i];
+        if (clipsOf(seg, a).length > 0) {
+          const tr = resolveTrack(seg, a, EMPTY_CARRY_EVENTS, cur[a]);
+          if (tr.length > 0) cur[a] = tr[tr.length - 1].endYaw;
+        }
+      }
+      allYaws[j + 1] = { ...cur };
+    }
+    entry = { stamp, yaws: allYaws };
+    startYawsCache.set(segs, entry);
+  }
+  return entry.yaws[Math.min(index, segs.length - 1)];
 }
 
 /** Where Masha sits when riding on Bear's shoulders (root position). */

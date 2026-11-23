@@ -48,6 +48,8 @@ export const HDRI_URL = "assets/hdri/meadow_2_1k.hdr";
 export interface StageOptions {
   /** post-processing tier 0..3 (off | low | medium | high). Default: `?post=` URL flag, else 3 (high). */
   post?: PostQuality;
+  /** load hidden test glTF character (RobotExpressive.glb) for harness diagnostics. Default: false. */
+  loadTestRig?: boolean;
 }
 
 /** Extra handles for tools, tests and the behind-the-scenes overlay (additive to the frozen StageHandle). */
@@ -146,23 +148,32 @@ export async function createStage(canvas: HTMLCanvasElement, opts: StageOptions 
   let contextLost = false;
   let lastRenderedFrame: FrameState | null = null;
   let readyAt = Infinity;
+  let handle: StageHandleEx;
+  const rerenderIfIdle = () => {
+    if (lastRenderedFrame !== null && !disposed && !contextLost) {
+      handle.render(lastRenderedFrame);
+    }
+  };
   const assetsReady = Promise.all([
-    set.assetsReady,
-    loadCharacter(TEST_GLTF_ID).then((r) => {
-      if (disposed) {
-        r.dispose();
-        return;
-      }
-      testRig = r;
-      r.root.position.set(16.5, 0, 4);
-      r.root.rotation.y = -1.2;
-      scene.add(r.root);
-    }),
-    loadSetOverrides(set.elements,undefined,()=>disposed),
-    loadGeneratedYard(set.elements,()=>disposed).catch(error=>console.warn('Garden assets could not load',error)),
-    loadPropOverrides(props.objects,undefined,()=>disposed),
+    set.assetsReady.then(rerenderIfIdle),
+    opts.loadTestRig
+      ? loadCharacter(TEST_GLTF_ID).then((r) => {
+          if (disposed) {
+            r.dispose();
+            return;
+          }
+          testRig = r;
+          r.root.position.set(16.5, 0, 4);
+          r.root.rotation.y = -1.2;
+          scene.add(r.root);
+          rerenderIfIdle();
+        })
+      : Promise.resolve(),
+    loadSetOverrides(set.elements,undefined,()=>disposed).then(rerenderIfIdle),
+    loadGeneratedYard(set.elements,()=>disposed).then(rerenderIfIdle).catch(error=>console.warn('Garden assets could not load',error)),
+    loadPropOverrides(props.objects,undefined,()=>disposed).then(rerenderIfIdle),
     // A5 environment: CC0 HDRI + PBR textures swap in asynchronously; failures keep the procedural look
-    loadHdri(look, assetUrl(HDRI_URL), () => disposed),
+    loadHdri(look, assetUrl(HDRI_URL), () => disposed).then(rerenderIfIdle),
     loadEnvTextures(Math.min(8, renderer.capabilities.getMaxAnisotropy())).then(({ textures }) => {
       if (disposed) {
         for (const t of Object.values(textures)) (t as THREE.Texture | null | undefined)?.dispose?.();
@@ -170,8 +181,9 @@ export async function createStage(canvas: HTMLCanvasElement, opts: StageOptions 
       }
       applyLookTextures(look.materials, textures);
       set.applyTextures(textures);
+      rerenderIfIdle();
     }),
-  ]).then(() => { readyAt = performance.now(); });
+  ]).then(() => { readyAt = performance.now(); rerenderIfIdle(); });
 
   // ---- size / adaptive resolution / point-sprite scale ----
   const size = new THREE.Vector2();
@@ -199,6 +211,7 @@ export async function createStage(canvas: HTMLCanvasElement, opts: StageOptions 
     camera.aspect = cssW / cssH;
     camera.updateProjectionMatrix();
     applyPixelRatio();
+    rerenderIfIdle();
   };
   resize(canvas.clientWidth || canvas.width || 1280, canvas.clientHeight || canvas.height || 720);
 
@@ -229,7 +242,7 @@ export async function createStage(canvas: HTMLCanvasElement, opts: StageOptions 
   const yaws: Partial<Record<ActorId, number>> = {};
   const lifts: Partial<Record<ActorId, number>> = {};
 
-  const handle: StageHandleEx = {
+  handle = {
     camera,
     scene,
     renderer,
@@ -245,14 +258,20 @@ export async function createStage(canvas: HTMLCanvasElement, opts: StageOptions 
     resolutionScale: () => scale,
     setAdaptive(on: boolean) {
       adaptive = on;
+      let changed = false;
       if (!on) {
         postCeiling = postMax;
-        post?.setQuality(postMax);
+        if (post && post.quality !== postMax) {
+          post.setQuality(postMax);
+          changed = true;
+        }
       }
       if (!on && scale !== 1) {
         scale = 1;
         applyPixelRatio();
+        changed = true;
       }
+      if (changed) rerenderIfIdle();
     },
     postQuality: () => (post ? post.quality : 0),
     setPostQuality(q: PostQuality) {
@@ -260,13 +279,20 @@ export async function createStage(canvas: HTMLCanvasElement, opts: StageOptions 
       const nq = Math.max(0, Math.min(postMax, q)) as PostQuality;
       postCeiling = nq;
       post.setQuality(nq);
+      rerenderIfIdle();
     },
     render(frame: FrameState) {
       lastRenderedFrame = frame;
       if (contextLost || disposed) return;
       // camera
       const location=frame.camera.location??sceneLocationAt(frame.camera.look[0],frame.camera.look[2]);
-      const localActors=Object.fromEntries(Object.entries(frame.actors).filter(([id,a])=>(!frame.cast||frame.cast.includes(id as ActorId))&&sceneLocationAt(a.pos[0],a.pos[2])===location)) as FrameState['actors'];
+      const localActors = {} as FrameState["actors"];
+      for (const id of ACTOR_IDS) {
+        const a = frame.actors?.[id];
+        if (a && (!frame.cast || frame.cast.includes(id)) && sceneLocationAt(a.pos[0], a.pos[2]) === location) {
+          localActors[id] = a;
+        }
+      }
       const c = clearForeground(frame.camera,localActors);
       camera.position.set(c.pos[0], c.pos[1], c.pos[2]);
       if (Math.abs(camera.fov - c.fov) > 1e-3) {
@@ -328,19 +354,35 @@ export async function createStage(canvas: HTMLCanvasElement, opts: StageOptions 
       let swing = 0;
       let swingerId: ActorId | null = null;
       let swingerYaw = 0;
+      const visibleRigs = {} as Record<ActorId, CharacterRig>;
       for (const id of ACTOR_IDS) {
         const a = frame.actors?.[id];
         const rig = rigs[id];
         if (!a || !rig) continue;
+        const inCast = !frame.cast || frame.cast.includes(id);
+        const inLoc = sceneLocationAt(a.pos[0], a.pos[2]) === location;
+        const visible = inCast && inLoc && a.opacity > 0.001 && a.posture !== "offstage";
+        if (!visible) {
+          rig.root.visible = false;
+          delete rig.root.userData.carryContacts;
+          delete rig.root.userData.hugContacts;
+          delete rig.root.userData.objectContact;
+          delete rig.root.userData.objectContacts;
+          lifts[id] = 0;
+          sockets[id] = rig.handSocket;
+          yaws[id] = a.yaw;
+          continue;
+        }
+        visibleRigs[id] = rig;
         const lift = a.physicsRoot ? 0 : walkHeightAt(a.pos[0], a.pos[2]);
         lifts[id] = lift;
         const contactFrame = liftActorFrame(a, lift);
         rig.apply(contactFrame);
-        rig.root.visible=rig.root.visible&&(!frame.cast||frame.cast.includes(id))&&sceneLocationAt(a.pos[0],a.pos[2])===location;
+        rig.root.visible = true;
         if (lift !== 0) rig.root.position.y += lift; // world matrices refresh in renderer.render / getWorldPosition
         sockets[id] = rig.handSocket;
         yaws[id] = a.yaw;
-        if (a.verb === "swing" && a.opacity > 0.001 && a.posture !== "offstage" && sceneLocationAt(a.pos[0], a.pos[2]) === location) {
+        if (a.verb === "swing") {
           // Set convention (+X rotation): +angle moves the seat toward -Z, so negate actor-local +Z displacement.
           const aRad =
             a.action && a.action.duration > 0
@@ -372,8 +414,8 @@ export async function createStage(canvas: HTMLCanvasElement, opts: StageOptions 
         }
       }
       set.setHammock(hammockWeight, hammockSway, frame.t);
-      applyCarryContacts(rigs,frame);
-      applyHugContacts(rigs,frame);
+      applyCarryContacts(visibleRigs,frame);
+      applyHugContacts(visibleRigs,frame);
       let objectFrame = frame;
       if (swingerId) {
         const sa = frame.actors[swingerId];
@@ -409,7 +451,7 @@ export async function createStage(canvas: HTMLCanvasElement, opts: StageOptions 
           }
         }
       }
-      applyObjectContacts(rigs,objectFrame);
+      applyObjectContacts(visibleRigs,objectFrame);
       contactShadows.update(rigs, frame, location, lp.stars, lifts);
       props.apply(frame.props, sockets, yaws, frame.actors);
       for(const id of PROP_IDS) {
@@ -425,7 +467,11 @@ export async function createStage(canvas: HTMLCanvasElement, opts: StageOptions 
       } else {
         set.setPondRipple(0, 0, 0);
       }
-      fx.apply(frame.fx?.filter(f=>sceneLocationAt(f.at[0],f.at[2])===location) ?? NO_FX, pointScale, { sunColor: lp.sunColor, skyHorizon: lp.skyHorizon, stars: lp.stars });
+      let localFx = NO_FX;
+      if (frame.fx && frame.fx.length > 0) {
+        localFx = frame.fx.filter((f) => sceneLocationAt(f.at[0], f.at[2]) === location);
+      }
+      fx.apply(localFx, pointScale, { sunColor: lp.sunColor, skyHorizon: lp.skyHorizon, stars: lp.stars });
       atmosphere.update(frame.t, location, lp.windowGlow, pointScale);
       updateEnvironment(look, scene, performance.now());
       renderer.info.reset();
