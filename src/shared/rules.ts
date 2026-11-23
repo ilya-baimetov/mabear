@@ -348,8 +348,3 @@ export function preFilter(text: string, lang: Lang | "auto", uiLang?: Lang): { t
   out = out.replace(/[ \t]{2,}/g, " ").replace(/\s+([,.!?;:])/g, "$1").trim();
   return { text: out, hits };
 }
-
-/** True if the text would be changed by the pre-filter. */
-export function hasBlockedContent(text: string): boolean {
-  return preFilter(text, "auto").hits.length > 0;
-}

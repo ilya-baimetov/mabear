@@ -9,6 +9,39 @@ export function speechLanguage(text: string, fallback: Lang): Lang {
 export function speechKey(text: string, lang: Lang): string { return `${lang}:${speechText(text)}`; }
 export interface SpeechRecording { text: string; lang: Lang; url: string; duration: number; }
 export type SpeechDurations = Readonly<Record<string, number>>;
+
+export const SPEECH_ERROR_CODES = [
+  "invalid_request",
+  "invalid_id",
+  "line_too_long",
+  "voice_allowance_reached",
+  "speech_not_configured",
+  "speech_submission_needs_review",
+  "speech_generation_failed",
+  "speech_failed",
+  "job_not_found",
+  "recording_not_found",
+  "recording_incomplete",
+  "method_not_allowed",
+  "origin_not_allowed",
+  "rate_limited",
+  "unauthorized",
+] as const;
+export type SpeechErrorCode = (typeof SPEECH_ERROR_CODES)[number];
+
+export interface SpeechRequest {
+  text: string;
+  lang: Lang;
+}
+
+export type SpeechStatusResponse =
+  | { status: "pending"; id: string }
+  | { status: "ready"; id: string; url: string; duration: number };
+
+export interface SpeechErrorResponse {
+  error: SpeechErrorCode;
+}
+
 export function mashaSpeechInput(text: string, lang: Lang): Record<string, unknown> {
   return {
     prompt: speechText(text), language_boost: lang === 'ru' ? 'Russian' : 'English',

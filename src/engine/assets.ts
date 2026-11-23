@@ -3,10 +3,11 @@
 // (`source: { gltf: url }`, plus `skeletonMap` when the official rig doesn't use Mixamo bone names).
 // The `robot_test` entry is a working glTF example (three.js RobotExpressive.glb, CC0) loaded as a hidden character.
 import * as THREE from "three";
+import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import {openHouseAperture} from './set/houseDoor';
 import { ACTOR_IDS, PROP_IDS, CARROT_IDS, type Vec3, type ActorId } from "../shared/schema";
 import type { ActorFrame, CharacterRig } from "./api";
-import { SET_ELEMENT_IDS, SET_ELEMENTS, type SetElementId } from "./set/bearsYard";
+import { SET_ELEMENT_IDS, SET_ELEMENTS, type SetElementId } from "../shared/yardLayout";
 
 export type AssetKind = "character" | "set" | "prop";
 export type AssetSource = "procedural" | { gltf: string };
@@ -50,9 +51,10 @@ const CHARACTER_LABELS: Record<string, string> = {
   wolf_b: "Wolf — procedural stand-in for the production character rig",
 };
 
-/** Height of each character (m): used for the last-resort capsule when a builder or download fails. */
-const CHARACTER_HEIGHTS: Record<string, number> = { masha: 1.0, bear: 2.4, wolf_a: 2.05, wolf_b: 1.93, lady_bear:2.15,hare:.85,rosie:1.05,squirrel:.65,rival_bear:2.55 };
-const CHARACTER_TINTS: Record<string, number> = { masha: 0xc7317d, bear: 0x7a4a2b, wolf_a: 0x7c8288, wolf_b: 0x76716c,lady_bear:0x976539,hare:0xb9b7b2,rosie:0xeeb7ad,squirrel:0xa45225,rival_bear:0x282421 };
+/** Height of each character (m): used for generated glTF normalization and last-resort stand-in capsules. */
+const CHARACTER_HEIGHTS: Record<string, number> = { masha: 1.0, bear: 2.4, wolf_a: 2.05, wolf_b: 1.93, lady_bear: 2.15, hare: .85, rosie: 1.05, squirrel: .65, rival_bear: 2.55 };
+const GENERATED_CHARACTER_IDS: readonly ActorId[] = ["masha", "bear", "lady_bear", "hare", "rosie", "squirrel", "rival_bear"];
+const CHARACTER_TINTS: Record<string, number> = { masha: 0xc7317d, bear: 0x7a4a2b, wolf_a: 0x7c8288, wolf_b: 0x76716c, lady_bear: 0x976539, hare: 0xb9b7b2, rosie: 0xeeb7ad, squirrel: 0xa45225, rival_bear: 0x282421 };
 
 function buildManifest(): Record<string, AssetEntry> {
   const m: Record<string, AssetEntry> = {};
@@ -61,8 +63,9 @@ function buildManifest(): Record<string, AssetEntry> {
     m[e.id] = e;
   };
   for (const id of ACTOR_IDS) put({ id, kind: "character", source: "procedural", scale: 1, offset: [0, 0, 0], label: CHARACTER_LABELS[id] ?? id });
-  const generated: Record<string,number> = {masha:1, bear:2.4, lady_bear:2.15, hare:.85, rosie:1.05, squirrel:.65, rival_bear:2.55};
-  for(const [id,height] of Object.entries(generated)) m[id] = {id,kind:"character",source:{gltf:`assets/generated/${id}.glb`},generated:true,height,scale:1,offset:[0,0,0],label:`${id} — generated textured character with adapted skeletal animation`};
+  for (const id of GENERATED_CHARACTER_IDS) {
+    m[id] = { id, kind: "character", source: { gltf: `assets/generated/${id}.glb` }, generated: true, height: CHARACTER_HEIGHTS[id], scale: 1, offset: [0, 0, 0], label: `${id} — generated textured character with adapted skeletal animation` };
+  }
   put({
     id: TEST_GLTF_ID, kind: "character", source: { gltf: TEST_GLTF_URL }, skeletonMap: ROBOT_SKELETON_MAP,
     scale: 1, offset: [0, 0, 0], height: 1.6, hidden: true,
@@ -119,12 +122,96 @@ function resolveUrl(url: string): string {
   return base.replace(/\/?$/, "/") + url;
 }
 
-/** Load a glTF/GLB (GLTFLoader is imported lazily so the manifest stays light). */
-export async function loadGltf(url: string): Promise<{ scene: THREE.Group; animations: THREE.AnimationClip[] }> {
-  const { GLTFLoader } = await import("three/examples/jsm/loaders/GLTFLoader.js");
-  const { MeshoptDecoder } = await import("three/examples/jsm/libs/meshopt_decoder.module.js");
-  const gltf = await new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).loadAsync(resolveUrl(url));
-  return { scene: gltf.scene, animations: gltf.animations };
+let gltfLoaderPromise: Promise<import("three/examples/jsm/loaders/GLTFLoader.js").GLTFLoader> | null = null;
+async function getGltfLoader() {
+  if (!gltfLoaderPromise) {
+    gltfLoaderPromise = Promise.all([
+      import("three/examples/jsm/loaders/GLTFLoader.js"),
+      import("three/examples/jsm/libs/meshopt_decoder.module.js"),
+    ]).then(([{ GLTFLoader }, { MeshoptDecoder }]) => new GLTFLoader().setMeshoptDecoder(MeshoptDecoder))
+      .catch((err) => {
+        gltfLoaderPromise = null;
+        throw err;
+      });
+  }
+  return gltfLoaderPromise;
+}
+
+function disposeObjectResources(root: THREE.Object3D, extraMats?: readonly THREE.Material[]): void {
+  const mats = new Set<THREE.Material>(extraMats);
+  const texs = new Set<THREE.Texture>();
+  const skeletons = new Set<THREE.Skeleton>();
+  root.traverse((o) => {
+    const mesh = o as THREE.Mesh;
+    if (mesh.geometry) mesh.geometry.dispose();
+    const skinned = o as THREE.SkinnedMesh;
+    if (skinned.isSkinnedMesh && skinned.skeleton && !skeletons.has(skinned.skeleton)) {
+      skeletons.add(skinned.skeleton);
+      skinned.skeleton.dispose();
+    }
+    if (mesh.material) {
+      for (const m of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) mats.add(m);
+    }
+  });
+  for (const m of mats) {
+    const std = m as THREE.MeshStandardMaterial;
+    for (const tex of [std.map, std.normalMap, std.roughnessMap, std.metalnessMap, std.emissiveMap, std.aoMap]) {
+      if (tex) texs.add(tex);
+    }
+    m.dispose();
+  }
+  for (const tex of texs) tex.dispose();
+}
+
+function abortError(signal: AbortSignal): unknown {
+  return signal.reason ?? new DOMException("Aborted", "AbortError");
+}
+
+/** Load a glTF/GLB (reusing a single module-level GLTFLoader configured with MeshoptDecoder). */
+export async function loadGltf(
+  url: string,
+  signal?: AbortSignal,
+): Promise<{ scene: THREE.Group; animations: THREE.AnimationClip[] }> {
+  if (signal?.aborted) throw abortError(signal);
+  const loader = await getGltfLoader();
+  if (signal?.aborted) throw abortError(signal);
+  const loadPromise = loader.loadAsync(resolveUrl(url));
+  if (!signal) {
+    const gltf = await loadPromise;
+    return { scene: gltf.scene, animations: gltf.animations };
+  }
+  return new Promise<{ scene: THREE.Group; animations: THREE.AnimationClip[] }>((resolve, reject) => {
+    let settled = false;
+    const onAbort = () => {
+      if (settled) return;
+      settled = true;
+      signal.removeEventListener("abort", onAbort);
+      reject(abortError(signal));
+    };
+    signal.addEventListener("abort", onAbort, { once: true });
+    loadPromise.then(
+      (gltf) => {
+        signal.removeEventListener("abort", onAbort);
+        if (settled || signal.aborted) {
+          disposeObjectResources(gltf.scene);
+          if (!settled) {
+            settled = true;
+            reject(abortError(signal));
+          }
+          return;
+        }
+        settled = true;
+        resolve({ scene: gltf.scene, animations: gltf.animations });
+      },
+      (err) => {
+        signal.removeEventListener("abort", onAbort);
+        if (!settled) {
+          settled = true;
+          reject(err);
+        }
+      },
+    );
+  });
 }
 
 /** Resolve a character through the manifest: procedural builder or glTF. Never throws (falls back to a capsule). */
@@ -171,6 +258,51 @@ export async function loadCharacter(id: string, manifest: Record<string, AssetEn
   }
 }
 
+function addHouseNightGlow(house: THREE.Group): void {
+  const parts: THREE.BufferGeometry[] = [];
+  const addPart = (g: THREE.BufferGeometry, x: number, y: number, z: number, rotY = 0, sx = 1, sy = 1, sz = 1) => {
+    g.scale(sx, sy, sz);
+    if (rotY) g.rotateY(rotY);
+    g.translate(x, y, z);
+    const nonIdx = g.index ? g.toNonIndexed() : g;
+    if (nonIdx !== g) g.dispose();
+    parts.push(nonIdx);
+  };
+  // Front right 4-pane window glass aligned inside treehouse.glb's recessed wooden panes.
+  for (const px of [0.83, 1.08]) {
+    addPart(new THREE.BoxGeometry(0.17, 0.18, 0.015), px, 2.14, 0.945);
+    addPart(new THREE.BoxGeometry(0.17, 0.18, 0.015), px, 1.90, 0.962);
+  }
+  // Left shed window glass on the recessed shed wall (behind the front bough).
+  addPart(new THREE.BoxGeometry(0.36, 0.22, 0.015), -4.05, 2.72, -0.37);
+  // Porch lantern bulb tucked inside the red conical shade above the front door.
+  addPart(new THREE.SphereGeometry(0.085, 10, 8), -0.58, 3.44, 1.54, 0, 1, 1.3, 1);
+
+  const merged = mergeGeometries(parts, false);
+  for (const p of parts) p.dispose();
+  if (!merged) return;
+
+  const glowMat = new THREE.MeshStandardMaterial({
+    color: 0xffd28a,
+    emissive: new THREE.Color(0xff9d3b),
+    emissiveIntensity: 0,
+    roughness: 0.2,
+    metalness: 0.0,
+    transparent: true,
+    opacity: 0,
+    depthWrite: false,
+  });
+  glowMat.userData.generated = true;
+  const mesh = new THREE.Mesh(merged, glowMat);
+  mesh.name = "set:house:night_glow";
+  mesh.castShadow = false;
+  mesh.receiveShadow = false;
+  mesh.visible = false;
+  house.add(mesh);
+  house.userData.glowMaterials = [glowMat];
+  house.userData.glowMesh = mesh;
+}
+
 /** Load glTF replacements of set elements into their named anchors (non-blocking for the caller). */
 export async function loadSetOverrides(anchors: Record<SetElementId, THREE.Group>, manifest: Record<string, AssetEntry> = ASSET_MANIFEST, isDisposed:()=>boolean=()=>false): Promise<void> {
   await Promise.all(
@@ -186,9 +318,14 @@ export async function loadSetOverrides(anchors: Record<SetElementId, THREE.Group
             o.receiveShadow = true;
           }
         });
-        for(const child of [...anchors[id].children]) if(child.name !== 'set:bees') { anchors[id].remove(child); child.traverse(o=>(o as THREE.Mesh).geometry?.dispose()); }
+        for(const child of [...anchors[id].children]) if(child.name !== 'set:bees' && child.name !== 'set:chimney_smoke') { anchors[id].remove(child); child.traverse(o=>(o as THREE.Mesh).geometry?.dispose()); }
         anchors[id].add(normalized);
-        if(id==='house')openHouseAperture(normalized);
+        if(id==='house'){
+          openHouseAperture(normalized);
+          const smoke = anchors[id].getObjectByName('set:chimney_smoke');
+          if (smoke) smoke.position.set(-1.05, 10.65, -2.6);
+          addHouseNightGlow(anchors[id]);
+        }
         status.set(e.id, { id: e.id, source: "gltf", ok: true });
       } catch (err) {
         status.set(e.id, { id: e.id, source: "gltf", ok: false, error: String(err) });
@@ -234,7 +371,22 @@ export function normalizeStatic(model:THREE.Object3D,height?:number,scale=1,offs
   const inner=new THREE.Group();inner.add(model);inner.scale.setScalar(s);
   inner.position.set(-(b.min.x+b.max.x)*s/2,-b.min.y*s,-(b.min.z+b.max.z)*s/2);
   const root=new THREE.Group();root.add(inner);root.position.fromArray(offset);
-  model.traverse(o=>{if((o as THREE.Mesh).isMesh){o.castShadow=true;o.receiveShadow=true;const m=o as THREE.Mesh;for(const material of Array.isArray(m.material)?m.material:[m.material]){const mat=material as THREE.MeshStandardMaterial;mat.userData.generated=true;mat.roughness=Math.max(.75,mat.roughness);mat.metalness=0;mat.normalScale?.setScalar(.55);}}});
+  model.traverse(o=>{
+    if((o as THREE.Mesh).isMesh){
+      o.castShadow=true;o.receiveShadow=true;
+      const m=o as THREE.Mesh;
+      for(const material of Array.isArray(m.material)?m.material:[m.material]){
+        const mat=material as THREE.MeshStandardMaterial;
+        mat.userData.generated=true;
+        mat.roughness=Math.max(.75,mat.roughness);
+        mat.metalness=0;
+        mat.normalScale?.setScalar(.55);
+        for(const tex of [mat.map,mat.normalMap,mat.roughnessMap,mat.metalnessMap,mat.emissiveMap]){
+          if(tex) tex.anisotropy = Math.max(tex.anisotropy ?? 1, 4);
+        }
+      }
+    }
+  });
   return root;
 }
 
@@ -307,8 +459,7 @@ export function gltfRig(id: string, model: THREE.Object3D, entry: AssetEntry): C
       root.updateMatrixWorld(true);
     },
     dispose() {
-      model.traverse((o) => (o as THREE.Mesh).geometry?.dispose());
-      for (const m of mats) m.dispose();
+      disposeObjectResources(model, mats);
     },
   };
 }

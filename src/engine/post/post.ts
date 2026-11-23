@@ -14,7 +14,6 @@ import { FullScreenQuad } from "three/examples/jsm/postprocessing/Pass.js";
 import { SMAAPass } from "three/examples/jsm/postprocessing/SMAAPass.js";
 
 export type PostQuality = 0 | 1 | 2 | 3;
-export const POST_QUALITY_NAMES: Record<PostQuality, string> = { 0: "off", 1: "low", 2: "medium", 3: "high" };
 
 /** Pure: parse a `?post=` URL value (0..3 | off | low | medium | high | false | true). */
 export function parsePostQuality(search: string, fallback: PostQuality = 3): PostQuality {
@@ -80,13 +79,13 @@ export interface GradeParams {
 }
 
 export const DEFAULT_GRADE: GradeParams = {
-  gain: [1.015, 1.0, 0.98],
-  lift: [0.008, 0.009, 0.006],
-  saturation: 1.03,
-  contrast: 0.06,
-  vignette: 0.16,
-  bloomStrength: 0.12,
-  bloomThreshold: 1.0,
+  gain: [1.02, 1.005, 0.985],
+  lift: [0.005, 0.004, 0.006],
+  saturation: 1.07,
+  contrast: 0.085,
+  vignette: 0.15,
+  bloomStrength: 0.18,
+  bloomThreshold: 0.88,
   aoIntensity: 0.85,
 };
 
@@ -145,8 +144,8 @@ void main() {
 }`;
 
 const COMPOSITE_FRAG = /* glsl */ `
-uniform sampler2D tScene; uniform sampler2D tBloom; uniform sampler2D tAO;
-uniform float uExposure; uniform float uBloom; uniform float uAO;
+uniform sampler2D tScene; uniform sampler2D tBloom; uniform sampler2D tAO; uniform sampler2D tDepth;
+uniform float uExposure; uniform float uBloom; uniform float uAO; uniform float uNear; uniform float uFar;
 uniform vec3 uGain; uniform vec3 uLift; uniform float uSat; uniform float uContrast; uniform float uVignette;
 uniform vec2 uAspect;
 varying vec2 vUv;
@@ -164,6 +163,15 @@ vec3 aces(vec3 color) {
   color = RRTAndODTFit(color);
   return clamp(ACESOutputMat * color, 0.0, 1.0);
 }
+vec3 preserveChroma(vec3 c) {
+  float mx = max(c.r, max(c.g, c.b));
+  float mn = min(c.r, min(c.g, c.b));
+  float lum = dot(c, vec3(0.2126, 0.7152, 0.0722));
+  if (lum <= 1e-4 || mx <= mn) return c;
+  float sat = (mx - mn) / max(mx, 1e-4);
+  float boost = 1.0 + 0.18 * sat * smoothstep(0.15, 0.9, sat);
+  return max(vec3(0.0), mix(vec3(lum), c, boost));
+}
 vec3 srgb(vec3 c) {
   return mix(pow(c, vec3(0.41666)) * 1.055 - vec3(0.055), c * 12.92, vec3(lessThanEqual(c, vec3(0.0031308))));
 }
@@ -171,12 +179,17 @@ void main() {
   vec3 c = texture2D(tScene, vUv).rgb;
   #ifdef USE_AO
   float ao = texture2D(tAO, vUv).r;
-  c *= mix(1.0, ao, uAO);
+  float lum = dot(c, vec3(0.2126, 0.7152, 0.0722));
+  float rawDepth = texture2D(tDepth, vUv).r;
+  float linZ = (uNear * uFar) / max(1e-4, uFar - rawDepth * (uFar - uNear));
+  float depthMask = 1.0 - smoothstep(45.0, 95.0, linZ);
+  float aoWeight = uAO * (1.0 - 0.62 * smoothstep(0.55, 2.2, lum)) * depthMask;
+  c *= mix(1.0, ao, aoWeight);
   #endif
   #ifdef USE_BLOOM
   c += texture2D(tBloom, vUv).rgb * uBloom;
   #endif
-  c = srgb(aces(c));
+  c = srgb(aces(preserveChroma(c)));
   // grade (display-referred): saturation, gentle S-curve, warm gain + lift, soft vignette
   float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
   c = mix(vec3(l), c, uSat);
@@ -184,10 +197,12 @@ void main() {
   c = c * uGain + uLift * (1.0 - c);
   vec2 d = (vUv - 0.5) * uAspect;
   c *= 1.0 - uVignette * smoothstep(0.35, 1.05, length(d));
+  float dither = (fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715)))) - 0.5) / 255.0;
+  c += vec3(dither);
   gl_FragColor = vec4(clamp(c, 0.0, 1.0), 1.0);
 }`;
 
-const BLOOM_LEVELS = 4;
+const BLOOM_LEVELS = 5;
 
 /**
  * Create the pipeline. Returns null if the device cannot render to half-float targets (the stage then keeps the
@@ -201,159 +216,205 @@ export function createPost(renderer: THREE.WebGLRenderer, scene: THREE.Scene, ca
     if (!renderer.extensions.has("EXT_color_buffer_half_float")) return null;
   }
   let w = 2, h = 2;
-  const depthTexture = new THREE.DepthTexture(w, h);
-  depthTexture.type = THREE.UnsignedIntType;
-  const sceneRT = new THREE.WebGLRenderTarget(w, h, { type: THREE.HalfFloatType, depthTexture, depthBuffer: true });
-  sceneRT.texture.name = "post:scene";
-  const ldrRT = new THREE.WebGLRenderTarget(w, h, { type: THREE.UnsignedByteType, depthBuffer: false });
-  ldrRT.texture.name = "post:ldr";
-  const mips: THREE.WebGLRenderTarget[] = [];
-  for (let i = 0; i < BLOOM_LEVELS; i++) {
-    const rt = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, depthBuffer: false });
-    rt.texture.name = `post:bloom${i}`;
-    mips.push(rt);
-  }
-  const downMat = new THREE.ShaderMaterial({
-    vertexShader: VERT,
-    fragmentShader: DOWN_FRAG,
-    uniforms: { tSrc: { value: null }, uTexel: { value: new THREE.Vector2() }, uThreshold: { value: 1 }, uPrefilter: { value: 0 } },
-    depthTest: false,
-    depthWrite: false,
-  });
-  const upMat = new THREE.ShaderMaterial({
-    vertexShader: VERT,
-    fragmentShader: UP_FRAG,
-    uniforms: { tSrc: { value: null }, uTexel: { value: new THREE.Vector2() } },
-    depthTest: false,
-    depthWrite: false,
-    blending: THREE.AdditiveBlending,
-    transparent: true,
-  });
-  const compMat = new THREE.ShaderMaterial({
-    vertexShader: VERT,
-    fragmentShader: COMPOSITE_FRAG,
-    uniforms: {
-      tScene: { value: sceneRT.texture },
-      tBloom: { value: mips[0].texture },
-      tAO: { value: null },
-      uExposure: { value: 1 },
-      uBloom: { value: 0 },
-      uAO: { value: 0 },
-      uGain: { value: new THREE.Vector3() },
-      uLift: { value: new THREE.Vector3() },
-      uSat: { value: 1 },
-      uContrast: { value: 0 },
-      uVignette: { value: 0 },
-      uAspect: { value: new THREE.Vector2(1, 1) },
-    },
-    depthTest: false,
-    depthWrite: false,
-  });
-  const quad = new FullScreenQuad(compMat);
-  // GTAO at half resolution, depth from the scene target (normals reconstructed: no second scene render)
-  const gtao = new GTAOPass(scene, camera, 1, 1, { depthTexture });
-  gtao.output = GTAOPass.OUTPUT.Off;
-  gtao.updateGtaoMaterial({ radius: 0.6, distanceExponent: 1.5, thickness: 1.0, scale: 1.1, samples: 12, distanceFallOff: 1.0 });
-  gtao.updatePdMaterial({ lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 6, rings: 2, samples: 8 });
-  compMat.uniforms.tAO.value = gtao.pdRenderTarget.texture;
-  const smaa = new SMAAPass();
-  smaa.renderToScreen = true;
+  let depthTexture: THREE.DepthTexture | null = null;
+  let sceneRT: THREE.WebGLRenderTarget | null = null;
+  let ldrRT: THREE.WebGLRenderTarget | null = null;
+  let mips: THREE.WebGLRenderTarget[] | null = null;
+  let downMat: THREE.ShaderMaterial | null = null;
+  let upMat: THREE.ShaderMaterial | null = null;
+  let compMat: THREE.ShaderMaterial | null = null;
+  let quad: FullScreenQuad | null = null;
+  let gtao: GTAOPass | null = null;
+  let smaa: SMAAPass | null = null;
 
-  let q: PostQuality = quality;
-  const setDefines = () => {
-    const d: Record<string, string> = {};
-    if (q >= 3) d.USE_AO = "";
-    if (q >= 2) d.USE_BLOOM = "";
-    compMat.defines = d;
-    compMat.needsUpdate = true;
-  };
-  setDefines();
-
-  const renderBloom = () => {
-    // down: scene → mip0 (prefilter) → mip1 → … ; up: … → mip1 += up(mip2) → mip0 += up(mip1)
-    let src: THREE.Texture = sceneRT.texture;
-    let sw = w, sh = h;
-    for (let i = 0; i < BLOOM_LEVELS; i++) {
-      downMat.uniforms.tSrc.value = src;
-      (downMat.uniforms.uTexel.value as THREE.Vector2).set(1 / sw, 1 / sh);
-      downMat.uniforms.uPrefilter.value = i === 0 ? 1 : 0;
-      downMat.uniforms.uThreshold.value = pipeline.grade.bloomThreshold;
-      quad.material = downMat;
-      renderer.setRenderTarget(mips[i]);
-      quad.render(renderer);
-      src = mips[i].texture;
-      sw = mips[i].width;
-      sh = mips[i].height;
-    }
-    for (let i = BLOOM_LEVELS - 2; i >= 0; i--) {
-      upMat.uniforms.tSrc.value = mips[i + 1].texture;
-      (upMat.uniforms.uTexel.value as THREE.Vector2).set(1 / mips[i + 1].width, 1 / mips[i + 1].height);
-      quad.material = upMat;
-      renderer.setRenderTarget(mips[i]);
-      quad.render(renderer); // additive onto the level's own downsample
-    }
+  const disposeAllocated = () => {
+    sceneRT?.dispose();
+    depthTexture?.dispose();
+    ldrRT?.dispose();
+    if (mips) for (const m of mips) m.dispose();
+    downMat?.dispose();
+    upMat?.dispose();
+    compMat?.dispose();
+    quad?.dispose();
+    gtao?.dispose();
+    smaa?.dispose();
   };
 
-  const pipeline: PostPipeline = {
-    get quality() {
-      return q;
-    },
-    grade: { ...DEFAULT_GRADE, gain: [...DEFAULT_GRADE.gain], lift: [...DEFAULT_GRADE.lift] },
-    setQuality(nq) {
-      if (nq === q) return;
-      q = nq;
-      setDefines();
-    },
-    setSize(nw, nh) {
-      w = Math.max(2, Math.floor(nw));
-      h = Math.max(2, Math.floor(nh));
-      sceneRT.setSize(w, h);
-      ldrRT.setSize(w, h);
-      for (let i = 0; i < BLOOM_LEVELS; i++) mips[i].setSize(Math.max(1, w >> (i + 1)), Math.max(1, h >> (i + 1)));
-      gtao.setSize(Math.max(1, w >> 1), Math.max(1, h >> 1));
-      smaa.setSize(w, h);
-      (compMat.uniforms.uAspect.value as THREE.Vector2).set(w / Math.max(w, h), h / Math.max(w, h)).multiplyScalar(1.6);
-    },
-    render() {
-      if (q === 0) {
-        renderer.setRenderTarget(null);
-        renderer.render(scene, camera);
-        return;
+  try {
+    depthTexture = new THREE.DepthTexture(w, h);
+    depthTexture.type = THREE.UnsignedIntType;
+    sceneRT = new THREE.WebGLRenderTarget(w, h, { type: THREE.HalfFloatType, depthTexture, depthBuffer: true });
+    sceneRT.texture.name = "post:scene";
+    ldrRT = new THREE.WebGLRenderTarget(w, h, { type: THREE.UnsignedByteType, depthBuffer: false });
+    ldrRT.texture.name = "post:ldr";
+    downMat = new THREE.ShaderMaterial({
+      vertexShader: VERT,
+      fragmentShader: DOWN_FRAG,
+      uniforms: { tSrc: { value: null }, uTexel: { value: new THREE.Vector2() }, uThreshold: { value: 1 }, uPrefilter: { value: 0 } },
+      depthTest: false,
+      depthWrite: false,
+    });
+    upMat = new THREE.ShaderMaterial({
+      vertexShader: VERT,
+      fragmentShader: UP_FRAG,
+      uniforms: { tSrc: { value: null }, uTexel: { value: new THREE.Vector2() } },
+      depthTest: false,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      transparent: true,
+    });
+    compMat = new THREE.ShaderMaterial({
+      vertexShader: VERT,
+      fragmentShader: COMPOSITE_FRAG,
+      uniforms: {
+        tScene: { value: sceneRT.texture },
+        tBloom: { value: null },
+        tAO: { value: null },
+        tDepth: { value: depthTexture },
+        uExposure: { value: 1 },
+        uBloom: { value: 0 },
+        uAO: { value: 0 },
+        uNear: { value: camera.near },
+        uFar: { value: camera.far },
+        uGain: { value: new THREE.Vector3() },
+        uLift: { value: new THREE.Vector3() },
+        uSat: { value: 1 },
+        uContrast: { value: 0 },
+        uVignette: { value: 0 },
+        uAspect: { value: new THREE.Vector2(1, 1) },
+      },
+      depthTest: false,
+      depthWrite: false,
+    });
+    quad = new FullScreenQuad(compMat);
+    smaa = new SMAAPass();
+    smaa.renderToScreen = true;
+
+    const ensureBloom = (): THREE.WebGLRenderTarget[] => {
+      if (mips) return mips;
+      const created: THREE.WebGLRenderTarget[] = [];
+      for (let i = 0; i < BLOOM_LEVELS; i++) {
+        const rt = new THREE.WebGLRenderTarget(Math.max(1, w >> (i + 1)), Math.max(1, h >> (i + 1)), {
+          type: THREE.HalfFloatType,
+          depthBuffer: false,
+        });
+        rt.texture.name = `post:bloom${i}`;
+        created.push(rt);
       }
-      const g = pipeline.grade;
-      renderer.setRenderTarget(sceneRT);
-      renderer.render(scene, camera);
-      if (q >= 3) gtao.render(renderer, sceneRT, sceneRT, 0, false);
-      if (q >= 2) renderBloom();
-      const u = compMat.uniforms;
-      u.uExposure.value = renderer.toneMappingExposure;
-      u.uBloom.value = g.bloomStrength;
-      u.uAO.value = g.aoIntensity;
-      (u.uGain.value as THREE.Vector3).set(g.gain[0], g.gain[1], g.gain[2]);
-      (u.uLift.value as THREE.Vector3).set(g.lift[0], g.lift[1], g.lift[2]);
-      u.uSat.value = g.saturation;
-      u.uContrast.value = g.contrast;
-      u.uVignette.value = g.vignette;
-      quad.material = compMat;
-      renderer.setRenderTarget(ldrRT);
-      quad.render(renderer);
-      smaa.render(renderer, null as unknown as THREE.WebGLRenderTarget, ldrRT, 0, false);
-      renderer.setRenderTarget(null);
-    },
-    dispose() {
-      sceneRT.dispose();
-      depthTexture.dispose();
-      ldrRT.dispose();
-      for (const m of mips) m.dispose();
-      downMat.dispose();
-      upMat.dispose();
-      compMat.dispose();
-      quad.dispose();
-      gtao.dispose();
-      smaa.dispose();
-    },
-  };
-  return pipeline;
+      mips = created;
+      compMat!.uniforms.tBloom.value = mips[0].texture;
+      return mips;
+    };
+
+    const ensureGtao = (): GTAOPass => {
+      if (gtao) return gtao;
+      // GTAO at half resolution, depth from the scene target (normals reconstructed: no second scene render)
+      const pass = new GTAOPass(scene, camera, Math.max(1, w >> 1), Math.max(1, h >> 1), { depthTexture: depthTexture! });
+      pass.output = GTAOPass.OUTPUT.Off;
+      pass.updateGtaoMaterial({ radius: 0.6, distanceExponent: 1.5, thickness: 1.0, scale: 1.1, samples: 12, distanceFallOff: 1.0 });
+      pass.updatePdMaterial({ lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 6, rings: 2, samples: 8 });
+      compMat!.uniforms.tAO.value = pass.pdRenderTarget.texture;
+      gtao = pass;
+      return pass;
+    };
+
+    let q: PostQuality = quality;
+    const ensureForQuality = (tier: PostQuality) => {
+      if (tier >= 2) ensureBloom();
+      if (tier >= 3) ensureGtao();
+    };
+    const setDefines = () => {
+      const d: Record<string, string> = {};
+      if (q >= 3) d.USE_AO = "";
+      if (q >= 2) d.USE_BLOOM = "";
+      compMat!.defines = d;
+      compMat!.needsUpdate = true;
+    };
+    ensureForQuality(q);
+    setDefines();
+
+    const renderBloom = () => {
+      const bloomMips = ensureBloom();
+      // down: scene → mip0 (prefilter) → mip1 → … ; up: … → mip1 += up(mip2) → mip0 += up(mip1)
+      let src: THREE.Texture = sceneRT!.texture;
+      let sw = w, sh = h;
+      for (let i = 0; i < BLOOM_LEVELS; i++) {
+        downMat!.uniforms.tSrc.value = src;
+        (downMat!.uniforms.uTexel.value as THREE.Vector2).set(1 / sw, 1 / sh);
+        downMat!.uniforms.uPrefilter.value = i === 0 ? 1 : 0;
+        downMat!.uniforms.uThreshold.value = pipeline.grade.bloomThreshold;
+        quad!.material = downMat!;
+        renderer.setRenderTarget(bloomMips[i]);
+        quad!.render(renderer);
+        src = bloomMips[i].texture;
+        sw = bloomMips[i].width;
+        sh = bloomMips[i].height;
+      }
+      for (let i = BLOOM_LEVELS - 2; i >= 0; i--) {
+        upMat!.uniforms.tSrc.value = bloomMips[i + 1].texture;
+        (upMat!.uniforms.uTexel.value as THREE.Vector2).set(1 / bloomMips[i + 1].width, 1 / bloomMips[i + 1].height);
+        quad!.material = upMat!;
+        renderer.setRenderTarget(bloomMips[i]);
+        quad!.render(renderer); // additive onto the level's own downsample
+      }
+    };
+
+    const pipeline: PostPipeline = {
+      get quality() {
+        return q;
+      },
+      grade: { ...DEFAULT_GRADE, gain: [...DEFAULT_GRADE.gain], lift: [...DEFAULT_GRADE.lift] },
+      setQuality(nq) {
+        if (nq === q) return;
+        q = nq;
+        ensureForQuality(q);
+        setDefines();
+      },
+      setSize(nw, nh) {
+        w = Math.max(2, Math.floor(nw));
+        h = Math.max(2, Math.floor(nh));
+        sceneRT!.setSize(w, h);
+        ldrRT!.setSize(w, h);
+        if (mips) for (let i = 0; i < BLOOM_LEVELS; i++) mips[i].setSize(Math.max(1, w >> (i + 1)), Math.max(1, h >> (i + 1)));
+        gtao?.setSize(Math.max(1, w >> 1), Math.max(1, h >> 1));
+        smaa!.setSize(w, h);
+        (compMat!.uniforms.uAspect.value as THREE.Vector2).set(w / Math.max(w, h), h / Math.max(w, h)).multiplyScalar(1.6);
+      },
+      render() {
+        if (q === 0) {
+          renderer.setRenderTarget(null);
+          renderer.render(scene, camera);
+          return;
+        }
+        const g = pipeline.grade;
+        renderer.setRenderTarget(sceneRT!);
+        renderer.render(scene, camera);
+        if (q >= 3) ensureGtao().render(renderer, sceneRT!, sceneRT!, 0, false);
+        if (q >= 2) renderBloom();
+        const u = compMat!.uniforms;
+        u.uExposure.value = renderer.toneMappingExposure;
+        u.uBloom.value = g.bloomStrength;
+        u.uAO.value = g.aoIntensity;
+        u.uNear.value = camera.near;
+        u.uFar.value = camera.far;
+        (u.uGain.value as THREE.Vector3).set(g.gain[0], g.gain[1], g.gain[2]);
+        (u.uLift.value as THREE.Vector3).set(g.lift[0], g.lift[1], g.lift[2]);
+        u.uSat.value = g.saturation;
+        u.uContrast.value = g.contrast;
+        u.uVignette.value = g.vignette;
+        quad!.material = compMat!;
+        renderer.setRenderTarget(ldrRT!);
+        quad!.render(renderer);
+        smaa!.render(renderer, null as unknown as THREE.WebGLRenderTarget, ldrRT!, 0, false);
+        renderer.setRenderTarget(null);
+      },
+      dispose: disposeAllocated,
+    };
+    return pipeline;
+  } catch (err) {
+    disposeAllocated();
+    throw err;
+  }
 }
 
 /** Tier 0: the plain renderer path (pre-A5 look). */

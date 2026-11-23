@@ -72,7 +72,7 @@ function frame(t: number): FrameState {
 
 const canvas = document.getElementById("c") as HTMLCanvasElement;
 const hud = document.getElementById("hud")!;
-const stage = await createStage(canvas);
+const stage = await createStage(canvas, { loadTestRig: true } as Parameters<typeof createStage>[1]);
 const fit = () => stage.resize(canvas.clientWidth, canvas.clientHeight);
 fit();
 addEventListener("resize", fit);

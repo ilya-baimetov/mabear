@@ -1,3 +1,4 @@
+import {smooth} from './math';
 import type {Vec2,PropId} from './schema';
 
 /** The revised house is a separate stage. Semantic marks connect it to the
@@ -40,7 +41,6 @@ export const housePickupPosition=(item:PropId):Vec2=>houseWorld([-3.22,houseWork
 export function houseCookingSupportHeightAt(x:number,z:number):number {
  const s=HOUSE_COOKING_HELPER,dx=x-s.position[0],dz=Math.abs(z-s.position[1]);
  if(dz>=s.depth/2||dx<-.35||dx>.35+s.stepDepth*2)return 0;
- const smooth=(v:number)=>{const t=Math.max(0,Math.min(1,v));return t*t*(3-2*t);};
  const far=.35+s.stepDepth*2;
  const h=s.height/3*(smooth((far-dx)/.14)+smooth((far-s.stepDepth-dx)/.14)+smooth((.35-dx)/.14));
  return h*smooth((dx+.35)/.08)*smooth((s.depth/2-dz)/.08);

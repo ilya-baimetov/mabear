@@ -3,6 +3,7 @@
 // episode are a story gag, not their rest anatomy. Keep the common Mixamo rig so all story verbs work.
 import * as THREE from "three";
 import type { ActorFrame, CharacterRig } from "../api";
+import { emotionWeights } from "../motion/emotion";
 import { buildFace, blendedMouthShape, type FaceConfig } from "./face";
 import {
   blob, bump, buildSkeleton, col, dir, extraBone, eyeMaterial, furMaterial, limb, makeRig, materialSet, mergeSame,
@@ -381,7 +382,7 @@ export function buildWolf(variant: WolfVariant): CharacterRig {
       lidMaterial: fur,
     },
     eyeMaterial: eyeMat,
-    brows: { color: variant === "b" ? C.light : C.furDark, y: .054, dx: .005, length: .09, thickness: .013, arch: variant === "a" ? .012 : .004, range: .027, material: fur },
+    brows: { color: variant === "b" ? "#5e5a56" : C.furDark, y: .054, dx: .005, length: .09, thickness: .013, arch: variant === "a" ? .012 : .004, range: .027, material: fur },
     mouth: {
       surface: { center: H.snoutCenter as V3, radius: sr[2], zAt: () => sc.z + sr[2] },
       y: sc.y - 0.026,
@@ -412,6 +413,21 @@ export function buildWolf(variant: WolfVariant): CharacterRig {
   paintVertices(lowerJaw, (_p, out) => out.copy(cLight).lerp(cFur, .16));
   parts.push({ geom: lowerJaw, bone: jaw, material: fur });
   const mouthMat = mats.add(new THREE.MeshStandardMaterial({color: 0xffffff, vertexColors: true, roughness: .82}));
+  mouthMat.onBeforeCompile = (shader) => {
+    if (shader.fragmentShader.includes("#include <roughnessmap_fragment>")) {
+      shader.fragmentShader = shader.fragmentShader.replace(
+        "#include <roughnessmap_fragment>",
+        `#include <roughnessmap_fragment>
+{
+  float toothMask = smoothstep(0.45, 0.72, min(diffuseColor.g, diffuseColor.b));
+  float tongueMask = smoothstep(0.15, 0.35, diffuseColor.r - diffuseColor.g) * (1.0 - toothMask);
+  roughnessFactor = mix(0.94, 0.38, tongueMask);
+  roughnessFactor = mix(roughnessFactor, 0.28, toothMask);
+}`,
+      );
+    }
+  };
+  mouthMat.customProgramCacheKey = () => "mabear-wolf-mouth-v1";
   const interior = blob(4, (d, out) => out.set(d.x * jawWidth * .91, .002 + d.y * .009,
     jawCenterZ + d.z * jawLength * .9));
   paintVertices(interior, (_p, out) => out.copy(col(C.mouthInterior)));
@@ -662,17 +678,68 @@ export function buildWolf(variant: WolfVariant): CharacterRig {
   }
   const body = skinBody(root, parts);
 
-  // ---- secondary motion: tail sway (lags behind the hips, follows the sway driver), ear twitch
+  // ---- secondary motion: cascading tail0 -> tail1 -> tail2, turn-whip, emotion-reactive tail & ear posture
   const secondary = {
     update(frame: ActorFrame, phase: number): void {
-      const w = (frame.secondary.sway - 0.5) * 2;
-      const j = (frame.secondary.jiggle - 0.5) * 2;
-      const a = 0.18 * w + 0.06 * Math.sin(phase * 0.7);
-      tail0.rotation.set(0.1 + 0.05 * j, a * 0.6, 0);
-      tail1.rotation.set(0.05, a, 0.04 * Math.sin(phase * 0.7 + 0.6));
-      tail2.rotation.set(0.0, a * 1.3, 0.06 * Math.sin(phase * 0.7 + 1.2));
-      ears[0].rotation.z = -0.28 + 0.08 * w + 0.02 * Math.sin(phase * 1.3);
-      ears[1].rotation.z = 0.28 + 0.08 * w * 0.8 - 0.02 * Math.sin(phase * 1.3 + 0.9);
+      if (
+        !frame.spring &&
+        frame.face.emotion === "neutral" &&
+        !frame.face.emotionTransition &&
+        frame.secondary.sway === 0 &&
+        frame.secondary.jiggle === 0
+      ) {
+        tail0.rotation.set(0, 0, 0);
+        tail1.rotation.set(0, 0, 0);
+        tail2.rotation.set(0, 0, 0);
+        ears[0].rotation.set(-0.12, 0.3, -0.28);
+        ears[1].rotation.set(-0.12, -0.3, 0.28);
+        return;
+      }
+      const ew = emotionWeights(frame.face);
+      const happyW = (ew.happy ?? 0) + (ew.excited ?? 0) + 0.5 * (ew.mischievous ?? 0) + 0.4 * (ew.proud ?? 0);
+      const tuckW = (ew.sad ?? 0) + (ew.scared ?? 0);
+      const angryW = (ew.angry ?? 0) + 0.5 * (ew.annoyed ?? 0);
+      const alertW = (ew.curious ?? 0) + (ew.surprised ?? 0);
+      const sleepScale = frame.posture === "sleep" ? 0.2 : 1;
+
+      const sp = frame.spring;
+      const w = sp
+        ? THREE.MathUtils.clamp(sp.swayX + (frame.secondary.sway - 0.5) * 0.6, -1.2, 1.2)
+        : frame.secondary.sway === 0
+          ? 0
+          : (frame.secondary.sway - 0.5) * 2;
+      const j = sp
+        ? THREE.MathUtils.clamp(sp.bounceY + (frame.secondary.jiggle - 0.5) * 0.5, -1.2, 1.2)
+        : frame.secondary.jiggle === 0
+          ? 0
+          : (frame.secondary.jiggle - 0.5) * 2;
+      const whip = sp ? THREE.MathUtils.clamp(sp.yawVel * 0.16, -0.35, 0.35) : 0;
+      const foreSway = sp ? sp.swayZ : 0;
+
+      const sitLift = frame.posture === "sit" ? 0.22 * (1 - tuckW) : 0;
+      const emoPitch0 = 0.42 * angryW + 0.24 * happyW + 0.12 * alertW - 0.38 * tuckW + sitLift;
+      const emoPitch1 = 0.28 * angryW + 0.14 * happyW + 0.08 * alertW - 0.32 * tuckW;
+      const emoPitch2 = 0.16 * angryW + 0.08 * happyW + 0.05 * alertW - 0.22 * tuckW;
+      const wagDamp = sleepScale * (1 - 0.65 * angryW) * (1 - 0.72 * tuckW);
+      const wag = (lag: number) =>
+        ((1 - happyW) * 0.06 * Math.sin(phase * 0.85 - lag) + happyW * 0.25 * Math.sin(phase * 2.8 - lag)) * wagDamp;
+
+      const l0 = 0.55 * (0.16 * w + whip) * sleepScale + wag(0) * 0.55;
+      const l1 = 0.95 * (0.16 * w + whip * 1.15) * sleepScale + wag(0.65) * 0.95;
+      const l2 = 1.25 * (0.16 * w + whip * 1.35) * sleepScale + wag(1.3) * 1.25;
+
+      tail0.rotation.set(emoPitch0 + (0.08 * j + 0.05 * foreSway) * sleepScale, -l0 * 0.6, l0 * 0.5);
+      tail1.rotation.set(emoPitch1 + 0.06 * j * sleepScale + 0.03 * Math.cos(phase * 0.85 - 0.65) * wagDamp, -l1 * 0.35, l1 * 0.95);
+      tail2.rotation.set(emoPitch2 + 0.04 * j * sleepScale + 0.04 * Math.cos(phase * 0.85 - 1.3) * wagDamp, -l2 * 0.2, l2 * 1.15);
+
+      const earRx = -0.12 + 0.06 * happyW + 0.16 * alertW - 0.18 * tuckW - 0.28 * angryW + (0.04 * j + 0.03 * foreSway) * sleepScale;
+      const earDrz = 0.08 * happyW + 0.1 * alertW - 0.26 * tuckW - 0.1 * angryW;
+      const earDry = -0.18 * angryW + 0.08 * alertW;
+      const curiousTilt = (ew.curious ?? 0) * 0.09;
+      const twitch0 = (0.05 * w + 0.025 * Math.sin(phase * 1.3) + happyW * 0.025 * Math.sin(phase * 2.8)) * sleepScale;
+      const twitch1 = (0.05 * w * 0.85 - 0.025 * Math.sin(phase * 1.3 + 0.9) - happyW * 0.025 * Math.sin(phase * 2.8 + 0.4)) * sleepScale;
+      ears[0].rotation.set(earRx + curiousTilt, 0.3 + earDry, -0.28 + earDrz + twitch0);
+      ears[1].rotation.set(earRx - curiousTilt * 0.6, -0.3 - earDry, 0.28 - earDrz + twitch1);
     },
   };
 

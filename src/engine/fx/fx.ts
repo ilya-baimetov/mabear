@@ -4,7 +4,7 @@
 import * as THREE from "three";
 import { FX_IDS, type FxId } from "../../shared/schema";
 import type { FxFrame } from "../api";
-import { rng } from "../look";
+import { rng } from "../math/rng";
 
 interface FxDef {
   kind: number;
@@ -33,7 +33,7 @@ const VERT = /* glsl */ `
 attribute vec4 aSeed;   // 4 uniform randoms per particle
 attribute float aIndex; // 0..1 particle index
 uniform float uK; uniform float uScale; uniform float uSize; uniform int uKind;
-varying float vAlpha; varying float vMix; varying float vRot;
+varying float vAlpha; varying float vMix; varying float vRot; varying vec2 vSeed;
 const float PI = 3.14159265;
 void main() {
   float k = clamp(uK, 0.0, 1.0);
@@ -41,6 +41,7 @@ void main() {
   float size = uSize;
   float alpha = 1.0;
   vRot = 0.0;
+  vSeed = aSeed.xy;
   vec3 dir = normalize(vec3(aSeed.x - 0.5, aSeed.y * 0.8 + 0.1, aSeed.z - 0.5) + 1e-4);
   if (uKind == 0) { // flour_cloud: burst, decelerate, billow and fade
     float e = 1.0 - pow(1.0 - k, 3.0);
@@ -101,13 +102,14 @@ void main() {
 }`;
 
 const FRAG = /* glsl */ `
-uniform vec3 uColor; uniform vec3 uColor2; uniform int uKind;
-varying float vAlpha; varying float vMix; varying float vRot;
+uniform vec3 uColor; uniform vec3 uColor2; uniform vec3 uTint; uniform int uKind;
+varying float vAlpha; varying float vMix; varying float vRot; varying vec2 vSeed;
 float seg(vec2 p, vec2 a, vec2 b) { vec2 pa = p - a, ba = b - a; float h = clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0); return length(pa - ba * h); }
 void main() {
   vec2 q = gl_PointCoord - 0.5;
   q.y = -q.y;
   float a = 0.0;
+  vec3 col = mix(uColor, uColor2, vMix);
   if (uKind == 1) { // heart
     vec2 h = q * 2.4; h.y += 0.15;
     float v = pow(h.x * h.x + h.y * h.y - 0.35, 3.0) - h.x * h.x * h.y * h.y * h.y;
@@ -116,24 +118,49 @@ void main() {
     vec2 s = abs(q);
     float d = min(s.x * 6.0 + s.y, s.y * 6.0 + s.x);
     a = 1.0 - smoothstep(0.35, 0.5, d) + (1.0 - smoothstep(0.0, 0.22, length(q))) * 0.8;
-  } else if (uKind == 3) { // Z letter
-    float d = min(min(seg(q, vec2(-0.28, 0.28), vec2(0.28, 0.28)), seg(q, vec2(0.28, 0.28), vec2(-0.28, -0.28))), seg(q, vec2(-0.28, -0.28), vec2(0.28, -0.28)));
+  } else if (uKind == 3) { // Z letter (rotated by vRot)
+    float cr = cos(vRot), sr = sin(vRot);
+    vec2 rq = mat2(cr, -sr, sr, cr) * q;
+    float d = min(min(seg(rq, vec2(-0.28, 0.28), vec2(0.28, 0.28)), seg(rq, vec2(0.28, 0.28), vec2(-0.28, -0.28))), seg(rq, vec2(-0.28, -0.28), vec2(0.28, -0.28)));
     a = 1.0 - smoothstep(0.06, 0.1, d);
+  } else if (uKind == 5) { // splash: multi-lobe droplet + satellite micro-drops
+    float ang = vSeed.x * 6.28318;
+    float ca = cos(ang), sa = sin(ang);
+    vec2 sq = mat2(ca, -sa, sa, ca) * q;
+    float d0 = smoothstep(0.34, 0.14, length(sq * vec2(1.0, 0.82)));
+    float d1 = smoothstep(0.16, 0.05, length(sq - vec2(0.21, 0.12))) * 0.80;
+    float d2 = smoothstep(0.14, 0.04, length(sq - vec2(-0.20, -0.14))) * 0.72;
+    a = max(d0, max(d1, d2));
+    col += vec3(0.22) * smoothstep(0.14, 0.0, length(sq - vec2(-0.07, 0.08)));
   } else if (uKind == 6) { // tear drop
     vec2 t = q; t.y += 0.1;
     float d = length(t) - 0.28 + max(0.0, t.y) * 0.55;
     a = 1.0 - smoothstep(-0.03, 0.02, d);
-  } else { // soft puff / droplet
-    a = smoothstep(0.5, uKind == 5 ? 0.35 : 0.1, length(q));
+  } else { // soft multi-lobe volumetric puff (flour_cloud, dust, anger_puff)
+    float ang = vSeed.x * 6.28318;
+    float ca = cos(ang), sa = sin(ang);
+    vec2 pq = mat2(ca, -sa, sa, ca) * q;
+    float b0 = smoothstep(1.0, 0.12, length(pq) / 0.34);
+    float b1 = smoothstep(1.0, 0.16, length(pq - vec2(0.14, 0.08)) / (0.24 + 0.04 * vSeed.y)) * 0.92;
+    float b2 = smoothstep(1.0, 0.16, length(pq - vec2(-0.15, 0.06)) / (0.23 + 0.04 * vMix)) * 0.88;
+    float b3 = smoothstep(1.0, 0.16, length(pq - vec2(0.01, -0.14)) / 0.25) * 0.85;
+    a = max(max(b0, b1), max(b2, b3));
+    col *= clamp(0.76 + 0.24 * (q.y * 1.6 + 0.25), 0.58, 1.04);
   }
   a *= vAlpha;
   if (a < 0.01) discard;
-  vec3 col = mix(uColor, uColor2, vMix);
   if (uKind == 1 || uKind == 6) col += vec3(0.35) * smoothstep(0.12, 0.0, length(q - vec2(-0.12, 0.12)));
+  if (uKind == 0 || uKind == 4 || uKind == 5 || uKind == 7) col *= uTint;
   gl_FragColor = vec4(col, a);
   #include <tonemapping_fragment>
   #include <colorspace_fragment>
 }`;
+
+export interface FxLighting {
+  sunColor: number;
+  skyHorizon: number;
+  stars: number;
+}
 
 interface Emitter {
   points: THREE.Points;
@@ -143,11 +170,16 @@ interface Emitter {
 export interface FxHandle {
   root: THREE.Group;
   /** show exactly the given effects (pure function of the frame) */
-  apply(fx: FxFrame[], pointScale: number): void;
+  apply(fx: FxFrame[], pointScale: number, lighting?: FxLighting): void;
   /** number of effects currently visible */
   active(): number;
   dispose(): void;
 }
+
+const _sun = new THREE.Color();
+const _sky = new THREE.Color();
+const _white = new THREE.Color(0xffffff);
+const _tint = new THREE.Color(0xffffff);
 
 function makeGeometry(def: FxDef, seed: number): THREE.BufferGeometry {
   const r = rng(seed);
@@ -193,6 +225,7 @@ export function createFx(): FxHandle {
           uKind: { value: def.kind },
           uColor: { value: new THREE.Color(def.color) },
           uColor2: { value: new THREE.Color(def.color2) },
+          uTint: { value: new THREE.Color(0xffffff) },
         },
         transparent: true,
         depthWrite: false,
@@ -211,10 +244,18 @@ export function createFx(): FxHandle {
 
   return {
     root,
-    apply(fx, pointScale) {
+    apply(fx, pointScale, lighting) {
       for (const pool of pools.values()) for (const e of pool) e.points.visible = false;
       used.clear();
       activeCount = 0;
+      if (lighting) {
+        _sun.setHex(lighting.sunColor);
+        _sky.setHex(lighting.skyHorizon);
+        const night = Math.min(1, Math.max(0, Number.isFinite(lighting.stars) ? lighting.stars : 0));
+        _tint.copy(_sun).lerp(_sky, 0.35).lerp(_white, 0.35 * (1 - night)).multiplyScalar(1 - 0.54 * night);
+      } else {
+        _tint.setRGB(1, 1, 1);
+      }
       for (const f of fx) {
         const def = FX_DEFS[f.id];
         if (!def || !(f.k >= 0 && f.k <= 1)) continue;
@@ -225,6 +266,7 @@ export function createFx(): FxHandle {
         e.points.position.set(f.at[0], f.at[1] + lift, f.at[2]);
         e.mat.uniforms.uK.value = f.k;
         e.mat.uniforms.uScale.value = pointScale;
+        (e.mat.uniforms.uTint.value as THREE.Color).copy(_tint);
         e.points.visible = true;
         activeCount++;
       }

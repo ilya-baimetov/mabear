@@ -1,8 +1,7 @@
 // Playback clock: playback = evaluate(clock), scrubbing = evaluate(scrubT) (spec §4.3, §7.4). No React.
 import type { ActorId, CamKey, Lang, Timeline, Vec3 } from "../../shared/schema";
-import type { AudioEngine, FrameState, StageHandle } from "../api";
+import type { AudioEngine, FrameState, PlaybackEvaluator, StageHandle } from "../api";
 import { evaluate } from "./evaluate";
-import type { PlaybackEvaluator } from "../physics/rapierReplay";
 
 export interface PlayerOptions {
   stage: StageHandle;
@@ -10,9 +9,7 @@ export interface PlayerOptions {
   onTime?: (t: number, playing: boolean) => void;
   onFrame?: (frame: FrameState) => void;
   /** Optional deterministic physics trajectory; unsupported stories retain animation. */
-  evaluator?: PlaybackEvaluator & {readonly ready?:boolean};
-  /** Preparation holds the existing picture and requested timestamp, including audio. */
-  onPreparing?: (preparing:boolean)=>void;
+  evaluator?: PlaybackEvaluator;
 }
 
 export class Player {
@@ -38,22 +35,30 @@ export class Player {
   private toEnd = false;
   private lastNow = 0;
   private resumableAudio = false;
-  private preparationHeld = false;
-  private preparingReported = false;
-  private deferredAudio = false;
+  private seenRenderErrors = new Set<string>();
   /** debug/screenshot hook: replaces the compiled camera (e.g. a character close-up) */
   cameraOverride: ((frame: FrameState) => CamKey) | null = null;
   /** Cast inspection may show an actor who is absent from the current story. */
   castOverride: ActorId[] | null = null;
   /** debug/screenshot hook: skip rendering (the last frame stays on screen) so headless screenshots aren't starved */
   frozen = false;
+  private dirty = true;
+  private settleFrames = 2;
+  private lastCameraOverride = this.cameraOverride;
+  private lastCastOverride = this.castOverride;
 
   constructor(private opts: PlayerOptions) {
     this.loop = this.loop.bind(this);
     this.raf = requestAnimationFrame(this.loop);
   }
 
+  markDirty(): void {
+    this.dirty = true;
+    this.settleFrames = 2;
+  }
+
   setTimeline(tl: Timeline, lang: Lang): void {
+    this.markDirty();
     this.opts.evaluator?.setTimeline(tl);
     const wasPlaying = this.playing;
     const changed = tl !== this.timeline || lang !== this.lang;
@@ -62,16 +67,13 @@ export class Player {
     this.lang = lang;
     this.setPreviewEnd(this.previewEnd ?? undefined);
     if (this.t > tl.duration) this.t = tl.duration;
-    if (wasPlaying && (changed || this.isPreparing)) {
-      if(this.isPreparing){this.opts.audio?.stop();this.deferredAudio=true;}
-      else {this.deferredAudio=false;this.opts.audio?.play(this.previewTimeline, this.t, lang);}
-      this.tStart=this.t;this.wallStart=performance.now();
+    if (changed && wasPlaying) {
+      // timeline edited during playback: re-schedule from the current time (the engine keeps lines/music running)
+      this.opts.audio?.play(this.previewTimeline, this.t, lang);
     }
     if (this.endT > tl.duration || !wasPlaying || this.toEnd) this.endT = this.previewTimeline.duration;
     // Stop at an unvoiced new paragraph; the app prepares it before resuming.
     if(wasPlaying&&this.opts.audio?.readyUntil)this.endT=Math.min(this.endT,Math.max(this.t,this.opts.audio.readyUntil(this.previewTimeline,lang,this.t)));
-    if(this.isPreparing)this.preparationHeld=true;
-    this.reportPreparing();
   }
 
   private setPreviewEnd(end?: number): void {
@@ -88,14 +90,14 @@ export class Player {
   get isPlaying(): boolean {
     return this.playing;
   }
-  get isPreparing():boolean{return this.opts.evaluator?.ready===false;}
-  private reportPreparing(){const value=this.isPreparing;if(value!==this.preparingReported){this.preparingReported=value;this.opts.onPreparing?.(value);}}
   get frame(): FrameState | null {
     return this.lastFrame;
   }
 
   play(from: number, to?: number): void {
+    this.markDirty();
     this.castOverride = null;
+    this.lastCastOverride = null;
     const resume = this.resumableAudio && !this.playing && Math.abs(from - this.t) < 1e-6 && (to ?? null) === this.previewEnd;
     this.resumableAudio = false;
     this.setPreviewEnd(to);
@@ -105,26 +107,23 @@ export class Player {
     this.playing = true;
     this.tStart = this.t;
     this.wallStart = performance.now();
-    if(this.isPreparing){
-      this.preparationHeld=true;this.deferredAudio=true;this.opts.audio?.stop();
-    }else if (resume && this.opts.audio?.resume) this.opts.audio.resume();
+    if (resume && this.opts.audio?.resume) this.opts.audio.resume();
     else { this.opts.audio?.stop(); this.opts.audio?.play(this.previewTimeline, this.t, this.lang); }
-    if(!this.isPreparing){this.preparationHeld=false;this.deferredAudio=false;}
-    this.reportPreparing();
     this.opts.onTime?.(this.t, true);
   }
 
   pause(): void {
     if (!this.playing) return;
     this.playing = false;
-    this.resumableAudio = !this.deferredAudio && !!this.opts.audio?.pause;
-    if(this.deferredAudio){this.deferredAudio=false;this.opts.audio?.stop();}
-    else if (this.opts.audio?.pause) this.opts.audio.pause(); else this.opts.audio?.stop();
+    this.markDirty();
+    this.resumableAudio = !!this.opts.audio?.pause;
+    if (this.opts.audio?.pause) this.opts.audio.pause(); else this.opts.audio?.stop();
     this.opts.onTime?.(this.t, false);
   }
 
   seek(t: number, boundEnd?: number): void {
     if (this.playing) this.pause();
+    this.markDirty();
     if (this.resumableAudio) this.opts.audio?.stop();
     this.resumableAudio = false;
     this.setPreviewEnd(boundEnd);
@@ -136,12 +135,10 @@ export class Player {
   private loop(now: number): void {
     this.raf = requestAnimationFrame(this.loop);
     if (this.frozen) return;
-    this.reportPreparing();
-    if(this.isPreparing){this.preparationHeld=true;this.lastNow=now;return;}
-    if(this.preparationHeld){
-      this.preparationHeld=false;this.tStart=this.t;this.wallStart=now;this.lastNow=now;
-      if(this.deferredAudio&&this.playing)this.opts.audio?.play(this.previewTimeline,this.t,this.lang);
-      this.deferredAudio=false;
+    if (this.cameraOverride !== this.lastCameraOverride || this.castOverride !== this.lastCastOverride) {
+      this.lastCameraOverride = this.cameraOverride;
+      this.lastCastOverride = this.castOverride;
+      this.markDirty();
     }
     const dt = this.lastNow ? Math.min(0.1, Math.max(0, (now - this.lastNow) / 1000)) : 1 / 60;
     this.lastNow = now;
@@ -152,6 +149,7 @@ export class Player {
         this.playing = false;
         this.opts.audio?.stop();
         this.idleT = 0;
+        this.markDirty();
         this.opts.onTime?.(this.t, false);
       } else {
         this.opts.onTime?.(this.t, true);
@@ -165,6 +163,13 @@ export class Player {
     const last = view.segments.at(-1);
     const atSegmentEnd = last && Math.abs(last.offset + last.segment.duration - view.duration) < 1e-6;
     const atEnd = !this.playing && view.duration > 0 && this.t >= view.duration - 1e-3;
+    if (!this.playing && !(atEnd && atSegmentEnd) && !this.dirty && this.settleFrames <= 0 && this.cameraOverride === null) {
+      return;
+    }
+    if (!this.playing) {
+      this.dirty = false;
+      if (this.settleFrames > 0) this.settleFrames--;
+    }
     const evalT = atEnd && atSegmentEnd ? view.duration + this.idleT : this.t;
     try {
       let frame = this.opts.evaluator ? this.opts.evaluator.evaluate(view, evalT) : evaluate(view, evalT);
@@ -178,13 +183,19 @@ export class Player {
         this.opts.audio.updateListener(frame.camera, pos);
       }
       this.opts.onFrame?.(frame);
+      this.seenRenderErrors.clear();
     } catch (err) {
-      console.warn("frame failed", err);
+      const msg = err instanceof Error ? err.message || err.name : String(err);
+      if (!this.seenRenderErrors.has(msg)) {
+        this.seenRenderErrors.add(msg);
+        console.warn("frame failed", err);
+      }
     }
   }
 
   dispose(): void {
     cancelAnimationFrame(this.raf);
+    this.seenRenderErrors.clear();
     this.opts.audio?.stop();
     this.opts.evaluator?.dispose();
   }

@@ -50,10 +50,31 @@ export interface ActorFrame {
   /** Surface pickup uses the same contact pose at its attachment instant. */
   pickup?: {item:PropId;position:Vec3;rotation:Vec3;release:number;container?:"kitchen_bowl"|"kitchen_pot"};
   /** Free-hand push of a resting ball; never an attachment. */
-  nudge?:{item:PropId;position:Vec3;rotation:Vec3;release:number;container?:"kitchen_bowl"|"kitchen_pot"};
-  objectContact?:{position:Vec3;side:1|-1;strength:number};
+  nudge?: {item:PropId;position:Vec3;rotation:Vec3;release:number;container?:"kitchen_bowl"|"kitchen_pot"};
+  objectContact?:ObjectContact;
+  objectContacts?:ObjectContact[];
   /** secondary-motion drivers 0..1 (hem sway, belly jiggle, ear wiggle) */
   secondary: { sway: number; jiggle: number; breathe: number };
+  /** Continuous deterministic spring-damper kinematic state for rigid bodies and rig overlap. */
+  spring?: ActorSpringState;
+}
+export interface ObjectContact {
+  position: Vec3;
+  side: 1 | -1;
+  strength: number;
+  pole?: Vec3;
+}
+export interface ActorSpringState {
+  /** local-space lateral spring deflection (-1..1) */
+  swayX: number;
+  /** local-space fore-aft spring deflection (-1..1) */
+  swayZ: number;
+  /** vertical impact/bounce damped oscillation (-1..1) */
+  bounceY: number;
+  /** root angular velocity yaw rate (rad/s) */
+  yawVel: number;
+  /** monotonic story time (s) for continuous secondary wave phasing */
+  time: number;
 }
 
 export interface PropFrame {
@@ -87,6 +108,34 @@ export interface FrameState {
   lighting: { from: TimeOfDay; to: TimeOfDay; k: number };
   props: Record<PropId, PropFrame>;
   fx: FxFrame[];
+}
+
+export type Weights = Array<[THREE.Object3D, number]>;
+
+export interface SkinPart {
+  /** geometry in `bone`-local space (rest pose) */
+  geom: THREE.BufferGeometry;
+  bone: THREE.Object3D;
+  material: THREE.Material;
+  /** casts shadows (default true); parts with different flags land in different meshes */
+  shadow?: boolean;
+  /** smooth weights from the REST position in character space (default: rigid on `bone`) */
+  weights?: (p: THREE.Vector3, n: THREE.Vector3) => Weights;
+}
+
+export interface FaceRig {
+  group: THREE.Group;
+  /** eyes, highlights, lids and brows on their face bones: the character merges them into its skinned body */
+  parts: SkinPart[];
+  eyeMaterial: THREE.Material;
+  update(p: FaceParams, sleeping: boolean): void;
+  dispose(): void;
+}
+
+export interface PlaybackEvaluator {
+  setTimeline(timeline: Timeline): void;
+  evaluate(view: Timeline, t: number): FrameState;
+  dispose(): void;
 }
 
 /** A built character (procedural stand-in or glTF). */
@@ -148,4 +197,7 @@ export interface AudioDebug {
   ttsAvailable: boolean;
   unlocked: boolean;
   recordedSpeech?: {voice:string;scheduled:{text:string;lang:Lang;offset:number;duration:number}[]};
+  voices?: Record<string, string>;
+  errors?: number;
+  lastError?: string;
 }

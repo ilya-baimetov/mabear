@@ -1,8 +1,9 @@
 // Gesture verbs. wave = RobotExpressive clip (upper body); nod / shake_head = Mixamo Xbot clips;
 // the rest (clap, point, shrug, Bear's signature facepalm, hug) are procedural on the idle base.
-import { addLayer, clamp, qfromTo, qmul, window01, type PoseLayer } from "../blend";
+import { addLayer, clamp, clamp01, qfromTo, qmul, window01, type PoseLayer } from "../blend";
+import { clapOpen } from "../../../shared/contactTiming";
 import {
-  ARMS, STYLES, UPPER, UPPER_NO_HEAD, arm, byPersona, idleBase, leg, mask, pose, rx, ry, rz, sampleClip, type VerbCtx, type VerbImpl,
+  ARMS, STYLES, UPPER, UPPER_NO_HEAD, arm, byPersona, idleBase, leg, persona, mask, pose, rx, ry, rz, sampleClip, type VerbCtx, type VerbImpl,
 } from "./common";
 
 /** Play a gesture clip over the idle lower body. Bear plays clips slower. */
@@ -15,18 +16,25 @@ function gestureClip(name: string, lt: number, ctx: VerbCtx, bones = UPPER, loop
 export const wave: VerbImpl = (lt, _p, ctx) => {
   // the robot wave raises the right arm; loop the clip's middle (the waving part) for long beats
   const L = gestureClip("robot_wave", lt, ctx, UPPER_NO_HEAD, true);
-  const out = addLayer(L, ctx.actor === "masha" ? { Spine: rz(Math.sin(lt * 6) * 0.05), LeftLeg: rx(0.25 * Math.abs(Math.sin(lt * 6))), RightLeg: rx(0.25 * Math.abs(Math.sin(lt * 6))) } : {});
-  return { ...out, lift: ctx.actor === "masha" ? Math.abs(Math.sin(lt * 6 + 0.6)) * 0.012 : 0, face: { browRaise: 0.3 } };
+  const p = persona(ctx.actor);
+  const lively = p === "masha" || p === "rosie";
+  const f = p === "rosie" ? 4.8 : 6.0;
+  const out = addLayer(L, lively ? { Spine: rz(Math.sin(lt * f) * 0.05), LeftLeg: rx(0.22 * Math.abs(Math.sin(lt * f))), RightLeg: rx(0.22 * Math.abs(Math.sin(lt * f))) } : {});
+  return { ...out, lift: lively ? Math.abs(Math.sin(lt * f + 0.6)) * 0.012 * clamp(ctx.style.bounce, 0.6, 1.3) : 0, face: { browRaise: 0.3 } };
 };
 
 export const clap: VerbImpl = (lt, _p, ctx) => {
   const k = window01(lt, 0, ctx.dur, 0.2);
-  const period = byPersona(ctx.actor, 0.3, 0.42, 0.32);
-  const open = 0.5 + 0.5 * Math.cos((lt / period) * Math.PI * 2); // 0 = hands together
+  const open = clapOpen(lt); // 0 = hands together at 0.3, 0.9, ... (matches clap foley & contact solver)
+  const impact = Math.pow(clamp01(1 - open), 2) * k;
   const base = idleBase(ctx, 0.5);
   const arms = pose(arm("Left", 0.55, 1.05 - 0.35 * open, 0.85 + 0.25 * open, -0.6), arm("Right", 0.55, 1.05 - 0.35 * open, 0.85 + 0.25 * open, -0.6));
   const L = mask(base, { bones: arms, hipsOffset: [0, 0, 0] }, ARMS, k);
-  return { ...L, lift: ctx.actor === "masha" ? Math.abs(Math.sin(lt * 5)) * 0.015 : 0, face: { emotion: "happy" } };
+  const bounce = byPersona(ctx.actor, 0.014, 0.005, 0.01, 0.012);
+  const out = addLayer(L, {
+    Head: rx(0.03 * impact),
+  });
+  return { ...out, lift: impact * bounce, face: { emotion: "happy" } };
 };
 
 /** Arm pointing toward a local-frame direction (from the shoulder). */
@@ -62,27 +70,32 @@ export const shake_head: VerbImpl = (lt, _p, ctx) => {
   const L = gestureClip("xbot_headshake", lt, ctx, ["Spine2", "Neck", "Head"]);
   // exaggerate a bit for cartoon readability
   const k = window01(lt, 0, ctx.dur, 0.15);
-  return addLayer(L, { Head: ry(Math.sin(lt * byPersona(ctx.actor, 14, 8, 12)) * 0.25 * k) });
+  return addLayer(L, { Head: ry(Math.sin(lt * byPersona(ctx.actor, 14, 8, 12, 12)) * 0.25 * k) });
 };
 
 export const shrug: VerbImpl = (lt, _p, ctx) => {
-  const s = window01(lt / ctx.dur, 0.05, 0.95, 0.3);
+  const u = lt / ctx.dur;
+  const s = window01(u, 0.05, 0.95, 0.3);
+  const dropTau = clamp01((u - 0.65) / 0.35) * ctx.dur;
+  const settle = u > 0.65 ? Math.exp(-6 * dropTau) * Math.sin(14 * dropTau) * 0.06 * window01(u, 0.65, 1, 0.05) : 0;
   const base = idleBase(ctx, 0.4);
   // shoulders up, elbows at the sides, forearms and palms turned out (upper arms stay down: no T-pose)
-  const arms = pose(arm("Left", 1.35, 0.3, 1.35, 0.9), arm("Right", 1.35, 0.3, 1.35, 0.9), { LeftShoulder: rz(0.3), RightShoulder: rz(-0.3) });
+  const arms = pose(arm("Left", 1.35, 0.3, 1.35, 0.9), arm("Right", 1.35, 0.3, 1.35, 0.9), { LeftShoulder: rz(0.3 - settle), RightShoulder: rz(-0.3 + settle) });
   const L = mask(base, { bones: arms, hipsOffset: [0, 0, 0] }, ARMS, s);
-  return { ...addLayer(L, { Head: rz(0.2 * s), Neck: rx(-0.1 * s) }), face: { browRaise: 0.8 * s } };
+  return { ...addLayer(L, { Head: rz(0.2 * s), Neck: rx(-0.1 * s), Spine2: rx(-0.04 * settle) }), face: { browRaise: 0.8 * s } };
 };
 
 export const facepalm: VerbImpl = (lt, _p, ctx) => {
   // Bear's signature: paw slowly up to the face, head sinks into it and shakes, long-suffering
   const u = lt / ctx.dur;
   const up = window01(u, 0.0, 0.92, 0.25);
+  const hitTau = clamp01((u - 0.22) / 0.5) * ctx.dur;
+  const slapRecoil = u > 0.22 ? Math.exp(-7 * hitTau) * Math.sin(14 * hitTau) * 0.06 : 0;
   const base = idleBase(ctx, 0.3);
   const shake = Math.sin(lt * 4) * 0.12 * window01(u, 0.3, 0.8, 0.1);
   const arms = pose(arm("Right", 0.15, 1.35, 2.3, -1.45), { RightHand: rz(0.3) });
   let L = mask(base, { bones: arms, hipsOffset: [0, 0, 0] }, ["RightArm", "RightForeArm", "RightHand"], up);
-  L = addLayer(L, { Spine2: rx(0.12 * up), Neck: rx(0.25 * up), Head: qmul(rx(0.2 * up), ry(shake)), LeftShoulder: rz(-0.1 * up) });
+  L = addLayer(L, { Spine2: rx(0.12 * up + slapRecoil * 0.5), Neck: rx(0.25 * up + slapRecoil), Head: qmul(rx(0.2 * up + slapRecoil), ry(shake)), LeftShoulder: rz(-0.1 * up) });
   return { ...L, face: { lidClose: 0.85 * up, emotion: "annoyed" } };
 };
 

@@ -3,16 +3,21 @@ import * as THREE from 'three';
 import type { ActorFrame, CharacterRig, Quat } from '../api';
 import type { ActorId, Vec3 } from '../../shared/schema';
 import { BONES, SKELETON, makeSetup, type SourcePoseWorld } from '../motion/retarget';
-import { qmul, qinv, IDENTITY } from '../motion/blend';
+import { qmul, qinv, qeuler, IDENTITY } from '../motion/blend';
 import { STYLES, feetPoints } from '../motion/verbs/common';
 import {createMashaPerformance} from './mashaPerformance';
-import {createMashaContacts} from './mashaContacts';
+import {createMashaContacts,solveArm} from './mashaContacts';
+import {contactWindowSuppression} from './contactHands';
 import {repairSquirrelBind} from './squirrelBind';
 import {createGeneratedFace} from './generatedFace';
 
 export interface GeneratedOptions { height: number; mashaPerformance?: boolean; animalPerformance?:boolean; }
 interface Sample { mesh: THREE.SkinnedMesh; index: number; }
 const p = new THREE.Vector3(), q = new THREE.Quaternion();
+const _qWorld = new THREE.Quaternion(), _qParent = new THREE.Quaternion(), _qPitch = new THREE.Quaternion(), _qRoll = new THREE.Quaternion(), _qCanon = new THREE.Quaternion(), _qDelta = new THREE.Quaternion();
+const _vDesired = new THREE.Vector3(), _vAdd = new THREE.Vector3(), _vFwd = new THREE.Vector3(), _vLat = new THREE.Vector3(), _vTarget = new THREE.Vector3(), _vHip = new THREE.Vector3(), _vPole = new THREE.Vector3();
+const _eTail = new THREE.Euler(0, 0, 0, 'YXZ');
+const _legScratch = [0, 1].map(() => ({ origFootPos: new THREE.Vector3(), origFootQ: new THREE.Quaternion(), toeDir: new THREE.Vector3(), footLeft: new THREE.Vector3() }));
 
 /** Keep the source's skeleton and materials; map canonical game poses through world-space rest transforms. */
 export function generatedRig(id: ActorId, model: THREE.Group, options: GeneratedOptions): CharacterRig {
@@ -30,12 +35,55 @@ export function generatedRig(id: ActorId, model: THREE.Group, options: Generated
       if(m.isSkinnedMesh) meshes.push(m);
       for(const mat of Array.isArray(m.material) ? m.material : [m.material]) {
         const material = mat as THREE.MeshStandardMaterial;
-        material.transparent = true; material.roughness = Math.max(.65,material.roughness); material.metalness = 0;
+        material.transparent = true; material.forceSinglePass = true; material.roughness = Math.max(.65,material.roughness); material.metalness = 0;
+        material.envMapIntensity = 0.68;
         // Generated normal maps contain some high-frequency baked fur; keep it subtle under sunlight.
-        material.normalScale?.set(.6,.6); materials.add(material);
+        material.normalScale?.set(.6,.6);
+        if(material.map) material.map.anisotropy = 6;
+        if(material.normalMap) material.normalMap.anisotropy = 6;
+        if(material.roughnessMap) material.roughnessMap.anisotropy = 6;
+        materials.add(material);
       }
     }
   });
+  const roughnessFloor = id === 'masha' ? 0.70 : 0.80;
+  const rimTint = (
+    id === 'masha' ? new THREE.Color('#ffe0cf').multiplyScalar(0.14)
+    : id === 'rosie' ? new THREE.Color('#ffd9d0').multiplyScalar(0.13)
+    : new THREE.Color('#fff5ea').multiplyScalar(0.15)
+  );
+  for(const material of materials) {
+    const previousCompile = material.onBeforeCompile;
+    const previousKey = material.customProgramCacheKey;
+    material.onBeforeCompile = (shader, renderer) => {
+      previousCompile?.call(material, shader, renderer);
+      shader.uniforms.charRoughnessFloor = { value: roughnessFloor };
+      shader.uniforms.charRimTint = { value: rimTint };
+      if(shader.fragmentShader.includes('#include <common>')) {
+        shader.fragmentShader = shader.fragmentShader.replace(
+          '#include <common>',
+          '#include <common>\nuniform float charRoughnessFloor;\nuniform vec3 charRimTint;',
+        );
+      }
+      if(shader.fragmentShader.includes('#include <roughnessmap_fragment>') && shader.fragmentShader.includes('charRoughnessFloor')) {
+        shader.fragmentShader = shader.fragmentShader.replace(
+          '#include <roughnessmap_fragment>',
+          '#include <roughnessmap_fragment>\nroughnessFactor = max(roughnessFactor, charRoughnessFloor);',
+        );
+      }
+      if(shader.fragmentShader.includes('#include <emissivemap_fragment>') && shader.fragmentShader.includes('charRimTint')) {
+        shader.fragmentShader = shader.fragmentShader.replace(
+          '#include <emissivemap_fragment>',
+          '#include <emissivemap_fragment>\n{\n  float charRim = pow(1.0 - saturate(dot(normal, normalize(vViewPosition))), 3.2);\n  totalEmissiveRadiance += diffuseColor.rgb * charRimTint * charRim;\n}',
+        );
+      }
+    };
+    material.customProgramCacheKey = () => {
+      const pk = previousKey && previousKey !== THREE.Material.prototype.customProgramCacheKey ? previousKey.call(material) : '';
+      return pk ? `${pk}:generated-char-v1:${id}` : `generated-char-v1:${id}`;
+    };
+    material.needsUpdate = true;
+  }
   for(const name of BONES) {
     const source = Object.keys(byName).find(n => n.replace(/^mixamorig[:_]?/i,'') === name);
     if(source) map[name] = source;
@@ -75,6 +123,15 @@ export function generatedRig(id: ActorId, model: THREE.Group, options: Generated
 
   // Repair the split skirt in every version of this asset. Sleeve/hand highlights
   // must retain their arm weights; facial performance remains a separate opt-in.
+  for(const mesh of meshes) {
+    const pos = mesh.geometry.getAttribute('position');
+    const bindWorld = new Float64Array(pos.count * 3);
+    for(let i=0;i<pos.count;i++) {
+      mesh.getVertexPosition(i,p).applyMatrix4(mesh.matrixWorld);
+      bindWorld[i*3]=p.x; bindWorld[i*3+1]=p.y; bindWorld[i*3+2]=p.z;
+    }
+    mesh.userData.bindWorldPositions = bindWorld;
+  }
   let dressVertices = 0;
   if(id === 'masha') for(const mesh of meshes) dressVertices += repairDress(mesh);
   // Facial anchors are authored in metres, then converted through the imported skeleton's centimetre scale.
@@ -93,10 +150,11 @@ export function generatedRig(id: ActorId, model: THREE.Group, options: Generated
   const samples: Sample[] = [];
   for(const mesh of meshes) {
     const pos = mesh.geometry.getAttribute('position');
+    const bindWorld = mesh.userData.bindWorldPositions as Float64Array | undefined;
     const candidates: Sample[] = [];
     for(let i=0;i<pos.count;i++) {
-      mesh.getVertexPosition(i,p).applyMatrix4(mesh.matrixWorld);
-      if(p.y < options.height*.105) candidates.push({mesh,index:i});
+      const py = bindWorld ? bindWorld[i*3+1] : mesh.getVertexPosition(i,p).applyMatrix4(mesh.matrixWorld).y;
+      if(py < options.height*.105) candidates.push({mesh,index:i});
     }
     // Surface sampling is only for sole contact, not a per-frame full-mesh CPU skinning pass.
     const step = Math.max(1,Math.floor(candidates.length/100));
@@ -106,6 +164,78 @@ export function generatedRig(id: ActorId, model: THREE.Group, options: Generated
   const measured={height:options.height,hipHeight:hip.y,leg:{x:Math.abs(thigh.x-hip.x),y:thigh.y-hip.y,thigh:thigh.distanceTo(knee),shin:knee.distanceTo(ankle),ankle:ankle.y,toe:options.height*.065}};
   root.userData.generated = {mapping:map,dressVertices,source:'Meshy 7.1',facialRig:!!performance||!!animalPerformance||faces.length>0,performance:performance?'masha-v3':animalPerformance?'animal-v1':null,measured,calibrationError:Math.abs(style.hipHeight-measured.hipHeight)};
   if(id==='squirrel')root.userData.squirrelBind=model.userData.squirrelBind;
+  const tailBone=id==='squirrel'?byName.Tail:undefined;
+  const tailRestWorldQ=tailBone?tailBone.getWorldQuaternion(new THREE.Quaternion()):null;
+  const tailRestWorldInv=tailRestWorldQ?tailRestWorldQ.clone().invert():null;
+  const heavy=THREE.MathUtils.clamp((options.height-.65)/(2.55-.65),0,1);
+  const nimble=1.15-.45*heavy;
+  const legLen=measured.leg.thigh+measured.leg.shin;
+  const UP=new THREE.Vector3(0,1,0);
+
+  const applyFootGrounding=(frame:ActorFrame,supportAt:(x:number,z:number)=>number,intended:number)=>{
+    const groundWeight=THREE.MathUtils.clamp(frame.groundWeight??1,0,1);
+    const airFade=1-THREE.MathUtils.smoothstep(intended,.04*options.height,.10*options.height);
+    const hRoot=supportAt(frame.pos[0],frame.pos[2]);
+    if(!Number.isFinite(hRoot))return;
+    const physAirFade=frame.physicsRoot?1-THREE.MathUtils.smoothstep(frame.pos[1]-hRoot,.04*options.height,.10*options.height):1;
+    const weight=groundWeight*airFade*physAirFade;
+    if(weight<=1e-4)return;
+    const fwdDefault=_vFwd.set(Math.sin(frame.yaw),0,Math.cos(frame.yaw));
+    const latDefault=_vLat.set(Math.cos(frame.yaw),0,-Math.sin(frame.yaw));
+    const span=Math.max(.05,measured.leg.toe*.75),latSpan=Math.max(.03,options.height*.04),maxStep=legLen*.55;
+    type LegPlan={sideSign:1|-1;upLeg:THREE.Bone;leg:THREE.Bone;foot:THREE.Bone;origFootPos:THREE.Vector3;origFootQ:THREE.Quaternion;toeDir:THREE.Vector3;footLeft:THREE.Vector3;footLift:number;plant:number;dh:number;slopePitch:number;slopeRoll:number};
+    const plans:LegPlan[]=[];
+    for(const [sideIdx,side] of (['Left','Right'] as const).entries()){
+      const upLeg=bones[`${side}UpLeg`],leg=bones[`${side}Leg`],foot=bones[`${side}Foot`],toe=bones[`${side}ToeBase`];
+      if(!upLeg||!leg||!foot)continue;
+      const sc=_legScratch[sideIdx];
+      const origFootPos=foot.getWorldPosition(sc.origFootPos),origFootQ=foot.getWorldQuaternion(sc.origFootQ);
+      const toeDir=toe?toe.getWorldPosition(sc.toeDir).sub(origFootPos):sc.toeDir.copy(fwdDefault);
+      toeDir.y=0;
+      if(toeDir.lengthSq()<1e-6)toeDir.copy(fwdDefault);else toeDir.normalize();
+      const footLeft=sc.footLeft.crossVectors(UP,toeDir).normalize();
+      const hRaw=supportAt(origFootPos.x,origFootPos.z),h=Number.isFinite(hRaw)?hRaw:hRoot;
+      const footLift=Math.max(0,origFootPos.y-(frame.pos[1]+measured.leg.ankle));
+      const plant=1-THREE.MathUtils.smoothstep(footLift,.01*options.height,.08*options.height);
+      const dh=THREE.MathUtils.clamp(h-hRoot,-maxStep,maxStep);
+      const hFRaw=supportAt(origFootPos.x+toeDir.x*span,origFootPos.z+toeDir.z*span),hBRaw=supportAt(origFootPos.x-toeDir.x*span,origFootPos.z-toeDir.z*span);
+      const hF=Number.isFinite(hFRaw)?hFRaw:h,hB=Number.isFinite(hBRaw)?hBRaw:h;
+      const stepMask=1-THREE.MathUtils.smoothstep(Math.abs(hF-hB),.08,.16);
+      const slopePitch=THREE.MathUtils.clamp(Math.atan2(hF-hB,2*span),-.35,.35)*stepMask;
+      const hLRaw=supportAt(origFootPos.x+footLeft.x*latSpan,origFootPos.z+footLeft.z*latSpan),hRRaw=supportAt(origFootPos.x-footLeft.x*latSpan,origFootPos.z-footLeft.z*latSpan);
+      const hL2=Number.isFinite(hLRaw)?hLRaw:h,hR2=Number.isFinite(hRRaw)?hRRaw:h;
+      const latMask=1-THREE.MathUtils.smoothstep(Math.abs(hL2-hR2),.06,.14);
+      const slopeRoll=THREE.MathUtils.clamp(Math.atan2(hL2-hR2,2*latSpan),-.18,.18)*latMask;
+      plans.push({sideSign:side==='Left'?1:-1,upLeg,leg,foot,origFootPos,origFootQ,toeDir,footLeft,footLift,plant,dh,slopePitch,slopeRoll});
+    }
+    if(plans.length<2)return;
+    const minGroundedDh=Math.min(plans[0].dh*plans[0].plant,plans[1].dh*plans[1].plant);
+    const pelvisOffset=THREE.MathUtils.clamp(minGroundedDh,-legLen*.35,legLen*.25)*weight;
+    const anyWork=Math.abs(pelvisOffset)>1e-4||plans.some(l=>Math.abs(l.dh)>1e-4||Math.abs(l.slopePitch)>1e-3||Math.abs(l.slopeRoll)>1e-3);
+    if(!anyWork)return;
+    holder.position.y+=pelvisOffset;
+    root.updateMatrixWorld(true);
+    for(const l of plans){
+      const effectiveDeltaY=l.dh>=0?Math.max(l.dh*l.plant,l.dh-l.footLift):l.dh*l.plant;
+      const targetY=l.origFootPos.y+effectiveDeltaY*weight;
+      const target=_vTarget.set(l.origFootPos.x,targetY,l.origFootPos.z);
+      const needsIk=Math.abs(targetY-l.origFootPos.y)>1e-4||Math.abs(pelvisOffset)>1e-4;
+      if(needsIk){
+        const hipPos=l.upLeg.getWorldPosition(_vHip);
+        const pole=_vPole.copy(hipPos).lerp(target,.5).addScaledVector(fwdDefault,.35*options.height).addScaledVector(latDefault,l.sideSign*.06*options.height);
+        solveArm(l.upLeg,l.leg,l.foot,target,pole);
+      }
+      const ankleWeight=l.plant*weight;
+      if(needsIk||Math.abs(l.slopePitch*ankleWeight)>1e-4||Math.abs(l.slopeRoll*ankleWeight)>1e-4){
+        const pitchQ=_qPitch.setFromAxisAngle(l.footLeft,-l.slopePitch*ankleWeight);
+        const rollQ=_qRoll.setFromAxisAngle(l.toeDir,l.slopeRoll*ankleWeight);
+        const desiredFootQ=rollQ.multiply(pitchQ).multiply(l.origFootQ);
+        l.foot.quaternion.copy(l.foot.parent!.getWorldQuaternion(_qParent).invert().multiply(desiredFootQ));
+        l.foot.updateWorldMatrix(false,true);
+      }
+    }
+    root.userData.footGrounding={weight,pelvisOffset,leftDh:plans[0].dh,rightDh:plans[1].dh,leftSlope:plans[0].slopePitch,rightSlope:plans[1].slopePitch};
+  };
 
   return {
     id,root,bones,rest,height:options.height,handSocket,
@@ -114,25 +244,60 @@ export function generatedRig(id: ActorId, model: THREE.Group, options: Generated
       root.position.set(0,0,0); root.rotation.set(0,0,0); holder.position.y=-box.min.y*scale;
       for(const [b,r] of localRest) {b.quaternion.copy(r.q);b.position.copy(r.p);}
       root.updateMatrixWorld(true);
+      const springFollow:Partial<Record<string,Quat>>={};
+      if(frame.spring&&frame.posture!=='sleep'&&frame.posture!=='carried'){
+        const kSpring=1-contactWindowSuppression(frame);
+        if(kSpring>1e-4){
+          const sp=frame.spring,clamp=THREE.MathUtils.clamp;
+          springFollow.Spine2=qeuler(
+            clamp((sp.swayZ*.032+sp.bounceY*(.024+.012*heavy))*kSpring,-.05,.05),
+            clamp((-sp.yawVel*(.025+.01*heavy))*kSpring,-.045,.045),
+            clamp((-sp.swayX*.028-sp.yawVel*.012)*kSpring,-.045,.045),
+          );
+          springFollow.Neck=qeuler(
+            clamp((sp.swayZ*.018+sp.bounceY*.022*nimble)*kSpring,-.04,.04),
+            clamp((-sp.yawVel*.022*nimble)*kSpring,-.04,.04),
+            clamp((-sp.swayX*.016*nimble)*kSpring,-.035,.035),
+          );
+          springFollow.Head=qeuler(
+            clamp((sp.swayZ*.022+sp.bounceY*.030*nimble+.008*Math.sin(sp.time*1.9)*nimble)*kSpring,-.05,.05),
+            clamp((-sp.yawVel*.032*nimble)*kSpring,-.055,.055),
+            clamp((-sp.swayX*.020*nimble)*kSpring,-.04,.04),
+          );
+        }
+      }
       const globals:Record<string,Quat> = {};
       for(const name of BONES) {
         const parent = SKELETON[name];
-        globals[name] = parent ? qmul(globals[parent],frame.bones[name]??IDENTITY) : frame.bones[name]??IDENTITY;
+        const localPose=frame.bones[name]??IDENTITY,follow=springFollow[name];
+        const posedLocal=follow?qmul(localPose,follow):localPose;
+        globals[name] = parent ? qmul(globals[parent],posedLocal) : posedLocal;
         const b = bones[name]; if(!b) continue;
         const delta = qmul(globals[name],qinv(setup.F[name]));
         const world = qmul(qmul(qmul(qinv(setup.C),delta),setup.C),setup.restRot[name]);
-        const parentQ = b.parent!.getWorldQuaternion(q).invert();
-        b.quaternion.copy(parentQ.multiply(new THREE.Quaternion().fromArray(world)));
+        const parentQ = b.parent!.getWorldQuaternion(_qParent).invert();
+        b.quaternion.copy(parentQ.multiply(_qWorld.fromArray(world)));
         b.updateWorldMatrix(false,true);
       }
       const hips = bones.Hips, hp = localRest.get(hips)!.p;
-      const desired = hips.parent!.localToWorld(hp.clone()).add(new THREE.Vector3(...frame.hipsOffset));
+      const desired = hips.parent!.localToWorld(_vDesired.copy(hp)).add(_vAdd.set(frame.hipsOffset[0],frame.hipsOffset[1],frame.hipsOffset[2]));
       hips.position.copy(hips.parent!.worldToLocal(desired));
+      if(tailBone&&tailRestWorldQ&&tailRestWorldInv&&frame.spring){
+        const sp=frame.spring,sleepScale=frame.posture==='sleep'?.25:1;
+        const pitch=THREE.MathUtils.clamp((sp.bounceY*.20+sp.swayZ*.16+.04*Math.cos(sp.time*2.3))*sleepScale,-.32,.32);
+        const yaw=THREE.MathUtils.clamp((-sp.yawVel*.14-sp.swayX*.20+.09*Math.sin(sp.time*2.4)+.03*Math.sin(sp.time*4.1+.7))*sleepScale,-.38,.38);
+        const roll=THREE.MathUtils.clamp((-sp.swayX*.10-sp.yawVel*.06+.03*Math.sin(sp.time*2.4+.5))*sleepScale,-.22,.22);
+        const canonQ=_qCanon.setFromEuler(_eTail.set(pitch,yaw,roll,'YXZ'));
+        const localDelta=_qDelta.copy(tailRestWorldInv).multiply(canonQ).multiply(tailRestWorldQ);
+        tailBone.quaternion.copy(localRest.get(tailBone)!.q).multiply(localDelta);
+        tailBone.updateWorldMatrix(false,true);
+      }
       root.updateMatrixWorld(true);
       // Match the motion solver's intended clearance: jump flight stays airborne and shoulder rides keep their height.
+      let intended=0;
       if(frame.posture === 'stand' || frame.posture === 'offstage') {
         const feet=feetPoints(frame.bones,frame.hipsOffset,style);
-        const intended=Math.max(0,Math.min(...feet.left.map(v=>v[1]),...feet.right.map(v=>v[1])));
+        intended=Math.max(0,Math.min(...feet.left.map(v=>v[1]),...feet.right.map(v=>v[1])));
         let low=Infinity;
         for(const sample of samples){sample.mesh.getVertexPosition(sample.index,p).applyMatrix4(sample.mesh.matrixWorld);low=Math.min(low,p.y);}
         if(Number.isFinite(low)) holder.position.y += (intended-low)*THREE.MathUtils.clamp(frame.groundWeight??1,0,1);
@@ -141,6 +306,11 @@ export function generatedRig(id: ActorId, model: THREE.Group, options: Generated
       root.visible=frame.opacity>.001;
       for(const face of faces)face(frame);
       root.updateMatrixWorld(true);
+      delete root.userData.footGrounding;
+      const supportAt=root.userData.supportHeightAt as ((x:number,z:number)=>number)|undefined;
+      if(typeof supportAt==='function'&&frame.posture==='stand'&&!frame.riding&&frame.verb!=='swing'){
+        applyFootGrounding(frame,supportAt,intended);
+      }
       contacts?.update(frame);
       performance?.update(frame);
       animalPerformance?.update(frame);
@@ -164,7 +334,7 @@ export function generatedRig(id: ActorId, model: THREE.Group, options: Generated
 function repairDress(mesh:THREE.SkinnedMesh):number {
   const mat=(Array.isArray(mesh.material)?mesh.material[0]:mesh.material) as THREE.MeshStandardMaterial;
   const tex=mat.map, uv=mesh.geometry.getAttribute('uv'), position=mesh.geometry.getAttribute('position');
-  if(!tex?.image || !uv) return 0;
+  if(!tex?.image || !uv || typeof document === 'undefined') return 0;
   const bitmap=tex.image as ImageBitmap;
   const canvas=document.createElement('canvas'); canvas.width=bitmap.width; canvas.height=bitmap.height;
   const ctx=canvas.getContext('2d',{willReadFrequently:true}); if(!ctx)return 0;
@@ -174,9 +344,11 @@ function repairDress(mesh:THREE.SkinnedMesh):number {
   const hip=mesh.skeleton.bones.findIndex(b=>b.name==='Hips');if(hip<0)return 0;
   const candidate=new Uint8Array(position.count),cloth=new Uint8Array(position.count);
   const seams=new Map<string,number>(),seamLinks:[number,number][]=[];
+  const bindWorld=mesh.userData.bindWorldPositions as Float64Array|undefined;
   for(let i=0;i<position.count;i++) {
     for(let k=0;k<4;k++){indices[i*4+k]=oldI.getComponent(i,k);weights[i*4+k]=oldW.getComponent(i,k);}
-    mesh.getVertexPosition(i,p).applyMatrix4(mesh.matrixWorld);
+    if(bindWorld)p.set(bindWorld[i*3],bindWorld[i*3+1],bindWorld[i*3+2]);
+    else mesh.getVertexPosition(i,p).applyMatrix4(mesh.matrixWorld);
     // UV/normal seams duplicate vertices. Reconnect coincident rest positions
     // before identifying enclosed texture islands; an index-only flood fill
     // mistakes disconnected pieces of the tights for pale skirt patterns.
@@ -239,11 +411,14 @@ function repairDress(mesh:THREE.SkinnedMesh):number {
 function addMashaFace(mesh:THREE.SkinnedMesh,hipY:number,facial=true):(frame:ActorFrame)=>void {
   const positions=mesh.geometry.getAttribute('position');
   const blink=new Float32Array(positions.count*3),mouth=new Float32Array(positions.count*3),seated=new Float32Array(positions.count*3);
+  const swayX=new Float32Array(positions.count*3),swayZ=new Float32Array(positions.count*3);
   const skirt=new Set<number>(mesh.userData.skirtVertices??[]),cloth=new THREE.Vector3(),axis=new THREE.Vector3(1,0,0);
   const world=new THREE.Vector3(),zero=new THREE.Vector3(),ex=new THREE.Vector3(),ey=new THREE.Vector3(),ez=new THREE.Vector3();
   const matrix=new THREE.Matrix4(),delta=new THREE.Vector3();
+  const bindWorld=mesh.userData.bindWorldPositions as Float64Array|undefined;
   for(let i=0;i<positions.count;i++) {
-    mesh.getVertexPosition(i,world).applyMatrix4(mesh.matrixWorld);
+    if(bindWorld)world.set(bindWorld[i*3],bindWorld[i*3+1],bindWorld[i*3+2]);
+    else mesh.getVertexPosition(i,world).applyMatrix4(mesh.matrixWorld);
     let blinkY=0,mouthY=0;
     for(const [cx,cy] of facial?[[.0556,.7374],[-.053,.7449]]:[]) {
       const radius=Math.hypot((world.x-cx)/.036,(world.y-cy)/.038);
@@ -253,14 +428,17 @@ function addMashaFace(mesh:THREE.SkinnedMesh,hipY:number,facial=true):(frame:Act
       const x=Math.max(0,1-(world.x/.067)**4),y=Math.min(1,(.662-world.y)/.012)*Math.min(1,(world.y-.59)/.025);mouthY=-.018*x*y;
     }
     cloth.set(0,0,0);
+    let skirtSwingW=0;
     if(skirt.has(i)&&world.y<.43){
       // Bend the repaired skirt forward over the lap. Keeping it as a vertical
       // cone lets the bent white thighs punch through its front when seated.
       const blend=Math.min(1,Math.max(0,(.43-world.y)/.08)),angle=-1.18*blend*blend*(3-2*blend);
       cloth.set(world.x,world.y-hipY,world.z).applyAxisAngle(axis,angle);
       cloth.y+=hipY;cloth.sub(world);
+      const hemU=Math.min(1,Math.max(0,(.43-world.y)/.33));
+      skirtSwingW=hemU*hemU*(3-2*hemU);
     }
-    if(!blinkY&&!mouthY&&cloth.lengthSq()===0)continue;
+    if(!blinkY&&!mouthY&&cloth.lengthSq()===0&&skirtSwingW===0)continue;
     // Invert this vertex's rest skin transform to express metre-space displacement as local morph deltas.
     mesh.applyBoneTransform(i,zero.set(0,0,0)).applyMatrix4(mesh.matrixWorld);
     mesh.applyBoneTransform(i,ex.set(1,0,0)).applyMatrix4(mesh.matrixWorld).sub(zero);
@@ -270,13 +448,32 @@ function addMashaFace(mesh:THREE.SkinnedMesh,hipY:number,facial=true):(frame:Act
     if(blinkY){delta.set(0,blinkY,0).applyMatrix4(matrix);blink.set(delta.toArray(),i*3);}
     if(mouthY){delta.set(0,mouthY,0).applyMatrix4(matrix);mouth.set(delta.toArray(),i*3);}
     if(cloth.lengthSq()>0){delta.copy(cloth).applyMatrix4(matrix);seated.set(delta.toArray(),i*3);}
+    if(skirtSwingW>0){
+      delta.set(.045*skirtSwingW,0,0).applyMatrix4(matrix);swayX.set(delta.toArray(),i*3);
+      delta.set(0,0,.045*skirtSwingW).applyMatrix4(matrix);swayZ.set(delta.toArray(),i*3);
+    }
   }
-  mesh.geometry.morphAttributes.position=[new THREE.Float32BufferAttribute(blink,3),new THREE.Float32BufferAttribute(mouth,3),new THREE.Float32BufferAttribute(seated,3)];
+  mesh.geometry.morphAttributes.position=[
+    new THREE.Float32BufferAttribute(blink,3),
+    new THREE.Float32BufferAttribute(mouth,3),
+    new THREE.Float32BufferAttribute(seated,3),
+    new THREE.Float32BufferAttribute(swayX,3),
+    new THREE.Float32BufferAttribute(swayZ,3),
+  ];
   mesh.geometry.morphTargetsRelative=true;mesh.updateMorphTargets();
   return frame=>{
     const a=mesh.morphTargetInfluences!;a[0]=facial?frame.face.lidClose:0;a[1]=!facial||frame.face.viseme==='rest'?0:frame.face.visemeWeight*(frame.face.viseme==='open_wide'?1:.65);
     const bend=['LeftUpLeg','RightUpLeg'].reduce((sum,name)=>{const q=frame.bones[name];return sum+(q?Math.abs(2*Math.atan2(q[0],q[3])):0);},0)*.5;
     const k=frame.posture==='sit'||frame.posture==='carried'||frame.verb==='stand_up'?Math.min(1,Math.max(0,(bend-.35)/1.05)):0;
     a[2]=k*k*(3-2*k);
+    const sp=frame.spring;
+    const skirtActive=!sp||frame.posture==='sit'||frame.posture==='carried'||frame.posture==='sleep'?0:(1-a[2]);
+    if(skirtActive>0&&sp){
+      a[3]=skirtActive*THREE.MathUtils.clamp(sp.swayX*.9-sp.yawVel*.12+(frame.secondary.sway-.5)*.5+.05*Math.sin(sp.time*2.7),-1,1);
+      a[4]=skirtActive*THREE.MathUtils.clamp(sp.swayZ*.9+sp.bounceY*.18+.04*Math.cos(sp.time*2.2),-1,1);
+    }else{
+      a[3]=0;
+      a[4]=0;
+    }
   };
 }

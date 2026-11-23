@@ -1,7 +1,8 @@
 import * as THREE from 'three';
 import {RoundedBoxGeometry} from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
+import {braidedRugMaterial, checkerboardMaterial, circusArtwork, createHearthFlameMaterial, emberBedMaterial} from '../interiorDecor';
 
-/** Production geometry ported from the reviewed interior shape study. No texture maps. */
+/** Production geometry ported from the reviewed interior shape study. */
 export function buildLivingShapes(materials: Record<string, THREE.MeshStandardMaterial>) {
   const fireplace = new THREE.Group();
   fireplace.name = 'shaped fireplace';
@@ -55,15 +56,15 @@ export function buildLivingShapes(materials: Record<string, THREE.MeshStandardMa
   // The stripped-room reference (episode 26) puts the flue at about 60% of
   // hearth width. A narrower lower body also restores the gap beside the chair.
   block(fireplace, 'low projecting hearth', 0, .07, .05, 1.40, .14, 1.51, materials.plaster, .035);
-  block(fireplace, 'firebox floor behind the opening', 0, .155, .065, .80, .035, 1.00, materials.black, .008);
+  block(fireplace, 'firebox floor behind the opening', 0, .155, .065, .80, .035, 1.00, materials.black, .008).castShadow = false;
   const back = new THREE.Shape();
   back.moveTo(-.40, .17); back.lineTo(.40, .17); back.lineTo(.40, .45);
   back.bezierCurveTo(.40, .61, .24, .73, 0, .73);
   back.bezierCurveTo(-.24, .73, -.40, .61, -.40, .45); back.closePath();
-  extrude(fireplace, 'recessed firebox back', back, .045, materials.black, -.39, 0);
+  extrude(fireplace, 'recessed firebox back', back, .045, materials.black, -.39, 0).castShadow = false;
   // Dark reveals end behind the face, so the opening retains readable thickness.
-  block(fireplace, 'left inner firebox reveal', -.396, .305, .045, .012, .31, .78, materials.black, 0);
-  block(fireplace, 'right inner firebox reveal', .396, .305, .045, .012, .31, .78, materials.black, 0);
+  block(fireplace, 'left inner firebox reveal', -.396, .305, .045, .012, .31, .78, materials.black, 0).castShadow = false;
+  block(fireplace, 'right inner firebox reveal', .396, .305, .045, .012, .31, .78, materials.black, 0).castShadow = false;
   const arch = new THREE.Shape();
   arch.moveTo(-.50, .45);
   arch.bezierCurveTo(-.50, .69, -.29, .90, 0, .90);
@@ -72,12 +73,38 @@ export function buildLivingShapes(materials: Record<string, THREE.MeshStandardMa
   arch.bezierCurveTo(.40, .61, .24, .73, 0, .73);
   arch.bezierCurveTo(-.24, .73, -.40, .61, -.40, .45);
   arch.closePath();
-  const surround = materials.wood.clone();
-  surround.color.lerp(materials.chair.color, .5);
-  extrude(fireplace, 'plain raised arch surround', arch, .035, surround, .567, .005);
+  const surround = new THREE.MeshStandardMaterial({color: materials.wood.color.clone().lerp(materials.chair.color, .5), roughness: .78});
+  surround.name = 'fireplace arch surround';
+  surround.userData = {setOwned: true, vertexBatch: 'matte'};
+  extrude(fireplace, 'plain raised arch surround', arch, .035, surround, .567, .005).castShadow = false;
   block(fireplace, 'mantel lower lip', 0, 1.312, -.04, 1.32, .055, 1.33, materials.wood, .016);
   block(fireplace, 'thin projecting mantel', 0, 1.37, -.0225, 1.39, .075, 1.365, materials.wood, .028);
   block(fireplace, 'slender chimney breast', 0, 2.615, -.48, .83, 2.43, .45, materials.wood, .018);
+
+  // Cozy hearth logs, glowing ember bed, and crossed animated flame planes (all strictly inside firebox z < 0.2).
+  const emberMaterial = emberBedMaterial();
+  const emberBed = mesh(fireplace, 'glowing hearth ember bed', new THREE.SphereGeometry(.26, 20, 12), emberMaterial, 0, .185, -.02);
+  emberBed.scale.set(1.12, .16, .72);
+  emberBed.castShadow = emberBed.receiveShadow = false;
+  const charredLogMat = new THREE.MeshStandardMaterial({
+    color: '#342219', roughness: .94, emissive: '#4d1504', emissiveIntensity: .22,
+    ...(materials.wood.normalMap ? {normalMap: materials.wood.normalMap} : {}),
+  });
+  charredLogMat.name = 'charred hearth bark';
+  charredLogMat.userData = {setOwned: true, vertexBatch: 'matte'};
+  rod(fireplace, 'charred hearth log', new THREE.Vector3(-.24, .22, -.08), new THREE.Vector3(.22, .22, .08), .044, charredLogMat, .040).castShadow = false;
+  rod(fireplace, 'charred hearth log', new THREE.Vector3(-.22, .22, .10), new THREE.Vector3(.24, .23, -.09), .042, charredLogMat, .038).castShadow = false;
+  rod(fireplace, 'charred hearth log', new THREE.Vector3(-.18, .285, -.02), new THREE.Vector3(.20, .30, .03), .038, charredLogMat, .035).castShadow = false;
+  const flames = new THREE.Group();
+  flames.name = 'hearth flames';
+  flames.position.set(0, .37, .01);
+  fireplace.add(flames);
+  const flameMaterial = createHearthFlameMaterial();
+  for (const angle of [0, Math.PI / 3, -Math.PI / 3]) {
+    const sheet = mesh(flames, 'hearth flame sheet', new THREE.PlaneGeometry(.34, .34, 6, 10), flameMaterial);
+    sheet.rotation.y = angle;
+    sheet.castShadow = sheet.receiveShadow = false;
+  }
 
   // The back is a padded volume with a gently bowed face, not a flat plaque.
   // Its superellipsoid contour gives broad flat-ish areas and soft shoulders.
@@ -144,9 +171,13 @@ export function buildLivingShapes(materials: Record<string, THREE.MeshStandardMa
   }
   // A few generic, unlettered volumes establish shelf capacity and scale.
   // They are solid monochrome book shapes rather than finished asset detail.
-  const bookMaterials = [materials.paper, materials.blue, materials.chair, materials.black].map(source => {
-    const material = source.clone();
+  const bookMaterials = ['#7f8b73', '#607d8b', '#9c6248', '#3c403a'].map((hex) => {
+    const material = new THREE.MeshStandardMaterial({
+      color: hex,
+      roughness: .82,
+    });
     material.color.lerp(materials.wood.color, .45);
+    material.userData = {setOwned: true, vertexBatch: 'matte'};
     return material;
   });
   const bookHeights = [.40, .46, .43, .34, .47, .41, .49, .38];
@@ -157,37 +188,107 @@ export function buildLivingShapes(materials: Record<string, THREE.MeshStandardMa
       const pattern = (index + row * 3) % bookHeights.length;
       const width = bookWidths[pattern], height = bookHeights[pattern];
       x += width / 2;
-      block(bookcase, 'plain upright book volume', x, shelfY + .043 + height / 2, .10 + (index % 3) * .015, width, height, .38, bookMaterials[(index + row) % bookMaterials.length], .008);
+      block(bookcase, 'plain upright book volume', x, shelfY + .043 + height / 2, .10 + (index % 3) * .015, width, height, .38, bookMaterials[(index + row) % bookMaterials.length], .008).castShadow = false;
       x += width / 2 + .017;
     }
     if (row % 2 === 0) {
       for (let index = 0; index < 3; index++) {
         const height = .40 + index * .025;
         const item = block(bookcase, 'slightly leaning right book volume', .70 + index * .15, shelfY + .043 + height / 2, .10, .12, height, .38, bookMaterials[(index + row + 1) % bookMaterials.length], .008);
+        item.castShadow = false;
         item.rotation.z = index === 0 ? -.16 : 0;
         item.position.y = shelfY + .043 + Math.cos(item.rotation.z) * height / 2 + Math.abs(Math.sin(item.rotation.z)) * .06;
       }
     } else {
-      block(bookcase, 'horizontal book volume', .52, shelfY + .085, .11, .60, .085, .38, bookMaterials[row % bookMaterials.length], .008);
+      block(bookcase, 'horizontal book volume', .52, shelfY + .085, .11, .60, .085, .38, bookMaterials[row % bookMaterials.length], .008).castShadow = false;
       const item = block(bookcase, 'leaning end volume', .94, shelfY + .25, .1, .13, .42, .38, bookMaterials[(row + 1) % bookMaterials.length], .008);
+      item.castShadow = false;
       item.rotation.z = -.17;
       item.position.y = shelfY + .043 + Math.cos(.17) * .21 + Math.sin(.17) * .065;
     }
   });
 
-  // Empty inset panels show the gallery's silhouette, without inventing artwork.
-  const frame = (x: number, y: number, width: number, height: number) => {
+  // Framed storybook illustrations inset flush at z = -2.685 inside the gallery rails.
+  const galleryPanelMat = new THREE.MeshStandardMaterial({color: materials.plaster.color, roughness: .90});
+  galleryPanelMat.name = 'gallery inset plaster';
+  galleryPanelMat.userData = {setOwned: true, vertexBatch: 'matte'};
+  const artKinds = ['poster', 'forest', 'photo', 'certificate'] as const;
+  const rawArts = artKinds.map(k => circusArtwork(k));
+  let galleryAtlasMat: THREE.MeshStandardMaterial | null = null;
+  if (rawArts.every((m): m is THREE.MeshStandardMaterial => !!m?.map?.image) && typeof document !== 'undefined') {
+    const atlasCanvas = document.createElement('canvas');
+    atlasCanvas.width = 1024; atlasCanvas.height = 1280;
+    const ctx = atlasCanvas.getContext('2d') as Partial<CanvasRenderingContext2D> | null;
+    if (ctx && typeof ctx.drawImage === 'function' && typeof ctx.fillRect === 'function') {
+      rawArts.forEach((m, idx) => {
+        const col = idx % 2, row = Math.floor(idx / 2);
+        ctx.drawImage!(m.map!.image as CanvasImageSource, col * 512, row * 640, 512, 640);
+        m.dispose();
+      });
+      const tex = new THREE.CanvasTexture(atlasCanvas);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      tex.anisotropy = 8;
+      galleryAtlasMat = new THREE.MeshStandardMaterial({color: '#ffffff', map: tex, roughness: .88});
+      galleryAtlasMat.name = 'gallery artwork atlas';
+      galleryAtlasMat.userData.setOwned = true;
+      galleryAtlasMat.addEventListener('dispose', () => tex.dispose());
+    }
+  }
+  const frame = (x: number, y: number, width: number, height: number, artKind: 'poster' | 'photo' | 'certificate' | 'forest') => {
     const rail = .047;
-    block(furnishings, 'blank inset gallery panel', x, y, -2.703, width - rail, height - rail, .025, materials.plaster, .003);
+    block(furnishings, 'blank inset gallery panel', x, y, -2.703, width - rail, height - rail, .025, galleryPanelMat, .003).castShadow = false;
+    const idx = artKinds.indexOf(artKind);
+    const artMat = galleryAtlasMat ?? rawArts[idx];
+    if (artMat) {
+      const artGeo = new THREE.PlaneGeometry(width - rail * 1.85, height - rail * 1.85);
+      if (galleryAtlasMat) {
+        const col = idx % 2, row = Math.floor(idx / 2);
+        const u0 = col * .5 + .002, u1 = (col + 1) * .5 - .002;
+        const v0 = (1 - row) * .5 + .002, v1 = (2 - row) * .5 - .002;
+        const uvAttr = artGeo.getAttribute('uv');
+        for (let i = 0; i < uvAttr.count; i++) {
+          uvAttr.setXY(i, u0 + uvAttr.getX(i) * (u1 - u0), v0 + uvAttr.getY(i) * (v1 - v0));
+        }
+      }
+      const art = mesh(furnishings, `gallery artwork ${artKind}`, artGeo, artMat, x, y, -2.685);
+      art.castShadow = false;
+    }
     for (const sign of [-1, 1]) {
-      block(furnishings, 'vertical gallery frame rail', x + sign * (width - rail) / 2, y, -2.67, rail, height, .075, materials.wood, .006);
-      block(furnishings, 'horizontal gallery frame rail', x, y + sign * (height - rail) / 2, -2.67, width - rail, rail, .075, materials.wood, .006);
+      block(furnishings, 'vertical gallery frame rail', x + sign * (width - rail) / 2, y, -2.67, rail, height, .075, materials.wood, .006).castShadow = false;
+      block(furnishings, 'horizontal gallery frame rail', x, y + sign * (height - rail) / 2, -2.67, width - rail, rail, .075, materials.wood, .006).castShadow = false;
     }
   };
-  frame(-.05, 2.15, .71, 1.17);
-  frame(-1.72, 2.12, .32, .72);
-  frame(-.08, 3.09, .72, .38);
-  frame(-1.72, 3.0, .32, .46);
+  frame(-.05, 2.15, .71, 1.17, 'poster');
+  frame(-1.72, 2.12, .32, .72, 'forest');
+  frame(-.08, 3.09, .72, .38, 'photo');
+  frame(-1.72, 3.0, .32, .46, 'certificate');
+
+  // Braided oval rag rug under chair & reading table, well clear of (0, 2.8) floor check.
+  {
+    const segs = 64, rx = 1.55, rz = 1.15;
+    const pos: number[] = [0, .003, 0], uv: number[] = [.5, .5], idx: number[] = [];
+    for (const [ringR, ringY] of [[.97, .003], [1.0, -.003]] as const) {
+      for (let i = 0; i <= segs; i++) {
+        const a = i / segs * Math.PI * 2;
+        const c = Math.cos(a), s = Math.sin(a);
+        pos.push(c * rx * ringR, ringY, s * rz * ringR);
+        uv.push(.5 + c * .495 * ringR, .5 + s * .495 * ringR);
+      }
+    }
+    for (let i = 0; i < segs; i++) {
+      const innerA = 1 + i, innerB = innerA + 1;
+      const outerA = 1 + (segs + 1) + i, outerB = outerA + 1;
+      idx.push(0, innerB, innerA, innerA, innerB, outerA, innerB, outerB, outerA);
+    }
+    const rugGeo = new THREE.BufferGeometry();
+    rugGeo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    rugGeo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+    rugGeo.setIndex(idx);
+    rugGeo.computeVertexNormals();
+    const rug = mesh(furnishings, 'braided oval rag rug', rugGeo, braidedRugMaterial(), .15, .004, -.75);
+    rug.castShadow = false;
+    rug.receiveShadow = true;
+  }
 
   const table = new THREE.Group();
   table.name = 'rounded low checkers table';
@@ -195,7 +296,26 @@ export function buildLivingShapes(materials: Record<string, THREE.MeshStandardMa
   furnishings.add(table);
   block(table, 'softly rounded table edge', 0, .645, 0, 1.96, .14, 1.45, materials.wood, .065);
   block(table, 'inset upper table surface', 0, .714, 0, 1.87, .045, 1.36, materials.wood, .022);
-  block(table, 'square unmarked board mass', -.04, .760, 0, 1.265, .065, 1.265, materials.plaster, .018);
+  block(table, 'square unmarked board mass', -.04, .760, 0, 1.265, .065, 1.265, materials.wood, .018);
+  const inlay = mesh(table, 'inlaid wooden checkerboard', new THREE.PlaneGeometry(1.12, 1.12), checkerboardMaterial(), -.04, .793, 0);
+  inlay.rotation.x = -Math.PI / 2;
+  inlay.castShadow = false;
+  const checkerProfile = [[0, 0], [.042, 0], [.044, .006], [.044, .015], [.038, .020], [.026, .018], [.016, .020], [0, .018]].map(([r, y]) => new THREE.Vector2(r, y));
+  const checkerGeo = new THREE.LatheGeometry(checkerProfile, 24);
+  const darkCheckerMat = new THREE.MeshStandardMaterial({color: '#3f2616', roughness: .42});
+  darkCheckerMat.name = 'dark wooden checker'; darkCheckerMat.userData = {setOwned: true, vertexBatch: 'matte'};
+  const creamCheckerMat = new THREE.MeshStandardMaterial({color: '#e5cda0', roughness: .45});
+  creamCheckerMat.name = 'cream wooden checker'; creamCheckerMat.userData = {setOwned: true, vertexBatch: 'matte'};
+  const sqSize = 1.12 * (464 / 512) / 8;
+  const placements: [number, number, boolean][] = [
+    [1, 0, true], [5, 0, true], [2, 1, true], [4, 3, true],
+    [0, 7, false], [4, 7, false], [3, 6, false], [5, 4, false],
+  ];
+  for (const [col, row, isDark] of placements) {
+    const cx = -.04 + (col - 3.5) * sqSize, cz = (row - 3.5) * sqSize;
+    const disc = mesh(table, isDark ? 'dark wooden checker piece' : 'cream wooden checker piece', checkerGeo, isDark ? darkCheckerMat : creamCheckerMat, cx, .793, cz);
+    disc.castShadow = false;
+  }
   for (const x of [-.77, .77]) for (const z of [-.49, .49]) {
     const leg = rod(table, 'tapered table leg', new THREE.Vector3(x * 1.07, .03, z * 1.08), new THREE.Vector3(x, .60, z), .045, materials.wood, .065);
     leg.position.y -= new THREE.Box3().setFromObject(leg).min.y;
@@ -203,5 +323,5 @@ export function buildLivingShapes(materials: Record<string, THREE.MeshStandardMa
   for (const z of [-.51, .51]) block(table, 'long shallow table apron', 0, .535, z, 1.58, .13, .065, materials.wood, .012);
   for (const x of [-.79, .79]) block(table, 'short shallow table apron', x, .535, 0, .065, .13, 1.02, materials.wood, .012);
 
-  return {fireplace, furnishings, chair};
+  return {fireplace, furnishings, chair, flameMaterial, emberMaterial};
 }

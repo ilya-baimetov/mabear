@@ -1,7 +1,10 @@
-import { useEffect, useRef } from "react";
 import { ArrowUpRight, BookOpen, ChefHat, Fish, House, Moon, Sprout, X } from "lucide-react";
-import type { FixtureEpisode } from "../../shared/schema";
-import { useStore, useStrings } from "../useStore";
+import type { ActorId, FixtureEpisode } from "../../shared/schema";
+import { getFixture } from "../../director/fixtures";
+import { sceneCount, STRINGS } from "../i18n";
+import { shallowEqual, useStoreSelector } from "../useStore";
+import { PORTRAITS } from "./castPortraits";
+import { ModalDialog } from "./ModalDialog";
 
 export const STORY_STARTERS = [
   { id: "garden_party", Icon: Sprout, mood: { en: "A little garden mischief", ru: "Приключения в огороде" }, description: { en: "Unexpected guests, a missing carrot, and a dance for everyone.", ru: "Нежданные гости, пропавшая морковка и танцы для всех." } },
@@ -12,24 +15,73 @@ export const STORY_STARTERS = [
 ] as const;
 
 export function StoryLibrary({ open, onClose, onChoose }: { open: boolean; onClose: () => void; onChoose: (id: FixtureEpisode["id"]) => void }) {
-  const dialog = useRef<HTMLDialogElement>(null);
-  const s = useStore(), t = useStrings();
-  useEffect(() => {
-    if (open && !dialog.current?.open) dialog.current?.showModal();
-    if (!open && dialog.current?.open) dialog.current?.close();
-  }, [open]);
-  return <dialog ref={dialog} className="story-library" aria-labelledby="library-title" onCancel={onClose} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-    <div className="library-content">
+  const s = useStoreSelector((st) => ({ lang: st.lang, fixtureId: st.fixtureId }), shallowEqual);
+  const t = STRINGS[s.lang];
+
+  return (
+    <ModalDialog
+      open={open}
+      onClose={onClose}
+      className="story-library"
+      surfaceClassName="library-content"
+      ariaLabelledBy="library-title"
+    >
       <header className="library-heading">
-        <div><span className="eyebrow"><BookOpen size={14}/>{t.examples}</span><h2 id="library-title">{s.lang === "en" ? "Every adventure starts somewhere." : "У каждого приключения есть начало."}</h2><p>{s.lang === "en" ? "Pick a story, make it yours, and see what happens." : "Выбери историю, добавь своё — и посмотри, что получится."}</p></div>
-        <button className="btn icon" aria-label={s.lang === "en" ? "Close examples" : "Закрыть примеры"} onClick={onClose}><X size={21}/></button>
+        <div>
+          <span className="eyebrow"><BookOpen size={14} aria-hidden="true"/>{t.examples}</span>
+          <h2 id="library-title">{s.lang === "en" ? "Every adventure starts somewhere." : "У каждого приключения есть начало."}</h2>
+          <p>{s.lang === "en" ? "Pick a story, make it yours, and see what happens." : "Выбери историю, добавь своё — и посмотри, что получится."}</p>
+        </div>
+        <button type="button" className="btn icon" aria-label={s.lang === "en" ? "Close examples" : "Закрыть примеры"} onClick={onClose}>
+          <X size={21} aria-hidden="true"/>
+        </button>
       </header>
-      <div className="library-grid">{STORY_STARTERS.map(({ id, Icon, mood, description }, i) => <button key={id} className={`library-card starter-${id}`} data-testid={`example-${id}`} onClick={() => {
-        onChoose(id);
-      }}>
-        <div className="library-art"><Icon size={62} strokeWidth={1.15}/><span className="library-number">0{i + 1}</span></div>
-        <div className="library-card-copy"><span>{mood[s.lang]}</span><h3>{t.fixtures[id]}</h3><p>{description[s.lang]}</p><span className="library-open">{s.lang === "en" ? "Open story" : "Открыть историю"}<ArrowUpRight size={16}/></span></div>
-      </button>)}</div>
-    </div>
-  </dialog>;
+      <div className="library-grid">
+        {STORY_STARTERS.map(({ id, Icon, mood, description }, i) => {
+          const fx = getFixture(id, s.lang) ?? getFixture(id, "en");
+          const actors: ActorId[] = fx
+            ? [...new Set(fx.paragraphs.flatMap(p => p.beatScript.beats.map(b => b.actor)))]
+            : [];
+          return (
+            <button
+              type="button"
+              key={id}
+              className={`library-card starter-${id}`}
+              data-testid={`example-${id}`}
+              onClick={() => onChoose(id)}
+            >
+              <div className="library-art">
+                <Icon size={62} strokeWidth={1.15} aria-hidden="true"/>
+                <span className="library-number">0{i + 1}</span>
+              </div>
+              <div className="library-card-copy">
+                <span>{mood[s.lang]}</span>
+                <h3>{t.fixtures[id]}</h3>
+                <p>{description[s.lang]}</p>
+                <div className="library-card-meta">
+                  {fx && <span className="library-scenes-pill">{sceneCount(fx.paragraphs.length, s.lang)}</span>}
+                  {actors.length > 0 && (
+                    <div className="library-cast" aria-hidden="true">
+                      {actors.map(actorId => (
+                        <img key={actorId} src={PORTRAITS[actorId]} alt="" aria-hidden="true" />
+                      ))}
+                    </div>
+                  )}
+                  {s.fixtureId === id && (
+                    <span className="library-current-pill" style={{ position: "static" }}>
+                      {s.lang === "en" ? "Open now" : "Открыта"}
+                    </span>
+                  )}
+                </div>
+                <span className="library-open">
+                  {s.lang === "en" ? "Open story" : "Открыть историю"}
+                  <ArrowUpRight size={16} aria-hidden="true"/>
+                </span>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </ModalDialog>
+  );
 }

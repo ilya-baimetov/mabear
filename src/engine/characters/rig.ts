@@ -8,8 +8,10 @@
 // The engine never imports React. This module never creates a renderer (builds fine in node).
 import * as THREE from "three";
 import { mergeGeometries, mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
-import type { ActorFrame, CharacterRig } from "../api";
-import type { FaceRig } from "./face";
+import type { ActorFrame, CharacterRig, FaceRig, SkinPart, Weights } from "../api";
+export type { SkinPart, Weights };
+import { smoothstep } from "../../shared/math";
+export { smoothstep };
 
 export const MIXAMO_BONES = [
   "Hips", "Spine", "Spine1", "Spine2", "Neck", "Head",
@@ -109,11 +111,6 @@ export function buildSkeleton(p: SkeletonProportions): BuiltSkeleton {
 /** sRGB hex → linear THREE.Color (respects ColorManagement). */
 export function col(hex: string): THREE.Color {
   return new THREE.Color(hex);
-}
-
-export function smoothstep(e0: number, e1: number, x: number): number {
-  const t = Math.min(1, Math.max(0, (x - e0) / (e1 - e0)));
-  return t * t * (3 - 2 * t);
 }
 
 /** Write per-vertex colours from a function of the (geometry-local) vertex position. */
@@ -486,16 +483,20 @@ float furNoise(vec3 x) {
         "#include <color_fragment>",
         `#include <color_fragment>
 vec3 furP = vFurPos * furFreq * vec3(1.0, furStretch, 1.0);
-float furH = furNoise(furP) * 0.65 + furNoise(furP * 2.3 + 7.1) * 0.35;
+vec3 furClumpP = furP * 0.28 + vec3(3.7, 1.9, 5.3);
+float furFineH = furNoise(furP) * 0.65 + furNoise(furP * 2.3 + 7.1) * 0.35;
+float furClumpH = furNoise(furClumpP);
 float furFoot = length(fwidth(furP));
 float furFade = 1.0 - smoothstep(0.35, 0.9, furFoot);
-diffuseColor.rgb *= 1.0 + furValue * furFade * (furH - 0.5) * 2.0;`,
+float furClumpFade = 1.0 - smoothstep(0.45, 1.45, length(fwidth(furClumpP)));
+float furColorMod = (furFineH - 0.5) * furFade * 0.68 + (furClumpH - 0.5) * furClumpFade * 0.45;
+diffuseColor.rgb *= 1.0 + furValue * furColorMod * 2.0;`,
       )
       .replace(
         "#include <normal_fragment_maps>",
         `#include <normal_fragment_maps>
 {
-  vec2 dH = vec2(dFdx(furH), dFdy(furH)) * furBump * furFade;
+  vec2 dH = (vec2(dFdx(furFineH), dFdy(furFineH)) * furFade * 0.72 + vec2(dFdx(furClumpH), dFdy(furClumpH)) * furClumpFade * 0.52) * furBump;
   vec3 sX = dFdx(-vViewPosition);
   vec3 sY = dFdy(-vViewPosition);
   vec3 r1 = cross(sY, normal);
@@ -514,7 +515,7 @@ diffuseColor.rgb *= 1.0 + furValue * furFade * (furH - 0.5) * 2.0;`,
 }`,
       );
   };
-  m.customProgramCacheKey = () => "mabear-fur-v2";
+  m.customProgramCacheKey = () => "mabear-fur-v3";
   return m;
 }
 
@@ -579,18 +580,7 @@ export function plushSurface(g: THREE.BufferGeometry, count: number, length: num
 // elbows, knees and the waist bend without seams or creases. Result: a handful of draw calls per character.
 // ---------------------------------------------------------------------------------------------
 
-export type Weights = Array<[THREE.Object3D, number]>;
-
-export interface SkinPart {
-  /** geometry in `bone`-local space (rest pose) */
-  geom: THREE.BufferGeometry;
-  bone: THREE.Object3D;
-  material: THREE.Material;
-  /** casts shadows (default true); parts with different flags land in different meshes */
-  shadow?: boolean;
-  /** smooth weights from the REST position in character space (default: rigid on `bone`) */
-  weights?: (p: THREE.Vector3, n: THREE.Vector3) => Weights;
-}
+// SkinPart / Weights are declared in ../api to keep rig and face acyclic.
 
 /** Keep the 4 largest influences and normalise them. */
 export function normWeights(w: Weights): Weights {
@@ -599,15 +589,6 @@ export function normWeights(w: Weights): Weights {
   const top = [...merged.entries()].sort((a, b) => b[1] - a[1]).slice(0, 4);
   const sum = top.reduce((s, [, v]) => s + v, 0) || 1;
   return top.map(([b, v]) => [b, v / sum]);
-}
-
-/** Weights that blend from bone `a` to bone `b` as `x` goes from `x0` to `x1` (smoothstep). */
-export function blend2(a: THREE.Object3D, b: THREE.Object3D, x: number, x0: number, x1: number): Weights {
-  const t = smoothstep(x0, x1, x);
-  return [
-    [a, 1 - t],
-    [b, t],
-  ];
 }
 
 export interface SkinnedBody {
@@ -841,6 +822,7 @@ const IDENTITY_Q = new THREE.Quaternion();
 
 /** Deterministic oscillator phase from the frame itself (rendering must not depend on wall-clock). */
 export function secondaryPhase(frame: ActorFrame): number {
+  if (frame.spring) return frame.spring.time * 2.2;
   const [x, , z] = frame.pos;
   return (x * 1.9 + z * 2.3) * Math.PI + frame.hipsOffset[1] * 40 + frame.secondary.breathe * Math.PI * 2;
 }

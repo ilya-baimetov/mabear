@@ -1,10 +1,10 @@
+import { smooth } from './math';
+
 /** One clap cadence for the rendered contact and its sound. Seconds are clip-local. */
 export const CLAP_PERIOD = .6;
 export const CLAP_CONTACT = .3;
 export const CLAP_HOLD_START = .27;
 export const CLAP_HOLD_END = .33;
-
-function smooth(x:number):number { x=Math.max(0,Math.min(1,x));return x*x*(3-2*x); }
 
 export function clapOpen(time:number):number {
  const cycle=((time%CLAP_PERIOD)+CLAP_PERIOD)%CLAP_PERIOD;

@@ -1,7 +1,9 @@
 // Pose math and blending (spec §7.4): quaternion helpers, 0.2 s crossfades, additive layers
 // (breathing, look-at). Pure functions over plain arrays — no Three.js, no React.
 import type { Quat } from "../api";
+import { clamp, clamp01, easeInOut, lerp, lerp3, lerpAngle, smooth, window01 } from "../../shared/math";
 import type { Emotion, Vec3, Viseme } from "../../shared/schema";
+export { clamp, clamp01, easeInOut, lerp, lerp3, lerpAngle, smooth, window01 };
 
 export type Pose = Record<string, Quat>;
 
@@ -133,42 +135,9 @@ export function qscale(q: Quat, t: number): Quat {
   return qslerp(IDENTITY, q, t);
 }
 
-export function round4(q: Quat): Quat {
-  const r = (n: number) => Math.round(n * 1e5) / 1e5;
-  return [r(q[0]), r(q[1]), r(q[2]), r(q[3])];
-}
-
-// ---------- scalar helpers ----------
-
-export const clamp01 = (x: number) => (x < 0 ? 0 : x > 1 ? 1 : x);
-export const clamp = (x: number, lo: number, hi: number) => (x < lo ? lo : x > hi ? hi : x);
-export const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
-export const smooth = (t: number) => {
-  const x = clamp01(t);
-  return x * x * (3 - 2 * x);
-};
-export const easeInOut = (t: number) => {
-  const x = clamp01(t);
-  return x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2;
-};
-/** 0 → 1 → 0 bell over [a, b] with smooth ramps of width r. */
-export function window01(t: number, a: number, b: number, r: number): number {
-  if (t <= a || t >= b) return 0;
-  return Math.min(smooth((t - a) / r), smooth((b - t) / r));
-}
-/** Interpolate angles along the shortest arc (a spin's 2π end blends to 0 without unwinding). */
-export function lerpAngle(a: number, b: number, t: number): number {
-  return a + Math.atan2(Math.sin(b - a), Math.cos(b - a)) * t;
-}
-export function lerp3(a: Vec3, b: Vec3, t: number): Vec3 {
-  return [lerp(a[0], b[0], t), lerp(a[1], b[1], t), lerp(a[2], b[2], t)];
-}
+// ---------- scalar helpers re-exported from ../../shared/math ----------
 
 // ---------- layer operations ----------
-
-export function emptyLayer(): PoseLayer {
-  return { bones: {}, hipsOffset: [0, 0, 0] };
-}
 
 /** Crossfade two full layers (slerp per bone; missing bones are identity). */
 export function blendLayers(a: PoseLayer, b: PoseLayer, t: number): PoseLayer {
@@ -246,4 +215,47 @@ export function applyLookAt(base: PoseLayer, look: Pose): PoseLayer {
   const bones: Pose = { ...base.bones };
   for (const n of Object.keys(look)) bones[n] = qmul(look[n], bones[n] ?? IDENTITY);
   return { ...base, bones };
+}
+
+// ---------- causal 2nd-order spring-damper convolution (stateless, seek-invariant) ----------
+
+export const SPRING_WINDOW_S = 0.8;
+export const SPRING_TAPS = 16;
+
+const kernelMemo = new Map<string, Float64Array>();
+
+/**
+ * Normalized 16-tap causal 2nd-order spring-damper impulse response over [t - 0.8s, t]
+ * at midpoint offsets τ_k = (k + 0.5) * (0.8 / 16):
+ * h(τ) = (ω_n / √(1 - ζ²)) * exp(-ζ ω_n τ) * sin(ω_d τ), normalized to unit DC gain.
+ */
+export function springKernel(freq: number, damping: number): Float64Array {
+  const key = `${freq.toFixed(3)}|${damping.toFixed(3)}`;
+  const cached = kernelMemo.get(key);
+  if (cached) return cached;
+  const dt = SPRING_WINDOW_S / SPRING_TAPS;
+  const wn = Math.max(0.5, freq) * Math.PI * 2;
+  const zeta = clamp(damping, 0.05, 0.95);
+  const root = Math.sqrt(1 - zeta * zeta);
+  const wd = wn * root;
+  const weights = new Float64Array(SPRING_TAPS);
+  let integral = 0;
+  for (let k = 0; k < SPRING_TAPS; k++) {
+    const tau = (k + 0.5) * dt;
+    const h = (wn / root) * Math.exp(-zeta * wn * tau) * Math.sin(wd * tau);
+    weights[k] = h;
+    integral += h * dt;
+  }
+  const scale = integral > 1e-6 ? dt / integral : 1 / SPRING_TAPS;
+  for (let k = 0; k < SPRING_TAPS; k++) weights[k] *= scale;
+  kernelMemo.set(key, weights);
+  return weights;
+}
+
+/** Convolve `samples[0..N-1]` (ordered newest-to-oldest at τ_k) with `kernel`, clamping to [-limit, limit]. */
+export function convolveSpring(samples: ArrayLike<number>, kernel: Float64Array, gain = 1, limit = 1): number {
+  let acc = 0;
+  const n = Math.min(samples.length, kernel.length);
+  for (let k = 0; k < n; k++) acc += samples[k] * kernel[k];
+  return clamp(acc * gain, -limit, limit);
 }

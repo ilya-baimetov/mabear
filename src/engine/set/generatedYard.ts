@@ -10,6 +10,10 @@ export async function loadGeneratedYard(anchors:Record<SetElementId,THREE.Group>
     const model=normalizeStatic(loaded.scene,1);model.updateMatrixWorld(true);
     const parts:THREE.Mesh[]=[];model.traverse(o=>{if((o as THREE.Mesh).isMesh)parts.push(o as THREE.Mesh)});
     if(isDisposed()){for(const part of parts){part.geometry.dispose();for(const m of Array.isArray(part.material)?part.material:[part.material]){for(const v of Object.values(m))if(v instanceof THREE.Texture)v.dispose();m.dispose();}}return;}
+    if(id==='carrot'){
+      const fallback=parent.getObjectByName('set:garden:procedural_carrots');
+      if(fallback){parent.remove(fallback);fallback.traverse(o=>(o as THREE.Mesh).geometry?.dispose());}
+    }
     for(const part of parts){
       const geometry=part.geometry.clone().applyMatrix4(part.matrixWorld);part.geometry.dispose();
       const mesh=new THREE.InstancedMesh(geometry,part.material,spots.length);mesh.name=`generated:${id}`;

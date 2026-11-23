@@ -6,7 +6,7 @@ import { MARKS } from "../shared/bible/set";
 import { GRAMMAR, VERB_IMPLIED_PROP, isWolf } from "../shared/grammar";
 import { CANON_ABSENT_COMPOUNDS, RULES, canonAbsentFor, canonAbsentMessage, isCanonAbsentCompound, preFilter } from "../shared/rules";
 import {
-  ACTOR_IDS, AMBIENCES, EMOTES, EMOTIONS, MARK_IDS, MAX_BEATS, MAX_DELAY_S, MAX_LINE_CHARS, MAX_SUMMARY_CHARS,
+  ACTOR_IDS, AMBIENCES, EMOTIONS, MARK_IDS, MAX_BEATS, MAX_DELAY_S, MAX_LINE_CHARS, MAX_SUMMARY_CHARS,
   MOODS, MUSIC_MOODS, PROP_IDS, SFX_IDS, SHOTS, TIMES_OF_DAY, VERBS,
   type ActorId, type Ambience, type Beat, type BeatScript, type Emote, type Lang, type MarkId, type PropId,
   type RuleHit, type WorldState,
@@ -356,7 +356,4 @@ export function validateBeatScript(bs: BeatScript, startState: WorldState, lang:
   };
 }
 
-/** Marks used as hiding spots (for parser and compiler). */
-export const HIDING_MARKS: MarkId[] = ["big_tree", "bush", "van", "woodpile"];
-export const EMOTE_IDS = EMOTES;
 export { MARKS };

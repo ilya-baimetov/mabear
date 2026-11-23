@@ -100,8 +100,13 @@ function tick(): void {
   if (s.playing) return;
   const t = holdAt ?? 0;
   if (s.timeline.duration > t + 0.001) { start(t); return; }
-  if (!store.hasPending()) endSession();
-  else store.setWaiting(true);
+  if (!store.hasPending()) {
+    if (s.loop && s.timeline.duration > 0 && t >= s.timeline.duration - 0.02) {
+      start(0);
+      return;
+    }
+    endSession();
+  } else store.setWaiting(true);
 }
 function begin(next: Session, uptoIndex: number, prepare = true, from = 0): void {
   endSession();
@@ -197,11 +202,27 @@ export const playback = {
     start(range.start, range.end);
   },
   canReact(): boolean { return session === null && !store.getState().waiting; },
+  retryVoice() {
+    store.dismissVoiceError();
+    this.play();
+  },
   onPlayerStopped(t: number) {
     remember(t);
-    if (session?.kind !== "all") return;
-    holdAt = t;
-    queueMicrotask(tick);
+    const s = store.getState();
+    if (session?.kind === "all") {
+      holdAt = t;
+      queueMicrotask(tick);
+      return;
+    }
+    const range = playbackRange(s);
+    if (s.loop && range.end > range.start && t >= range.end - 0.02 && !store.hasPending()) {
+      queueMicrotask(() => {
+        const cur = store.getState();
+        if (!cur.loop || cur.playing || cur.waiting || cur.episodeId !== s.episodeId) return;
+        const r = playbackRange(cur);
+        if (r.end > r.start) start(r.start, r.scope.kind === "story" ? undefined : r.end);
+      });
+    }
   },
   pause() {
     const s = store.getState();

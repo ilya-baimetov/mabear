@@ -32,30 +32,51 @@ export function makeMusicLoop(ctx: BaseAudioContext, decoded: AudioBuffer): Audi
 export class RecordedMusicBank {
   private buffers = new Map<MusicMood, AudioBuffer>();
   private pending = new Map<MusicMood, Promise<void>>();
+  private controller = new AbortController();
+  private disposed = false;
   constructor(private context: () => BaseAudioContext | null, private request: typeof fetch = (...args) => fetch(...args)) {}
   get(mood: MusicMood): AudioBuffer | undefined { return this.buffers.get(mood); }
 
   async prepare(timeline: Timeline, from = 0, to = timeline.duration): Promise<void> {
+    if (this.disposed || this.controller.signal.aborted) return;
     const ctx = this.context();
     if (!ctx) return;
     const flat = flattenTimeline(timeline);
     const moods = new Set(planMusicSections(flat.music, flat.duration)
       .filter(section => section.mood !== "none" && section.end > from && section.start < to).map(section => section.mood));
     await Promise.all([...moods].map(mood => {
-      if (this.buffers.has(mood)) return Promise.resolve();
+      if (this.disposed || this.buffers.has(mood)) return Promise.resolve();
       const pending = this.pending.get(mood);
       if (pending) return pending;
-      const abort = new AbortController(), timer = setTimeout(() => abort.abort(), 10_000);
+      const abort = new AbortController();
+      const onDisposeAbort = () => abort.abort(this.controller.signal.reason);
+      if (this.controller.signal.aborted) abort.abort(this.controller.signal.reason);
+      else this.controller.signal.addEventListener("abort", onDisposeAbort, { once: true });
+      const timer = setTimeout(() => abort.abort(), 10_000);
       const loading = Promise.resolve().then(async () => {
+        if (this.disposed || abort.signal.aborted) return;
         const response = await this.request(`/assets/music/${mood}-v1.mp3`, { signal: abort.signal });
         if (!response.ok) throw new Error(`Music HTTP ${response.status}`);
         const decoded = await ctx.decodeAudioData(await response.arrayBuffer());
+        if (this.disposed || abort.signal.aborted) return;
         this.buffers.set(mood, makeMusicLoop(ctx, decoded));
       }).catch(() => { /* Optional score: failure remains silent and can be retried. */ })
-        .finally(() => { clearTimeout(timer); this.pending.delete(mood); });
+        .finally(() => {
+          clearTimeout(timer);
+          this.controller.signal.removeEventListener("abort", onDisposeAbort);
+          this.pending.delete(mood);
+        });
       this.pending.set(mood, loading);
       return loading;
     }));
+  }
+
+  dispose(): void {
+    if (this.disposed) return;
+    this.disposed = true;
+    this.controller.abort();
+    this.buffers.clear();
+    this.pending.clear();
   }
 }
 

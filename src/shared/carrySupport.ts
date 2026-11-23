@@ -1,11 +1,12 @@
+import {easeInOut,smooth} from './math';
 import type {Vec3} from './schema';
 type Q=[number,number,number,number];
 export const CARRY_LIFT_ARC=1.15;
-export const carryLiftProgress=(time:number,duration:number)=>{const v=Math.max(0,Math.min(1,(time/duration-.3)/.3));return v<.5?2*v*v:1-(-2*v+2)**2/2;};
+export const carryLiftProgress=(time:number,duration:number)=>easeInOut((time/duration-.3)/.3);
 export function carryLiftRootHeight(k:number,seat:number){return seat*k+Math.sin(k*Math.PI)*CARRY_LIFT_ARC;}
 /** Framing estimate from the same lift path; includes the shipped head mesh. */
 export function carryLiftHeadHeight(time:number,duration:number){
- const u=time/duration,k=carryLiftProgress(time,duration),smooth=(v:number)=>{v=Math.max(0,Math.min(1,v));return v*v*(3-2*v);};
+ const u=time/duration,k=carryLiftProgress(time,duration);
  const nape=1.30+.70*smooth((u-.4)/.15),raw=carryLiftRootHeight(k,nape)+.75*(1-k)+.32*k,fit=smooth((k-.8)/.2);
  return raw*(1-fit)+2.32*fit;
 }

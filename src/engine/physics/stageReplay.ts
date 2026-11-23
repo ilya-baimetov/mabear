@@ -1,30 +1,35 @@
-import type {StageHandleEx} from '../stage';
-import {ResponsiveReplay} from './responsiveReplay';
-import {walkHeightAt} from '../set/bearsYard';
-import type {FrameState,Quat} from '../api';
-import type {Vec3} from '../../shared/schema';
+import type { Quat, FrameState } from '../api';
+import type { StageHandleEx } from '../stage';
+import { liftActorFrame } from '../stage/stageContacts';
+import { walkHeightAt } from '../../shared/yardLayout';
+import type { ActorId, PropId, Vec3 } from '../../shared/schema';
+import { createRapierReplay, type PropTransform } from './rapierReplay';
 
-/** Sample the same rig/socket/prop transform used by the stage. Only one pose
- * application per release; no GPU render, wall clock or per-frame feedback. */
-function stageBallSampler(stage:StageHandleEx){
-  return (frame:FrameState)=>{
-    const a=frame.actors.masha,rig=stage.rigs.masha;
-    rig.apply(a);
-    if(!a.physicsRoot)rig.root.position.y+=walkHeightAt(a.pos[0],a.pos[2]);
+/**
+ * Sample the exact rig/socket/prop transform used by the stage for any actor and prop.
+ * Only one pose application per release; no GPU render, wall clock, or per-frame feedback.
+ */
+export function createStageReplay(stage: StageHandleEx) {
+  const sampleProp = (frame: FrameState, actor: ActorId, prop: PropId): PropTransform => {
+    const a = frame.actors[actor];
+    const rig = stage.rigs[actor];
+    const lift = a.physicsRoot ? 0 : walkHeightAt(a.pos[0], a.pos[2]);
+    rig.apply(liftActorFrame(a, lift));
+    if (lift !== 0) rig.root.position.y += lift;
     rig.root.updateMatrixWorld(true);
-    stage.props.apply(frame.props,{masha:rig.handSocket},{masha:a.yaw},frame.actors);
-    const ball=stage.props.objects.ball;
-    return {pos:ball.position.toArray() as Vec3,rotation:ball.quaternion.toArray() as Quat};
+    const cur = frame.props[prop];
+    const props =
+      cur?.attachedTo === actor && cur.visible
+        ? frame.props
+        : { ...frame.props, [prop]: { visible: true, attachedTo: actor, pos: a.pos } };
+    stage.props.apply(props, { [actor]: rig.handSocket }, { [actor]: a.yaw }, frame.actors);
+    const obj = stage.props.objects[prop];
+    return { pos: obj.position.toArray() as Vec3, rotation: obj.quaternion.toArray() as Quat };
   };
-}
 
-/** Synchronous diagnostic evaluator. Production playback uses the worker below. */
-export async function createStageReplay(stage:StageHandleEx){
-  const {createRapierReplay}=await import('./rapierReplay');
-  return createRapierReplay({background:true,sampleBall:stageBallSampler(stage)});
-}
-
-export function createResponsiveStageReplay(stage:StageHandleEx){
-  return new ResponsiveReplay({sampleBall:stageBallSampler(stage),
-    createWorker:()=>new Worker(new URL('./replayWorker.ts',import.meta.url),{type:'module'})});
+  return createRapierReplay({
+    background: true,
+    sampleProp,
+    sampleBall: (frame) => sampleProp(frame, 'masha', 'ball'),
+  });
 }

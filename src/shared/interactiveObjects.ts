@@ -1,3 +1,4 @@
+import {clamp01,smooth} from './math';
 import type {Vec2, Vec3, Segment} from './schema';
 import {houseWorld,HOUSE_KITCHEN_OFFSET} from './houseLayout';
 
@@ -38,7 +39,6 @@ export function entryPoint(depth:number):Vec2 {
 export const INTERIOR_THRESHOLD=entryPoint(.18);
 export const INTERIOR_APPROACH=entryPoint(2.1);
 export function entranceSupportAt(x:number,z:number):number {
-  const smooth=(a:number)=>{const k=Math.max(0,Math.min(1,a));return k*k*(3-2*k);};
   if(Math.abs(x-HOUSE_DOOR.exterior.center[0])<1.15&&z<-4.05&&z>-5.8)return .24*(smooth((-4.05-z)/.35)+smooth((-4.55-z)/.32));
   const d=HOUSE_DOOR.interior,dx=x-d.center[0],dz=z-d.center[1];
   const lateral=Math.cos(d.yaw)*dx-Math.sin(d.yaw)*dz,depth=Math.sin(d.yaw)*dx+Math.cos(d.yaw)*dz;
@@ -49,9 +49,22 @@ export function objectOpenAt(segment:Segment,t:number,id:'house_door'|'kitchen_c
   let value=segment.startState.objects?.[id]??0;
   for(const cue of segment.objectCues??[]){
     if(cue.object!==id||t<cue.start)continue;
-    const u=Math.max(0,Math.min(1,(t-cue.start)/cue.dur)),k=u*u*(3-2*u);
+    const k=smooth((t-cue.start)/cue.dur);
     value=cue.from+(cue.to-cue.from)*k;
   }
   return value;
 }
 export const doorOpenAt=(segment:Segment,t:number)=>objectOpenAt(segment,t,'house_door');
+/** Exact world-space position of the accessible (+Z local) drop-ring handle on `buildHouseDoor(inside)`. */
+export function doorHandleAt(open:number,inside:boolean):Vec3 {
+  const d=inside?HOUSE_DOOR.interior:HOUSE_DOOR.exterior;
+  const a=(inside?-1:1)*clamp01(open)*Math.PI*.53;
+  const hx=d.width-.18,hy=1.155,hz=.088;
+  const rx=-d.width/2+hx*Math.cos(a)+hz*Math.sin(a);
+  const rz=-hx*Math.sin(a)+hz*Math.cos(a);
+  return [
+    d.center[0]+rx*Math.cos(d.yaw)+rz*Math.sin(d.yaw),
+    d.base+hy,
+    d.center[1]-rx*Math.sin(d.yaw)+rz*Math.cos(d.yaw),
+  ];
+}

@@ -1,7 +1,7 @@
 // A separate, private visual edition. The existing Worker retains ownership of
 // authentication. This edition has its own director key and expanded character bible.
 import { handleDirect } from "./direct";
-import { directLimiter, rateLimitResponse } from "./rateLimit";
+import { directLimiter, rateLimitResponse, speechLimiter } from "./rateLimit";
 import { getSessionCookie } from './auth';
 import {handleSpeech,type SpeechEnv} from './speech';
 export {MashaSpeech} from './speech';
@@ -34,20 +34,21 @@ export default {
     try {
       if (url.pathname === '/login') {
         const res = secured(await env.STORY_SERVICE.fetch(request));
+        const secureAttr = url.protocol === 'https:' ? '; Secure' : '';
         // The shared login always returns to /. Remember this edition's audition
         // destination without modifying the original service or accepting arbitrary URLs.
         if (request.method === 'GET' && url.searchParams.get('next') === 'voice') {
-          res.headers.append('Set-Cookie', 'mb_audition_return=1; Path=/; Max-Age=600; HttpOnly; Secure; SameSite=Lax');
+          res.headers.append('Set-Cookie', `mb_audition_return=1; Path=/; Max-Age=600; HttpOnly${secureAttr}; SameSite=Lax`);
         }
         if (request.method === 'POST' && res.status === 303 && res.headers.get('Location') === '/' && /(?:^|;\s*)mb_audition_return=1(?:;|$)/.test(request.headers.get('cookie') ?? '')) {
           res.headers.set('Location', '/voice/');
-          res.headers.append('Set-Cookie', 'mb_audition_return=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax');
+          res.headers.append('Set-Cookie', `mb_audition_return=; Path=/; Max-Age=0; HttpOnly${secureAttr}; SameSite=Lax`);
         }
         return res;
       }
       // Forward the original host and cookie: the shared service issues a host-only
       // cookie for THIS edition. Its existing auth and rate limits still apply.
-      if ((url.pathname.startsWith("/api/") && url.pathname !== "/api/direct" && !url.pathname.startsWith('/api/speech')) || url.pathname === "/login" || url.pathname === "/logout") {
+      if ((url.pathname.startsWith("/api/") && url.pathname !== "/api/direct" && !url.pathname.startsWith('/api/speech')) || url.pathname === "/logout") {
         return secured(await env.STORY_SERVICE.fetch(request));
       }
       // An authenticated HEAD on the original protected app is an authorization
@@ -62,10 +63,14 @@ export default {
         }
         return secured(new Response("The story playground is resting. Please try again shortly.", { status: 503 }));
       }
-      if(url.pathname==='/api/speech'||url.pathname.startsWith('/api/speech/')){
-        const origin=request.headers.get('origin');
-        if(origin&&origin!==url.origin)return secured(Response.json({error:'origin_not_allowed'},{status:403}));
-        return secured(await handleSpeech(request,env));
+      if (url.pathname === '/api/speech' || url.pathname.startsWith('/api/speech/')) {
+        const origin = request.headers.get('origin');
+        if (origin && origin !== url.origin) return secured(Response.json({ error: 'origin_not_allowed' }, { status: 403 }));
+        if (request.method === 'POST' && url.pathname === '/api/speech') {
+          const decision = speechLimiter.check(getSessionCookie(request) ?? request.headers.get("cf-connecting-ip") ?? "anonymous");
+          if (!decision.ok) return secured(rateLimitResponse(decision));
+        }
+        return secured(await handleSpeech(request, env));
       }
       if (url.pathname === "/api/direct") {
         if (request.method !== "POST") return secured(Response.json({ error: "method_not_allowed" }, { status: 405, headers: { allow: "POST" } }));
@@ -77,6 +82,7 @@ export default {
       }
       return secured(await env.ASSETS.fetch(request));
     } catch {
+      if (url.pathname.startsWith("/api/")) return secured(Response.json({ error: "service_unavailable" }, { status: 503 }));
       return secured(new Response("The story playground is resting. Please try again shortly.", { status: 503 }));
     }
   },

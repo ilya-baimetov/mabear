@@ -1,4 +1,5 @@
 import {CHARACTER_REACH} from './characterReach';
+import {clamp01,smooth} from './math';
 import type {ActorId,Vec2} from './schema';
 
 /** Conservative torso clearance based on the normalized shipped rigs. */
@@ -18,7 +19,7 @@ export function hammockTiming(mount:boolean,duration:number){
 /** Ballistic horizontal motion is constant-speed while unsupported. */
 export function hammockTravelProgress(mount:boolean,progress:number,duration:number):number{
  const {launch,land}=hammockTiming(mount,duration);
- return Math.max(0,Math.min(1,(progress*duration-launch)/(land-launch)));
+ return clamp01((progress*duration-launch)/(land-launch));
 }
 export function hammockWorld(point:Vec2):Vec2 {
  const c=Math.cos(HAMMOCK_SUPPORT.yaw),s=Math.sin(HAMMOCK_SUPPORT.yaw);
@@ -45,9 +46,9 @@ export function hammockExitPoint(from:Vec2,actor:ActorId,side:1|-1):Vec2 {
  * cushion. An adult can lower onto it without a hop. Shared by pose, root and
  * camera so neither the body nor the framing gets ahead of the mount. */
 export function armchairMountMotion(child:boolean,progress:number){
- const clamp=(v:number)=>Math.max(0,Math.min(1,v)),smooth=(v:number)=>{const k=clamp(v);return k*k*(3-2*k);},u=clamp(progress);
+ const u=clamp01(progress);
  if(!child)return{travel:smooth((u-.16)/.64),pose:smooth(u/.8),lift:0,crouch:0,ground:1-smooth(u/.8)};
- const flight=clamp((u-.18)/.54);
+ const flight=clamp01((u-.18)/.54);
  return{travel:smooth((u-.30)/.42),pose:smooth((u-.12)/.50),lift:.25*4*flight*(1-flight),crouch:u<.18?Math.sin(u/.18*Math.PI):0,ground:1-smooth(u/.18)};
 }
 
