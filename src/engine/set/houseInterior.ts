@@ -19,9 +19,6 @@ import {
   windowLandscape,
 } from './interiorDecor';
 
-/** Lower and upper surfaces meet at a single edge rather than overlapping. */
-export const HOUSE_WALL_BANDS = {panelTop: 1.16, upperBottom: 1.16, upperTop: 3.84} as const;
-
 const DAY_CEILING_LIGHT = new THREE.Color(0xffe5bc);
 const NIGHT_CEILING_LIGHT = new THREE.Color(0xffcc82);
 const DAY_READING_LIGHT = new THREE.Color(0xffce8b);
@@ -165,31 +162,25 @@ export function buildHouseInterior(_materials: LookMaterials): THREE.Group {
   paper.name = 'muted green wall';
   paper.userData.setOwned = true;
 
-  const kitchenWin = windowLandscape();
+  const win = windowLandscape();
   let glass: THREE.MeshStandardMaterial;
-  if (kitchenWin) {
-    glass = kitchenWin.material;
-    readyPromises.push(kitchenWin.ready);
+  let doorLandscape: THREE.MeshStandardMaterial;
+  if (win) {
+    glass = win.material;
+    readyPromises.push(win.ready);
+    glass.name = 'window light';
+    glass.side = THREE.DoubleSide;
+    glass.userData.setOwned = true;
+    glass.userData.windowBaseColor = glass.color.clone();
+    doorLandscape = glass;
   } else {
     glass = material('window light', '#a2b7b5', .42);
-  }
-  glass.name = 'window light';
-  glass.side = THREE.DoubleSide;
-  glass.userData.setOwned = true;
-  glass.userData.windowBaseColor = glass.color.clone();
-
-  const doorWin = windowLandscape();
-  let doorLandscape: THREE.MeshStandardMaterial;
-  if (doorWin) {
-    doorLandscape = doorWin.material;
-    readyPromises.push(doorWin.ready);
-  } else {
+    glass.side = THREE.DoubleSide;
+    glass.userData.windowBaseColor = glass.color.clone();
     doorLandscape = material('doorway daylight', '#dee3d2', .90);
+    doorLandscape.side = THREE.DoubleSide;
+    doorLandscape.userData.windowBaseColor = doorLandscape.color.clone();
   }
-  doorLandscape.name = 'doorway daylight';
-  doorLandscape.side = THREE.DoubleSide;
-  doorLandscape.userData.setOwned = true;
-  doorLandscape.userData.windowBaseColor = doorLandscape.color.clone();
 
   const m = {
     chair: upholsteryMaterial(),
@@ -292,7 +283,9 @@ export function buildHouseInterior(_materials: LookMaterials): THREE.Group {
   root.userData = {
     setElement: 'house_interior', revision: 'reviewed-wall-return-04', geometryVersion: 'integrated-interior-v1',
     description: 'Connected kitchen and living room from the reviewed cartoon shape study',
-    wallSections, ceiling, cookingPot, windowMaterials: [m.glass, m.doorLandscape],
+    wallSections, ceiling, cookingPot,
+    windowMaterials: glass === doorLandscape ? [glass] : [glass, doorLandscape],
+    extraDisposables: [panel, paper, kitchen, m.curtain, m.figure],
     assetsReady: Promise.all(readyPromises).then(() => undefined),
     anchors: {chair, prepTable, tableSurfaceY, diningSeatY: seatY, helper},
     hearthLight, ceilingLight: warm, kitchenLight, readingLight: reading,

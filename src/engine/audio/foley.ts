@@ -1,7 +1,6 @@
 // Automatic foley (spec §7.6), fully synthesized: footsteps per surface (heavy = lower + louder + ground thump),
 // landing thud, body fall, cloth rustle, prop pickup/putdown, rope creak, sizzle loop, munch, small splash, water pour, clap.
 import type { FoleyId, Surface } from "../../shared/schema";
-import { FOLEY_IDS } from "../../shared/schema";
 import { munch, sizzle } from "./sfx";
 import { biquad, burst, mulberry32, tone, SILENT, type Out } from "./synth";
 
@@ -149,5 +148,3 @@ export function renderFoley(o: Out, id: FoleyId, surface: Surface, t: number, ga
       return;
   }
 }
-
-export const ALL_FOLEY: readonly FoleyId[] = FOLEY_IDS;

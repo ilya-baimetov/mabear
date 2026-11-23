@@ -4,7 +4,7 @@
 import * as THREE from "three";
 import { FX_IDS, type FxId } from "../../shared/schema";
 import type { FxFrame } from "../api";
-import { rng } from "../look";
+import { rng } from "../math/rng";
 
 interface FxDef {
   kind: number;

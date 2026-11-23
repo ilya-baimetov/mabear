@@ -3,6 +3,7 @@ import type {ActorFrame} from '../api';
 import type {ActorId,Emotion} from '../../shared/schema';
 import {EMOTION_PRESETS,mouthShapeFor, type MouthShape} from './face';
 import {emotionWeights} from '../motion/emotion';
+import { clamp, smooth } from '../../shared/math';
 
 /** Landmarks measured on the actual height-normalized bind meshes. Animal
  * muzzles and fur stay intact; these are not scaled copies of Masha's face. */
@@ -16,7 +17,6 @@ export const GENERATED_FACE_PROFILES:Partial<Record<ActorId,Profile>>={
  squirrel:{eyes:[{x:0,y:.4297,z:.0478,rx:.016,ry:.018},{x:.0714,y:.4252,z:.0528,rx:.018,ry:.018}],mouth:{x:.0352,y:.3659,z:.0801,rx:.037,ry:.026},browY:.027,jaw:.009},
  rival_bear:{eyes:[{x:-.0533,y:2.2671,z:.3233,rx:.027,ry:.022},{x:.0506,y:2.2671,z:.3238,rx:.027,ry:.022}],mouth:{x:.0064,y:2.0107,z:.4006,rx:.108,ry:.070},browY:.034,jaw:.027},
 };
-const clamp=THREE.MathUtils.clamp,smooth=(v:number)=>{v=clamp(v,0,1);return v*v*(3-2*v);};
 type Point={p:THREE.Vector3;uv:THREE.Vector2};
 function sampler(mesh:THREE.SkinnedMesh,points:Point[],eye:Eye){
  const idx=mesh.geometry.index!,cells=new Map<string,number[]>(),step=eye.rx*.6;

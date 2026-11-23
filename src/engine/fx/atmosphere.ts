@@ -3,7 +3,8 @@
 import * as THREE from "three";
 import type { SceneLocation } from "../../shared/bible/set";
 import { HOUSE_ORIGIN } from "../../shared/houseLayout";
-import { rng } from "../look";
+import { clamp01, smoothstep } from "../../shared/math";
+import { rng } from "../math/rng";
 
 const PARTICLE_COUNT = 72;
 
@@ -102,11 +103,6 @@ const ZONE_BOUNDS: Record<SceneLocation, { origin: [number, number, number]; spa
   house: { origin: [HOUSE_ORIGIN[0] - 7, 0.3, HOUSE_ORIGIN[1] - 3], span: [10, 3.0, 6] },
 };
 
-function smoothstep(e0: number, e1: number, x: number): number {
-  const k = Math.min(1, Math.max(0, (x - e0) / (e1 - e0)));
-  return k * k * (3 - 2 * k);
-}
-
 export function createAtmosphere(): AtmosphereHandle {
   const root = new THREE.Group();
   root.name = "fx:atmosphere";
@@ -155,7 +151,7 @@ export function createAtmosphere(): AtmosphereHandle {
     root,
     update(t, location, windowGlow, pointScale) {
       const indoor = location === "house";
-      const glow = Number.isFinite(windowGlow) ? Math.min(1, Math.max(0, windowGlow)) : 0;
+      const glow = Number.isFinite(windowGlow) ? clamp01(windowGlow) : 0;
       const firefly = !indoor && glow > 0.35 ? smoothstep(0.35, 0.72, glow) : 0;
       const pollenVis = indoor ? 1 : 1 - smoothstep(0.22, 0.35, glow);
       const zone = ZONE_BOUNDS[location] ?? ZONE_BOUNDS.yard;

@@ -1,13 +1,15 @@
 // Behind-the-scenes funder overlay (spec §4.4). Hidden by default; ?pitch=1 or Shift+B. Never shown to players.
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { X } from "lucide-react";
 import { costUsd, MODEL_PRICES, VIDEO_BITRATE_LABEL, VIDEO_BYTES_PER_SECOND } from "../../shared/pricing";
 import type { LogEntry, Usage } from "../../shared/schema";
 import { DIRECTOR_MODELS, type DirectorModel } from "../../shared/schema";
 import { exportLog, store } from "../store";
-import { useStore, useStrings } from "../useStore";
-import { fmt } from "../i18n";
+import { shallowEqual, useStoreSelector } from "../useStore";
+import { fmt, STRINGS } from "../i18n";
 import { playback } from "../playback";
+import { getStageController } from "../stageController";
+import type {} from "../debugBridge";
 import { DataView } from "./DataView";
 import { Economics, bytes, usd } from "./Economics";
 import { SystemLayers } from "./SystemLayers";
@@ -33,7 +35,7 @@ function useStats() {
   useEffect(() => {
     const id = window.setInterval(() => {
       try {
-        setStats(playback.player ? window.__mabear?.stats() ?? null : null);
+        setStats(playback.player ? getStageController()?.stats() ?? null : null);
       } catch {
         setStats(null);
       }
@@ -44,8 +46,19 @@ function useStats() {
 }
 
 export function BehindTheScenes() {
-  const s = useStore();
-  const t = useStrings();
+  const s = useStoreSelector(
+    (st) => ({
+      lang: st.lang,
+      selectedId: st.selectedId,
+      paragraphs: st.paragraphs,
+      segmentIds: st.segmentIds,
+      results: st.results,
+      model: st.model,
+      timelineRevision: st.timelineRevision,
+    }),
+    shallowEqual,
+  );
+  const t = STRINGS[s.lang];
   const stats = useStats();
   const pid = s.selectedId ?? s.paragraphs[0]?.id ?? null;
   const p = s.paragraphs.find((x) => x.id === pid) ?? null;
@@ -53,10 +66,11 @@ export function BehindTheScenes() {
   const si = pid ? s.segmentIds.indexOf(pid) : -1;
   const result = si >= 0 ? s.results[si] : null;
   const seg = result?.segment ?? null;
-  const planBytes = seg ? new TextEncoder().encode(JSON.stringify(seg)).length : 0;
+  const planBytes = useMemo(() => (seg ? new TextEncoder().encode(JSON.stringify(seg)).length : 0), [seg]);
+  const meanUsage = useMemo(() => meanLlmUsage(), [s.paragraphs, s.timelineRevision]);
   const measured = v && v.usage && MODEL_PRICES[v.model] ? costUsd(v.model, v.usage) : null;
   const cost = v?.cached ? 0 : measured ?? 0;
-  const estimate = costUsd(s.model ?? "claude-opus-5-5", meanLlmUsage() ?? TYPICAL_USAGE);
+  const estimate = costUsd(s.model ?? "claude-opus-5-5", meanUsage ?? TYPICAL_USAGE);
   const why = v ? (v.cached ? t.bts.cache : v.source === "fixture" ? t.bts.stagedFixture : t.bts.stagedOffline) : "";
   const econCost = measured !== null && !v?.cached ? measured : estimate;
   const econNote = measured !== null && !v?.cached ? t.bts.measured : fmt(t.bts.estimated, { why });
@@ -83,7 +97,7 @@ export function BehindTheScenes() {
       <div className="bts-head bts-head-row">
         <h2><span aria-hidden="true">🎬</span> {t.bts.title}</h2>
         <button type="button" className="btn small bts-close" onClick={() => store.setPitch(false)}>
-          <X size={15} aria-hidden="true"/>
+          <X size={15} aria-hidden="true" />
           <span>{t.bts.close}</span>
         </button>
       </div>
@@ -162,7 +176,7 @@ export function BehindTheScenes() {
                 ))}
               </div>
               <div className="cue-counts" data-testid="tts-voices">
-                {Object.entries((window as unknown as { __mabearAudio?: { voices?: Record<string, string> } }).__mabearAudio?.voices ?? {}).map(([k, n]) => (
+                {Object.entries(window.__mabearAudio?.voices ?? {}).map(([k, n]) => (
                   <span key={k} className="achip">{k} → {n}</span>
                 ))}
               </div>

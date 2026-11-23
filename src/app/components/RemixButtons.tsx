@@ -1,14 +1,19 @@
 import { store, type Paragraph } from "../store";
-import { useStore, useStrings } from "../useStore";
+import { STRINGS } from "../i18n";
+import { shallowEqual, useStoreSelector } from "../useStore";
 import { playback } from "../playback";
 import { revealStage } from "./studioView";
-import { DEFAULT_REMIX, TIMES_OF_DAY, type MusicMood, type TimeOfDay } from "../../shared/schema";
+import { DEFAULT_REMIX, MUSIC_MOODS, TIMES_OF_DAY, type MusicMood, type TimeOfDay } from "../../shared/schema";
 import { Camera, Music2, RotateCcw, Sun } from "lucide-react";
 
-const MOODS: MusicMood[] = ["playful", "calm", "sleepy", "tense", "spooky", "chase", "triumphant", "sad", "romantic_waltz", "none"];
+const MOODS: readonly MusicMood[] = [...MUSIC_MOODS.filter((m) => m !== "none"), "none"];
 
 export function RemixButtons({ p }: { p: Paragraph }) {
-  const t = useStrings(), s = useStore();
+  const s = useStoreSelector(
+    (st) => ({ lang: st.lang, results: st.results, segmentIds: st.segmentIds }),
+    shallowEqual,
+  );
+  const t = STRINGS[s.lang];
   const v = p.versions[p.current];
   if (!v) return null;
   const result = s.results[s.segmentIds.indexOf(p.id)];

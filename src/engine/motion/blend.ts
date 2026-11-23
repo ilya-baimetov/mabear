@@ -1,7 +1,9 @@
 // Pose math and blending (spec §7.4): quaternion helpers, 0.2 s crossfades, additive layers
 // (breathing, look-at). Pure functions over plain arrays — no Three.js, no React.
 import type { Quat } from "../api";
+import { clamp, clamp01, easeInOut, lerp, lerp3, lerpAngle, smooth, window01 } from "../../shared/math";
 import type { Emotion, Vec3, Viseme } from "../../shared/schema";
+export { clamp, clamp01, easeInOut, lerp, lerp3, lerpAngle, smooth, window01 };
 
 export type Pose = Record<string, Quat>;
 
@@ -133,42 +135,9 @@ export function qscale(q: Quat, t: number): Quat {
   return qslerp(IDENTITY, q, t);
 }
 
-export function round4(q: Quat): Quat {
-  const r = (n: number) => Math.round(n * 1e5) / 1e5;
-  return [r(q[0]), r(q[1]), r(q[2]), r(q[3])];
-}
-
-// ---------- scalar helpers ----------
-
-export const clamp01 = (x: number) => (x < 0 ? 0 : x > 1 ? 1 : x);
-export const clamp = (x: number, lo: number, hi: number) => (x < lo ? lo : x > hi ? hi : x);
-export const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
-export const smooth = (t: number) => {
-  const x = clamp01(t);
-  return x * x * (3 - 2 * x);
-};
-export const easeInOut = (t: number) => {
-  const x = clamp01(t);
-  return x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2;
-};
-/** 0 → 1 → 0 bell over [a, b] with smooth ramps of width r. */
-export function window01(t: number, a: number, b: number, r: number): number {
-  if (t <= a || t >= b) return 0;
-  return Math.min(smooth((t - a) / r), smooth((b - t) / r));
-}
-/** Interpolate angles along the shortest arc (a spin's 2π end blends to 0 without unwinding). */
-export function lerpAngle(a: number, b: number, t: number): number {
-  return a + Math.atan2(Math.sin(b - a), Math.cos(b - a)) * t;
-}
-export function lerp3(a: Vec3, b: Vec3, t: number): Vec3 {
-  return [lerp(a[0], b[0], t), lerp(a[1], b[1], t), lerp(a[2], b[2], t)];
-}
+// ---------- scalar helpers re-exported from ../../shared/math ----------
 
 // ---------- layer operations ----------
-
-export function emptyLayer(): PoseLayer {
-  return { bones: {}, hipsOffset: [0, 0, 0] };
-}
 
 /** Crossfade two full layers (slerp per bone; missing bones are identity). */
 export function blendLayers(a: PoseLayer, b: PoseLayer, t: number): PoseLayer {

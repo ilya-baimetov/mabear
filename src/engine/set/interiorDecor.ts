@@ -25,13 +25,16 @@ function makeCanvasTexture(
  return tex;
 }
 
+const mapDisposers = new WeakSet<THREE.Material>();
+
 function attachMapDisposal(material:THREE.Material):void {
+ if(mapDisposers.has(material))return;
+ mapDisposers.add(material);
  material.addEventListener('dispose',()=>{
   const std=material as THREE.MeshStandardMaterial;
-  std.map?.dispose();
-  std.normalMap?.dispose();
-  std.roughnessMap?.dispose();
-  std.emissiveMap?.dispose();
+  for(const tex of new Set([std.map,std.normalMap,std.roughnessMap,std.emissiveMap])){
+   tex?.dispose();
+  }
  });
 }
 
@@ -189,7 +192,6 @@ export function bicycleWallpaper():THREE.MeshStandardMaterial|null {
  if(material){
   const normalMap=paperGrainNormal();
   if(normalMap){material.normalMap=normalMap;material.normalScale.set(.26,.26);}
-  attachMapDisposal(material);
  }
  return material;
 }
@@ -724,7 +726,6 @@ export function windowLandscape():{material:THREE.MeshStandardMaterial;ready:Pro
  });
  if(!material)return null;
  material.emissive.setHex(0xffffff);material.emissiveMap=material.map;material.emissiveIntensity=.3;
- attachMapDisposal(material);
  let disposed=false;material.addEventListener('dispose',()=>{disposed=true;});
  const ready=new Promise<void>(resolve=>{
   if(typeof Image==='undefined'){resolve();return;}

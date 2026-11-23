@@ -22,6 +22,12 @@ export const LOGIN_LIMITS: RateLimitConfig = {
   global: { limit: 500, windowMs: 60 * 60 * 1000 },
 };
 
+/** Speech generation submissions (POST /api/speech) per session/IP and globally per isolate. */
+export const SPEECH_LIMITS: RateLimitConfig = {
+  perKey: { limit: 60, windowMs: 60_000 },
+  global: { limit: 600, windowMs: 60 * 60 * 1000 },
+};
+
 export type RateLimitDecision = { ok: true } | { ok: false; scope: "session" | "global"; retryAfterS: number };
 
 const MAX_KEYS = 5000;
@@ -66,11 +72,13 @@ export class RateLimiter {
 
 export const directLimiter = new RateLimiter(DIRECT_LIMITS);
 export const loginLimiter = new RateLimiter(LOGIN_LIMITS);
+export const speechLimiter = new RateLimiter(SPEECH_LIMITS);
 
 /** Test hook: clears the module-level limiters. */
 export function resetRateLimits(): void {
   directLimiter.reset();
   loginLimiter.reset();
+  speechLimiter.reset();
 }
 
 export function rateLimitResponse(d: Extract<RateLimitDecision, { ok: false }>): Response {

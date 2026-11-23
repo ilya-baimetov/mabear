@@ -5,16 +5,12 @@ import {
   DEFAULT_REMIX,
   MAX_PARAGRAPH_CHARS,
   type BeatScript,
-  type BeatScriptSource,
   type DirectorModel,
   type DirectResponse,
   type FixtureEpisode,
   type Lang,
-  type LogEntry,
   type Remix,
-  type RuleHit,
   type Timeline,
-  type Usage,
   type WorldState,
 } from "../shared/schema";
 import type { CompileResult } from "../compiler/types";
@@ -25,113 +21,28 @@ import { initialWorldState, worldStateDigest } from "../compiler/worldState";
 import { parseParagraph } from "../director/offline/parser";
 import { directParagraph } from "../director/client";
 import { FIXTURES } from "../director/fixtures/index";
-import recordings from '../shared/recordedSpeech.json';
-import {speechKey, type SpeechDurations, type SpeechRecording} from '../shared/speech';
+import recordings from "../shared/recordedSpeech.json";
+import { speechKey, type SpeechDurations, type SpeechRecording } from "../shared/speech";
+import { DirectorQueue, MAX_PARALLEL } from "./store/directorQueue";
+import { cloneParagraphs, HistoryStack } from "./store/history";
+import {
+  LS,
+  appendLog,
+  attachPagehideFlush,
+  cacheGet,
+  cachePut,
+  clearLog,
+  exportLog,
+  flushPersistence,
+  lsGet,
+  lsSet,
+  persistEpisode,
+  restoreEpisode,
+} from "./store/persistence";
+import type { AppState, Listener, Paragraph, ParagraphStatus, ParagraphVersion, ToastMessage, ToastNotice } from "./store/types";
 
-export type ParagraphStatus = "draft" | "directing" | "ready" | "adjusted" | "error";
-
-export interface ParagraphVersion {
-  version: number;
-  text: string;
-  lang: Lang;
-  beatScript: BeatScript;
-  source: BeatScriptSource;
-  latencyMs: number;
-  usage: Usage | null;
-  model: string;
-  ruleHits: RuleHit[];
-  remix: Remix;
-  /** served from the director cache: no API call, $0 */
-  cached?: boolean;
-  /** material digest (postures + held items) of the start state this version was directed against */
-  startKey?: string;
-}
-
-export interface Paragraph {
-  id: string;
-  text: string;
-  versions: ParagraphVersion[];
-  /** index into versions of the version that plays (-1 = none yet) */
-  current: number;
-  status: ParagraphStatus;
-  error: string | null;
-  /** set while a director call for the latest version is in flight */
-  pendingVersion: number | null;
-  lastRemixMs: number | null;
-  /** carried remix preset when duplicating a remixed scene as a fresh draft */
-  pendingRemix?: Remix;
-}
-
-export interface ToastMessage {
-  id: number;
-  message: { en: string; ru: string };
-  undoable?: boolean;
-}
-
-export interface AppState {
-  stageReady: boolean;
-  /** The user-facing scope of the latest explicit preview. */
-  previewScope: { kind: "moment"; id: string } | { kind: "story" } | null;
-  episodeId: string;
-  title: string;
-  lang: Lang;
-  paragraphs: Paragraph[];
-  selectedId: string | null;
-  timeline: Timeline;
-  results: CompileResult[];
-  /** paragraph ids aligned with timeline.segments */
-  segmentIds: string[];
-  playing: boolean;
-  t: number;
-  volume: number;
-  muted: boolean;
-  captions: boolean;
-  loop: boolean;
-  canUndo: boolean;
-  canRedo: boolean;
-  saveError: boolean;
-  toast: ToastMessage | null;
-  pitch: boolean;
-  model: DirectorModel | null;
-  directorCalls: number;
-  /** example currently loaded (unchanged), so the EN/RU toggle can swap it without an AI call */
-  fixtureId: FixtureEpisode["id"] | null;
-  /** ▶ Play is holding for the director ("getting ready…") */
-  waiting: boolean;
-  voiceError?: string | null;
-  preparingVoice?: boolean;
-}
-
-type Listener = () => void;
-
-/** Director calls in flight at once during a ▶ Play run. */
-export const MAX_PARALLEL = 4;
-
-const LS = {
-  lang: "mabear.lang",
-  log: "mabear.log",
-  cache: "mabear.cache",
-  episode: "mabear.episode",
-  volume: "mabear.volume",
-  captions: "mabear.captions",
-};
-
-function lsGet(key: string): string | null {
-  try {
-    return localStorage.getItem(key);
-  } catch {
-    return null;
-  }
-}
-function lsSet(key: string, v: string): boolean {
-  try {
-    localStorage.setItem(key, v);
-    return true;
-  } catch {
-    /* quota or disabled */
-    return false;
-  }
-}
+export { MAX_PARALLEL, exportLog, clearLog };
+export type { AppState, Paragraph, ParagraphStatus, ParagraphVersion, ToastMessage, ToastNotice };
 
 export function normalizeText(s: string): string {
   return s.replace(/\s+/g, " ").trim();
@@ -157,48 +68,12 @@ export function directorCacheKey(text: string, lang: Lang, start: WorldState, mo
   return hashStr([normalizeText(text), lang, worldStateDigest(start), BIBLE_VERSION, model ?? "default"].join("§"));
 }
 
-// ---------- director cache (localStorage LRU, 200 entries) ----------
-const CACHE_MAX = 200;
-function cacheLoad(): { k: string; v: DirectResponse }[] {
-  try {
-    return JSON.parse(lsGet(LS.cache) ?? "[]") as { k: string; v: DirectResponse }[];
-  } catch {
-    return [];
-  }
-}
-function cacheGet(k: string): DirectResponse | null {
-  const all = cacheLoad();
-  const i = all.findIndex((e) => e.k === k);
-  if (i < 0) return null;
-  const [hit] = all.splice(i, 1);
-  all.push(hit);
-  lsSet(LS.cache, JSON.stringify(all));
-  return hit.v;
-}
-function cachePut(k: string, v: DirectResponse): void {
-  const all = cacheLoad().filter((e) => e.k !== k);
-  all.push({ k, v });
-  while (all.length > CACHE_MAX) all.shift();
-  lsSet(LS.cache, JSON.stringify(all));
-}
-
-function appendLog(e: LogEntry): void {
-  try {
-    const all = JSON.parse(lsGet(LS.log) ?? "[]") as LogEntry[];
-    all.push(e);
-    while (all.length > 500) all.shift();
-    lsSet(LS.log, JSON.stringify(all));
-  } catch {
-    lsSet(LS.log, JSON.stringify([e]));
-  }
-}
-export function exportLog(): string {
-  return lsGet(LS.log) ?? "[]";
-}
-
 /** What changes staging between paragraphs: every actor's posture and held item (not position or facing). */
 export function materialDigest(ws: WorldState): string {
-  return ACTOR_IDS.map((id) => `${id}:${ws.actors[id]?.posture ?? "-"}:${ws.actors[id]?.holding ?? "-"}`).join("|")+`|door:${ws.objects?.house_door??0}|cupboard:${ws.objects?.kitchen_cupboard??0}|pantry:${ws.props.pantry_honey?.at??'cupboard'}`;
+  return (
+    ACTOR_IDS.map((id) => `${id}:${ws.actors[id]?.posture ?? "-"}:${ws.actors[id]?.holding ?? "-"}`).join("|") +
+    `|door:${ws.objects?.house_door ?? 0}|cupboard:${ws.objects?.kitchen_cupboard ?? 0}|pantry:${ws.props.pantry_honey?.at ?? "cupboard"}`
+  );
 }
 
 function emptyTimeline(): Timeline {
@@ -219,48 +94,24 @@ function hasPitchParam(): boolean {
   }
 }
 
-interface HistoryEntry {
-  title: string;
-  paragraphs: Paragraph[];
-  selectedId: string | null;
-  fixtureId: FixtureEpisode["id"] | null;
-}
-
-const HISTORY_LIMIT = 40;
-const EDIT_COALESCE_MS = 900;
-
-function cloneParagraphs(paragraphs: Paragraph[]): Paragraph[] {
-  return paragraphs.map((p) => ({
-    ...p,
-    pendingVersion: null,
-    status: p.status === "directing" ? "draft" : p.status,
-    versions: [...p.versions],
-  }));
-}
-
 // ---------- the store ----------
 class Store {
   state: AppState;
   private listeners = new Set<Listener>();
-  private inflight = new Map<string, AbortController>();
-  private queue: (() => void)[] = [];
-  private redirected = new Set<string>();
-  private active = 0;
+  private directorQueue = new DirectorQueue();
+  private history = new HistoryStack();
+  private episodeGeneration = 0;
   /** a ▶ Play session is running (set by playback): only then may a broken paragraph be re-directed */
   private runActive = false;
-  /** paragraphs whose re-direct is queued for the next microtask (they count as pending) */
-  private redirectQueue = new Set<string>();
-  private historyPast: HistoryEntry[] = [];
-  private historyFuture: HistoryEntry[] = [];
-  private historyBatchDepth = 0;
-  private lastEditId: string | null = null;
-  private lastEditAt = 0;
   private toastCounter = 0;
   /** recompile() calls so far (e2e: typing must not compile) */
   compileCount = 0;
-  private speechDurations: Record<string, number> = Object.fromEntries((recordings as SpeechRecording[]).map(r => [speechKey(r.text,r.lang),r.duration]));
+  private speechDurations: Record<string, number> = Object.fromEntries(
+    (recordings as SpeechRecording[]).map((r) => [speechKey(r.text, r.lang), r.duration]),
+  );
 
   constructor() {
+    attachPagehideFlush();
     const vol = Number(lsGet(LS.volume) ?? "0.8");
     const captions = lsGet(LS.captions) !== "0";
     this.state = {
@@ -272,6 +123,7 @@ class Store {
       paragraphs: [],
       selectedId: null,
       timeline: emptyTimeline(),
+      timelineRevision: 1,
       results: [],
       segmentIds: [],
       playing: false,
@@ -304,75 +156,56 @@ class Store {
     for (const l of this.listeners) l();
   }
 
-  private setParagraphs(paragraphs: Paragraph[], extra: Partial<AppState> = {}): void {
+  private setParagraphs(paragraphs: Paragraph[], extra: Partial<AppState> = {}, immediatePersist = true): void {
     this.set({ paragraphs, ...extra });
-    this.persist();
+    this.persist(immediatePersist);
   }
 
-  private patchParagraph(id: string, patch: Partial<Paragraph>): void {
-    this.setParagraphs(this.state.paragraphs.map((p) => (p.id === id ? { ...p, ...patch } : p)));
+  private patchParagraph(id: string, patch: Partial<Paragraph>, immediatePersist = true): void {
+    this.setParagraphs(
+      this.state.paragraphs.map((p) => (p.id === id ? { ...p, ...patch } : p)),
+      {},
+      immediatePersist,
+    );
   }
 
-  private makeSnapshot(): HistoryEntry {
-    return {
-      title: this.state.title,
-      paragraphs: cloneParagraphs(this.state.paragraphs),
-      selectedId: this.state.selectedId,
-      fixtureId: this.state.fixtureId,
-    };
+  private syncHistoryFlags(): void {
+    const canUndo = this.history.canUndo;
+    const canRedo = this.history.canRedo;
+    if (this.state.canUndo !== canUndo || this.state.canRedo !== canRedo) {
+      this.set({ canUndo, canRedo });
+    }
   }
 
   private pushHistory(coalesceKey?: string): void {
-    if (this.historyBatchDepth > 0) return;
-    const now = Date.now();
-    if (coalesceKey && coalesceKey === this.lastEditId && now - this.lastEditAt < EDIT_COALESCE_MS) {
-      this.lastEditAt = now;
-      if (this.historyFuture.length) {
-        this.historyFuture = [];
-        this.set({ canUndo: this.historyPast.length > 0, canRedo: false });
-      }
-      return;
-    }
-    this.historyPast.push(this.makeSnapshot());
-    while (this.historyPast.length > HISTORY_LIMIT) this.historyPast.shift();
-    this.historyFuture = [];
-    this.lastEditId = coalesceKey ?? null;
-    this.lastEditAt = coalesceKey ? now : 0;
-    const canUndo = this.historyPast.length > 0;
-    if (this.state.canUndo !== canUndo || this.state.canRedo) {
-      this.set({ canUndo, canRedo: false });
+    if (this.history.push(this.state, coalesceKey)) {
+      this.syncHistoryFlags();
     }
   }
 
   runHistoryBatch<T>(fn: () => T): T {
-    if (this.historyBatchDepth === 0) this.pushHistory();
-    this.historyBatchDepth += 1;
+    if (!this.history.inBatch) this.pushHistory();
+    this.history.enterBatch();
     try {
       return fn();
     } finally {
-      this.historyBatchDepth -= 1;
+      this.history.exitBatch();
+      if (!this.history.inBatch) this.persist(true);
     }
   }
 
   clearHistory(): void {
-    this.historyPast = [];
-    this.historyFuture = [];
-    this.lastEditId = null;
-    this.lastEditAt = 0;
-    if (this.state.canUndo || this.state.canRedo) this.set({ canUndo: false, canRedo: false });
+    this.history.clear();
+    this.syncHistoryFlags();
   }
 
   undo(): boolean {
-    const prev = this.historyPast.pop();
+    const prev = this.history.undo(this.state);
     if (!prev) return false;
-    for (const c of this.inflight.values()) c.abort();
-    this.inflight.clear();
-    this.redirectQueue.clear();
-    this.historyFuture.push(this.makeSnapshot());
-    this.lastEditId = null;
-    this.lastEditAt = 0;
+    this.directorQueue.clearAbortableQueues();
     const paragraphs = cloneParagraphs(prev.paragraphs);
-    const selectedId = prev.selectedId && paragraphs.some((p) => p.id === prev.selectedId) ? prev.selectedId : (paragraphs[0]?.id ?? null);
+    const selectedId =
+      prev.selectedId && paragraphs.some((p) => p.id === prev.selectedId) ? prev.selectedId : (paragraphs[0]?.id ?? null);
     this.set({
       title: prev.title,
       paragraphs,
@@ -381,25 +214,21 @@ class Store {
       waiting: false,
       playing: false,
       toast: null,
-      canUndo: this.historyPast.length > 0,
-      canRedo: this.historyFuture.length > 0,
+      canUndo: this.history.canUndo,
+      canRedo: this.history.canRedo,
     });
     this.recompile({ redirectBroken: "mark" });
-    this.persist();
+    this.persist(true);
     return true;
   }
 
   redo(): boolean {
-    const next = this.historyFuture.pop();
+    const next = this.history.redo(this.state);
     if (!next) return false;
-    for (const c of this.inflight.values()) c.abort();
-    this.inflight.clear();
-    this.redirectQueue.clear();
-    this.historyPast.push(this.makeSnapshot());
-    this.lastEditId = null;
-    this.lastEditAt = 0;
+    this.directorQueue.clearAbortableQueues();
     const paragraphs = cloneParagraphs(next.paragraphs);
-    const selectedId = next.selectedId && paragraphs.some((p) => p.id === next.selectedId) ? next.selectedId : (paragraphs[0]?.id ?? null);
+    const selectedId =
+      next.selectedId && paragraphs.some((p) => p.id === next.selectedId) ? next.selectedId : (paragraphs[0]?.id ?? null);
     this.set({
       title: next.title,
       paragraphs,
@@ -408,49 +237,37 @@ class Store {
       waiting: false,
       playing: false,
       toast: null,
-      canUndo: this.historyPast.length > 0,
-      canRedo: this.historyFuture.length > 0,
+      canUndo: this.history.canUndo,
+      canRedo: this.history.canRedo,
     });
     this.recompile({ redirectBroken: "mark" });
-    this.persist();
+    this.persist(true);
     return true;
   }
 
-  private persist(): void {
-    const s = this.state;
-    const ok = lsSet(
-      LS.episode,
-      JSON.stringify({
-        episodeId: s.episodeId,
-        title: s.title,
-        fixtureId: s.fixtureId,
-        selectedId: s.selectedId,
-        paragraphs: s.paragraphs.map((p) => ({ ...p, pendingVersion: null, status: p.status === "directing" ? "draft" : p.status })),
-      }),
-    );
-    if (!ok && !this.state.saveError) this.set({ saveError: true });
-    else if (ok && this.state.saveError) this.set({ saveError: false });
+  private persist(immediate = true): void {
+    persistEpisode(this.state, immediate, (ok) => {
+      if (!ok && !this.state.saveError) this.set({ saveError: true });
+      else if (ok && this.state.saveError) this.set({ saveError: false });
+    });
+  }
+
+  flushPersistence(): void {
+    flushPersistence();
   }
 
   private restore(): void {
-    try {
-      const raw = lsGet(LS.episode);
-      if (!raw) return;
-      const saved = JSON.parse(raw) as { episodeId: string; title: string; fixtureId?: FixtureEpisode["id"] | null; selectedId?: string | null; paragraphs: Paragraph[] };
-      if (!Array.isArray(saved.paragraphs)) return;
-      const selectedId = saved.selectedId && saved.paragraphs.some((p) => p.id === saved.selectedId) ? saved.selectedId : (saved.paragraphs[0]?.id ?? null);
-      this.state = {
-        ...this.state,
-        episodeId: saved.episodeId,
-        title: saved.title ?? "",
-        fixtureId: saved.fixtureId ?? null,
-        selectedId,
-        paragraphs: saved.paragraphs,
-      };
-      this.recompile();
-    } catch {
-      /* ignore corrupt state */
-    }
+    const saved = restoreEpisode();
+    if (!saved) return;
+    this.state = {
+      ...this.state,
+      episodeId: saved.episodeId,
+      title: saved.title,
+      fixtureId: saved.fixtureId,
+      selectedId: saved.selectedId,
+      paragraphs: saved.paragraphs,
+    };
+    this.recompile();
   }
 
   // ---------- UI actions ----------
@@ -460,12 +277,22 @@ class Store {
     const fixture = FIXTURES.find((f) => f.id === fid && f.lang === this.state.lang);
     // A language switch may translate a pristine example, but must never replace local edits,
     // cleared/deleted blocks, a new title, pending work, or remixes that have not made a new version.
-    const untouched = fixture && this.state.title === fixture.title && this.state.paragraphs.length === fixture.paragraphs.length && this.state.paragraphs.every((p, i) => {
-      const v = p.versions[p.current];
-      return p.current === 0 && v?.source === "fixture" && p.pendingVersion === null
-        && normalizeText(p.text) === normalizeText(fixture.paragraphs[i].text)
-        && v.remix.cameraSeed === DEFAULT_REMIX.cameraSeed && v.remix.timeOfDay === DEFAULT_REMIX.timeOfDay && v.remix.musicMood === DEFAULT_REMIX.musicMood;
-    });
+    const untouched =
+      fixture &&
+      this.state.title === fixture.title &&
+      this.state.paragraphs.length === fixture.paragraphs.length &&
+      this.state.paragraphs.every((p, i) => {
+        const v = p.versions[p.current];
+        return (
+          p.current === 0 &&
+          v?.source === "fixture" &&
+          p.pendingVersion === null &&
+          normalizeText(p.text) === normalizeText(fixture.paragraphs[i].text) &&
+          v.remix.cameraSeed === DEFAULT_REMIX.cameraSeed &&
+          v.remix.timeOfDay === DEFAULT_REMIX.timeOfDay &&
+          v.remix.musicMood === DEFAULT_REMIX.musicMood
+        );
+      });
     this.set({ lang });
     if (untouched && fid) this.loadFixtureById(fid, false);
   }
@@ -473,7 +300,7 @@ class Store {
     if (title === this.state.title) return;
     if (this.state.paragraphs.length) this.pushHistory("__title__");
     this.set({ title });
-    this.persist();
+    this.persist(false);
   }
   setVolume(volume: number): void {
     lsSet(LS.volume, String(volume));
@@ -505,8 +332,12 @@ class Store {
   setModel(model: DirectorModel | null): void {
     this.set({ model });
   }
-  setPreviewScope(previewScope: AppState["previewScope"]): void { this.set({ previewScope }); }
-  setStageReady(stageReady:boolean):void { if(this.state.stageReady!==stageReady)this.set({stageReady}); }
+  setPreviewScope(previewScope: AppState["previewScope"]): void {
+    this.set({ previewScope });
+  }
+  setStageReady(stageReady: boolean): void {
+    if (this.state.stageReady !== stageReady) this.set({ stageReady });
+  }
   select(id: string | null): void {
     this.set({ selectedId: id });
   }
@@ -516,11 +347,13 @@ class Store {
   setWaiting(waiting: boolean): void {
     if (this.state.waiting !== waiting) this.set({ waiting });
   }
-  setVoiceStatus(preparingVoice: boolean, voiceError: string | null = null): void { this.set({preparingVoice,voiceError}); }
+  setVoiceStatus(preparingVoice: boolean, voiceError: string | null = null): void {
+    this.set({ preparingVoice, voiceError });
+  }
   setSpeechDurations(durations: SpeechDurations): boolean {
-    const changed = Object.entries(durations).some(([key,dur]) => dur > 0 && this.speechDurations[key] !== dur);
+    const changed = Object.entries(durations).some(([key, dur]) => dur > 0 && this.speechDurations[key] !== dur);
     if (!changed) return false;
-    Object.assign(this.speechDurations,durations);
+    Object.assign(this.speechDurations, durations);
     this.recompile();
     return true;
   }
@@ -532,14 +365,9 @@ class Store {
   newStory(recordHistory = true): void {
     const hasContent = Boolean(this.state.title.trim() || this.state.paragraphs.some((p) => p.text.trim() || p.current >= 0));
     if (recordHistory && hasContent) this.pushHistory();
-    else if (!hasContent) {
-      this.historyPast = [];
-      this.historyFuture = [];
-      this.lastEditId = null;
-      this.lastEditAt = 0;
-    }
-    for (const c of this.inflight.values()) c.abort();
-    this.inflight.clear();
+    else if (!hasContent) this.history.clear();
+    this.episodeGeneration += 1;
+    this.directorQueue.clearAll();
     this.set({
       episodeId: newId("e"),
       title: "",
@@ -554,10 +382,10 @@ class Store {
       fixtureId: null,
       waiting: false,
       toast: null,
-      canUndo: this.historyPast.length > 0,
-      canRedo: this.historyFuture.length > 0,
+      canUndo: this.history.canUndo,
+      canRedo: this.history.canRedo,
     });
-    this.persist();
+    this.persist(true);
   }
 
   addParagraph(afterId?: string): string {
@@ -567,7 +395,7 @@ class Store {
     const i = afterId ? list.findIndex((x) => x.id === afterId) : -1;
     if (i >= 0) list.splice(i + 1, 0, p);
     else list.push(p);
-    this.setParagraphs(list, { selectedId: p.id });
+    this.setParagraphs(list, { selectedId: p.id }, true);
     return p.id;
   }
 
@@ -577,7 +405,11 @@ class Store {
     this.pushHistory();
     const orig = this.state.paragraphs[idx];
     const curRemix = orig.versions[orig.current]?.remix ?? orig.pendingRemix;
-    const isCustomRemix = curRemix && (curRemix.cameraSeed !== DEFAULT_REMIX.cameraSeed || curRemix.timeOfDay !== DEFAULT_REMIX.timeOfDay || curRemix.musicMood !== DEFAULT_REMIX.musicMood);
+    const isCustomRemix =
+      curRemix &&
+      (curRemix.cameraSeed !== DEFAULT_REMIX.cameraSeed ||
+        curRemix.timeOfDay !== DEFAULT_REMIX.timeOfDay ||
+        curRemix.musicMood !== DEFAULT_REMIX.musicMood);
     const clone: Paragraph = {
       id: newId(),
       text: orig.text,
@@ -591,15 +423,15 @@ class Store {
     };
     const list = [...this.state.paragraphs];
     list.splice(idx + 1, 0, clone);
-    this.setParagraphs(list, { selectedId: clone.id });
+    this.setParagraphs(list, { selectedId: clone.id }, true);
     this.recompile({ redirectBroken: "mark" });
     return clone.id;
   }
 
   deleteParagraph(id: string): void {
     this.pushHistory();
-    this.inflight.get(id)?.abort();
-    this.setParagraphs(this.state.paragraphs.filter((p) => p.id !== id));
+    this.directorQueue.remove(id);
+    this.setParagraphs(this.state.paragraphs.filter((p) => p.id !== id), {}, true);
     this.recompile({ redirectBroken: "mark" });
   }
 
@@ -610,7 +442,7 @@ class Store {
     if (i < 0 || j < 0 || j >= list.length) return;
     this.pushHistory();
     [list[i], list[j]] = [list[j], list[i]];
-    this.setParagraphs(list);
+    this.setParagraphs(list, {}, true);
     this.recompile({ redirectBroken: "mark" });
   }
 
@@ -619,7 +451,7 @@ class Store {
     if (!p || p.current <= 0 || p.pendingVersion !== null) return;
     this.pushHistory();
     const prev = p.versions[p.current - 1];
-    this.patchParagraph(id, { current: p.current - 1, text: prev.text, status: prev.ruleHits.length ? "adjusted" : "ready", error: null });
+    this.patchParagraph(id, { current: p.current - 1, text: prev.text, status: prev.ruleHits.length ? "adjusted" : "ready", error: null }, true);
     this.recompile({ redirectBroken: "mark" });
   }
 
@@ -629,7 +461,7 @@ class Store {
     const cur = p.versions[p.current];
     if (!cur) return false;
     this.pushHistory();
-    this.patchParagraph(id, { text: cur.text, status: cur.ruleHits.length ? "adjusted" : "ready", error: null });
+    this.patchParagraph(id, { text: cur.text, status: cur.ruleHits.length ? "adjusted" : "ready", error: null }, true);
     this.recompile({ redirectBroken: "mark" });
     return true;
   }
@@ -641,10 +473,14 @@ class Store {
     const cur = p.versions[p.current];
     const changed = !cur || normalizeText(cur.text) !== normalizeText(text);
     if (p.pendingVersion !== null) {
-      this.patchParagraph(id, { text });
+      this.patchParagraph(id, { text }, false);
       return;
     }
-    this.patchParagraph(id, { text, status: changed ? "draft" : p.status === "draft" ? (cur?.ruleHits.length ? "adjusted" : "ready") : p.status });
+    this.patchParagraph(
+      id,
+      { text, status: changed ? "draft" : p.status === "draft" ? (cur?.ruleHits.length ? "adjusted" : "ready") : p.status },
+      false,
+    );
   }
 
   /** A paragraph needs the director before it can play: it has text and was edited (or never rendered). */
@@ -654,11 +490,11 @@ class Store {
 
   /** Any director work in flight or queued (the player may be holding with "getting ready…"). */
   hasPending(): boolean {
-    return this.redirectQueue.size > 0 || this.state.paragraphs.some((p) => p.pendingVersion !== null);
+    return this.directorQueue.hasQueuedRedirects() || this.state.paragraphs.some((p) => p.pendingVersion !== null);
   }
 
   isRedirectQueued(id: string): boolean {
-    return this.redirectQueue.has(id);
+    return this.directorQueue.isRedirectQueued(id);
   }
 
   /** playback marks its ▶ session; outside one, nothing is ever sent to the director */
@@ -695,7 +531,10 @@ class Store {
       let remix: Remix = p.versions[p.current]?.remix ?? p.pendingRemix ?? { ...DEFAULT_REMIX };
       if (this.isDirty(p)) {
         const version = this.nextVersion(p, text);
-        const previous = paras.slice(Math.max(0, i - 3), i).map((x) => normalizeText(x.text)).filter(Boolean);
+        const previous = paras
+          .slice(Math.max(0, i - 3), i)
+          .map((x) => normalizeText(x.text))
+          .filter(Boolean);
         jobs.push({ id: p.id, text, start: state, version, previous });
         try {
           bs = parseParagraph(text, lang, state, { prevMusicMood: carry.music?.mood ?? null });
@@ -721,7 +560,11 @@ class Store {
       return 0;
     }
     const pending = new Map(jobs.map((j) => [j.id, j.version]));
-    this.setParagraphs(this.state.paragraphs.map((p) => (pending.has(p.id) ? { ...p, status: "directing", error: null, pendingVersion: pending.get(p.id)! } : p)));
+    this.setParagraphs(
+      this.state.paragraphs.map((p) => (pending.has(p.id) ? { ...p, status: "directing", error: null, pendingVersion: pending.get(p.id)! } : p)),
+      {},
+      true,
+    );
     this.recompile();
     for (const j of jobs) if (this.direct(j.id, j.text, lang, j.start, j.version, j.previous)) sent += 1;
     return sent;
@@ -735,28 +578,34 @@ class Store {
       this.applyDirectorResponse(id, version, text, lang, hit, start, 0, true);
       return false;
     }
-    this.inflight.get(id)?.abort();
-    const ctrl = new AbortController();
-    this.inflight.set(id, ctrl);
-    const run = () => {
-      if (ctrl.signal.aborted) {
-        this.next();
+    const gen = this.episodeGeneration;
+    const ctrl = this.directorQueue.startInflight(id);
+    const run = (token: symbol) => {
+      if (ctrl.signal.aborted || this.episodeGeneration !== gen) {
+        this.directorQueue.finishJob(id, ctrl, token);
         return;
       }
-      this.active += 1;
       this.set({ directorCalls: this.state.directorCalls + 1 });
       const t0 = performance.now();
       directParagraph(
-        { lang, paragraph: text, previous, worldState: start, episodeId: this.state.episodeId, paragraphId: id, ...(this.state.model ? { model: this.state.model } : {}) },
+        {
+          lang,
+          paragraph: text,
+          previous,
+          worldState: start,
+          episodeId: this.state.episodeId,
+          paragraphId: id,
+          ...(this.state.model ? { model: this.state.model } : {}),
+        },
         ctrl.signal,
       )
         .then((res) => {
-          if (ctrl.signal.aborted) return;
+          if (ctrl.signal.aborted || this.episodeGeneration !== gen) return;
           if (!res.error) cachePut(key, res);
           this.applyDirectorResponse(id, version, text, lang, res, start, performance.now() - t0);
         })
         .catch((err: unknown) => {
-          if (ctrl.signal.aborted) return;
+          if (ctrl.signal.aborted || this.episodeGeneration !== gen) return;
           // network failure: fall back to the offline parser so the paragraph still plays (status error + Retry)
           let beatScript: BeatScript | null = null;
           try {
@@ -765,32 +614,45 @@ class Store {
             beatScript = null;
           }
           const msg = err instanceof Error ? err.message : String(err);
-          if (beatScript) this.applyDirectorResponse(id, version, text, lang, { beatScript, source: "offline", latencyMs: 0, usage: null, model: "offline-parser", error: msg }, start, performance.now() - t0);
-          else this.markError(id, version, msg);
+          if (beatScript) {
+            this.applyDirectorResponse(
+              id,
+              version,
+              text,
+              lang,
+              { beatScript, source: "offline", latencyMs: 0, usage: null, model: "offline-parser", error: msg },
+              start,
+              performance.now() - t0,
+            );
+          } else {
+            this.markError(id, version, msg);
+          }
         })
         .finally(() => {
-          if (this.inflight.get(id) === ctrl) this.inflight.delete(id);
-          this.active -= 1;
-          this.next();
+          this.directorQueue.finishJob(id, ctrl, token);
         });
     };
-    this.queue.push(run);
-    this.next();
+    this.directorQueue.enqueue(id, run);
     return true;
-  }
-
-  private next(): void {
-    while (this.active < MAX_PARALLEL && this.queue.length) this.queue.shift()?.();
   }
 
   private markError(id: string, version: number, error: string): void {
     const p = this.state.paragraphs.find((x) => x.id === id);
     if (!p || p.pendingVersion !== version) return;
-    this.patchParagraph(id, { status: p.current >= 0 ? "error" : "draft", error, pendingVersion: null });
+    this.patchParagraph(id, { status: p.current >= 0 ? "error" : "draft", error, pendingVersion: null }, true);
     this.recompile({ redirectBroken: "direct" });
   }
 
-  private applyDirectorResponse(id: string, version: number, text: string, lang: Lang, res: DirectResponse, start: WorldState, clientMs: number, cached = false): void {
+  private applyDirectorResponse(
+    id: string,
+    version: number,
+    text: string,
+    lang: Lang,
+    res: DirectResponse,
+    start: WorldState,
+    clientMs: number,
+    cached = false,
+  ): void {
     const p = this.state.paragraphs.find((x) => x.id === id);
     if (!p || p.pendingVersion !== version) return;
     const nv: ParagraphVersion = {
@@ -817,10 +679,26 @@ class Store {
     // current; the paragraph waits for the next ▶ Play
     const stale = normalizeText(p.text) !== text;
     const status: ParagraphStatus = stale ? "draft" : res.error ? "error" : nv.ruleHits.length ? "adjusted" : "ready";
-    this.patchParagraph(id, { versions, current: stale ? p.current : nvIndex, status, error: res.error ?? null, pendingVersion: null, pendingRemix: undefined });
-    appendLog({ episodeId: this.state.episodeId, paragraphId: id, version, text: nv.text, lang: nv.lang, beatScript: nv.beatScript, source: nv.source, latencyMs: nv.latencyMs, usage: nv.usage, ruleHits: nv.ruleHits, ts: Date.now() });
+    this.patchParagraph(
+      id,
+      { versions, current: stale ? p.current : nvIndex, status, error: res.error ?? null, pendingVersion: null, pendingRemix: undefined },
+      true,
+    );
+    appendLog({
+      episodeId: this.state.episodeId,
+      paragraphId: id,
+      version,
+      text: nv.text,
+      lang: nv.lang,
+      beatScript: nv.beatScript,
+      source: nv.source,
+      latencyMs: nv.latencyMs,
+      usage: nv.usage,
+      ruleHits: nv.ruleHits,
+      ts: Date.now(),
+    });
     // directed against `start`: re-directing against the same start state can't help (§6.5.4)
-    this.redirected.add(`${id}:${directorCacheKey(nv.text, nv.lang, start, this.state.model)}`);
+    this.directorQueue.markRedirected(`${id}:${directorCacheKey(nv.text, nv.lang, start, this.state.model)}`);
     this.recompile({ redirectBroken: "direct" });
   }
 
@@ -828,7 +706,7 @@ class Store {
   retry(id: string): void {
     const p = this.state.paragraphs.find((x) => x.id === id);
     if (!p || p.pendingVersion !== null) return;
-    this.patchParagraph(id, { status: "draft", error: null });
+    this.patchParagraph(id, { status: "draft", error: null }, true);
   }
 
   setRemix(id: string, patch: Partial<Remix>): void {
@@ -841,17 +719,37 @@ class Store {
     this.state = { ...this.state, paragraphs: this.state.paragraphs.map((x) => (x.id === id ? { ...x, versions } : x)) };
     this.recompile();
     const ms = Math.max(1, Math.round(performance.now() - t0));
-    this.patchParagraph(id, { lastRemixMs: ms });
+    this.patchParagraph(id, { lastRemixMs: ms }, true);
   }
 
   loadFixture(fx: FixtureEpisode, recordHistory = true): void {
     const hasContent = Boolean(this.state.title.trim() || this.state.paragraphs.some((p) => p.text.trim() || p.current >= 0));
     if (recordHistory && hasContent) this.pushHistory();
-    for (const c of this.inflight.values()) c.abort();
-    this.inflight.clear();
+    this.episodeGeneration += 1;
+    this.directorQueue.clearAll();
     const paragraphs: Paragraph[] = fx.paragraphs.map((fp) => {
-      const v: ParagraphVersion = { version: 1, text: fp.text, lang: fx.lang, beatScript: fp.beatScript, source: "fixture", latencyMs: 0, usage: null, model: "fixture", ruleHits: fp.beatScript.rule_hits, remix: { ...DEFAULT_REMIX } };
-      return { id: newId(), text: fp.text, versions: [v], current: 0, status: fp.beatScript.rule_hits.length ? "adjusted" : "ready", error: null, pendingVersion: null, lastRemixMs: null };
+      const v: ParagraphVersion = {
+        version: 1,
+        text: fp.text,
+        lang: fx.lang,
+        beatScript: fp.beatScript,
+        source: "fixture",
+        latencyMs: 0,
+        usage: null,
+        model: "fixture",
+        ruleHits: fp.beatScript.rule_hits,
+        remix: { ...DEFAULT_REMIX },
+      };
+      return {
+        id: newId(),
+        text: fp.text,
+        versions: [v],
+        current: 0,
+        status: fp.beatScript.rule_hits.length ? "adjusted" : "ready",
+        error: null,
+        pendingVersion: null,
+        lastRemixMs: null,
+      };
     });
     this.set({
       episodeId: newId("e"),
@@ -864,11 +762,11 @@ class Store {
       fixtureId: fx.id,
       waiting: false,
       toast: null,
-      canUndo: this.historyPast.length > 0,
-      canRedo: this.historyFuture.length > 0,
+      canUndo: this.history.canUndo,
+      canRedo: this.history.canRedo,
     });
     this.recompile();
-    this.persist();
+    this.persist(true);
   }
 
   /** true when the story has user authoring/customization beyond a blank draft or untouched example */
@@ -881,16 +779,22 @@ class Store {
         return this.state.paragraphs.some((p, i) => {
           const v = p.versions[p.current];
           const orig = fx.paragraphs[i];
-          return !v || v.source !== "fixture"
-            || normalizeText(p.text) !== normalizeText(orig.text)
-            || v.remix.cameraSeed !== DEFAULT_REMIX.cameraSeed
-            || v.remix.timeOfDay !== DEFAULT_REMIX.timeOfDay
-            || v.remix.musicMood !== DEFAULT_REMIX.musicMood;
+          return (
+            !v ||
+            v.source !== "fixture" ||
+            normalizeText(p.text) !== normalizeText(orig.text) ||
+            v.remix.cameraSeed !== DEFAULT_REMIX.cameraSeed ||
+            v.remix.timeOfDay !== DEFAULT_REMIX.timeOfDay ||
+            v.remix.musicMood !== DEFAULT_REMIX.musicMood
+          );
         });
       }
     }
-    return this.state.title.trim().length > 0 || this.state.paragraphs.some(
-      (p) => p.text.trim() && (p.versions[p.current]?.source !== "fixture" || normalizeText(p.text) !== normalizeText(p.versions[p.current]?.text ?? "")),
+    return (
+      this.state.title.trim().length > 0 ||
+      this.state.paragraphs.some(
+        (p) => p.text.trim() && (p.versions[p.current]?.source !== "fixture" || normalizeText(p.text) !== normalizeText(p.versions[p.current]?.text ?? "")),
+      )
     );
   }
 
@@ -923,7 +827,7 @@ class Store {
     this.compileCount += 1;
     const playable: Paragraph[] = [];
     for (const p of this.state.paragraphs) {
-      if (p.pendingVersion !== null || this.redirectQueue.has(p.id)) break;
+      if (p.pendingVersion !== null || this.directorQueue.isRedirectQueued(p.id)) break;
       if (!normalizeText(p.text)) continue; // a cleared block never plays its old scene
       if (p.current >= 0 && p.versions[p.current]) playable.push(p);
     }
@@ -935,7 +839,9 @@ class Store {
           const v = p.versions[p.current];
           return { paragraphId: p.id, version: v.version, beatScript: v.beatScript, remix: v.remix };
         }),
-        this.state.lang, undefined, this.speechDurations,
+        this.state.lang,
+        undefined,
+        this.speechDurations,
       );
       results = out.results;
       timeline = out.timeline;
@@ -943,10 +849,17 @@ class Store {
       console.warn("compile failed", err);
     }
     const segmentIds = playable.map((p) => p.id);
-    this.set({ results, timeline, segmentIds, t: Math.min(this.state.t, timeline.duration) });
+    this.set({
+      results,
+      timeline,
+      segmentIds,
+      t: Math.min(this.state.t, timeline.duration),
+      timelineRevision: this.state.timelineRevision + 1,
+    });
     if (!opts.redirectBroken) return;
     // outside a ▶ session nothing goes to the director: only mark ✏️ for the next Play
     const mode = opts.redirectBroken === "direct" && this.runActive ? "direct" : "mark";
+    const gen = this.episodeGeneration;
     let queued = false;
     results.forEach((r, i) => {
       const p = playable[i];
@@ -956,15 +869,16 @@ class Store {
       // §6.5.4 + review #7: not repairable against the real start state, or directed against an estimated start
       // whose postures / held items differ from the real one → draft (+ one re-direct per real start inside a run)
       const drifted = v.startKey !== undefined && v.startKey !== materialDigest(start);
-      if ((!r.errors.length && !drifted) || p.status === "draft" || this.redirected.has(key)) return;
+      if ((!r.errors.length && !drifted) || p.status === "draft" || this.directorQueue.hasRedirected(key)) return;
       if (queued) return; // later paragraphs are re-checked once this one is re-directed
-      this.patchParagraph(p.id, { status: "draft" });
+      this.patchParagraph(p.id, { status: "draft" }, true);
       if (mode === "mark") return;
-      this.redirected.add(key);
-      this.redirectQueue.add(p.id);
+      this.directorQueue.markRedirected(key);
+      this.directorQueue.queueRedirect(p.id);
       queued = true;
       queueMicrotask(() => {
-        this.redirectQueue.delete(p.id);
+        if (this.episodeGeneration !== gen) return;
+        this.directorQueue.dequeueRedirect(p.id);
         this.directOne(p.id);
       });
     });
@@ -987,8 +901,11 @@ class Store {
     const lang = this.state.lang;
     const start = this.startStateFor(idx);
     const version = this.nextVersion(p, text);
-    const previous = this.state.paragraphs.slice(Math.max(0, idx - 3), idx).map((x) => normalizeText(x.text)).filter(Boolean);
-    this.patchParagraph(id, { status: "directing", error: null, pendingVersion: version });
+    const previous = this.state.paragraphs
+      .slice(Math.max(0, idx - 3), idx)
+      .map((x) => normalizeText(x.text))
+      .filter(Boolean);
+    this.patchParagraph(id, { status: "directing", error: null, pendingVersion: version }, true);
     this.recompile();
     this.direct(id, text, lang, start, version, previous);
   }

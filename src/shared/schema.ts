@@ -7,6 +7,14 @@ import { z } from "zod";
 export const ACTOR_IDS = ["masha", "bear", "wolf_a", "wolf_b", "lady_bear", "hare", "rosie", "squirrel", "rival_bear"] as const;
 /** The two Wolves (stand-ins). */
 export const WOLF_IDS = ["wolf_a", "wolf_b"] as const;
+export const SCENE_LOCATIONS = ["yard", "house", "pond", "wolves"] as const;
+export const SceneLocationSchema = z.enum(SCENE_LOCATIONS);
+export type SceneLocation = z.infer<typeof SceneLocationSchema>;
+export const INTERACTIVE_OBJECT_IDS = ["house_door", "kitchen_cupboard"] as const;
+export const InteractiveObjectIdSchema = z.enum(INTERACTIVE_OBJECT_IDS);
+export type InteractiveObjectId = z.infer<typeof InteractiveObjectIdSchema>;
+export const FIXTURE_IDS = ["garden_party", "pancake_morning", "bears_nap", "fishing_trip", "cozy_evening"] as const;
+export type FixtureId = (typeof FIXTURE_IDS)[number];
 export const MARK_IDS = [
   "clearing", "porch", "door", "garden", "beehive", "swing", "pond_shore", "pier", "table",
   "bench", "woodpile", "path_entry", "big_tree", "bush", "hammock", "creek", "van", "house_kitchen", "house_living", "cupboard",
@@ -190,10 +198,15 @@ export const ADDED_ACTOR_START = { ...WOLF_START, ...EXTRA_START };
 const extraStateDefault = (id: keyof typeof EXTRA_START) =>
   ActorStateSchema.default(() => structuredClone(EXTRA_START[id]));
 const wolfStateDefault = (id: "wolf_a" | "wolf_b") =>
-  ActorStateSchema.default(() => JSON.parse(JSON.stringify(WOLF_START[id])) as ActorState);
+  ActorStateSchema.default(() => structuredClone(WOLF_START[id]));
+
+export const WorldObjectsSchema = z.object({
+  house_door: z.number().min(0).max(1),
+  kitchen_cupboard: z.number().min(0).max(1).optional(),
+});
 
 export const WorldStateSchema = z.object({
-  objects:z.object({house_door:z.number().min(0).max(1),kitchen_cupboard:z.number().min(0).max(1).optional()}).optional(),
+  objects: WorldObjectsSchema.optional(),
   timeOfDay: TimeOfDaySchema,
   // wolf_a / wolf_b default in (additive): world states saved before the Wolves still parse.
   actors: z.object({ masha: ActorStateSchema, bear: ActorStateSchema, wolf_a: wolfStateDefault("wolf_a"), wolf_b: wolfStateDefault("wolf_b"), lady_bear: extraStateDefault("lady_bear"), hare: extraStateDefault("hare"), rosie: extraStateDefault("rosie"), squirrel: extraStateDefault("squirrel"), rival_bear: extraStateDefault("rival_bear") }),
@@ -230,7 +243,7 @@ export const ActorClipSchema = z.object({
 });
 export type ActorClip = z.infer<typeof ActorClipSchema>;
 
-export const CamKeySchema = z.object({ pos: Vec3Schema, look: Vec3Schema, fov: z.number(), location:z.enum(['yard','house','pond','wolves']).optional(), followActor:ActorIdSchema.optional() });
+export const CamKeySchema = z.object({ pos: Vec3Schema, look: Vec3Schema, fov: z.number(), location: SceneLocationSchema.optional(), followActor: ActorIdSchema.optional() });
 export type CamKey = z.infer<typeof CamKeySchema>;
 
 export const DialogueCueSchema = z.object({
@@ -284,7 +297,7 @@ export const FxCueSchema = z.object({ start: z.number(), dur: z.number(), id: Fx
 export type FxCue = z.infer<typeof FxCueSchema>;
 
 export const SegmentSchema = z.object({
-  objectCues:z.array(z.object({object:z.enum(['house_door','kitchen_cupboard']),start:z.number(),dur:z.number(),from:z.number(),to:z.number()})).optional(),
+  objectCues: z.array(z.object({ object: InteractiveObjectIdSchema, start: z.number(), dur: z.number(), from: z.number(), to: z.number() })).optional(),
   paragraphId: z.string(),
   version: z.number(),
   duration: z.number(),
@@ -391,7 +404,7 @@ export interface FixtureParagraph {
   beatScript: BeatScript;
 }
 export interface FixtureEpisode {
-  id: "garden_party" | "pancake_morning" | "bears_nap" | "fishing_trip" | "cozy_evening";
+  id: FixtureId;
   lang: Lang;
   title: string;
   paragraphs: FixtureParagraph[];

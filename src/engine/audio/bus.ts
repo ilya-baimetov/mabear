@@ -19,6 +19,7 @@ export const DUCK = { attack: 0.15, release: 0.4 } as const;
 export interface Buses {
   ctx: AudioContext;
   master: GainNode;
+  limiter: DynamicsCompressorNode;
   /** WebAudio-rendered voice (TTS fallback blips go to vocals, not here; kept for completeness) */
   voice: GainNode;
   fx: GainNode;
@@ -77,7 +78,7 @@ export function createBuses(ctx: AudioContext): Buses {
   const ambience = mk(MIX.ambience, ambienceDuck);
   const musicDuck = mk(1, master);
   const music = mk(MIX.music, musicDuck);
-  return { ctx, master, voice, fx, ambience, music, ambienceDuck, musicDuck };
+  return { ctx, master, limiter, voice, fx, ambience, music, ambienceDuck, musicDuck };
 }
 
 export function masterLevel(volume: number, muted: boolean): number {

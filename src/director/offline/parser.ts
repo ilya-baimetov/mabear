@@ -2,7 +2,6 @@
 // Powers the instant preview, the no-key fallback and the tests. The child's quoted words are kept verbatim
 // (only trimmed to 120 chars and passed through the safety pre-filter). The result always passes
 // validateBeatScript with 0 errors.
-import { CHARACTERS } from "../../shared/bible/characters";
 import { PROPS } from "../../shared/bible/props";
 import {isInteriorMark} from '../../shared/bible/set';
 import { canonAbsentMessage, detectLang, findCanonAbsent, isCanonAbsentCompound, preFilter } from "../../shared/rules";
@@ -13,40 +12,10 @@ import {
   type Mood, type MusicCue, type RuleHit, type MusicMood, type PropId, type SfxId, type TimeOfDay, type Verb, type WorldState,
 } from "../../shared/schema";
 import { allowedEmote, otherActor, validateBeatScript } from "../../compiler/validate";
+import type { Lexicon } from "./lexiconTypes";
+export type { Lexicon } from "./lexiconTypes";
 import { LEXICON_EN } from "./lexicon.en";
 import { LEXICON_RU } from "./lexicon.ru";
-
-export interface Lexicon {
-  lang: Lang;
-  /** `plural` = a group mention ("the wolves"): both Wolves act, in parallel */
-  actors: { re: RegExp; id: ActorId; nominative: boolean; plural?: boolean }[];
-  pronouns: { re: RegExp; id: ActorId; subject: boolean }[];
-  both: RegExp;
-  objectPrepositions: RegExp;
-  clauseSplit: RegExp;
-  simultaneous: RegExp;
-  verbs: { re: RegExp; verb: Verb }[];
-  speech: RegExp;
-  speechVerb: { re: RegExp; verb: Verb; emotion: Emotion }[];
-  emotes: { re: RegExp; emote: Emote }[];
-  marks: { re: RegExp; id: MarkId }[];
-  props: { re: RegExp; id: PropId }[];
-  itPronoun: RegExp;
-  /** non-actor nouns that can be a clause subject (sun, music, ball…) */
-  things: RegExp;
-  /** weather/time nouns that are never objects of an action (RU subject after the verb) */
-  weather: RegExp;
-  musicWord: RegExp;
-  musicStop: RegExp;
-  musicMoods: { re: RegExp; mood: MusicMood }[];
-  ambience: { re: RegExp; id: Ambience }[];
-  sfx: { re: RegExp; id: SfxId }[];
-  timeOfDay: { re: RegExp; tod: TimeOfDay }[];
-  emotions: { re: RegExp; emotion: Emotion }[];
-  verbLabels: Record<Verb, string>;
-  names: Record<ActorId, string>;
-  says: string;
-}
 
 export const LEXICONS: Record<Lang, Lexicon> = { en: LEXICON_EN, ru: LEXICON_RU };
 
@@ -572,9 +541,4 @@ function makeSummary(src: string, quotes: string[], beats: Beat[], lang: Lang): 
   for (const b of beats.slice(0, 3)) parts.push(`${lx.names[b.actor]} ${lx.verbLabels[b.verb]}`);
   const s = parts.join(", ");
   return clampText(s.charAt(0).toUpperCase() + s.slice(1) + ".", MAX_SUMMARY_CHARS);
-}
-
-/** Whether a character can speak (re-exported for UI hints). */
-export function canSpeak(a: ActorId): boolean {
-  return CHARACTERS[a].speaks;
 }

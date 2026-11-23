@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type {CharacterRig,FrameState} from '../api';
+import { smooth } from '../../shared/math';
 import type {ActorId} from '../../shared/schema';
 import {interactionRadius} from '../../shared/physicalInteractions';
 import {contactHands} from './contactHands';
@@ -7,7 +8,6 @@ import {contactHands} from './contactHands';
 type Sample={mesh:THREE.SkinnedMesh;index:number};
 const samples=new WeakMap<THREE.Object3D,Map<boolean,Sample[]>>();
 const at=(o:THREE.Object3D)=>o.getWorldPosition(new THREE.Vector3());
-const smooth=(v:number)=>{v=THREE.MathUtils.clamp(v,0,1);return v*v*(3-2*v);};
 function torsoSamples(rig:CharacterRig,arms=false):Sample[]{
  const cached=samples.get(rig.root)??new Map<boolean,Sample[]>(),existing=cached.get(arms);if(existing)return existing;
  const names=['Hips','Spine','Spine1','Spine2','LeftShoulder','RightShoulder',...(arms?['LeftArm','LeftForeArm','LeftHand','RightArm','RightForeArm','RightHand']:[])];

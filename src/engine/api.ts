@@ -108,6 +108,34 @@ export interface FrameState {
   fx: FxFrame[];
 }
 
+export type Weights = Array<[THREE.Object3D, number]>;
+
+export interface SkinPart {
+  /** geometry in `bone`-local space (rest pose) */
+  geom: THREE.BufferGeometry;
+  bone: THREE.Object3D;
+  material: THREE.Material;
+  /** casts shadows (default true); parts with different flags land in different meshes */
+  shadow?: boolean;
+  /** smooth weights from the REST position in character space (default: rigid on `bone`) */
+  weights?: (p: THREE.Vector3, n: THREE.Vector3) => Weights;
+}
+
+export interface FaceRig {
+  group: THREE.Group;
+  /** eyes, highlights, lids and brows on their face bones: the character merges them into its skinned body */
+  parts: SkinPart[];
+  eyeMaterial: THREE.Material;
+  update(p: FaceParams, sleeping: boolean): void;
+  dispose(): void;
+}
+
+export interface PlaybackEvaluator {
+  setTimeline(timeline: Timeline): void;
+  evaluate(view: Timeline, t: number): FrameState;
+  dispose(): void;
+}
+
 /** A built character (procedural stand-in or glTF). */
 export interface CharacterRig {
   id: ActorId | string;
@@ -167,4 +195,7 @@ export interface AudioDebug {
   ttsAvailable: boolean;
   unlocked: boolean;
   recordedSpeech?: {voice:string;scheduled:{text:string;lang:Lang;offset:number;duration:number}[]};
+  voices?: Record<string, string>;
+  errors?: number;
+  lastError?: string;
 }

@@ -171,9 +171,9 @@ export function buildLivingShapes(materials: Record<string, THREE.MeshStandardMa
   }
   // A few generic, unlettered volumes establish shelf capacity and scale.
   // They are solid monochrome book shapes rather than finished asset detail.
-  const bookMaterials = [materials.paper, materials.blue, materials.chair, materials.black].map((source, idx) => {
+  const bookMaterials = ['#7f8b73', '#607d8b', '#9c6248', '#3c403a'].map((hex) => {
     const material = new THREE.MeshStandardMaterial({
-      color: ['#7f8b73', '#607d8b', '#9c6248', '#3c403a'][idx],
+      color: hex,
       roughness: .82,
     });
     material.color.lerp(materials.wood.color, .45);

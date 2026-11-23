@@ -4,11 +4,11 @@ import {PROP_CONTACTS} from '../../shared/propContacts';
 import {clapOpen} from '../../shared/contactTiming';
 import {kitchenSurfaceGrasp,prepTableLift,solveArm} from './mashaContacts';
 import {contactHands,toolWristDelta,torsoElbowPole} from './contactHands';
+import { clamp, smooth } from '../../shared/math';
 
 type Sample={mesh:THREE.SkinnedMesh;index:number;local:THREE.Vector3;u:number};
 type Hand={side:number;arm:THREE.Bone;elbow:THREE.Bone;wrist:THREE.Bone;restQ:THREE.Quaternion;basis:THREE.Quaternion;scale:THREE.Vector3;samples:Sample[];palm:Sample[];length:number;normal:THREE.Vector3};
 const at=(o:THREE.Object3D)=>o.getWorldPosition(new THREE.Vector3());
-const smooth=(v:number)=>{v=THREE.MathUtils.clamp(v,0,1);return v*v*(3-2*v);};
 function measure(rig:CharacterRig,side:number,meshes:THREE.SkinnedMesh[]):Hand|null{
  const prefix=side>0?'Left':'Right',arm=rig.bones[prefix+'Arm'],elbow=rig.bones[prefix+'ForeArm'],wrist=rig.bones[prefix+'Hand'];
  if(!arm||!elbow||!wrist)return null;
@@ -119,7 +119,7 @@ export function addSourceContacts(rig:CharacterRig):boolean{
   const reverseSurface=frame.putDown?kitchenSurfaceGrasp(frame,frame.putDown):null;
   if(frame.pickup||reverseSurface){
    const data=(frame.pickup??frame.putDown)!,h=hands[1],grip=PROP_CONTACTS[data.item],duration=frame.action?.duration??1,attach=duration*data.release,pickupTime=frame.pickup?time:duration-time;
-   const after=THREE.MathUtils.clamp((pickupTime-attach)/Math.max(.001,duration-attach),0,1),carry=THREE.MathUtils.clamp((after-.06)/.64,0,1),gripCarry=smooth((after-.18)/.52),strength=pickupTime<attach?smooth(pickupTime/Math.max(.001,attach-.035)):1;
+   const after=clamp((pickupTime-attach)/Math.max(.001,duration-attach),0,1),carry=clamp((after-.06)/.64,0,1),gripCarry=smooth((after-.18)/.52),strength=pickupTime<attach?smooth(pickupTime/Math.max(.001,attach-.035)):1;
    const surfaceGrasp=kitchenSurfaceGrasp(frame,data);
    const base=[h.arm,h.elbow,h.wrist].map(b=>b.quaternion.clone()),baseQ=h.wrist.getWorldQuaternion(new THREE.Quaternion());
    const restQ=new THREE.Quaternion().setFromEuler(new THREE.Euler(...data.rotation,'YXZ')),heldQ=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),frame.yaw).multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(...(grip.rotation??[0,0,0]),'YXZ')));

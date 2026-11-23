@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import type {ActorFrame} from '../api';
 import {EMOTION_PRESETS,mouthShapeFor,type MouthShape} from './face';
 import {emotionWeights} from '../motion/emotion';
+import { clamp, lerp as mix, smooth } from '../../shared/math';
 
 // A local retopology pass over the generated model: replace the closed facial
 // surface with continuous skin rings, real eye openings and a recessed mouth.
@@ -9,9 +10,6 @@ import {emotionWeights} from '../motion/emotion';
 type Point={p:THREE.Vector3;uv:THREE.Vector2;index?:number};
 type Region={cx:number;cy:number;rx:number;ry:number};
 type Ring={mesh:THREE.Mesh;angles:number[];update:(inner:(angle:number)=>THREE.Vector3)=>void};
-const clamp=THREE.MathUtils.clamp;
-const mix=THREE.MathUtils.lerp;
-const smooth=(x:number)=>{x=clamp(x,0,1);return x*x*(3-2*x);};
 const key=(p:THREE.Vector3)=>`${Math.round(p.x*1e5)},${Math.round(p.y*1e5)},${Math.round(p.z*1e5)}`;
 
 function bindPoints(mesh:THREE.SkinnedMesh):Point[]{

@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type {CharacterRig,FrameState} from '../api';
+import { lerp, smooth } from '../../shared/math';
 import type {ActorId} from '../../shared/schema';
 import {contactHands} from './contactHands';
 import {solveArm} from './mashaContacts';
@@ -7,7 +8,6 @@ import {solveArm} from './mashaContacts';
 type Sample={mesh:THREE.SkinnedMesh;index:number};
 const cache=new WeakMap<THREE.Object3D,Map<string,Sample[]>>();
 const at=(o:THREE.Object3D)=>o.getWorldPosition(new THREE.Vector3());
-const smooth=(v:number)=>{v=THREE.MathUtils.clamp(v,0,1);return v*v*(3-2*v);};
 function samples(rig:CharacterRig,names:string[]):Sample[]{
  const key=names.join(),byKind=cache.get(rig.root)??new Map(),found=byKind.get(key);if(found)return found;
  const bones=new Set(names.map(n=>rig.bones[n])),out:Sample[]=[];
@@ -53,7 +53,7 @@ export function applyCarryContacts(rigs:Record<ActorId,CharacterRig>,frame:Frame
   const joints=['Arm','ForeArm','Hand'].map(n=>carrier.bones[side+n]),base=joints.map(j=>j.quaternion.clone());
   for(const name of ['Arm','ForeArm'])carrier.bones[side+name].quaternion.copy(carrier.rest[side+name]);carrier.root.updateMatrixWorld(true);
   const overhead=smooth((k-.35)/.4);
-  const pole=at(carrier.bones[side+'Arm']).addScaledVector(right,hand.side*.34).addScaledVector(forward,THREE.MathUtils.lerp(-.14,.16,overhead)).addScaledVector(up,-.55);
+  const pole=at(carrier.bones[side+'Arm']).addScaledVector(right,hand.side*.34).addScaledVector(forward,lerp(-.14,.16,overhead)).addScaledVector(up,-.55);
   const long=up.clone().addScaledVector(forward,-.9*smooth((k-.55)/.35)).normalize();
   const result=hand.place(target,long, right.clone().multiplyScalar(-hand.side),1,pole);
   if(strength<1)joints.forEach((j,i)=>{const solved=j.quaternion.clone();j.quaternion.copy(base[i]).slerp(solved,strength);});carrier.root.updateMatrixWorld(true);

@@ -3,7 +3,7 @@
 // arm swing; Bear's heavy footfalls and arms carried clear of his belly. Root motion comes from the compiled path.
 import { SPEEDS } from "../../../shared/grammar";
 import type { ActorId } from "../../../shared/schema";
-import { addLayer, clamp, lerp, qextrap, qpow, qslerp, smooth, type Pose, type PoseLayer } from "../blend";
+import { addLayer, clamp, lerp, qextrap, qmul, qpow, qslerp, smooth, type Pose, type PoseLayer } from "../blend";
 import { CLIPS } from "../clips.generated";
 import {
   LOWER, STYLES, UPPER, arm, feetPoints, styleLegs, idleBase, mask, persona, poseClip, pose, rx, ry, rz, sampleClip,
@@ -180,7 +180,7 @@ function between(ph: number, contacts: number[]): number {
  *  Rosie has a buoyant pig trot; Bears absorb heavy footfalls; Wolves have lanky springy rolls. */
 function gaitLegs(actor: ActorId, kind: Gait, bones: Pose, ph: number, contacts: number[]): Pose {
   const out: Pose = { ...bones };
-  const post = (b: string, a: number) => { if (a) out[b] = qmul2(out[b] ?? [0, 0, 0, 1], rx(a)); };
+  const post = (b: string, a: number) => { if (a) out[b] = qmul(out[b] ?? [0, 0, 0, 1], rx(a)); };
   const imp = impact(ph, contacts, kind === "run" ? 0.06 : 0.08);
   const p = persona(actor);
   if (p === "masha") {
@@ -261,7 +261,7 @@ function gait(kind0: Gait, ctx: VerbCtx, localT: number): PoseLayer {
     L = addLayer(L, {
       Spine: rx(0.1 * sq - 0.05 * air),
       Spine2: rx(-0.04 * air),
-      Head: qmul2(rx(0.06 * sq), rz(0.05 * Math.sin(ph * Math.PI * 2))),
+      Head: qmul(rx(0.06 * sq), rz(0.05 * Math.sin(ph * Math.PI * 2))),
     });
     L.lift = kind === "run" ? 0.05 * flight(ph, contacts, 0.4) * style.bounce : 0;
   } else if (p === "wolf") {
@@ -276,7 +276,7 @@ function gait(kind0: Gait, ctx: VerbCtx, localT: number): PoseLayer {
     L = addLayer(L, {
       Spine1: rx(0.1 + 0.06 * sq + (kind === "run" ? 0.08 : 0)),
       Neck: rx(-0.08),
-      Head: qmul2(rx(0.05 * sq - 0.03 * air), rz(0.04 * Math.sin(ph * Math.PI * 2))),
+      Head: qmul(rx(0.05 * sq - 0.03 * air), rz(0.04 * Math.sin(ph * Math.PI * 2))),
     });
     L.lift = kind === "run" ? 0.04 * flight(ph, contacts, 0.42) * style.bounce : 0;
   } else if (p === "rosie") {
@@ -292,7 +292,7 @@ function gait(kind0: Gait, ctx: VerbCtx, localT: number): PoseLayer {
       Hips: rz(roll),
       Spine: rx(0.07 * sq - 0.04 * air),
       Spine1: rz(-roll * 0.65),
-      Head: qmul2(rz(-roll * 0.35), rx(0.05 * sq - 0.04 * air)),
+      Head: qmul(rz(-roll * 0.35), rx(0.05 * sq - 0.04 * air)),
     });
     L.lift = kind === "run" ? 0.04 * flight(ph, contacts, 0.42) * style.bounce : 0.008 * air * style.bounce;
   } else {
@@ -305,9 +305,9 @@ function gait(kind0: Gait, ctx: VerbCtx, localT: number): PoseLayer {
     L = { ...L, bones: { ...L.bones, ...arms } };
     L = addLayer(L, {
       Hips: rz(roll),
-      Spine1: qmul2(rz(-roll * 0.7), rx(0.05 * settle)),
+      Spine1: qmul(rz(-roll * 0.7), rx(0.05 * settle)),
       Spine2: rx(0.03 * settle),
-      Head: qmul2(rz(-roll * 0.3), rx(0.07 * settle)),
+      Head: qmul(rz(-roll * 0.3), rx(0.07 * settle)),
     });
     if (kind === "run") L.lift = 0.025 * flight(ph, contacts, 0.45);
   }
@@ -328,8 +328,8 @@ function gait(kind0: Gait, ctx: VerbCtx, localT: number): PoseLayer {
   const headLead = clamp((ctx.omega ?? 0) * 0.14, -0.35, 0.35);
   if (pitchLean !== 0 || bankLean !== 0 || headLead !== 0) {
     L = addLayer(L, {
-      Spine: qmul2(rx(pitchLean * 0.55), rz(-bankLean * 0.5)),
-      Spine1: qmul2(rx(pitchLean * 0.45), rz(-bankLean * 0.35)),
+      Spine: qmul(rx(pitchLean * 0.55), rz(-bankLean * 0.5)),
+      Spine1: qmul(rx(pitchLean * 0.45), rz(-bankLean * 0.35)),
       Spine2: rz(-bankLean * 0.15),
       Neck: ry(headLead * 0.4),
       Head: ry(headLead * 0.6),
@@ -348,12 +348,6 @@ function gait(kind0: Gait, ctx: VerbCtx, localT: number): PoseLayer {
     return out;
   }
   return L;
-}
-
-function qmul2(a: [number, number, number, number], b: [number, number, number, number]): [number, number, number, number] {
-  const [ax, ay, az, aw] = a;
-  const [bx, by, bz, bw] = b;
-  return [aw * bx + ax * bw + ay * bz - az * by, aw * by - ax * bz + ay * bw + az * bx, aw * bz + ax * by - ay * bx + az * bw, aw * bw - ax * bx - ay * by - az * bz];
 }
 
 export const walk_to: VerbImpl = (lt, _p, ctx) => gait("walk", ctx, lt);

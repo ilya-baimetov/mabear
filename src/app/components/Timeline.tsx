@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { useStore, useStrings } from "../useStore";
+import { shallowEqual, useStore, useStoreSelector, useStrings } from "../useStore";
 import { playback, playbackRange } from "../playback";
 import { store } from "../store";
 import { selectedMoment } from "../storyFlow";
@@ -16,6 +16,9 @@ function formatTime(value: number, scopeDur: number, lang: "en" | "ru"): string 
 
 function voiceErrorText(code: string, lang: "en" | "ru"): string {
   const english = lang === "en";
+  if (code === "unauthorized" || code === "speech_http_401") return english
+    ? "Session expired — sign in again at /login to load Masha’s voice. Your story is saved."
+    : "Сессия закончилась — войди снова на /login, чтобы загрузить голос Маши. История сохранена.";
   if (code === "voice_allowance_reached") return english
     ? "New voice recordings are paused because the voice allowance is used up. Your story and existing recordings are saved."
     : "Лимит новых реплик исчерпан. История и готовые записи сохранены.";
@@ -34,7 +37,16 @@ function voiceErrorText(code: string, lang: "en" | "ru"): string {
 
 /** Scope lives above the picture, so it cannot disappear into transport overflow. */
 export function PlayerScope() {
-  const s = useStore(), p = selectedMoment(s), story = s.previewScope?.kind !== "moment";
+  const s = useStoreSelector(
+    (st) => ({
+      lang: st.lang,
+      paragraphs: st.paragraphs,
+      selectedId: st.selectedId,
+      previewScope: st.previewScope,
+    }),
+    shallowEqual,
+  );
+  const p = selectedMoment(s), story = s.previewScope?.kind !== "moment";
   const index = s.paragraphs.findIndex(x => x.id === p?.id);
   return <div className="player-heading">
     <span className="player-label"><Film size={14} aria-hidden="true"/>{s.lang === "en" ? "MOVIE" : "ФИЛЬМ"}</span>
@@ -45,6 +57,7 @@ export function PlayerScope() {
     <span className="player-scope-caption">{story ? (s.lang === "en" ? "All scenes, in order" : "Все сцены по порядку") : (s.lang === "en" ? "Selected scene only" : "Только выбранная сцена")}</span>
   </div>;
 }
+
 export function Timeline() {
   const s = useStore(), t = useStrings();
   const p = selectedMoment(s), bar = useRef<HTMLDivElement>(null);
@@ -62,6 +75,7 @@ export function Timeline() {
   const running = s.playing || s.waiting;
   const dirty = s.paragraphs.some(x => x.status === "draft" && (x.text.trim() || x.current >= 0));
   const playable = scopeDur > 0 || (wholeStory ? s.paragraphs.some(x => x.text.trim()) : !!p?.text.trim());
+  const voiceAuthExpired = s.voiceError === "unauthorized" || s.voiceError === "speech_http_401";
   const seekTo = (time: number) => playback.seek(range.start + Math.max(0, Math.min(scopeDur, time)));
   const ratioAt = (clientX: number): number | null => {
     const r = bar.current?.getBoundingClientRect();
@@ -88,6 +102,11 @@ export function Timeline() {
       <div className="voice-error" role="alert" data-testid="voice-error">
         <span>{voiceErrorText(s.voiceError, s.lang)}</span>
         <div className="voice-error-actions">
+          {voiceAuthExpired && (
+            <a className="btn small" href="/login" data-testid="voice-login">
+              {s.lang === "en" ? "Sign in" : "Войти"}
+            </a>
+          )}
           <button type="button" className="btn small" data-testid="retry-voice" onClick={() => playback.retryVoice()}>
             {s.lang === "en" ? "Retry" : "Повторить"}
           </button>

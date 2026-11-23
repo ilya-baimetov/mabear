@@ -6,11 +6,10 @@ import {clapOpen} from '../../shared/contactTiming';
 import {contactHands,toolWristDelta,torsoElbowPole} from './contactHands';
 import {HOUSE_PREP_TABLE} from '../../shared/houseLayout';
 import {cookingSupportHeightAt} from '../../shared/cookingStation';
+import { clamp, smooth } from '../../shared/math';
 
 type Hand={side:'Left'|'Right';arm:THREE.Bone;elbow:THREE.Bone;wrist:THREE.Bone;long:THREE.Vector3;normal:THREE.Vector3;width:THREE.Vector3;restQ:THREE.Quaternion;basis:THREE.Quaternion;scale:THREE.Vector3;palm:THREE.Vector3;grip:THREE.Vector3};
-const clamp=THREE.MathUtils.clamp;
 const point=(b:THREE.Object3D)=>b.getWorldPosition(new THREE.Vector3());
-const smooth=(v:number)=>{v=clamp(v,0,1);return v*v*(3-2*v);};
 
 /** Keep a carried object's base above the worktop while it still overlaps it.
  * The correction fades outside the table, and uses the same pre-helper-lift

@@ -71,11 +71,11 @@ let strictEnums = true;
 /** Test/ops hooks. */
 export function setRefusalFallbackEnabled(on: boolean): void {
   fallbackEnabled = on;
-  preferredShape = null;
+  preferredShapeByModel.clear();
 }
 export function setStrictEnums(on: boolean): void {
   strictEnums = on;
-  preferredShape = null;
+  preferredShapeByModel.clear();
 }
 
 const JSON_HEADERS = { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" };
@@ -214,15 +214,26 @@ const SHAPES: Shape[] = [
   { fallback: true, enums: false },
   { fallback: false, enums: false },
 ];
-/** The first shape the API accepted in this isolate (tried first next time). */
-let preferredShape: Shape | null = null;
+/** The first shape the API accepted per model in this isolate (tried first next time). */
+const preferredShapeByModel = new Map<string, Shape>();
+const clientCache = new Map<string, Anthropic>();
+
+function getClient(apiKey: string, timeoutMs: number): Anthropic {
+  let client = clientCache.get(apiKey);
+  if (!client) {
+    client = new Anthropic({ apiKey, timeout: timeoutMs, maxRetries: 1 });
+    clientCache.set(apiKey, client);
+  }
+  return client;
+}
 
 function shapesFor(model: string): Shape[] {
   // Haiku has no server-side fallback; other models get the fallback beta (§8.2) and drop it if the API rejects it.
   const supportsFallback = !model.startsWith("claude-haiku");
   const allowed = SHAPES.filter((s) => (supportsFallback ? true : !s.fallback) && (fallbackEnabled || !s.fallback) && (strictEnums || !s.enums));
+  const preferredShape = preferredShapeByModel.get(model);
   if (preferredShape) {
-    const p = allowed.find((s) => s.fallback === preferredShape!.fallback && s.enums === preferredShape!.enums);
+    const p = allowed.find((s) => s.fallback === preferredShape.fallback && s.enums === preferredShape.enums);
     if (p) return [p, ...allowed.filter((s) => s !== p)];
   }
   return allowed;
@@ -252,7 +263,7 @@ async function callOnce(client: Anthropic, model: string, userText: string, sign
     for (const shape of shapesFor(model)) {
       try {
         r = await send(client, shape, model, userText, signal);
-        preferredShape = shape;
+        preferredShapeByModel.set(model, shape);
         break;
       } catch (e) {
         // 400 → this request shape isn't accepted (e.g. fallback beta + structured outputs); try the next shape.
@@ -281,8 +292,11 @@ async function callOnce(client: Anthropic, model: string, userText: string, sign
   }
 }
 
-function describeError(e: unknown, timedOut: boolean): string {
-  if (timedOut) return "timeout: the director took longer than 20 s";
+function describeError(e: unknown, timedOut: boolean, timeoutMs = DIRECTOR_TIMEOUT_MS): string {
+  if (timedOut) {
+    const label = timeoutMs >= 1000 ? `${Math.round(timeoutMs / 1000)} s` : `${timeoutMs} ms`;
+    return `timeout: the director took longer than ${label}`;
+  }
   if (e instanceof Anthropic.APIError) return short(`api_error ${e.status ?? ""}: ${e.message}`);
   if (e instanceof Error) return short(`director_error: ${e.message}`);
   return "director_error";
@@ -330,7 +344,7 @@ export async function runDirector(req: DirectRequest, env: DirectorEnv, deps: Di
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   const usageRef: { usage: Usage | null } = { usage: null };
   try {
-    const client = deps.client ?? new Anthropic({ apiKey: env.ANTHROPIC_API_KEY, timeout: timeoutMs, maxRetries: 1 });
+    const client = deps.client ?? getClient(env.ANTHROPIC_API_KEY!, timeoutMs);
     const baseText = buildUserMessage(filteredReq, pre.text);
     let userText = baseText;
     let lastNote = "";
@@ -358,7 +372,7 @@ export async function runDirector(req: DirectRequest, env: DirectorEnv, deps: Di
     }
     return offline(short(`invalid_output after one repair: ${lastNote}`), usageRef.usage);
   } catch (e) {
-    return offline(describeError(e, controller.signal.aborted), usageRef.usage);
+    return offline(describeError(e, controller.signal.aborted, timeoutMs), usageRef.usage);
   } finally {
     clearTimeout(timer);
   }
@@ -371,6 +385,8 @@ const MAX_BODY_CHARS = 200_000;
 /** Validates the HTTP request (400 on bad input) and runs the director. Never 5xx for director failures. */
 export async function handleDirect(request: Request, env: DirectorEnv, deps: DirectorDeps = {}): Promise<Response> {
   if (request.method !== "POST") return new Response(JSON.stringify({ error: "method_not_allowed" }), { status: 405, headers: { ...JSON_HEADERS, allow: "POST" } });
+  const contentLength = Number(request.headers.get("content-length"));
+  if (Number.isFinite(contentLength) && contentLength > MAX_BODY_CHARS * 4) return badRequest("body_too_large", "Request body is too large.");
   let raw: string;
   try {
     raw = await request.text();

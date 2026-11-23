@@ -1,7 +1,7 @@
 // Honesty legend (spec §2): renders the §0 layer table with Live / Stand-in / Placeholder tags.
 import type { Lang } from "../../shared/schema";
 import { STRINGS } from "../i18n";
-import { useStore, useStrings } from "../useStore";
+import { useStoreSelector } from "../useStore";
 
 type Tag = "Live" | "Stand-in" | "Placeholder";
 
@@ -105,16 +105,9 @@ const LAYER_ROWS: LayerRow[] = [
   },
 ];
 
-export const LAYERS: { layer: string; production: string; prototype: string; tag: Tag }[] = LAYER_ROWS.map((row) => ({
-  layer: row.layer.en,
-  production: row.production.en,
-  prototype: row.prototype.en,
-  tag: row.tag,
-}));
-
 export function SystemLayers() {
-  const s = useStore();
-  const t = useStrings();
+  const lang = useStoreSelector((st) => st.lang);
+  const t = STRINGS[lang];
   return (
     <section className="bts-sec" data-testid="system-layers">
       <h3>{t.bts.layers}</h3>
@@ -124,18 +117,18 @@ export function SystemLayers() {
             <th scope="col">{t.bts.layer}</th>
             <th scope="col">{t.bts.production}</th>
             <th scope="col">{t.bts.prototype}</th>
-            <th scope="col"><span className="visually-hidden">{s.lang === "en" ? "Status" : "Статус"}</span></th>
+            <th scope="col"><span className="visually-hidden">{lang === "en" ? "Status" : "Статус"}</span></th>
           </tr>
         </thead>
         <tbody>
           {LAYER_ROWS.map((row) => (
             <tr key={row.layer.en}>
-              <td>{row.layer[s.lang]}</td>
-              <td>{row.production[s.lang]}</td>
-              <td>{row.prototype[s.lang]}</td>
+              <td>{row.layer[lang]}</td>
+              <td>{row.production[lang]}</td>
+              <td>{row.prototype[lang]}</td>
               <td>
                 <span className={`tag tag-${row.tag.replace(/\W/g, "").toLowerCase()}`}>
-                  {TAG_LABELS[row.tag][s.lang]}
+                  {TAG_LABELS[row.tag][lang]}
                 </span>
               </td>
             </tr>
@@ -143,7 +136,7 @@ export function SystemLayers() {
         </tbody>
       </table>
       <p className="note">
-        {s.lang === "en"
+        {lang === "en"
           ? "In production, the text→plan and plan→motion layers are one model trained on Animaccord's episode archive. Here they are approximated by Claude + a character bible and by open motion libraries."
           : "В продакшне слои «текст → план» и «план → движение» объединяются в одну модель на архиве серий Animaccord. Здесь их заменяют Claude + библия персонажей и открытые библиотеки движений."}
       </p>

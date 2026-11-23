@@ -1,10 +1,21 @@
 import { AlertTriangle, BookOpen, Clapperboard, Plus, Redo2, Undo2 } from "lucide-react";
+import { STRINGS } from "../i18n";
 import { store } from "../store";
 import { redoStory, undoStory } from "../storyFlow";
-import { useStore, useStrings } from "../useStore";
+import { shallowEqual, useStoreSelector } from "../useStore";
 
 export function TopBar({ onExamples, onNew }: { onExamples: () => void; onNew: () => void }) {
-  const s = useStore(), t = useStrings();
+  const s = useStoreSelector(
+    (st) => ({
+      lang: st.lang,
+      title: st.title,
+      saveError: st.saveError,
+      canUndo: st.canUndo,
+      canRedo: st.canRedo,
+    }),
+    shallowEqual,
+  );
+  const t = STRINGS[s.lang];
   return <header className="topbar">
     <div className="brand"><span className="logo" aria-hidden="true"><Clapperboard size={25} strokeWidth={2.3}/></span><span className="brand-wordmark"><span className="brand-name">Ma<span>Bear</span></span><span className="brand-caption">{s.lang === "en" ? "STORY STUDIO" : "СТУДИЯ ИСТОРИЙ"}</span></span></div>
     <div className="story-name"><label htmlFor="story-name">{s.lang === "en" ? "YOUR STORY" : "ТВОЯ ИСТОРИЯ"}</label><input id="story-name" data-testid="story-title" placeholder={s.lang === "en" ? "An untitled adventure" : "Приключение без названия"} value={s.title} onChange={e => store.setTitle(e.target.value)}/></div>

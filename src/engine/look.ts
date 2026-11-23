@@ -8,6 +8,9 @@ import { HDRLoader } from "three/examples/jsm/loaders/HDRLoader.js";
 import { FullScreenQuad } from "three/examples/jsm/postprocessing/Pass.js";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import type { TimeOfDay } from "../shared/schema";
+import { clamp01, lerp, smooth } from "../shared/math";
+import { rng } from "./math/rng";
+export { rng };
 
 // ---------------------------------------------------------------------------------------------------------------
 // Time-of-day presets (plain data, pure blending — unit-testable without WebGL)
@@ -82,14 +85,11 @@ function lerpHex(a: number, b: number, k: number): number {
   _cb.setHex(b);
   return _ca.lerp(_cb, k).getHex();
 }
-const lerp = (a: number, b: number, k: number) => a + (b - a) * k;
-const smooth = (k: number) => k * k * (3 - 2 * k);
-
 /** Pure: blend two presets. k is clamped to 0..1 and eased (smoothstep). */
 export function blendLighting(from: TimeOfDay, to: TimeOfDay, k: number): LightingParams {
   const a = TOD_PRESETS[from] ?? TOD_PRESETS.day;
   const b = TOD_PRESETS[to] ?? a;
-  const t = smooth(Math.min(1, Math.max(0, Number.isFinite(k) ? k : 0)));
+  const t = smooth(Number.isFinite(k) ? k : 0);
   if (t <= 0) return { ...a, sunDir: [...a.sunDir] as [number, number, number] };
   if (t >= 1) return { ...b, sunDir: [...b.sunDir] as [number, number, number] };
   const na = new THREE.Vector3(...a.sunDir).normalize();
@@ -432,6 +432,8 @@ function createEnvSystem(renderer: THREE.WebGLRenderer): EnvSystem {
     lastGen: -Infinity,
     generations: 0,
     setHdri(tex) {
+      const prev = mat.uniforms.tHdr.value as THREE.Texture | null;
+      if (prev && prev !== tex) prev.dispose();
       const st = hdriStats(tex);
       mat.uniforms.tHdr.value = tex;
       mat.uniforms.uHasHdr.value = 1;
@@ -675,17 +677,7 @@ function canvasTex(size: number, draw: (ctx: CanvasRenderingContext2D, size: num
   return t;
 }
 
-/** Deterministic PRNG (mulberry32). */
-export function rng(seed: number): () => number {
-  let a = seed >>> 0;
-  return () => {
-    a = (a + 0x6d2b79f5) >>> 0;
-    let t = a;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
+// rng() is declared in ./math/rng and re-exported above.
 
 function woodGrain(ctx: CanvasRenderingContext2D, s: number): void {
   const r = rng(7);
@@ -706,13 +698,8 @@ function woodGrain(ctx: CanvasRenderingContext2D, s: number): void {
   }
 }
 
-function clamp01(v: number): number {
-  return v < 0 ? 0 : v > 1 ? 1 : v;
-}
-
 function smooth01(e0: number, e1: number, x: number): number {
-  const t = clamp01((x - e0) / (e1 - e0));
-  return t * t * (3 - 2 * t);
+  return smooth((x - e0) / (e1 - e0));
 }
 
 function pixelTex(
@@ -962,13 +949,17 @@ function buildProceduralMaterialMaps(): Record<"stone" | "soil" | "paint" | "fab
   };
 }
 
+const materialPlaceholders = new WeakMap<LookMaterials, Set<THREE.Texture>>();
+
 export function createMaterials(): LookMaterials {
   const grain = canvasTex(256, woodGrain);
+  const woodFlat = flatNormal();
+  const barkFlat = flatNormal();
   const proc = buildProceduralMaterialMaps();
   const std = (o: THREE.MeshStandardMaterialParameters) => new THREE.MeshStandardMaterial({ vertexColors: true, ...o });
   const mats = {
-    wood: std({ roughness: 0.82, map: grain, normalMap: flatNormal() }),
-    bark: std({ roughness: 0.95, map: grain, normalMap: flatNormal() }),
+    wood: std({ roughness: 0.82, map: grain, normalMap: woodFlat }),
+    bark: std({ roughness: 0.95, map: grain, normalMap: barkFlat }),
     foliage: std({ roughness: 0.88 }),
     paint: std({ roughness: 0.78, normalScale: new THREE.Vector2(0.28, 0.28), ...proc.paint }),
     metal: std({ roughness: 0.44, metalness: 0.65, ...proc.metal }),
@@ -978,6 +969,9 @@ export function createMaterials(): LookMaterials {
     stone: std({ roughness: 0.96, normalScale: new THREE.Vector2(0.8, 0.8), ...proc.stone }),
     soil: std({ roughness: 0.96, normalScale: new THREE.Vector2(0.85, 0.85), ...proc.soil }),
   } as LookMaterials;
+  const placeholders = new Set<THREE.Texture>([woodFlat, barkFlat]);
+  if (grain) placeholders.add(grain);
+  materialPlaceholders.set(mats, placeholders);
   for (const k of MAT_KEYS) mats[k].name = `look:${k}`;
   installFoliageClumps(mats.foliage);
   return mats;
@@ -997,18 +991,32 @@ export interface LookTextures {
  * vertex colours still carry the palette.
  */
 export function applyLookTextures(m: LookMaterials, t: LookTextures): void {
+  const placeholders = materialPlaceholders.get(m);
+  const disposeUnusedPlaceholder = (tex: THREE.Texture | null) => {
+    if (!tex || !placeholders?.has(tex)) return;
+    for (const k of MAT_KEYS) {
+      const mat = m[k];
+      if (mat.map === tex || mat.normalMap === tex || mat.roughnessMap === tex) return;
+    }
+    placeholders.delete(tex);
+    tex.dispose();
+  };
   const set = (mat: THREE.MeshStandardMaterial, map?: THREE.Texture, nrm?: THREE.Texture, ns = 0.8) => {
     // map + normalMap are never null on these materials (procedural grain, flat 1×1 normal placeholder), so the
     // swap reuses the already-compiled shader program: no hitch when the textures arrive
     let recompile = false;
     if (map) {
-      recompile ||= !mat.map;
+      const prevMap = mat.map;
+      recompile ||= !prevMap;
       mat.map = map;
+      if (prevMap !== map) disposeUnusedPlaceholder(prevMap);
     }
     if (nrm) {
-      recompile ||= !mat.normalMap;
+      const prevNrm = mat.normalMap;
+      recompile ||= !prevNrm;
       mat.normalMap = nrm;
       mat.normalScale.set(ns, ns);
+      if (prevNrm !== nrm) disposeUnusedPlaceholder(prevNrm);
     }
     if (recompile) mat.needsUpdate = true;
   };
@@ -1062,12 +1070,16 @@ float folNoise(vec3 x) {
 }
 
 export function disposeMaterials(m: LookMaterials): void {
+  const texs = new Set<THREE.Texture>(materialPlaceholders.get(m));
   for (const k of MAT_KEYS) {
-    m[k].map?.dispose();
-    m[k].normalMap?.dispose();
-    m[k].roughnessMap?.dispose();
-    m[k].dispose();
+    const mat = m[k];
+    for (const t of [mat.map, mat.normalMap, mat.roughnessMap, mat.metalnessMap, mat.emissiveMap, mat.aoMap]) {
+      if (t) texs.add(t);
+    }
+    mat.dispose();
   }
+  for (const t of texs) t.dispose();
+  materialPlaceholders.delete(m);
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -1146,7 +1158,6 @@ function normalize(g: THREE.BufferGeometry): THREE.BufferGeometry {
   return g;
 }
 
-const _m = new THREE.Matrix4();
 const _q = new THREE.Quaternion();
 const _e = new THREE.Euler();
 const _s = new THREE.Vector3();
@@ -1294,13 +1305,6 @@ export class GeoBag {
     for (const list of this.parts.values()) for (const g of list) g.dispose();
     this.parts.clear();
   }
-}
-
-/** Single merged geometry of everything in the bag (ignoring material), for instancing (one material). */
-export function bagToSingle(bag: GeoBag): THREE.BufferGeometry {
-  const all: THREE.BufferGeometry[] = [];
-  for (const list of bag.parts.values()) all.push(...list);
-  return mergeGeometries(all, false)!;
 }
 
 /** Displace a geometry's vertices along their normals with a smooth pseudo-noise (for organic blobs). */

@@ -83,6 +83,27 @@ gl_Position = projectionMatrix * mvPosition;`,
   material.customProgramCacheKey = () => "nature:foliage:wind-sss:v1";
 }
 
+function disposeLoadedScene(scene: THREE.Object3D): void {
+  const mats = new Set<THREE.Material>();
+  const texs = new Set<THREE.Texture>();
+  scene.traverse((o) => {
+    const mesh = o as THREE.Mesh;
+    if (!mesh.isMesh) return;
+    mesh.geometry?.dispose();
+    if (mesh.material) {
+      for (const m of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) mats.add(m);
+    }
+  });
+  for (const m of mats) {
+    const std = m as THREE.MeshStandardMaterial;
+    for (const t of [std.map, std.normalMap, std.roughnessMap, std.metalnessMap, std.emissiveMap, std.aoMap]) {
+      if (t) texs.add(t);
+    }
+    m.dispose();
+  }
+  for (const t of texs) t.dispose();
+}
+
 /** Per-stage asset owner. Shared prototypes/materials, instanced draws, complete cleanup including late responses. */
 export class NatureAssets {
   private loader = new GLTFLoader();
@@ -98,6 +119,10 @@ export class NatureAssets {
     const prev = this.cache.get(id);
     if (prev) return prev;
     const promise = this.loader.loadAsync(assetUrl(`assets/nature/${id}.gltf`)).then((gltf) => {
+      if (this.dead) {
+        disposeLoadedScene(gltf.scene);
+        return [];
+      }
       gltf.scene.updateMatrixWorld(true);
       const bounds = new THREE.Box3().setFromObject(gltf.scene);
       const height = bounds.max.y - bounds.min.y || 1;
@@ -134,7 +159,11 @@ export class NatureAssets {
         parts.push({ geometry, material });
       });
       this.loaded.push(id);
-      if (this.dead) for (const resource of this.disposables) resource.dispose();
+      if (this.dead) {
+        for (const resource of this.disposables) resource.dispose();
+        this.disposables.clear();
+        return [];
+      }
       return parts;
     });
     this.cache.set(id, promise);
@@ -142,9 +171,9 @@ export class NatureAssets {
   }
 
   add(parent: THREE.Group, id: NatureId, spots: NatureSpot[], castShadow = false, foliageOnly = false, fallback?: () => void): void {
-    if (!spots.length || typeof document === "undefined") return;
+    if (this.dead || !spots.length || typeof document === "undefined") return;
     const job = this.load(id).then((parts) => {
-      if (this.dead) return;
+      if (this.dead || !parts.length) return;
       for (const part of parts) {
         if (foliageOnly && !/leav|leaf/i.test(part.material.name)) continue;
         const mesh = new THREE.InstancedMesh(part.geometry, part.material, spots.length);
@@ -185,6 +214,9 @@ export class NatureAssets {
   dispose(): void {
     this.dead = true;
     for (const resource of this.disposables) resource.dispose();
+    this.disposables.clear();
+    this.cache.clear();
+    this.materials.clear();
   }
 }
 

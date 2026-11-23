@@ -9,14 +9,23 @@ import { MomentWorkbench } from "./components/MomentWorkbench";
 import { MomentSequence } from "./components/MomentSequence";
 import { ReplaceStoryDialog } from "./components/ReplaceStoryDialog";
 import { FullStoryDialog } from "./components/FullStoryDialog";
-import { useStore } from "./useStore";
+import { shallowEqual, useStoreSelector } from "./useStore";
 import { store } from "./store";
 import { playback, playbackRange } from "./playback";
 import { redoStory, undoStory } from "./storyFlow";
 import { STRINGS } from "./i18n";
 
 export function App() {
-  const s = useStore();
+  const s = useStoreSelector(
+    (st) => ({
+      episodeId: st.episodeId,
+      toast: st.toast,
+      lang: st.lang,
+      title: st.title,
+      pitch: st.pitch,
+    }),
+    shallowEqual,
+  );
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [fullStoryOpen, setFullStoryOpen] = useState(false);
   const [replaceOpen, setReplaceOpen] = useState(false);

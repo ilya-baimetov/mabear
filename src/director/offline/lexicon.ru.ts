@@ -1,6 +1,6 @@
 // Russian lexicon for the offline parser (spec §10). Data only. Stems match at a word start (Cyrillic-aware);
 // `$` inside an alternative means "word ends here". Patterns are matched against a lower-cased clause (ё kept).
-import type { Lexicon } from "./parser";
+import type { Lexicon } from "./lexiconTypes";
 
 const R = (s: string) => new RegExp(`(?<![\\p{L}])(?:${s.replace(/\$/g, "(?![\\p{L}])")})`, "u");
 

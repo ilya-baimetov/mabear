@@ -1,6 +1,5 @@
 // Event SFX (spec §7.6): every SfxId synthesized (no samples). renderSfx(out, id, t, gain) schedules at ctx time t.
 import type { SfxId } from "../../shared/schema";
-import { SFX_IDS } from "../../shared/schema";
 import { biquad, burst, gainNode, mulberry32, partials, tone, SILENT, type Out } from "./synth";
 
 /** Approximate length of each effect (s); used for debug/tests and to size tails. */
@@ -227,5 +226,3 @@ export function renderSfx(o: Out, id: SfxId, t: number, gain = 1): void {
       return;
   }
 }
-
-export const ALL_SFX: readonly SfxId[] = SFX_IDS;

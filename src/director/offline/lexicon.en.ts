@@ -1,5 +1,5 @@
 // English lexicon for the offline parser (spec §10). Data only. Patterns are matched against a lower-cased clause.
-import type { Lexicon } from "./parser";
+import type { Lexicon } from "./lexiconTypes";
 
 const W = (s: string) => new RegExp(`\\b(?:${s})\\b`, "u");
 

@@ -6,7 +6,7 @@ import { GENERATED_PROPORTIONS } from "../generatedProportions";
 export {SEAT_HEIGHT} from '../../../shared/bible/set';
 import { CLIPS } from "../clips.generated";
 import {
-  IDENTITY, addLayer, clamp01, overrideLayer, qaxis, qeuler, qmul, qnorm, qslerp, smooth,
+  IDENTITY, addLayer, clamp01, overrideLayer, qaxis, qeuler, qmul, qnorm, qrot, qslerp, smooth,
   type Pose, type PoseLayer,
 } from "../blend";
 
@@ -155,7 +155,7 @@ export function feetPoints(bones: Pose, hipsOffset: Vec3, style: ActorStyle): { 
   const hip: Vec3 = [hipsOffset[0], style.hipHeight + hipsOffset[1], hipsOffset[2]];
   const side = (s: 1 | -1, n: "Left" | "Right"): Vec3[] => {
     const add = (a: Vec3, q: Quat, v: Vec3): Vec3 => {
-      const r = qrotv(q, v);
+      const r = qrot(q, v);
       return [a[0] + r[0], a[1] + r[1], a[2] + r[2]];
     };
     const up = add(hip, H, [s * L.x, L.y, 0]);
@@ -167,15 +167,6 @@ export function feetPoints(bones: Pose, hipsOffset: Vec3, style: ActorStyle): { 
     return [add(ankle, R3, [0, -L.ankle, -0.35 * L.toe]), add(ankle, R3, [0, -L.ankle, L.toe])];
   };
   return { left: side(1, "Left"), right: side(-1, "Right") };
-}
-
-function qrotv(q: Quat, v: Vec3): Vec3 {
-  const [x, y, z, w] = q;
-  const ix = w * v[0] + y * v[2] - z * v[1];
-  const iy = w * v[1] + z * v[0] - x * v[2];
-  const iz = w * v[2] + x * v[1] - y * v[0];
-  const iw = -x * v[0] - y * v[1] - z * v[2];
-  return [ix * w - iw * x - iy * z + iz * y, iy * w - iw * y - iz * x + ix * z, iz * w - iw * z - ix * y + iy * x];
 }
 
 /** Standing leg style: stance widened (hip abduction) and, for Bear, knees bent to carry the weight low. */
@@ -256,10 +247,6 @@ export type VerbImpl = (localT: number, params: ClipParams, ctx: VerbCtx) => Pos
 export type VerbKind = "clip" | "procedural" | "clip+procedural";
 
 // ---------- clip sampling (no AnimationMixer: pure function of time) ----------
-
-export function hasClip(name: string): boolean {
-  return name in CLIPS;
-}
 
 /** Sample a baked clip at time `time` (s). Loops wrap; one-shots clamp. Hips offset in metres for `style`. */
 export function sampleClip(name: string, time: number, style: ActorStyle, loop?: boolean): PoseLayer {

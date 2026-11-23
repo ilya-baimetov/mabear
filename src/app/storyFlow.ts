@@ -1,11 +1,12 @@
 import { store, type AppState, type Paragraph } from "./store";
 import { playback } from "./playback";
+import { getStageController } from "./stageController";
 
-export function selectedMoment(s: AppState): Paragraph | undefined {
+export function selectedMoment(s: Pick<AppState, "paragraphs" | "selectedId">): Paragraph | undefined {
   return s.paragraphs.find(p => p.id === s.selectedId) ?? s.paragraphs[0];
 }
 
-export function earlierChanges(s: AppState, id: string): number[] {
+export function earlierChanges(s: Pick<AppState, "paragraphs">, id: string): number[] {
   const index = s.paragraphs.findIndex(p => p.id === id);
   return s.paragraphs.slice(0, index).flatMap((p, i) => p.text.trim() && (p.status === "draft" || p.pendingVersion !== null) ? [i] : []);
 }
@@ -17,7 +18,7 @@ export function selectMoment(id: string): void {
   store.select(id);
   if (s.previewScope?.kind === "moment") {
     playback.setScope({ kind: "moment", id });
-    if (typeof window !== "undefined") window.__mabear?.closeup(null);
+    getStageController()?.closeup(null);
   }
 }
 

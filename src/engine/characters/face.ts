@@ -2,11 +2,13 @@
 // blink, acting brows, a morphing mouth (visemes + emotion shapes), emotion presets for all 12 emotions,
 // eye look-at toward a world point. Shared by every character through FaceConfig. Lives under the Head bone.
 import * as THREE from "three";
-import type { FaceParams } from "../api";
+import type { FaceParams, FaceRig, SkinPart } from "../api";
+export type { FaceRig };
 import {emotionWeights} from "../motion/emotion";
+import { clamp, lerp } from "../../shared/math";
 import type { Emotion, Viseme } from "../../shared/schema";
 import {
-  blob, col, eyeMaterial, HIGHLIGHT_VALUE, mergeSame, paintVertices, smoothstep, type MaterialSet, type SkinPart,
+  blob, col, eyeMaterial, HIGHLIGHT_VALUE, mergeSame, paintVertices, smoothstep, type MaterialSet,
 } from "./rig";
 
 /** A sphere (in head-bone local space) that facial features are projected onto. */
@@ -90,14 +92,7 @@ export interface FaceConfig {
   };
 }
 
-export interface FaceRig {
-  group: THREE.Group;
-  /** eyes, highlights, lids and brows on their face bones: the character merges them into its skinned body */
-  parts: SkinPart[];
-  eyeMaterial: THREE.Material;
-  update(p: FaceParams, sleeping: boolean): void;
-  dispose(): void;
-}
+// FaceRig is declared in ../api (and re-exported above) to keep face and rig acyclic.
 
 // ---------------------------------------------------------------------------------------------
 // Emotion presets and visemes
@@ -150,10 +145,6 @@ export const VISEME_SHAPES: Record<Viseme, Partial<MouthShape> | null> = {
   frown: { w: 0.85, open: 0.1, round: 0, teeth: 0, smile: -0.85 },
   grin: { w: 1.15, open: 0.5, round: 0, teeth: 1, smile: 0.95 },
 };
-
-function lerp(a: number, b: number, t: number): number {
-  return a + (b - a) * t;
-}
 
 /** Mouth shape for an emotion + viseme at weight (pure; exported for tests and tools). */
 export function mouthShapeFor(emotion: Emotion, viseme: Viseme, weight: number): MouthShape {
@@ -417,7 +408,7 @@ export function buildFace(cfg: FaceConfig, mats: MaterialSet): FaceRig {
   function writeMouth(s: MouthShape): void {
     const halfW = Mo.halfWidth * s.w * (1 - 0.3 * s.round);
     const open = Math.max(0, s.open) * Mo.height;
-    const topFrac = THREE.MathUtils.clamp(0.42 - 0.22 * s.smile, 0.15, 0.7);
+    const topFrac = clamp(0.42 - 0.22 * s.smile, 0.15, 0.7);
     const openness = smoothstep(0.0, 0.25, s.open);
     for (let j = 0; j <= V_SEG; j++) {
       const v = j / V_SEG; // 0 = top lip edge, 1 = bottom lip edge
@@ -493,11 +484,11 @@ export function buildFace(cfg: FaceConfig, mats: MaterialSet): FaceRig {
       v3.copy(gazeDir).applyQuaternion(e.g.getWorldQuaternion(tmpQ).invert());
       const yaw = Math.atan2(v3.x, Math.max(1e-4, v3.z)) + e.side * 0.02; // a hair of divergence reads relaxed
       const pitch = Math.atan2(v3.y, Math.hypot(v3.x, v3.z));
-      e.rot.rotation.set(-THREE.MathUtils.clamp(pitch, -0.3, 0.3), THREE.MathUtils.clamp(yaw, -0.45, 0.45), 0, "YXZ");
+      e.rot.rotation.set(-clamp(pitch, -0.3, 0.3), clamp(yaw, -0.45, 0.45), 0, "YXZ");
     }
 
     // brows
-    const raise = THREE.MathUtils.clamp(p.browRaise, -1, 1);
+    const raise = clamp(p.browRaise, -1, 1);
     for (const b of brows) {
       const r = (b.side === 1 ? cur.browL : cur.browR) + raise * 0.6;
       const y = b.y + r * B.range;

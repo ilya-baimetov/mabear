@@ -1,17 +1,36 @@
 import { Check, CircleAlert, Film, LoaderCircle, PenLine, Plus, Play } from "lucide-react";
 import { useStoryboardFrames } from "../storyboardFrames";
 import { playback, playbackRange } from "../playback";
-import { store } from "../store";
+import { store, type AppState } from "../store";
 import { timecode } from "./Timeline";
-import { useStore } from "../useStore";
+import { shallowEqual, useStoreSelector } from "../useStore";
 import { sceneCount } from "../i18n";
 import { earlierChanges, insertMoment, selectMoment, selectedMoment } from "../storyFlow";
 
+function activeSegmentIndex(st: AppState): number {
+  const end = playbackRange(st).end;
+  if (end <= 0) return -1;
+  const shownTime = Math.min(st.t, end - 1e-6);
+  return st.timeline.segments.findIndex(
+    (seg) => shownTime >= seg.offset && shownTime < seg.offset + seg.segment.duration,
+  );
+}
+
 export function MomentSequence({ onFullStory }: { onFullStory: () => void }) {
-  const s = useStore(), selected = selectedMoment(s), frames = useStoryboardFrames();
-  const end = playbackRange(s).end;
-  const shownTime = end > 0 ? Math.min(s.t, end - 1e-6) : 0;
-  const onStage = end > 0 ? s.timeline.segments.findIndex(seg => shownTime >= seg.offset && shownTime < seg.offset + seg.segment.duration) : -1;
+  const s = useStoreSelector(
+    (st) => ({
+      lang: st.lang,
+      paragraphs: st.paragraphs,
+      selectedId: st.selectedId,
+      segmentIds: st.segmentIds,
+      stageReady: st.stageReady,
+      timelineRevision: st.timelineRevision,
+      onStage: activeSegmentIndex(st),
+    }),
+    shallowEqual,
+  );
+  const selected = selectedMoment(s), frames = useStoryboardFrames();
+  const onStage = s.onStage;
   const addDisabled = s.paragraphs.at(-1)?.text.trim() === "" || s.paragraphs.some(p => p.pendingVersion !== null);
   return <section className="moment-sequence" aria-label={s.lang === "en" ? "Story scenes" : "Сцены истории"}>
     <div className="sequence-heading"><div><span><Film size={15} aria-hidden="true"/>{s.lang === "en" ? "STORYBOARD" : "РАСКАДРОВКА"}</span><strong>{sceneCount(s.paragraphs.length, s.lang)}<i>·</i>{s.lang === "en" ? "Tap a scene to edit" : "Нажми на сцену, чтобы изменить"}</strong></div><div className="sequence-actions"><button type="button" className="btn watch-story" data-testid="play-all" disabled={!s.stageReady || !s.paragraphs.some(p => p.text.trim())} onClick={() => playback.playAll()}><Play size={14} aria-hidden="true"/>{s.lang === "en" ? "Play entire story" : "Смотреть всю историю"}</button><button type="button" className="btn" data-testid="full-story" onClick={onFullStory}><PenLine size={14} aria-hidden="true"/>{s.lang === "en" ? "Edit full script" : "Весь текст"}</button></div></div>

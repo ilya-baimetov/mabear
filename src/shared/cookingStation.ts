@@ -1,3 +1,4 @@
+import {smooth} from './math';
 import type {Vec2} from './schema';
 import {houseCookingSupportHeightAt} from './houseLayout';
 
@@ -20,8 +21,7 @@ export function cookingSupportHeightAt(x:number,z:number):number {
   const indoors=houseCookingSupportHeightAt(x,z);if(indoors>0)return indoors;
   const s=COOKING_STATION,dx=Math.abs(x-s.position[0]);
   if(dx>=s.width/2||z<=s.stepBack||z>=s.topFront)return 0;
-  const ramp=(v:number)=>{const t=Math.max(0,Math.min(1,v));return t*t*(3-2*t);};
-  const first=s.stepTop*ramp((z-s.stepBack)/.20);
-  const second=(s.top-s.stepTop)*ramp((z-(s.topBack-.10))/.20);
-  return (first+second)*ramp((s.width/2-dx)/.10)*ramp((s.topFront-z)/.12);
+  const first=s.stepTop*smooth((z-s.stepBack)/.20);
+  const second=(s.top-s.stepTop)*smooth((z-(s.topBack-.10))/.20);
+  return (first+second)*smooth((s.width/2-dx)/.10)*smooth((s.topFront-z)/.12);
 }

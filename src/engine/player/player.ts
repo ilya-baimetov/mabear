@@ -1,8 +1,7 @@
 // Playback clock: playback = evaluate(clock), scrubbing = evaluate(scrubT) (spec §4.3, §7.4). No React.
 import type { ActorId, CamKey, Lang, Timeline, Vec3 } from "../../shared/schema";
-import type { AudioEngine, FrameState, StageHandle } from "../api";
+import type { AudioEngine, FrameState, PlaybackEvaluator, StageHandle } from "../api";
 import { evaluate } from "./evaluate";
-import type { PlaybackEvaluator } from "../physics/rapierReplay";
 
 export interface PlayerOptions {
   stage: StageHandle;
@@ -36,6 +35,7 @@ export class Player {
   private toEnd = false;
   private lastNow = 0;
   private resumableAudio = false;
+  private seenRenderErrors = new Set<string>();
   /** debug/screenshot hook: replaces the compiled camera (e.g. a character close-up) */
   cameraOverride: ((frame: FrameState) => CamKey) | null = null;
   /** Cast inspection may show an actor who is absent from the current story. */
@@ -156,13 +156,19 @@ export class Player {
         this.opts.audio.updateListener(frame.camera, pos);
       }
       this.opts.onFrame?.(frame);
+      this.seenRenderErrors.clear();
     } catch (err) {
-      console.warn("frame failed", err);
+      const msg = err instanceof Error ? err.message || err.name : String(err);
+      if (!this.seenRenderErrors.has(msg)) {
+        this.seenRenderErrors.add(msg);
+        console.warn("frame failed", err);
+      }
     }
   }
 
   dispose(): void {
     cancelAnimationFrame(this.raf);
+    this.seenRenderErrors.clear();
     this.opts.audio?.stop();
     this.opts.evaluator?.dispose();
   }

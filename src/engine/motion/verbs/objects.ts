@@ -147,9 +147,6 @@ export function swingAngleAt(lt: number, dur: number, maxAngle = 0.40): number {
   return (Math.sin(phase) - 0.04 * Math.sin(phase * 3)) * maxAngle * k;
 }
 
-/** Backwards-compatible alias for `swingAngleAt`. */
-export const swingAngle = swingAngleAt;
-
 export const swing: VerbImpl = (lt, _p, ctx) => {
   // Seated on the rope swing, riding the circular pendulum arc with angular-velocity phase-lagged pumping
   const a = swingAngleAt(lt, ctx.dur);

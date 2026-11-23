@@ -8,7 +8,7 @@ import type { ActorId, CamKey, Lang, Timeline, Vec3 } from "../../shared/schema"
 import { ACTOR_IDS } from "../../shared/schema";
 import { CHARACTERS } from "../../shared/bible/characters";
 import { AmbienceDirector } from "./ambience";
-import { MIX, createBuses, getSharedContext, masterLevel, mergeDuckWindows, resetDuck, scheduleDuck, setMaster, type Buses, type DuckWindow } from "./bus";
+import { MIX, createBuses, getSharedContext, mergeDuckWindows, resetDuck, scheduleDuck, setMaster, type Buses, type DuckWindow } from "./bus";
 import { FOLEY_LENGTH, renderFoley } from "./foley";
 import { RecordedMusicBank, RecordedMusicDirector as MusicDirector } from "./recordedMusic";
 import {
@@ -24,6 +24,10 @@ import { renderVocal, vocalFor, vocalLength } from "./vocals";
 export { MIX } from "./bus";
 export { LOOKAHEAD_S, TICK_MS } from "./scheduler";
 
+declare global {
+  var __mabearAudio: AudioDebug | undefined;
+}
+
 export interface AudioEngineOptions {
   /** look-ahead window (s); default LOOKAHEAD_S */
   lookahead?: number;
@@ -33,8 +37,6 @@ export interface AudioEngineOptions {
   noContext?: boolean;
 }
 
-/** Dialogue cues already in progress by more than this at play() are not spoken (can't start TTS mid-word). */
-export const DIALOGUE_LATE_S = 0.3;
 /**
  * play() at (about) the current playhead while already playing is a timeline update (a paragraph was added or
  * recompiled during playback): the session continues — music/ambience voices that still apply keep playing.
@@ -75,8 +77,7 @@ interface Session {
   duckDone: Set<string>;
   outs: SessionOuts | null;
   sources: Set<AudioScheduledSourceNode>;
-  timers: Map<ReturnType<typeof setTimeout>, { at: number; fn: () => void }>;
-  heldTimers: { at: number; fn: () => void }[];
+  sfxPanners: Set<StereoPannerNode>;
   pausedAt: number | null;
   pausedWall: number;
 }
@@ -103,6 +104,15 @@ function wallNow(): number {
     return globalThis.performance?.now() ?? Date.now();
   } catch {
     return Date.now();
+  }
+}
+
+function disconnectSafe(node: AudioNode | null | undefined): void {
+  if (!node) return;
+  try {
+    node.disconnect();
+  } catch {
+    /* already disconnected */
   }
 }
 
@@ -133,10 +143,15 @@ export function spatialize(cam: CamKey, p: Vec3): { pan: number; gain: number } 
 export function createAudioEngine(opts: AudioEngineOptions = {}): AudioEngine {
   const lookahead = opts.lookahead ?? LOOKAHEAD_S;
   const tickMs = opts.tickMs ?? TICK_MS;
-  // AudioDebug plus two diagnostic extras (errors swallowed so playback never breaks)
-  const debug: AudioDebug & { errors: number; lastError: string; voices: Record<string, string> } = {
-    scheduled: emptyCounts(), ttsAvailable: false, unlocked: false, errors: 0, lastError: "", voices: {},
-  };
+  const debug = {
+    scheduled: emptyCounts(),
+    ttsAvailable: false as boolean,
+    unlocked: false as boolean,
+    errors: 0,
+    lastError: "",
+    voices: { "en-US": "MiniMax Lively_Girl", "ru-RU": "MiniMax Lively_Girl" } as Record<string, string>,
+    recordedSpeech: { voice: "Lively_Girl", scheduled: [] as { text: string; lang: Lang; offset: number; duration: number }[] },
+  } satisfies AudioDebug;
   const safe = (fn: () => void): void => {
     try {
       fn();
@@ -147,7 +162,7 @@ export function createAudioEngine(opts: AudioEngineOptions = {}): AudioEngine {
   };
   lastDebug = debug;
   try {
-    (globalThis as unknown as { __mabearAudio?: AudioDebug }).__mabearAudio = debug;
+    globalThis.__mabearAudio = debug;
   } catch {
     /* ignore */
   }
@@ -155,16 +170,31 @@ export function createAudioEngine(opts: AudioEngineOptions = {}): AudioEngine {
   let ctx: AudioContext | null = null;
   const speech = new RecordedSpeechBank(() => ctx);
   const score = new RecordedMusicBank(() => ctx);
-  debug.voices = { 'en-US': 'MiniMax Lively_Girl', 'ru-RU': 'MiniMax Lively_Girl' };
-  debug.recordedSpeech={voice:'Lively_Girl',scheduled:[]};
-  debug.ttsAvailable = false;
   let buses: Buses | null = null;
   const channels: Partial<Record<ActorId, ActorChannel>> = {};
+  const timers = new Set<ReturnType<typeof setTimeout>>();
+  const timerAbort = new Set<() => void>();
   let volume = 1;
   let muted = false;
   let session: Session | null = null;
   let listener: { cam: CamKey; right: Vec3 } | null = null;
   let disposed = false;
+
+  const trackTimer = (fn: () => void, ms: number, onAbort?: () => void): ReturnType<typeof setTimeout> => {
+    const abortFn = onAbort ? () => { onAbort(); } : undefined;
+    if (abortFn) timerAbort.add(abortFn);
+    const id = setTimeout(() => {
+      timers.delete(id);
+      if (abortFn) timerAbort.delete(abortFn);
+      fn();
+    }, ms);
+    timers.add(id);
+    return id;
+  };
+  const cancelTimer = (id: ReturnType<typeof setTimeout>): void => {
+    clearTimeout(id);
+    timers.delete(id);
+  };
 
   const ensureAudio = (create: boolean): void => {
     if (opts.noContext || disposed) return;
@@ -211,8 +241,6 @@ export function createAudioEngine(opts: AudioEngineOptions = {}): AudioEngine {
     debug.scheduled[track]++;
   };
 
-  const voiceVolume = (): number => MIX.voice * masterLevel(volume, muted);
-
   function startSession(tl: Timeline, fromT: number, lang: Lang, counted: Set<string>): void {
     ensureAudio(true);
     const real = !!(ctx && buses && ctx.state === "running");
@@ -229,6 +257,7 @@ export function createAudioEngine(opts: AudioEngineOptions = {}): AudioEngine {
     const anchorCtx = real && ctx ? ctx.currentTime + START_LATENCY : 0;
     const toCtx = (ep: number): number => Math.max(0, anchorCtx + (ep - t0));
     const sources = new Set<AudioScheduledSourceNode>();
+    const sfxPanners = new Set<StereoPannerNode>();
     let outs: SessionOuts | null = null;
     let musicOut: Out | null = null;
     let ambOut: Out | null = null;
@@ -240,7 +269,7 @@ export function createAudioEngine(opts: AudioEngineOptions = {}): AudioEngine {
         return g;
       };
       outs = {
-        voice: mk(1,buses.voice),
+        voice: mk(1, buses.voice),
         sfx: mk(MIX.sfx, buses.fx),
         music: mk(1, buses.music),
         ambience: mk(1, buses.ambience),
@@ -259,24 +288,11 @@ export function createAudioEngine(opts: AudioEngineOptions = {}): AudioEngine {
       scheduledUntil: t0 - 0.03, firstTick: true, loop: null, counted,
       music: new MusicDirector(musicOut, planMusicSections(flat.music, flat.duration), toCtx, score),
       amb: new AmbienceDirector(ambOut, planAmbienceSpans(flat.ambience, flat.duration), toCtx),
-      duck: mergeDuckWindows(flat.ducking), duckDone: new Set(), outs, sources, timers: new Map(), heldTimers: [], pausedAt: null, pausedWall: 0,
+      duck: mergeDuckWindows(flat.ducking), duckDone: new Set(), outs, sources, sfxPanners, pausedAt: null, pausedWall: 0,
     };
     session = s;
     if (listener) s.amb.setListener(listener.cam.pos, listener.right);
     s.loop = startLoop(() => tick(s), tickMs);
-  }
-
-  function later(s: Session, delayS: number, fn: () => void): void {
-    const id = setTimeout(() => {
-      s.timers.delete(id);
-      if (session !== s) return;
-      try {
-        fn();
-      } catch {
-        /* never throw */
-      }
-    }, Math.max(0, delayS * 1000));
-    s.timers.set(id, { at: nowEp(s) + Math.max(0, delayS), fn });
   }
 
   function tick(s: Session): void {
@@ -316,18 +332,18 @@ export function createAudioEngine(opts: AudioEngineOptions = {}): AudioEngine {
 
     // Recorded dialogue shares the movie's audio clock, including exact mid-line seeks.
     for (const c of inWindow(s.flat.dialogue, first ? 0 : from, to)) {
-      if(c.t+c.dur<=s.fromT)continue;
+      if (c.t + c.dur <= s.fromT) continue;
       count(s, "dialogue", c.i);
       if (!o || !ctx || !CHARACTERS[c.actor]?.speaks) continue;
       const lang = c.lang ?? s.lang;
-      const ready=speech.get(c.text,lang);
-      if(!ready){debug.errors++;debug.lastError='Selected voice recording was not prepared';continue;}
-      const offset=Math.max(0,now-c.t), remaining=Math.min(ready.buffer.duration-offset,s.flat.duration-Math.max(now,c.t));
-      if(remaining<=0)continue;
-      const source=ctx.createBufferSource();source.buffer=ready.buffer;source.connect(o.voice);trackFor(s)(source);
-      source.start(at(Math.max(now,c.t)),offset,remaining);
-      debug.recordedSpeech!.scheduled.push({text:c.text,lang,offset,duration:remaining});
-      if(debug.recordedSpeech!.scheduled.length>100)debug.recordedSpeech!.scheduled.shift();
+      const ready = speech.get(c.text, lang);
+      if (!ready) { debug.errors++; debug.lastError = "Selected voice recording was not prepared"; continue; }
+      const offset = Math.max(0, now - c.t), remaining = Math.min(ready.buffer.duration - offset, s.flat.duration - Math.max(now, c.t));
+      if (remaining <= 0) continue;
+      const source = ctx.createBufferSource(); source.buffer = ready.buffer; source.connect(o.voice); trackFor(s)(source);
+      source.start(at(Math.max(now, c.t)), offset, remaining);
+      debug.recordedSpeech.scheduled.push({ text: c.text, lang, offset, duration: remaining });
+      if (debug.recordedSpeech.scheduled.length > 100) debug.recordedSpeech.scheduled.shift();
     }
 
     // One-shots already in progress at play(): scheduled at their true (past) ctx time, so the envelope automation
@@ -345,12 +361,12 @@ export function createAudioEngine(opts: AudioEngineOptions = {}): AudioEngine {
       const vo: Out | null = o && ctx ? { ctx, dest: o.vocals[c.actor] ?? o.vocals.masha, track: trackFor(s) } : null;
       const text = c.actor === "masha" ? interjection("masha", c.emote, s.lang) : null;
       if (text) {
-        const ready=speech.get(text,s.lang);
-        if(ready&&ctx&&o&&!late&&!s.flat.dialogue.some(d=>d.actor==='masha'&&d.t<c.t+ready.buffer.duration&&d.t+d.dur>c.t)){
-          const source=ctx.createBufferSource();source.buffer=ready.buffer;source.connect(o.voice);trackFor(s)(source);
-          source.start(at(c.t),0,Math.min(ready.buffer.duration,Math.max(.01,s.flat.duration-c.t)));
+        const ready = speech.get(text, s.lang);
+        if (ready && ctx && o && !late && !s.flat.dialogue.some((d) => d.actor === "masha" && d.t < c.t + ready.buffer.duration && d.t + d.dur > c.t)) {
+          const source = ctx.createBufferSource(); source.buffer = ready.buffer; source.connect(o.voice); trackFor(s)(source);
+          source.start(at(c.t), 0, Math.min(ready.buffer.duration, Math.max(0.01, s.flat.duration - c.t)));
         }
-      } else if (vo && c.actor!=='masha') {
+      } else if (vo && c.actor !== "masha") {
         if (!listener && channels[c.actor]) channels[c.actor]!.pan.pan.setValueAtTime(0, at(c.t));
         safe(() => renderVocal(vo, c.actor, c.emote, atLate(c.t)));
       }
@@ -374,7 +390,27 @@ export function createAudioEngine(opts: AudioEngineOptions = {}): AudioEngine {
       const p = ctx.createStereoPanner();
       p.pan.value = clamp(Number.isFinite(c.pan) ? c.pan : 0, -1, 1);
       p.connect(o.sfx);
-      safe(() => renderSfx({ ctx: ctx!, dest: p, track: trackFor(s) }, c.id, atLate(c.t), c.gain));
+      s.sfxPanners.add(p);
+      const cueSources = new Set<AudioScheduledSourceNode>();
+      const baseTrack = trackFor(s);
+      const sfxTrack = (n: AudioScheduledSourceNode): void => {
+        cueSources.add(n);
+        baseTrack(n);
+        const prev = n.onended;
+        n.onended = (ev) => {
+          prev?.call(n, ev);
+          cueSources.delete(n);
+          if (cueSources.size === 0) {
+            s.sfxPanners.delete(p);
+            disconnectSafe(p);
+          }
+        };
+      };
+      safe(() => renderSfx({ ctx: ctx!, dest: p, track: sfxTrack }, c.id, atLate(c.t), c.gain));
+      if (cueSources.size === 0) {
+        s.sfxPanners.delete(p);
+        disconnectSafe(p);
+      }
     }
 
     // past the end: stop looking ahead (scheduled tails finish on their own)
@@ -397,18 +433,16 @@ export function createAudioEngine(opts: AudioEngineOptions = {}): AudioEngine {
     return t;
   }
 
-  function endSession(): Session | null {
+  function endSession(immediate = false): Session | null {
     const s = session;
     if (!s) return null;
     session = null;
     s.loop?.stop();
     s.loop = null;
-    s.timers.forEach((_, id) => clearTimeout(id));
-    s.timers.clear();
     if (ctx && s.outs) {
       const now = ctx.currentTime;
       const o = s.outs;
-      const gains = [o.voice,o.sfx, o.music, o.ambience, ...Object.values(o.foley),...Object.values(o.vocals)];
+      const gains = [o.voice, o.sfx, o.music, o.ambience, ...Object.values(o.foley), ...Object.values(o.vocals)];
       for (const g of gains) {
         try {
           g.gain.cancelScheduledValues(now);
@@ -426,7 +460,14 @@ export function createAudioEngine(opts: AudioEngineOptions = {}): AudioEngine {
         }
       });
       s.sources.clear();
-      setTimeout(() => gains.forEach((g) => { try { g.disconnect(); } catch { /* ignore */ } }), 120);
+      const panners = [...s.sfxPanners];
+      s.sfxPanners.clear();
+      const disconnectSessionNodes = () => {
+        panners.forEach(disconnectSafe);
+        gains.forEach(disconnectSafe);
+      };
+      if (immediate) disconnectSessionNodes();
+      else trackTimer(disconnectSessionNodes, 120);
     }
     if (buses) {
       try {
@@ -469,18 +510,27 @@ export function createAudioEngine(opts: AudioEngineOptions = {}): AudioEngine {
   }
 
   const engine: AudioEngine = {
-    readyUntil(timeline,lang,from) {return opts.noContext?timeline.duration:speech.readyUntil(timeline,lang,from);},
-    async prepare(timeline,lang,from,to) {
-      if(opts.noContext)return {};
+    readyUntil(timeline, lang, from) { return opts.noContext ? timeline.duration : speech.readyUntil(timeline, lang, from); },
+    async prepare(timeline, lang, from, to) {
+      if (opts.noContext || disposed) return {};
       ensureAudio(true);
       // Give a cold score a short head start; a slow optional download must not
       // hold narration/the movie hostage. It can join at the correct phase later.
-      const musicReady = new Promise<void>(resolve => {
-        const timer = setTimeout(resolve, 1200);
-        void score.prepare(timeline,from,to).finally(() => { clearTimeout(timer); resolve(); });
+      const musicReady = new Promise<void>((resolve) => {
+        let settled = false;
+        let timer!: ReturnType<typeof setTimeout>;
+        const settle = () => {
+          if (settled) return;
+          settled = true;
+          cancelTimer(timer);
+          timerAbort.delete(settle);
+          resolve();
+        };
+        timer = trackTimer(settle, 1200, settle);
+        void score.prepare(timeline, from, to).finally(settle);
       });
       const [durations] = await Promise.all([
-        speech.prepare(timeline,lang,from,to),
+        speech.prepare(timeline, lang, from, to),
         musicReady,
       ]);
       return durations;
@@ -488,10 +538,23 @@ export function createAudioEngine(opts: AudioEngineOptions = {}): AudioEngine {
     async unlock(): Promise<void> {
       try {
         ensureAudio(true);
-        if (session?.pausedAt !== null && session?.pausedAt !== undefined) return;
+        if (disposed || (session?.pausedAt !== null && session?.pausedAt !== undefined)) return;
         if (ctx && ctx.state !== "running") {
-          await Promise.race([ctx.resume().catch(() => {}), new Promise((r) => setTimeout(r, 600))]);
+          await Promise.race([
+            ctx.resume().catch(() => {}),
+            new Promise<void>((r) => {
+              let done = false;
+              const finish = () => {
+                if (done) return;
+                done = true;
+                timerAbort.delete(finish);
+                r();
+              };
+              trackTimer(finish, 600, finish);
+            }),
+          ]);
         }
+        if (disposed) return;
         debug.unlocked = ctx?.state === "running";
         if (debug.unlocked && session && !session.real) restartReal();
       } catch {
@@ -501,6 +564,7 @@ export function createAudioEngine(opts: AudioEngineOptions = {}): AudioEngine {
 
     play(timeline: Timeline, fromT: number, lang: Lang): void {
       try {
+        if (disposed) return;
         const cur = session;
         if (cur && cur.pausedAt === null && timeline && Number.isFinite(fromT) && Math.abs(nowEp(cur) - fromT) < SOFT_REPLAY_S) {
           updateSession(cur, timeline, lang);
@@ -521,8 +585,6 @@ export function createAudioEngine(opts: AudioEngineOptions = {}): AudioEngine {
         s.pausedAt = nowEp(s);
         s.pausedWall = wallNow();
         s.loop?.stop(); s.loop = null;
-        s.timers.forEach((job, id) => { clearTimeout(id); s.heldTimers.push(job); });
-        s.timers.clear();
         if (s.real && ctx) void ctx.suspend().catch(() => {});
       } catch { /* never throw */ }
     },
@@ -532,10 +594,8 @@ export function createAudioEngine(opts: AudioEngineOptions = {}): AudioEngine {
         const s = session;
         if (!s || s.pausedAt === null) return;
         s.anchorWall += wallNow() - s.pausedWall;
-        const held = s.heldTimers.splice(0);
         s.pausedAt = null;
         if (s.real && ctx) void ctx.resume().catch(() => {});
-        held.forEach(job => later(s, job.at - nowEp(s), job.fn));
         s.loop = startLoop(() => tick(s), tickMs);
       } catch { /* never throw */ }
     },
@@ -597,10 +657,37 @@ export function createAudioEngine(opts: AudioEngineOptions = {}): AudioEngine {
 
     dispose(): void {
       try {
-        endSession();
         disposed = true;
+        endSession(true);
+        for (const id of timers) clearTimeout(id);
+        timers.clear();
+        for (const abort of [...timerAbort]) abort();
+        timerAbort.clear();
+        speech.dispose();
+        score.dispose();
         if (ctx) ctx.removeEventListener("statechange", onStateChange);
-        if (buses) buses.master.disconnect();
+        for (const a of ACTORS) {
+          const ch = channels[a];
+          if (!ch) continue;
+          disconnectSafe(ch.input);
+          disconnectSafe(ch.pan);
+          disconnectSafe(ch.dist);
+          delete channels[a];
+        }
+        if (buses) {
+          for (const node of [
+            buses.limiter,
+            buses.master,
+            buses.voice,
+            buses.fx,
+            buses.ambience,
+            buses.music,
+            buses.ambienceDuck,
+            buses.musicDuck,
+          ]) {
+            disconnectSafe(node);
+          }
+        }
         buses = null;
       } catch {
         /* never throw */

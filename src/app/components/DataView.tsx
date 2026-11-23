@@ -1,9 +1,10 @@
 // Read-only data view of a paragraph's compiled timeline as tracks (spec §4.4, D8).
+import { useMemo } from "react";
 import { CHARACTERS } from "../../shared/bible/characters";
-import { ACTOR_IDS, type ActorId, type Lang, type Segment, type Shot } from "../../shared/schema";
+import { ACTOR_IDS, type ActorId, type Lang, type Segment, type Shot, type Verb } from "../../shared/schema";
 import { STRINGS } from "../i18n";
 import { playback } from "../playback";
-import { useStore, useStrings } from "../useStore";
+import { shallowEqual, useStoreSelector } from "../useStore";
 
 interface Block {
   start: number;
@@ -52,12 +53,6 @@ const TRACK_LABELS: Record<string, { en: string; ru: string }> = {
   objects: { en: "Props / Doors", ru: "Двери и шкаф" },
 };
 
-const EXTRA_VERBS: Record<string, { en: string; ru: string }> = {
-  drop: { en: "drops", ru: "роняет" },
-  open: { en: "opens", ru: "открывает" },
-  close: { en: "closes", ru: "закрывает" },
-};
-
 const SHOT_LABELS: Record<Shot, { en: string; ru: string }> = {
   auto: { en: "auto", ru: "авто" },
   wide: { en: "wide", ru: "общий" },
@@ -88,8 +83,7 @@ function activeActorsOf(seg: Segment): ActorId[] {
 export function tracksOf(seg: Segment, lang: Lang = "en"): TrackRow[] {
   const d = seg.duration;
   const strings = STRINGS[lang];
-  const verbLabel = (verb: string) =>
-    (strings.verbs as Record<string, string>)[verb] ?? EXTRA_VERBS[verb]?.[lang] ?? verb;
+  const verbLabel = (verb: Verb) => strings.verbs[verb] ?? verb;
 
   const actorTracks: TrackRow[] = activeActorsOf(seg).map((id) => ({
     id: `actor-${id}`,
@@ -180,10 +174,13 @@ export function tracksOf(seg: Segment, lang: Lang = "en"): TrackRow[] {
 }
 
 export function DataView({ segment }: { segment: Segment }) {
-  const s = useStore();
-  const t = useStrings();
+  const s = useStoreSelector(
+    (st) => ({ lang: st.lang, timeline: st.timeline, t: st.t }),
+    shallowEqual,
+  );
+  const t = STRINGS[s.lang];
   const d = Math.max(segment.duration, 0.1);
-  const tracks = tracksOf(segment, s.lang);
+  const tracks = useMemo(() => tracksOf(segment, s.lang), [segment, s.lang]);
   const tlSeg = s.timeline.segments.find((x) => x.segment === segment || x.segment.paragraphId === segment.paragraphId);
   const segOffset = tlSeg?.offset ?? 0;
   const segDuration = tlSeg?.segment.duration ?? segment.duration;
