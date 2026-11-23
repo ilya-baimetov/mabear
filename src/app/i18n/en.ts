@@ -23,7 +23,7 @@ export const en = {
     facepalm: "facepalms", hug: "hugs", laugh: "laughs", cry: "cries", sulk: "sulks", surprised: "is surprised", scared: "is scared",
     angry_stomp: "stomps", sneeze: "sneezes", sigh: "sighs", take: "takes", give: "gives", eat: "eats", throw: "throws",
     cook: "cooks", fish: "fishes", swing: "swings", carry: "carries", water_plants: "waters plants",
-    drop: "drops", open: "opens", close: "closes",
+    drop: "drops", open: "opens", close: "closes", put_down: "puts down", nudge: "nudges",
   } satisfies Record<Verb, string>,
   bts: {
     title: "Behind the scenes",

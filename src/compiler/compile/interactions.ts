@@ -1,11 +1,11 @@
 import { isInsideHouse, MARKS } from "../../shared/bible/set";
 import { CHARACTER_REACH } from "../../shared/characterReach";
 import { GRAMMAR } from "../../shared/grammar";
-import { housePickupPosition, houseWorld } from "../../shared/houseLayout";
+import { HOUSE_KITCHEN_WORK_SHIFT, housePickupPosition, houseWorld } from "../../shared/houseLayout";
 import { avoidHammock, hammockExitPoint, hugSpacing, interactionRadius } from "../../shared/physicalInteractions";
 import { PROP_CONTACTS } from "../../shared/propContacts";
 import { propGripWorld, propPlacementAtMark } from "../../shared/propPlacement";
-import type { ActorId, Emotion, MarkId, Vec2 } from "../../shared/schema";
+import { isCarrot, type ActorId, type Emotion, type MarkId, type Vec2 } from "../../shared/schema";
 import { clampWalkable, pathLength, planPath, yawTo } from "../path";
 import {
   ACTORS,
@@ -18,7 +18,7 @@ import {
   record,
   v2,
 } from "./context";
-import { approachPoint, facePartner, locomote, seatExit } from "./staging";
+import { approachPoint, carrotApproach, facePartner, locomote, objectInteractionShot, seatExit } from "./staging";
 
 /** A static-obstacle clamp can otherwise push an approach point back into
  * the partner's belly. Search around the partner while retaining body room. */
@@ -74,6 +74,33 @@ export function putAsideForHug(ctx: CompileContext, a: ActorId, t: number, emoti
   const st = ctx.ws.actors[a];
   const item = st.holding;
   if (!item) return t;
+  if (isCarrot(item)) {
+    const preferred = st.mark ?? nearestMark(st.pos);
+    const occupied = Object.entries(ctx.ws.props).some(([id, p]) => id !== item && isCarrot(id) && p.at === "bench");
+    const mark: MarkId = preferred === "bench" && occupied ? "clearing" : ["garden", "bench", "table", "clearing"].includes(preferred) ? preferred : "clearing";
+    const placement = propPlacementAtMark(item, mark);
+    const grip = propGripWorld(placement.pos, placement.rot, PROP_CONTACTS[item].point);
+    const destination = carrotApproach(ctx, a, item, mark);
+    if (dist(st.pos, destination) > 0.04) t = locomote(ctx, a, t, "walk_to", destination, emotion, mark);
+    t = facePartner(ctx, a, t, [st.pos[0], st.pos[1] - 1], emotion);
+    const dur = 2;
+    pushClip(ctx, a, t, dur, "take", emotion, {
+      from: v2(st.pos),
+      facing: st.facing,
+      posture: st.posture,
+      item,
+      putDown: mark,
+      putDownPosition: placement.pos,
+      putDownRotation: placement.rot,
+      lookAt: grip,
+    });
+    ctx.events.push({ actor: a, verb: "take", start: t, dur, emote: null, hasLine: false, sfx: null, sfxAt: t + dur * 0.5, pos: v2(st.pos), main: false });
+    ctx.ws.props[item] = { at: mark, planted: false };
+    st.holding = null;
+    record(ctx, a, t + dur);
+    objectInteractionShot(ctx, a, item, t, t + dur, mark);
+    return t + dur;
+  }
   const mark = st.mark ?? nearestMark(st.pos);
   const placement = propPlacementAtMark(item, mark);
   const grip = propGripWorld(placement.pos, placement.rot, PROP_CONTACTS[item].point);
@@ -85,7 +112,7 @@ export function putAsideForHug(ctx: CompileContext, a: ActorId, t: number, emoti
   const dur = 1;
   pushClip(ctx, a, t, dur, "take", emotion, { from: v2(st.pos), facing: st.facing, posture: st.posture, item, putDown: mark, lookAt: grip });
   ctx.events.push({ actor: a, verb: "take", start: t, dur, emote: null, hasLine: false, sfx: null, sfxAt: t + 0.5, pos: v2(st.pos), main: false });
-  ctx.ws.props[item] = { at: mark };
+  ctx.ws.props[item] = { at: mark, ...(isCarrot(item) ? { planted: false } : {}) };
   st.holding = null;
   record(ctx, a, t + dur);
   return t + dur;
@@ -136,7 +163,7 @@ export function putAsideBeforeInteriorPickup(ctx: CompileContext, a: ActorId, t:
   if (mark !== "house_kitchen") return finish(putAsideForHug(ctx, a, t, emotion));
   const placement = propPlacementAtMark(item, mark);
   const grip = propGripWorld(placement.pos, placement.rot, PROP_CONTACTS[item].point);
-  const destination = a === "masha" ? housePickupPosition(item) : houseWorld(item === "frying_pan" ? [-3, 3.0] : [-2.9, 0.75]);
+  const destination = a === "masha" ? housePickupPosition(item) : houseWorld(item === "frying_pan" ? [-3, 3.0 + HOUSE_KITCHEN_WORK_SHIFT] : [-2.9, 0.75]);
   if (dist(st.pos, destination) > 0.04) {
     const start0 = t;
     t = locomote(ctx, a, t, "walk_to", destination, emotion, mark);
@@ -147,7 +174,7 @@ export function putAsideBeforeInteriorPickup(ctx: CompileContext, a: ActorId, t:
   const dur = 1;
   pushClip(ctx, a, t, dur, "take", emotion, { from: v2(st.pos), facing: st.facing, posture: st.posture, item, putDown: mark, lookAt: grip });
   ctx.events.push({ actor: a, verb: "take", start: t, dur, emote: null, hasLine: false, sfx: null, sfxAt: t + 0.5, pos: v2(st.pos), main: false });
-  ctx.ws.props[item] = { at: mark };
+  ctx.ws.props[item] = { at: mark, ...(isCarrot(item) ? { planted: false } : {}) };
   st.holding = null;
   record(ctx, a, t + dur);
   return finish(t + dur);
@@ -157,6 +184,7 @@ export function putAsideBeforeInteriorPickup(ctx: CompileContext, a: ActorId, t:
  * prop in world state, so it can be picked up again in a later paragraph. */
 export function putAsideBeforeClap(ctx: CompileContext, a: ActorId, t: number, emotion: Emotion): number {
   const st = ctx.ws.actors[a];
+  if (st.holding && isCarrot(st.holding) && st.posture !== "carried") t = putAsideForHug(ctx, a, t, emotion);
   if (!st.holding || st.posture === "carried") return t;
   const item = st.holding;
   const reach = CHARACTER_REACH[a];
@@ -202,7 +230,7 @@ export function putAsideBeforeClap(ctx: CompileContext, a: ActorId, t: number, e
   }
   st.facing = yaw;
   pushClip(ctx, a, t, 0.8, "take", emotion, { from: v2(st.pos), facing: st.facing, posture: st.posture, item, putDown: mark, lookAt: grip });
-  ctx.ws.props[item] = { at: mark };
+  ctx.ws.props[item] = { at: mark, ...(isCarrot(item) ? { planted: false } : {}) };
   st.holding = null;
   t += 0.8;
   record(ctx, a, t);

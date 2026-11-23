@@ -6,8 +6,10 @@ import { carryLiftRootHeight } from "../../shared/carrySupport";
 import { cookingSupportHeightAt } from "../../shared/cookingStation";
 import { LOCOMOTION_VERBS } from "../../shared/grammar";
 import { clamp, clamp01, easeInOut, lerp, lerpAngle, smooth } from "../../shared/math";
+import { BENCH_BALL_FALLBACK, ballOriginFromSupport, propPlacementAtMark, propPlacementInState } from "../../shared/propPlacement";
 import {
   ACTOR_IDS,
+  CARROT_IDS,
   PROP_IDS,
   type ActorClip,
   type ActorId,
@@ -21,7 +23,7 @@ import {
   type Vec3,
   type WorldState,
 } from "../../shared/schema";
-import { CROSSFADE_S, addLayer, blendLayers, type PoseLayer } from "../motion/blend";
+import { CROSSFADE_S, addLayer, blendLayers, qaxis, qmul, type PoseLayer } from "../motion/blend";
 import { STYLES, evaluatePose } from "../motion/library";
 import { swingAngleAt as clipSwingAngleAt } from "../motion/verbs/objects";
 import {
@@ -41,6 +43,7 @@ import {
   carryState,
   clipsOf,
   isActor,
+  isMark,
   kinematics,
   makeCtx,
   resolveTrack,
@@ -103,6 +106,7 @@ function evalActor(
         yaw: st.facing,
         opacity: 0,
         bones: OFFSTAGE_BONES,
+        hipsOffset: [0, 0, 0],
         groundWeight: 1,
         face: {
           emotion: "neutral",
@@ -392,6 +396,82 @@ export function evaluate(timeline: Timeline, t: number): FrameState {
   // props frame
   for (const actor of ACTOR_IDS) actors[actor].holding = heldBy(actor) ?? actors[actor].holding;
   const props = propsFrame(at, flights, actors, ltc);
+  // Optional authored resting poses keep the non-physics fallback continuous
+  // across scene boundaries. A new ownership event supersedes the old pose.
+  if (!props.ball.attachedTo && !flights.has("ball")) {
+    const events = ACTOR_IDS.flatMap((a) =>
+      clipsOf(seg, a)
+        .filter((c) => c.params.item === "ball" && ["take", "give", "throw", "drop", "put_down", "nudge"].includes(c.verb))
+        .map((c) => ({ c, t: c.start + c.dur * 0.5 })),
+    )
+      .filter((e) => e.t <= ltc)
+      .sort((a, b) => a.t - b.t);
+    const last = events.at(-1);
+    const saved = last?.c.verb === "nudge" ? seg.endState.props.ball : events.length ? null : seg.startState.props.ball;
+    if (saved?.position) {
+      const p = saved.position;
+      const rot = saved.rotation ?? [0, 0, 0];
+      props.ball = {
+        visible: true,
+        attachedTo: null,
+        pos: [...p],
+        rotation: qmul(qmul(qaxis([0, 1, 0], rot[1]), qaxis([1, 0, 0], rot[0])), qaxis([0, 0, 1], rot[2])),
+      };
+    }
+    if (last?.c.verb === "nudge") {
+      const from = last.c.params.nudgePosition ?? propPlacementAtMark("ball", "bench").pos;
+      const age = Math.max(0, ltc - last.t);
+      const travel = Math.min(age / BENCH_BALL_FALLBACK.rollSeconds, 1);
+      const fall = Math.max(0, age - BENCH_BALL_FALLBACK.edgeSeconds);
+      const x = from[0] + (BENCH_BALL_FALLBACK.support[0] - from[0]) * travel;
+      const y = fall === 0 ? from[1] : Math.max(0, from[1] - 4.905 * fall * fall);
+      const rotation = -(from[0] - x) / 0.15;
+      props.ball = {
+        visible: true,
+        attachedTo: null,
+        pos: ballOriginFromSupport([x, y, from[2]], [0, 0, rotation]),
+        rotation: [0, 0, Math.sin(rotation / 2), Math.cos(rotation / 2)],
+      };
+    }
+    // Exact table/bench base origins bypass the renderer's semantic nearest-mark snap.
+    if (at.ball === "bench" && !last?.c.params.nudgeAt) {
+      const p = propPlacementAtMark("ball", "bench");
+      props.ball = { visible: true, attachedTo: null, pos: p.pos, rotation: [0, 0, 0, 1] };
+    }
+  }
+  for (const id of CARROT_IDS) {
+    const loc = at[id];
+    if (!isMark(loc) || flights.has(id)) continue;
+    const picked = ACTOR_IDS.some((a) => clipsOf(seg, a).some((c) => c.params.item === id && c.verb === "take" && !c.params.putDown && ltc >= c.start + c.dur * 0.5));
+    const planted = loc === "garden" && !!seg.startState.props[id]?.planted && !picked;
+    const placement = propPlacementInState(id, { at: loc, planted });
+    const [x, y, z] = placement.rot;
+    if (loc === "kitchen_pot") {
+      const deposit = ACTOR_IDS.flatMap((a) => clipsOf(seg, a))
+        .filter((c) => c.params.item === id && c.params.putDown === "kitchen_pot" && c.params.putDownPosition && ltc >= c.start + c.dur * 0.5)
+        .at(-1);
+      if (deposit) {
+        const releaseY = deposit.params.putDownPosition![1];
+        const age = ltc - deposit.start - deposit.dur * 0.5;
+        placement.pos[1] = Math.max(placement.pos[1], releaseY - 4.905 * age * age);
+      }
+    }
+    // Quaternion in the renderer's YXZ order, independent of the generic resting-mark snap.
+    const cx = Math.cos(x / 2), sx = Math.sin(x / 2);
+    const cy = Math.cos(y / 2), sy = Math.sin(y / 2);
+    const cz = Math.cos(z / 2), sz = Math.sin(z / 2);
+    props[id] = {
+      visible: true,
+      pos: placement.pos,
+      attachedTo: null,
+      rotation: [
+        sx * cy * cz + cx * sy * sz,
+        cx * sy * cz - sx * cy * sz,
+        cx * cy * sz - sx * sy * cz,
+        cx * cy * cz + sx * sy * sz,
+      ],
+    };
+  }
 
   return {
     t,

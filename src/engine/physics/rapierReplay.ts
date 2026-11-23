@@ -60,12 +60,14 @@ export class RapierReplay implements PlaybackEvaluator {
   private warm(): void {
     this.warmTimer = undefined;
     const c = this.trajectory();
-    if (c.reason && c.releases.length === 0) return;
+    if (c.warmingComplete) return;
     const until = performance.now() + 4;
-    while (c.samples.at(-1)!.t < this.timeline.duration && performance.now() < until) {
-      c.sample(Math.min(this.timeline.duration, c.samples.at(-1)!.t + PHYSICS_DT * 2));
+    while (!c.warmingComplete && performance.now() < until) {
+      const before = c.samples.at(-1)!.t;
+      c.sample(Math.min(this.timeline.duration, before + PHYSICS_DT * 2));
+      if (c.warmingComplete || c.samples.at(-1)!.t <= before + 1e-9) return;
     }
-    if (c.samples.at(-1)!.t < this.timeline.duration) this.warmTimer = setTimeout(() => this.warm(), 16);
+    if (!c.warmingComplete) this.warmTimer = setTimeout(() => this.warm(), 16);
   }
 
   private trajectory(): Trajectory {
@@ -88,8 +90,9 @@ export class RapierReplay implements PlaybackEvaluator {
   }
 
   evaluate(view: Timeline, t: number): FrameState {
-    const frame = evaluate(view, t);
     const s = this.sample(view, t);
+    const traj = this.trajectory();
+    const frame = traj.continuity && !traj.reason ? traj.frame(view, t) : evaluate(view, t);
     if (s.root) {
       const actor: ActorFrame = { ...frame.actors.masha, pos: s.root, physicsRoot: true };
       // Damp the existing gait as actual motion stops. Do not invent a new pose system.
@@ -146,6 +149,10 @@ export class RapierReplay implements PlaybackEvaluator {
       samples: c.samples.length,
       caches: 1,
       revision: this.revision,
+      continuity: c.continuity,
+      routes: c.routes,
+      pickups: c.pickups,
+      impulses: c.impulses,
     };
   }
 

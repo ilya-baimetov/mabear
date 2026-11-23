@@ -1,3 +1,5 @@
+import {numberedCarrot,isCarrot} from '../../shared/gardenCarrots';
+import {CARROT_IDS} from '../../shared/schema';
 // Offline deterministic EN/RU parser (spec §10): paragraph → BeatScript. Pure.
 // Powers the instant preview, the no-key fallback and the tests. The child's quoted words are kept verbatim
 // (only trimmed to 120 chars and passed through the safety pre-filter). The result always passes
@@ -107,6 +109,8 @@ export function parseParagraph(text: string, lang: Lang, startState: WorldState,
   let music: MusicCue | null = null;
   let tod: TimeOfDay | null = null;
   let lastActor: ActorId | null = null;
+  const carrotLocations=Object.fromEntries(CARROT_IDS.map(id=>[id,startState.props[id]?.at??'garden']));
+  const carrotPlanted=Object.fromEntries(CARROT_IDS.map(id=>[id,startState.props[id]?.planted??startState.props[id]?.at==='garden']));
   let lastProp: PropId | null = null;
   let lastOpenable:'door'|'cupboard'|null=null;
 
@@ -264,9 +268,22 @@ export function parseParagraph(text: string, lang: Lang, startState: WorldState,
 
       // --- targets ---
       const cupboardMention=/\b(?:cupboard|cabinet|pantry)\b|шкаф|буфет/iu.test(clause);
-      const mark = cupboardMention?'cupboard':firstMatch(clause, lex.marks.map((x) => ({ re: x.re, v: x.id })))?.value ?? null;
+      const containerMention=/\b(?:bowl)\b|миск/iu.test(clause)?'kitchen_bowl':/\b(?:(?:cooking|kitchen|enamel|soup) )?pot\b|кастрюл|кот[её]л/iu.test(clause)&&!/(?:honey pot|pot of honey)/iu.test(clause)?'kitchen_pot':null;
+      const mark = containerMention??(cupboardMention?'cupboard':firstMatch(clause, lex.marks.map((x) => ({ re: x.re, v: x.id })))?.value ?? null);
       if(mark==='cupboard'||mark==='door')lastOpenable=mark;
       let prop = firstMatch(clause, lex.props.map((x) => ({ re: x.re, v: x.id })))?.value ?? null;
+      const invalidCarrotNumber=/(?:carrot(?:s)?|морков\p{L}*)\s*(?:number|no\.?|#|номер|№)?\s*(\d+)/iu.exec(clause);
+      if(invalidCarrotNumber&&(Number(invalidCarrotNumber[1])<1||Number(invalidCarrotNumber[1])>9)){verb='shrug';}
+      const numbered=numberedCarrot(clause);
+      if(prop==='carrot'&&!numbered){
+        const held=holding[subject];
+        const candidates=CARROT_IDS.filter(id=>carrotLocations[id]&&!['hidden',...ACTOR_IDS].includes(carrotLocations[id])&&(!mark||carrotLocations[id]===mark));
+        const selected=candidates.find(id=>carrotPlanted[id])??candidates[0];
+        if(verb!=='take'&&held&&isCarrot(held))prop=held;
+        else if(selected)prop=selected;
+        else if(verb==='take'){verb='shrug';prop=null;}
+      }
+      prop=numbered??prop;
       if (!prop && lex.itPronoun.test(clause) && lastProp) prop = lastProp;
       if (prop) lastProp = prop;
 
@@ -304,11 +321,18 @@ export function parseParagraph(text: string, lang: Lang, startState: WorldState,
           else mkBeat(a, verb);
           break;
         case "enter":
+          if(/\breturn(?:s|ed)?\b|возвращ|вернул/iu.test(clause)&&startState.actors[a].posture!=='offstage'){
+            mkBeat(a,mark?'walk_to':'look_at',{target:mark??prop??lastProp??'bench'});break;
+          }
           if(isInteriorMark(mark))mkBeat(a,'walk_to',{target:mark});
           else if(mark==='door'||beats.some(b=>b.actor===a&&b.target==='door')||startState.actors[a].mark==='door')mkBeat(a,'walk_to',{target:'house_living'});
           else mkBeat(a,verb);
           break;
         case "carry":
+          if(prop&&mark){
+            if(holding[a]!==prop){mkBeat(a,'take',{target:prop,item:prop});holding[a]=prop;if(isCarrot(prop)){carrotLocations[prop]=a;carrotPlanted[prop]=false;}}
+            mkBeat(a,'walk_to',{target:mark});break;
+          }
           if (isWolf(a)) { // Wolves don't carry Masha: they grab the thing, or just eye it
             if (prop) { mkBeat(a, "take", { target: prop, item: prop }); holding[a] = prop; }
             else mkBeat(a, "look_at", { target: mark ?? object ?? null });
@@ -334,31 +358,48 @@ export function parseParagraph(text: string, lang: Lang, startState: WorldState,
           else mkBeat(a, "swing");
           break;
         case "take": {
-          const fromCupboard=mark==='cupboard'||!mark&&(lastOpenable==='cupboard'||startState.actors[a].mark==='cupboard');
+          const fromCupboard:boolean=mark==='cupboard'||!mark&&(lastOpenable==='cupboard'||startState.actors[a].mark==='cupboard');
           const pantryItem:boolean=fromCupboard&&(!prop||prop==='honey_pot'||/honey|м[её]д/iu.test(clause));
-          const p: PropId | null = pantryItem?'pantry_honey':prop ?? (mark === "garden" ? "carrot" : mark === "beehive" ? "honey_pot" : null);
-          if (p) { mkBeat(a, "take", { target: p, item: p }); holding[a] = p; lastProp = p; }
+          const fromContainer:boolean=mark==='kitchen_bowl'||mark==='kitchen_pot';
+          const contained:PropId|undefined=fromContainer?CARROT_IDS.find(id=>carrotLocations[id]===mark):undefined;
+          const p: PropId | null = pantryItem?'pantry_honey':prop ?? contained ?? (mark === "garden" ? "carrot" : mark === "beehive" ? "honey_pot" : null);
+          if(fromContainer&&(!p||carrotLocations[p]!==mark)){mkBeat(a,'look_at',{target:mark});break;}
+          if (p) { mkBeat(a, "take", { target: p, item: p }); holding[a] = p; lastProp = p;if(isCarrot(p)){carrotLocations[p]=a;carrotPlanted[p]=false;} }
           else mkBeat(a, "peek", { target: mark ?? null });
+          break;
+        }
+        case "nudge": {
+          const item:PropId=prop??"ball";mkBeat(a,"nudge",{item,target:mark??"bench"});lastProp=item;break;
+        }
+        case "put_down": {
+          const item:PropId|null=prop??holding[a];
+          if(item){mkBeat(a,"put_down",{item,target:mark??startState.actors[a].mark??"clearing"});holding[a]=null;lastProp=item;if(isCarrot(item)){carrotLocations[item]=mark??"clearing";carrotPlanted[item]=false;}}
           break;
         }
         case "give": {
           const item = prop ?? holding[a];
-          if (item) { mkBeat(a, "give", { target: object ?? o, item }); holding[a] = null; holding[object ?? o] = item; }
+          if (item) { mkBeat(a, "give", { target: object ?? o, item }); holding[a] = null; holding[object ?? o] = item;if(isCarrot(item))carrotLocations[item]=object??o; }
           else mkBeat(a, "wave", { target: object ?? o });
           break;
         }
         case "eat": {
           const held = holding[a];
           const item = prop ?? (held && PROPS[held].edible ? held : a === "masha" ? "jam_jar" : a === "wolf_b" ? "pancakes" : "honey_pot");
-          mkBeat(a, "eat", { item });
-          if (["pancakes", "fish", "carrot", "cake", "lollipop"].includes(item)) holding[a] = null; else holding[a] = item;
+          mkBeat(a, "eat", { item });if(isCarrot(item))carrotLocations[item]="hidden";
+          if (isCarrot(item)||["pancakes", "fish", "cake", "lollipop"].includes(item)) holding[a] = null; else holding[a] = item;
           break;
+        }
+        case "drop": {
+          const item:PropId=prop??holding[a]??'ball';
+          mkBeat(a,'drop',{item});
+          if(isCarrot(item)){carrotLocations[item]=mark??startState.actors[a].mark??'clearing';carrotPlanted[item]=false;}
+          holding[a]=null;lastProp=item;break;
         }
         case "throw": {
           const item = prop ?? holding[a] ?? "ball";
-          const target: string | null = mark ?? object ?? null;
+          const target: MarkId | ActorId | null = mark ?? object ?? null;
           mkBeat(a, "throw", { item, target });
-          holding[a] = null;
+          holding[a] = null;if(isCarrot(item)){carrotLocations[item]=target??"clearing";carrotPlanted[item]=false;}
           break;
         }
         case "sit": case "sleep": case "hide": case "cook": mkBeat(a, verb, { target: mark }); break;

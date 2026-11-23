@@ -1,12 +1,15 @@
 import { MARKS, OBSTACLES, SEAT_HEIGHT, isInteriorMark } from "../../shared/bible/set";
 import { carryLiftHeadHeight } from "../../shared/carrySupport";
 import { cookingSupportHeightAt } from "../../shared/cookingStation";
+import { KITCHEN_CONTAINERS, isKitchenContainer } from "../../shared/kitchenContainers";
 import { clamp01, lerp, smooth } from "../../shared/math";
 import { armchairMountMotion, hammockTiming, hammockTravelProgress } from "../../shared/physicalInteractions";
-import { propPlacementAtMark } from "../../shared/propPlacement";
+import { propPlacementInState } from "../../shared/propPlacement";
 import { LOCOMOTION_VERBS } from "../../shared/grammar";
 import {
   ACTOR_IDS,
+  CARROT_IDS,
+  isCarrot,
   type ActorClip,
   type ActorId,
   type Beat,
@@ -69,7 +72,7 @@ export const CARRIED_OK = new Set<Verb>(["idle", "wave", "clap", "point_at", "lo
 export const SLEEP_OK = new Set<Verb>(["sleep", "wake_up", "idle", "surprised", "scared", "fall_down", "yawn_stretch"]);
 /** Bear verbs that end a shoulder ride. */
 export const ENDS_CARRY = new Set<Verb>(["sit", "sleep", "exit", "fall_down", "hide", "jump", "spin", "dance", "hug", "cook", "fish", "water_plants", "angry_stomp", "chase", "run_to"]);
-export const CONSUMABLE = new Set<PropId>(["pancakes", "fish", "carrot", "cake", "lollipop"]);
+export const CONSUMABLE = new Set<PropId>(["pancakes", "fish", ...CARROT_IDS, "cake", "lollipop"]);
 export const LOUD_VERBS = new Set<Verb>(["fall_down", "sneeze", "laugh", "angry_stomp", "jump"]);
 /** Bear sounds that send the (cowardly) Wolves cowering. */
 export const BEAR_SCARY_EMOTES = new Set<string>(["roar_soft", "growl_soft", "huff", "grunt"]);
@@ -123,9 +126,13 @@ export interface CompileContext {
   preparationCameras: CameraBeatInfo[];
   objectCues: NonNullable<Segment["objectCues"]>;
   cupboardFree: number;
+  kitchenContainerFree: number;
   lastCupboardShot: CameraCue | undefined;
+  lastCarrotShot: { cue: CameraCue; actor: ActorId; end: number } | undefined;
   doorShots: CameraCue[];
+  objectInteractionShots: CameraCue[];
   doorFree: number;
+  attemptedPickups: Set<string>;
   events: AudioBeatEvent[];
   dialogue: ReturnType<typeof makeDialogueCue>[];
   fx: FxCue[];
@@ -165,9 +172,13 @@ export function createCompileContext(
     preparationCameras: [],
     objectCues: [],
     cupboardFree: 0,
+    kitchenContainerFree: 0,
     lastCupboardShot: undefined,
+    lastCarrotShot: undefined,
     doorShots: [],
+    objectInteractionShots: [],
     doorFree: 0,
+    attemptedPickups: new Set<string>(),
     events: [],
     dialogue: [],
     fx: [],
@@ -307,7 +318,7 @@ export function targetPoint(ctx: CompileContext, id: string | null, t: number): 
       const p = posAt(ctx, at, t);
       return [r3(p[0]), 0.8, r3(p[1])];
     }
-    if (at && isMark(at)) return propPlacementAtMark(id, at).pos;
+    if (at && isMark(at)) return propPlacementInState(id, { ...ctx.ws.props[id], at }).pos;
   }
   return null;
 }
@@ -321,7 +332,7 @@ export function addFx(ctx: CompileContext, id: FxId, start: number, dur: number,
 export function dropHeld(ctx: CompileContext, a: ActorId): void {
   const st = ctx.ws.actors[a];
   if (!st.holding) return;
-  ctx.ws.props[st.holding] = { at: st.mark ?? nearestMark(st.pos) };
+  ctx.ws.props[st.holding] = { at: st.mark ?? nearestMark(st.pos), ...(isCarrot(st.holding) ? { planted: false } : {}) };
   st.holding = null;
 }
 
@@ -333,13 +344,14 @@ export function giveTo(ctx: CompileContext, a: ActorId, item: PropId): void {
   // resurrects it when a following paragraph rebuilds ownership.
   for (const other of ACTORS) if (other !== a && ctx.ws.actors[other].holding === item) ctx.ws.actors[other].holding = null;
   ctx.ws.actors[a].holding = item;
-  ctx.ws.props[item] = { at: a };
+  ctx.ws.props[item] = { at: a, ...(isCarrot(item) ? { planted: false } : {}) };
 }
 
 /** Standing position at a mark: marks inside an obstacle footprint stand just outside it, opposite the facing hint
  *  (behind the table facing the camera, behind the tree/bush when hiding, on the shore side of the pond). */
 export function standPos(mark: MarkId): Vec2 {
   const m = MARKS[mark];
+  if (isKitchenContainer(mark)) return [...KITCHEN_CONTAINERS[mark].approaches.bear.position];
   if (mark === "door" || mark === "pier" || isInteriorMark(mark)) return v2(m.pos);
   if (mark === "pond_shore") {
     const c = OBSTACLES.circles.find((o) => o.id === "pond")!;

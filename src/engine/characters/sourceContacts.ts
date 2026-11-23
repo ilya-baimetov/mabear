@@ -1,9 +1,12 @@
+import {isCarrot} from '../../shared/schema';
 import * as THREE from 'three';
 import type {ActorFrame,CharacterRig} from '../api';
 import {PROP_CONTACTS} from '../../shared/propContacts';
 import {clapOpen} from '../../shared/contactTiming';
 import {kitchenSurfaceGrasp,prepTableLift,solveArm} from './mashaContacts';
 import {contactHands,toolWristDelta,torsoElbowPole} from './contactHands';
+import {isHousePoint} from '../../shared/houseLayout';
+import {KITCHEN_CONTAINERS} from '../../shared/kitchenContainers';
 import { clamp, smooth } from '../../shared/math';
 
 type Sample={mesh:THREE.SkinnedMesh;index:number;local:THREE.Vector3;u:number};
@@ -52,6 +55,10 @@ function surface(h:Hand,direction:THREE.Vector3,palmOnly=false):THREE.Vector3{
  for(const sample of palmOnly?h.palm:h.samples){const v=sample.mesh.getVertexPosition(sample.index,new THREE.Vector3()).applyMatrix4(sample.mesh.matrixWorld),d=v.dot(direction);if(d>best){best=d;result=v;}}
  return result;
 }
+function palmSample(h:Hand,q:THREE.Quaternion,normal:THREE.Vector3):Sample{
+ let best=-Infinity,result=h.palm[0];for(const sample of h.palm){const dot=sample.local.clone().multiply(h.scale).applyQuaternion(q).dot(normal);if(dot>best){best=dot;result=sample;}}return result;
+}
+const samplePoint=(s:Sample)=>s.mesh.getVertexPosition(s.index,new THREE.Vector3()).applyMatrix4(s.mesh.matrixWorld);
 
 /** Source-preserving paw/hoof contacts. No human fingers are added to animal meshes. */
 export function addSourceContacts(rig:CharacterRig):boolean{
@@ -64,6 +71,13 @@ export function addSourceContacts(rig:CharacterRig):boolean{
   const wristTarget=target.clone().sub(local.clone().multiply(h.scale).applyQuaternion(q));
   const pole=poleOverride??torsoElbowPole(at(h.arm),h.side as 1|-1,height,torso.getWorldQuaternion(new THREE.Quaternion()).multiply(restTorso));
   const error=solveArm(h.arm,h.elbow,h.wrist,wristTarget,pole);setWorldRotation(h.wrist,q);return error;
+ };
+ const fitSample=(h:Hand,s:Sample,target:THREE.Vector3,q:THREE.Quaternion,pole?:THREE.Vector3)=>{
+  let error=place(h,s.local,target,q,pole);
+  // A fixed measured vertex avoids alternating between two support extrema
+  // when the broad mixed-weight paw rotates above the pot.
+  for(let i=0;i<6;i++)error=place(h,h.wrist.worldToLocal(samplePoint(s)),target,q,pole);
+  return error;
  };
  contactHands.set(rig.root,hands.map(h=>({side:h.side as 1|-1,place(target,long,normal,strength,pole){
   const base=[h.arm,h.elbow,h.wrist].map(b=>b.quaternion.clone()),q=orient(h,long,normal);
@@ -79,6 +93,20 @@ export function addSourceContacts(rig:CharacterRig):boolean{
   rig.handSocket.userData.preciseGrip=false;
   rig.handSocket.position.copy(socketPosition);rig.handSocket.quaternion.copy(socketRotation);
   const delta=torso.getWorldQuaternion(new THREE.Quaternion()).multiply(restTorso),vec=(x:number,y:number,z:number)=>new THREE.Vector3(x,y,z).applyQuaternion(delta),time=frame.action?.time??0;
+  const kitchenCarrot=rig.id==='bear'&&isCarrot(frame.holding??frame.pickup?.item??frame.putDown?.item)&&isHousePoint(frame.pos[0],frame.pos[2])&&frame.pos[0]<-9;
+  const kitchenFoodPickup=rig.id==='bear'&&frame.pickup&&['pancakes','cake','jam_jar'].includes(frame.pickup.item)&&isHousePoint(frame.pos[0],frame.pos[2]);
+  const pot=KITCHEN_CONTAINERS.kitchen_pot,nearPot=kitchenCarrot?smooth((1.50-Math.hypot(frame.pos[0]-pot.position[0],frame.pos[2]-pot.position[1]))/.55):0;
+  const kitchenCarryOrigin=()=>new THREE.Vector3(-.20-.25*nearPot,1.20+.65*nearPot,.48-.08*nearPot).applyAxisAngle(new THREE.Vector3(0,1,0),frame.yaw).add(new THREE.Vector3(...frame.pos));
+  const kitchenPole=(h:Hand)=>new THREE.Vector3(h.side*(.22+.13*nearPot),1.38+.57*nearPot,.30-.25*nearPot).applyAxisAngle(new THREE.Vector3(0,1,0),frame.yaw).add(new THREE.Vector3(...frame.pos));
+  if(kitchenCarrot&&['idle','walk_to','run_to','tiptoe_to','look_at','take','put_down'].includes(frame.verb)){
+    // Tuck the free paw while passing furniture. Its normal gait swing extends
+    // beyond the torso and cuts through both the table and stove in this aisle.
+    const h=hands[0],base=[h.arm,h.elbow,h.wrist].map(b=>b.quaternion.clone()),normal=new THREE.Vector3(0,0,1).applyAxisAngle(new THREE.Vector3(0,1,0),frame.yaw),handQ=orient(h,new THREE.Vector3(0,1,0),normal),target=new THREE.Vector3(.27,1.53,.43).applyAxisAngle(new THREE.Vector3(0,1,0),frame.yaw).add(new THREE.Vector3(...frame.pos));
+    for(let i=0;i<4;i++)place(h,h.wrist.worldToLocal(surface(h,normal,true)),target,handQ,kitchenPole(h));
+    const strength=frame.pickup&&!frame.holding?smooth(time/.25):frame.putDown?1-smooth((time/(frame.action?.duration??1)-.7)/.3):1;
+    if(strength<1)[h.arm,h.elbow,h.wrist].forEach((b,i)=>{const solved=b.quaternion.clone();b.quaternion.copy(base[i]).slerp(solved,strength);});
+    rig.root.updateMatrixWorld(true);
+  }
   if(frame.verb==='clap'&&!frame.holding){
    const open=clapOpen(time),gap=.001+open*height*.115,center=at(hands[0].arm).add(at(hands[1].arm)).multiplyScalar(.5).add(vec(0,-height*.065,height*.18));
    const entry=smooth(time/.15),exit=frame.action?.duration?smooth((frame.action.duration-time)/.12):1,strength=Math.min(entry,exit),errors:number[]=[];
@@ -117,16 +145,35 @@ export function addSourceContacts(rig:CharacterRig):boolean{
    Object.assign(metrics,{mode:'clap',targetGap:gap,surfaceGap:left.clone().sub(right).dot(axis),reachError:Math.max(...errors),strength,palmNormalDot:normals[0].dot(normals[1]),padOverlap,planeNormal:axis.toArray()});
   }
   const reverseSurface=frame.putDown?kitchenSurfaceGrasp(frame,frame.putDown):null;
-  if(frame.pickup||reverseSurface){
+  const potWithdrawal=rig.id==='bear'&&frame.putDown?.container==='kitchen_pot'&&time>=(frame.action?.duration??1)*frame.putDown.release;
+  if(potWithdrawal){
+   const data=frame.putDown!,h=hands[1],grip=PROP_CONTACTS[data.item],duration=frame.action?.duration??1,release=duration*data.release,u=clamp((time-release)/Math.max(.001,duration-release),0,1);
+   const base=[h.arm,h.elbow,h.wrist].map(b=>b.quaternion.clone()),baseElbow=at(h.elbow),restQ=new THREE.Quaternion().setFromEuler(new THREE.Euler(...data.rotation,'YXZ')),normal=new THREE.Vector3(0,0,1).applyQuaternion(restQ),long=new THREE.Vector3(0,-1,0).applyQuaternion(restQ),contactQ=orient(h,long,normal),baseQ=h.wrist.getWorldQuaternion(new THREE.Quaternion());
+   const grasp=palmSample(h,contactQ,normal),baseNormal=h.normal.clone().applyQuaternion(h.restQ.clone().invert()).applyQuaternion(baseQ),lower=smooth((u-.45)/.55),direction=normal.clone().lerp(baseNormal,lower).normalize(),handQ=contactQ.clone().slerp(baseQ,lower);
+   const start=new THREE.Vector3(...data.position).add(new THREE.Vector3(...grip.point).applyQuaternion(restQ)).addScaledVector(normal,-grip.radius-.0005),retreat=new THREE.Vector3(-.58,2.18,-.03).applyAxisAngle(new THREE.Vector3(0,1,0),frame.yaw).add(new THREE.Vector3(...frame.pos));
+   // First clear the rim at full height; only then lower the empty paw toward
+   // the actual idle pose. The released carrot follows its independent fall.
+   const target=u<.45?start.lerp(retreat,smooth(u/.45)):retreat.lerp(samplePoint(grasp),lower);
+   const pole=kitchenPole(h).lerp(baseElbow,lower);
+   const error=fitSample(h,grasp,target,handQ,pole);
+   const exit=smooth((u-.85)/.15);if(exit>0)[h.arm,h.elbow,h.wrist].forEach((b,i)=>b.quaternion.slerp(base[i],exit));
+   rig.root.updateMatrixWorld(true);Object.assign(metrics,{mode:'potWithdraw',prop:data.item,reachError:error,targetPoint:target.toArray(),contactPoint:samplePoint(grasp).toArray(),progress:u});
+  }else if(frame.pickup||reverseSurface||frame.putDown&&isCarrot(frame.putDown.item)){
    const data=(frame.pickup??frame.putDown)!,h=hands[1],grip=PROP_CONTACTS[data.item],duration=frame.action?.duration??1,attach=duration*data.release,pickupTime=frame.pickup?time:duration-time;
-   const after=clamp((pickupTime-attach)/Math.max(.001,duration-attach),0,1),carry=clamp((after-.06)/.64,0,1),gripCarry=smooth((after-.18)/.52),strength=pickupTime<attach?smooth(pickupTime/Math.max(.001,attach-.035)):1;
+   const after=clamp((pickupTime-attach)/Math.max(.001,duration-attach),0,1),carry=clamp((after-(data.container?.34:.06))/(data.container?.56:.64),0,1),gripCarry=smooth((after-(data.container?.34:.18))/(data.container?.56:.52)),strength=pickupTime<attach?smooth(pickupTime/Math.max(.001,attach-.035)):1;
    const surfaceGrasp=kitchenSurfaceGrasp(frame,data);
    const base=[h.arm,h.elbow,h.wrist].map(b=>b.quaternion.clone()),baseQ=h.wrist.getWorldQuaternion(new THREE.Quaternion());
    const restQ=new THREE.Quaternion().setFromEuler(new THREE.Euler(...data.rotation,'YXZ')),heldQ=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),frame.yaw).multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(...(grip.rotation??[0,0,0]),'YXZ')));
    const heldDirection=grip.support?new THREE.Vector3(0,1,0):new THREE.Vector3(0,0,1).applyQuaternion(heldQ),heldOrigin=surface(h,heldDirection,true).addScaledVector(heldDirection,grip.radius+.0005).sub(new THREE.Vector3(...grip.point).applyQuaternion(heldQ));
    if(data.item==='pantry_honey'&&rig.id==='bear')heldOrigin.set(...frame.pos).add(new THREE.Vector3(-.33,1.45,.46).applyAxisAngle(new THREE.Vector3(0,1,0),frame.yaw));
+   if(kitchenCarrot)heldOrigin.copy(kitchenCarryOrigin());
    heldOrigin.y+=prepTableLift(frame,data.item,heldOrigin,.18);
-   const origin=new THREE.Vector3(...data.position);if(pickupTime>attach)origin.y+=.18*smooth(after/.18);origin.lerp(heldOrigin,carry);
+   // The pot release is already above its rim. A large extra lift overextends
+   // the measured arm midway through the approach and drives its thick skin
+   // into the near wall even when the exact handoff is reachable.
+   const containerLift=data.container==='kitchen_pot'?(frame.putDown?.06:.52):data.container==='kitchen_bowl'?.24:0;
+   const origin=new THREE.Vector3(...data.position);if(pickupTime>attach)origin.y+=(containerLift||.18)*smooth(after/(containerLift?.30:.18));origin.lerp(heldOrigin,carry);
+   if(containerLift&&pickupTime>attach){const horizontal=Math.hypot(origin.x-data.position[0],origin.z-data.position[2]);origin.y=Math.max(origin.y,data.position[1]+containerLift*smooth(after/.30)*(1-smooth((horizontal-.22)/.32)));}
    // Pull the jar clear of the shelf lip before lowering it to the carry pose.
    // The same time-derived path is evaluated on either side of attachment.
    if(data.item==='pantry_honey'&&data.position[1]>2){
@@ -136,22 +183,30 @@ export function addSourceContacts(rig:CharacterRig):boolean{
    const horizontal=Math.hypot(origin.x-data.position[0],origin.z-data.position[2]);
    if(pickupTime>attach&&data.item!=='pantry_honey')origin.y=Math.max(origin.y,data.position[1]+.03*smooth(after/.1)*(1-smooth((horizontal-.15)/.25)));
    if(pickupTime>attach)origin.y+=prepTableLift(frame,data.item,origin,.18)*smooth(after/.1);
+   if(data.container==='kitchen_pot'&&frame.putDown&&pickupTime>attach){
+    // Keep the approaching arm on the near side until the paw is above the
+    // opening, then translate the carrot over the pot for the exact release.
+    const away=new THREE.Vector3(frame.pos[0]-data.position[0],0,frame.pos[2]-data.position[2]).normalize();
+    origin.addScaledVector(away,.07*smooth(after/.25)*(1-smooth((after-.60)/.40)));
+   }
    const objectQ=restQ.clone().slerp(heldQ,carry),objectDelta=objectQ.clone().multiply(restQ.clone().invert());
    const normal=surfaceGrasp?surfaceGrasp.normal.clone().applyQuaternion(objectDelta):grip.support?new THREE.Vector3(0,1,0):new THREE.Vector3(0,0,1).applyQuaternion(restQ),long=surfaceGrasp?surfaceGrasp.long.clone().applyQuaternion(objectDelta):grip.support?new THREE.Vector3(data.position[0],at(h.arm).y,data.position[2]).sub(at(h.arm)).normalize():new THREE.Vector3(0,1,0).applyQuaternion(restQ);
-   if(!surfaceGrasp&&!grip.support&&data.position[1]+new THREE.Vector3(...grip.point).applyQuaternion(restQ).y<frame.pos[1]+restShoulderY-height*.08)long.negate();
+   if(data.container==='kitchen_pot'||!surfaceGrasp&&!grip.support&&data.position[1]+new THREE.Vector3(...grip.point).applyQuaternion(restQ).y<frame.pos[1]+restShoulderY-height*.08)long.negate();
    const direction=normal.clone().lerp(heldDirection,surfaceGrasp?gripCarry:carry);
    if(surfaceGrasp&&normal.dot(heldDirection)<-.99)direction.addScaledVector(surfaceGrasp.outward,-Math.sin(gripCarry*Math.PI));direction.normalize();
-   const gripOffset=new THREE.Vector3(...grip.point).applyQuaternion(objectQ);
+   const gripOffset=data.item==='ball'?new THREE.Vector3(0,.15,0).applyQuaternion(objectQ).sub(new THREE.Vector3(0,.15,0)):new THREE.Vector3(...grip.point).applyQuaternion(objectQ);
    if(surfaceGrasp)gripOffset.copy(surfaceGrasp.offset).applyQuaternion(objectDelta).lerp(new THREE.Vector3(...grip.point).applyQuaternion(objectQ),gripCarry);
-   const carryQ=data.item==='pantry_honey'&&rig.id==='bear'?orient(h,new THREE.Vector3(0,1,0),heldDirection):baseQ;
+   const carryQ=(data.item==='pantry_honey'&&rig.id==='bear')||kitchenCarrot?orient(h,new THREE.Vector3(0,1,0),heldDirection):baseQ;
    const handQ=orient(h,long,normal).slerp(carryQ,surfaceGrasp?gripCarry:carry),target=origin.clone().add(gripOffset).addScaledVector(direction,-grip.radius-.0005);
    let best=-Infinity,local=h.palm[0].local;
    for(const sample of h.palm){const d=sample.local.clone().multiply(h.scale).applyQuaternion(handQ).dot(direction);if(d>best){best=d;local=sample.local;}}
-   let error=place(h,local,target,handQ);
-   for(let i=0;i<4;i++)error=place(h,h.wrist.worldToLocal(surface(h,direction,true)),target,handQ);
+   const carryPole=kitchenCarrot||kitchenFoodPickup?at(h.arm).add(new THREE.Vector3(h.side*height*.2,-height*.2,0).applyQuaternion(rig.root.quaternion)).lerp(kitchenPole(h),data.container==='kitchen_pot'?1:kitchenCarrot?smooth(carry):1-smooth(carry)):undefined;
+   const potGrasp=data.container==='kitchen_pot'?palmSample(h,handQ,direction):null;
+   let error=potGrasp?fitSample(h,potGrasp,target,handQ,carryPole):place(h,local,target,handQ,carryPole);
+   if(!potGrasp)for(let i=0;i<4;i++)error=place(h,h.wrist.worldToLocal(surface(h,direction,true)),target,handQ,carryPole);
    if(strength<1)[h.arm,h.elbow,h.wrist].forEach((b,i)=>{const solved=b.quaternion.clone();b.quaternion.copy(base[i]).slerp(solved,strength);});
    rig.root.updateMatrixWorld(true);
-   const touch=surface(h,direction,true),actualOrigin=touch.clone().addScaledVector(direction,grip.radius+.0005).sub(gripOffset);
+   const touch=potGrasp?samplePoint(potGrasp):surface(h,direction,true),actualOrigin=touch.clone().addScaledVector(direction,grip.radius+.0005).sub(gripOffset);
    rig.handSocket.position.copy(h.wrist.worldToLocal(actualOrigin.clone()));rig.handSocket.quaternion.copy(h.wrist.getWorldQuaternion(new THREE.Quaternion()).invert().multiply(objectQ));rig.handSocket.userData.preciseGrip=true;rig.handSocket.updateWorldMatrix(false,true);
    Object.assign(metrics,{mode:frame.pickup?'pickup':'putDown',prop:data.item,strength,reachError:error,attachmentError:actualOrigin.distanceTo(new THREE.Vector3(...data.position)),targetError:actualOrigin.distanceTo(origin),contactPoint:touch.toArray(),targetPoint:target.toArray(),withdrawal:after,surfaceGrip:!!surfaceGrasp,releaseGap:actualOrigin.distanceTo(new THREE.Vector3(...data.position))});
   }else if(frame.putDown){
@@ -195,17 +250,17 @@ export function addSourceContacts(rig:CharacterRig):boolean{
     rig.root.updateMatrixWorld(true);
     Object.assign(metrics,{primaryReachError:error,strength:fishingWeight});
    }
-   if(frame.holding==='pantry_honey'&&rig.id==='bear'){
+   if(frame.holding==='pantry_honey'&&rig.id==='bear'||kitchenCarrot){
     const base=[h.arm,h.elbow,h.wrist].map(b=>b.quaternion.clone());
     const carrying=['idle','walk_to','run_to','tiptoe_to','look_at','open','close'].includes(frame.verb);
     // The stable carry must yield to authored gestures and object actions.
     // Blend at their boundaries so waving/eating/giving still moves this paw.
     const weight=carrying?1:1-Math.min(smooth(time/.25),smooth(((frame.action?.duration??0)-time)/.25));
-    const origin=new THREE.Vector3(...frame.pos).add(new THREE.Vector3(-.33,1.45,.46).applyAxisAngle(new THREE.Vector3(0,1,0),frame.yaw));
+    const origin=kitchenCarrot?kitchenCarryOrigin():new THREE.Vector3(...frame.pos).add(new THREE.Vector3(-.33,1.45,.46).applyAxisAngle(new THREE.Vector3(0,1,0),frame.yaw));
     const target=origin.add(new THREE.Vector3(...grip.point).applyQuaternion(q)).addScaledVector(direction,-grip.radius-.0005);
     const handQ=orient(h,new THREE.Vector3(0,1,0),direction);
-    let error=place(h,h.wrist.worldToLocal(surface(h,direction,true)),target,handQ);
-    for(let i=0;i<4;i++)error=place(h,h.wrist.worldToLocal(surface(h,direction,true)),target,handQ);
+    let error=place(h,h.wrist.worldToLocal(surface(h,direction,true)),target,handQ,kitchenCarrot?kitchenPole(h):undefined);
+    for(let i=0;i<4;i++)error=place(h,h.wrist.worldToLocal(surface(h,direction,true)),target,handQ,kitchenCarrot?kitchenPole(h):undefined);
     if(weight<1)[h.arm,h.elbow,h.wrist].forEach((b,i)=>{const solved=b.quaternion.clone();b.quaternion.copy(base[i]).slerp(solved,weight);});
     rig.root.updateMatrixWorld(true);Object.assign(metrics,{carryTarget:target.toArray(),reachError:error});
    }

@@ -60,8 +60,19 @@ export interface PropColliderProfile {
   angularDamping: number;
 }
 
+const CARROT_COLLIDER_PROFILE: PropColliderProfile = {
+  shape: 'cylinder',
+  radius: 0.04,
+  halfHeight: 0.14,
+  density: 160,
+  restitution: 0.16,
+  friction: 0.62,
+  linearDamping: 0.35,
+  angularDamping: 0.55,
+};
+
 /**
- * Physical dimensions and material response for all 19 props.
+ * Physical dimensions and material response for all props.
  * Each rigid body origin is centered at `(0, profile.halfHeight, 0)` relative to the
  * rendered base origin so props rest flush on surfaces at every orientation.
  */
@@ -170,16 +181,15 @@ export const PROP_COLLIDER_PROFILES: Record<PropId, PropColliderProfile> = {
     linearDamping: 0.48,
     angularDamping: 0.78,
   },
-  carrot: {
-    shape: 'cylinder',
-    radius: 0.04,
-    halfHeight: 0.14,
-    density: 160,
-    restitution: 0.16,
-    friction: 0.62,
-    linearDamping: 0.35,
-    angularDamping: 0.55,
-  },
+  carrot: CARROT_COLLIDER_PROFILE,
+  carrot_2: CARROT_COLLIDER_PROFILE,
+  carrot_3: CARROT_COLLIDER_PROFILE,
+  carrot_4: CARROT_COLLIDER_PROFILE,
+  carrot_5: CARROT_COLLIDER_PROFILE,
+  carrot_6: CARROT_COLLIDER_PROFILE,
+  carrot_7: CARROT_COLLIDER_PROFILE,
+  carrot_8: CARROT_COLLIDER_PROFILE,
+  carrot_9: CARROT_COLLIDER_PROFILE,
   fish: {
     shape: 'box',
     radius: 0.05,

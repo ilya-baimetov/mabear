@@ -12,6 +12,20 @@ import {
 
 export const PHYSICS_DT = 1 / 60;
 export const MAX_SECONDS = 180;
+export const MAX_CONTINUITY_SECONDS = 60;
+
+export const NONCONTACT_VERBS = new Set([
+  'idle',
+  'look_at',
+  'point_at',
+  'wave',
+  'nod',
+  'shake_head',
+  'shrug',
+  'laugh',
+  'surprised',
+  'sigh',
+]);
 
 export const ROOT_VERBS = new Set([
   'idle',
@@ -28,6 +42,9 @@ export const ROOT_VERBS = new Set([
   'surprised',
   'sigh',
   'drop',
+  'take',
+  'put_down',
+  'nudge',
   'clap',
   'spin',
   'dance',
@@ -47,11 +64,14 @@ export const isActor = (s: string | undefined | null): s is ActorId => !!s && AC
 
 export interface PropRelease {
   t: number;
-  kind: 'throw' | 'drop';
+  kind: 'throw' | 'drop' | 'bench_put_down';
   actor: ActorId;
   prop: PropId;
   clip: ActorClip;
   offset: number;
+  bench?: boolean;
+  position?: [number, number, number];
+  rotation?: [number, number, number];
 }
 
 const yard = (p: number[]) =>
@@ -63,6 +83,11 @@ export function rootReason(timeline: Timeline): string | null {
   if (!timeline.segments.length) return 'empty timeline';
   if (timeline.segments.every(({ segment }) => segment.cast && !segment.cast.includes('masha')))
     return 'Masha is not in this story';
+  // Permit the director's spectator acting within the supported ball story;
+  // do not opt unrelated indoor/object choreography into yard root control.
+  const ballStory = timeline.segments.some(({ segment }) =>
+    segment.actorClips.masha.some((c) => ['drop', 'put_down', 'nudge'].includes(c.verb) && c.params.item === 'ball'),
+  );
   for (const { segment } of timeline.segments) {
     if (!yard(segment.startState.actors.masha.pos) || segment.startState.actors.masha.posture !== 'stand')
       return 'outside supported standing yard motion';
@@ -72,17 +97,20 @@ export function rootReason(timeline: Timeline): string | null {
           (c) =>
             c.verb === 'carry' ||
             c.verb === 'hug' ||
-            (id !== 'masha' && c.params.target === 'masha' && !c.params.ambient),
+            (id !== 'masha' && c.params.target === 'masha' && !c.params.ambient && !(ballStory && NONCONTACT_VERBS.has(c.verb))),
         ),
       )
     )
       return 'paired choreography';
     for (const c of segment.actorClips.masha) {
+      if (c.verb === 'take' && (c.params.item !== 'ball' || c.params.putDown)) return 'authored non-ball pickup';
+      if (c.verb === 'put_down' && (c.params.item !== 'ball' || c.params.putDown !== 'bench')) return 'authored non-bench placement';
+      if (c.verb === 'nudge' && (c.params.item !== 'ball' || c.params.nudgeAt !== 'bench')) return 'authored non-bench nudge';
       if (
         !ROOT_VERBS.has(c.verb) ||
         c.params.sceneCut ||
         (c.params.posture && c.params.posture !== 'stand') ||
-        ACTOR_IDS.includes(c.params.target as (typeof ACTOR_IDS)[number])
+        (ACTOR_IDS.includes(c.params.target as (typeof ACTOR_IDS)[number]) && !(ballStory && NONCONTACT_VERBS.has(c.verb)))
       )
         return `authored choreography: ${c.verb}`;
       if ([c.params.from, c.params.to, ...(c.params.path ?? [])].some((p) => p && !yard(p)))
@@ -90,6 +118,30 @@ export function rootReason(timeline: Timeline): string | null {
     }
   }
   return null;
+}
+
+/** Only Masha's drop/put_down/nudge/retrieval chain is retargeted. Other transfers keep authored animation. */
+export function canSimulateBallContinuity(timeline: Timeline): boolean {
+  let released = false;
+  const clips = timeline.segments
+    .flatMap(({ offset, segment }) =>
+      ACTOR_IDS.flatMap((actor) => segment.actorClips[actor].map((clip) => ({ actor, clip, t: offset + clip.start }))),
+    )
+    .sort((a, b) => a.t - b.t);
+  for (const { actor, clip } of clips) {
+    if (clip.verb === 'carry' || clip.verb === 'hug') return false;
+    if (
+      released &&
+      (clip.params.item === 'ball' || clip.params.target === 'ball') &&
+      !NONCONTACT_VERBS.has(clip.verb) &&
+      !(actor === 'masha' && (['take', 'drop', 'put_down', 'nudge'].includes(clip.verb) || MOVE_VERBS.has(clip.verb)))
+    ) {
+      return false;
+    }
+    if (actor === 'masha' && clip.verb === 'take' && clip.params.item === 'ball') released = false;
+    if (actor === 'masha' && (clip.verb === 'drop' || clip.verb === 'put_down') && clip.params.item === 'ball') released = true;
+  }
+  return true;
 }
 
 /** Ensure offset + localT is >= localT after subtracting offset in float64 (avoids 1-ULP pre-release evaluate mismatch). */
@@ -105,7 +157,10 @@ function adjustSegmentTime(offset: number, localT: number, maxDur: number): numb
  * Schedule all simulated prop releases (`throw` clips and non-re-picked `drop` clips)
  * across all actors, props, and locations, plus exact handoff breakpoints for simulated props.
  */
-export function schedulePropTimeline(timeline: Timeline): { releases: PropRelease[]; handoffs: number[]; propCount: number } {
+export function schedulePropTimeline(
+  timeline: Timeline,
+  allowBallContinuity = false,
+): { releases: PropRelease[]; handoffs: number[]; propCount: number } {
   if (timeline.duration > MAX_SECONDS || !timeline.segments.length) {
     return { releases: [], handoffs: [], propCount: 0 };
   }
@@ -132,14 +187,31 @@ export function schedulePropTimeline(timeline: Timeline): { releases: PropReleas
     if (clip.verb === 'throw') {
       const t = adjustSegmentTime(offset, clip.start + clip.dur * 0.4, timeline.duration);
       if (t <= timeline.duration) releases.push({ t, kind: 'throw', actor, prop, clip, offset });
+    } else if (clip.verb === 'put_down' && clip.params.putDown === 'bench' && prop === 'ball' && actor === 'masha' && allowBallContinuity) {
+      const t = adjustSegmentTime(offset, clip.start + clip.dur * 0.5, timeline.duration);
+      if (t <= timeline.duration) {
+        releases.push({
+          t,
+          kind: 'bench_put_down',
+          actor,
+          prop,
+          clip,
+          offset,
+          bench: true,
+          position: clip.params.putDownPosition,
+          rotation: clip.params.putDownRotation,
+        });
+      }
     } else if (clip.verb === 'drop') {
-      // Keep drop followed by re-pickup of the same item on animation until pickup retargeting exists.
+      // Keep drop followed by re-pickup of the same item on animation unless ball continuity is active.
       let rePicked = false;
-      for (let j = i + 1; j < allClips.length; j++) {
-        const later = allClips[j].clip;
-        if ((later.params.item === prop || later.params.target === prop) && later.verb !== 'idle') {
-          rePicked = true;
-          break;
+      if (!(allowBallContinuity && prop === 'ball' && actor === 'masha')) {
+        for (let j = i + 1; j < allClips.length; j++) {
+          const later = allClips[j].clip;
+          if ((later.params.item === prop || later.params.target === prop) && later.verb !== 'idle') {
+            rePicked = true;
+            break;
+          }
         }
       }
       if (!rePicked) {

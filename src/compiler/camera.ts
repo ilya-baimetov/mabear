@@ -354,3 +354,17 @@ export function planCamera(input: CameraPlanInput): CameraCue[] {
     return resolveShotCue(s, side, rc);
   });
 }
+
+/** Split a long camera cue without replaying its entire move in every chunk. */
+export function splitCameraCue(cue: CameraCue, maxSeconds = 6): CameraCue[] {
+  if (cue.dur <= maxSeconds + 0.000001) return [cue];
+  const n = Math.ceil(cue.dur / maxSeconds);
+  const dur = cue.dur / n;
+  return Array.from({ length: n }, (_, i) => ({
+    ...cue,
+    start: cue.start + i * dur,
+    dur,
+    from: cameraAt([cue], cue.start + i * dur)!,
+    to: cameraAt([cue], cue.start + (i + 1) * dur)!,
+  }));
+}

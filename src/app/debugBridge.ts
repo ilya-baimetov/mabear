@@ -65,6 +65,30 @@ export function installDebugBridge({ stage, player, evaluator, controller, getCa
         ...player.frame?.props.pantry_honey,
         worldPosition: stage.props.objects.pantry_honey.position.toArray(),
       },
+      carrots: Object.fromEntries(
+        Object.entries(player.frame?.props ?? {})
+          .filter(([id]) => /^carrot(?:_\d+)?$/.test(id))
+          .map(([id, prop]) => [
+            id,
+            {
+              ...prop,
+              worldPosition: stage.props.objects[id as keyof typeof stage.props.objects]?.position.toArray(),
+            },
+          ]),
+      ),
+      ball: {
+        ...player.frame?.props.ball,
+        worldPosition: stage.props.objects.ball.position.toArray(),
+      },
+      masha: player.frame
+        ? {
+            position: player.frame.actors.masha.pos,
+            yaw: player.frame.actors.masha.yaw,
+            holding: player.frame.actors.masha.holding,
+            verb: player.frame.actors.masha.verb,
+            pickup: player.frame.actors.masha.pickup,
+          }
+        : null,
       panels: ["outside", "inside"].map((side) => {
         const o = stage.set.root.getObjectByName(`object:house_door:${side}`);
         return { side, open: o?.userData.open };

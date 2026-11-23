@@ -25,7 +25,7 @@ export async function loadGeneratedYard(anchors:Record<SetElementId,THREE.Group>
   await Promise.all([
     plant('orchard_tree',anchors.ground,[{x:1,z:-12,h:6.3,yaw:-.25},{x:10.5,z:-13,h:5.6,yaw:.6}]),
     plant('beehive',anchors.beehive,[{x:-1.65,z:-1.1,h:1.25,yaw:.15},{x:1.55,z:-1.2,h:1.35,yaw:-.1}]),
-    plant('carrot',anchors.garden,[-1.2,1.2].flatMap((z,row)=>Array.from({length:9},(_,k)=>({x:-1.7+k*.42,z:z+(k%2?.1:-.1),y:-.13,h:.48+(k%3)*.025,yaw:k*1.7+row})))),
+    plant('carrot',anchors.garden,[-1.2].flatMap((z,row)=>Array.from({length:9},(_,k)=>({x:-1.7+k*.42,z:z+(k%2?.1:-.1),y:-.13,h:.48+(k%3)*.025,yaw:k*1.7+row})))),
     plant('daisies',anchors.ground,[{x:-8.9,z:-2,h:.68},{x:-9.5,z:-2.3,h:.61},{x:-3.3,z:-2.5,h:.7},{x:-2.8,z:-3,h:.55},{x:3,z:-5.2,h:.55},{x:7.9,z:-5.4,h:.63},{x:8.3,z:-5.7,h:.57},{x:9,z:-8,h:.6}]),
   ]);
 }

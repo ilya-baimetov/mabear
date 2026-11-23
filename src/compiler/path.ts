@@ -5,7 +5,7 @@
 import { isInsideHouse, OBSTACLES, SET_BOUNDS, WAYPOINTS, sceneLocationAt } from "../shared/bible/set";
 import type { Vec2 } from "../shared/schema";
 import {pondBlocksWalk,pondRadius,POND_CENTER,POND_PIER_START} from '../shared/pond';
-import {HOUSE_FOOTPRINT,HOUSE_COOKING_HELPER,HOUSE_PREP_TABLE,HOUSE_READING_TABLE,HOUSE_LIVING_MARK,houseLocal,houseWorld} from '../shared/houseLayout';
+import {HOUSE_FOOTPRINT,HOUSE_COOKING_HELPER,HOUSE_PREP_TABLE,HOUSE_READING_TABLE,HOUSE_LIVING_MARK,HOUSE_KITCHEN_CHAIR_SHIFT,HOUSE_KITCHEN_LEFT_CHAIR_POSITION,houseLocal,houseWorld} from '../shared/houseLayout';
 
 const MARGIN = 0.25;
 
@@ -53,8 +53,8 @@ export function interiorObstacles():{id:string;min:Vec2;max:Vec2}[]{
     rect('refrigerator',[-7.60,-1.0],[-6.08,.60]),
     rect('kitchen-counter',[-6.52,-2.09],[-3.90,-.78]),
     rect('stove',[-4.60,-.67],[-3.76,.17]),
-    rect('kitchen-left-chair',[-6.10,.20],[-5.40,.94]),
-    rect('kitchen-south-chair',[-5.40,2.47],[-4.70,3.22]),
+    table('kitchen-left-chair',HOUSE_KITCHEN_LEFT_CHAIR_POSITION,.70,.74),
+    rect('kitchen-south-chair',[-5.40,2.47+HOUSE_KITCHEN_CHAIR_SHIFT],[-4.70,3.22+HOUSE_KITCHEN_CHAIR_SHIFT]),
     {id:'cooking-helper',min:[helper.position[0]-.35,helper.position[1]-helper.depth/2],max:[helper.position[0]+.35+helper.stepDepth*2,helper.position[1]+helper.depth/2]},
   ];
 }

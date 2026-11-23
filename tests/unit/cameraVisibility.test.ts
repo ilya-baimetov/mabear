@@ -40,7 +40,18 @@ describe('camera visibility follows the rendered scenic locations',()=>{
 
   it('clears the actual fishing location cut and later low-angle reaction throughout their shots',()=>{
     const timeline=story('fishing_trip');
-    for(const [start,end,subject] of [[6.2,6.85,'masha'],[21.5,22.9,'bear']] as const){
+    // Locate the actions, not obsolete wall-clock offsets: a more deliberate
+    // initial ball pickup legitimately changes when Masha reaches the pond.
+    const entry=timeline.segments.find(s=>s.segment.actorClips.masha.some(c=>c.params.sceneCut))!;
+    const travel=entry.segment.actorClips.masha.find(c=>c.params.sceneCut)!;
+    const crossing=entry.segment.camera.find(c=>c.cutAt!==undefined&&c.to.location==='pond'&&c.cutAt>=travel.start&&c.cutAt<=travel.start+travel.dur);
+    const reaction=timeline.segments.flatMap(s=>s.segment.camera.map(c=>({offset:s.offset,cue:c}))).find(({cue})=>cue.shot==='low_angle');
+    expect(crossing).toBeDefined();expect(reaction).toBeDefined();
+    const windows:[number,number,ActorId][]=[
+      [entry.offset+crossing!.cutAt!+.05,entry.offset+crossing!.start+crossing!.dur-.01,'masha'],
+      [reaction!.offset+reaction!.cue.start+.05,reaction!.offset+reaction!.cue.start+reaction!.cue.dur-.05,'bear'],
+    ];
+    for(const [start,end,subject] of windows){
       for(let t=start;t<end;t+=.1){
         const frame=evaluate(timeline,t),v=visibility(frame,subject);
         expect(v.camera.location).toBe('pond');

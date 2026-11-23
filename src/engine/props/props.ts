@@ -12,6 +12,7 @@ import { PROP_SLOTS, restPlacement, restingMark } from "./propPlacement";
 import {
   PENDULUM_PROPS,
   PROP_VISUALS,
+  SMALL_PROPS,
   buildPropMesh,
   createPropPalette,
   type PropPalette,
@@ -19,7 +20,7 @@ import {
   type R3,
 } from "./propRecipes";
 
-export { PROP_SLOTS, PROP_VISUALS, buildPropMesh, restPlacement, restingMark, type PropPalette, type PropVisual, type R3 };
+export { PROP_SLOTS, PROP_VISUALS, SMALL_PROPS, buildPropMesh, restPlacement, restingMark, type PropPalette, type PropVisual, type R3 };
 
 export interface PropsHandle {
   root: THREE.Group;

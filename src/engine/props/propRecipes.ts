@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
-import type { PropId } from "../../shared/schema";
+import { CARROT_IDS, type PropId } from "../../shared/schema";
 import { GeoBag, xf, type LookMaterials, type MatKey } from "../look";
 import { rng } from "../math/rng";
 
@@ -23,7 +23,7 @@ export interface PropPalette {
   owned: THREE.Material[];
 }
 
-export const SMALL_PROPS = new Set<PropId>(["carrot", "flowers", "fish", "lollipop", "book"]);
+export const SMALL_PROPS = new Set<PropId>([...CARROT_IDS, "flowers", "fish", "lollipop", "book"]);
 export const PENDULUM_PROPS = new Set<PropId>(["bucket", "watering_can", "flowers"]);
 
 export const box = (w: number, h: number, d: number) => new THREE.BoxGeometry(w, h, d);
@@ -41,6 +41,20 @@ function propLeaf(length: number, width: number, bend = 0.14): THREE.BufferGeome
   solid.computeVertexNormals();
   return solid;
 }
+
+const CARROT_VISUAL: PropVisual = {
+  build(b) {
+    b.add("paint", new THREE.ConeGeometry(0.05, 0.30, 10), 0xf07f2a, xf([0, 0.15, 0], [Math.PI, 0, 0]), {
+      colorFn: (p, _n, o) => { if (Math.abs(((p.y + 1) % 0.04) - 0.02) < 0.003) o.multiplyScalar(0.8); },
+    });
+    for (let i = 0; i < 4; i++) {
+      const a = (i / 4) * Math.PI * 2;
+      b.add("foliage", new THREE.ConeGeometry(0.02, 0.14, 5), 0x4f9e3a, xf([Math.cos(a) * 0.012, 0.38, Math.sin(a) * 0.012], [Math.sin(a) * 0.3, 0, -Math.cos(a) * 0.3]));
+    }
+  },
+  grip: { pos: [0, -0.39, 0.05], rot: [0, 0, 0] },
+  restRot: [Math.PI / 2, 0, 0.4],
+};
 
 export const PROP_VISUALS: Record<PropId, PropVisual> = {
   pantry_honey: {
@@ -191,19 +205,15 @@ export const PROP_VISUALS: Record<PropId, PropVisual> = {
     grip: { pos: [0, -0.06, 0.04], rot: [0, 0, 0] },
     restRot: [Math.PI / 2.2, 0, 0],
   },
-  carrot: {
-    build(b) {
-      b.add("paint", new THREE.ConeGeometry(0.04, 0.2, 10), 0xf07f2a, xf([0, 0.1, 0], [Math.PI, 0, 0]), {
-        colorFn: (p, _n, o) => { if (Math.abs(((p.y + 1) % 0.04) - 0.02) < 0.003) o.multiplyScalar(0.8); },
-      });
-      for (let i = 0; i < 4; i++) {
-        const a = (i / 4) * Math.PI * 2;
-        b.add("foliage", new THREE.ConeGeometry(0.02, 0.14, 5), 0x4f9e3a, xf([Math.cos(a) * 0.012, 0.27, Math.sin(a) * 0.012], [Math.sin(a) * 0.3, 0, -Math.cos(a) * 0.3]));
-      }
-    },
-    grip: { pos: [0, -0.1, 0.05], rot: [0, 0, 0] },
-    restRot: [Math.PI / 2, 0, 0.4],
-  },
+  carrot: CARROT_VISUAL,
+  carrot_2: CARROT_VISUAL,
+  carrot_3: CARROT_VISUAL,
+  carrot_4: CARROT_VISUAL,
+  carrot_5: CARROT_VISUAL,
+  carrot_6: CARROT_VISUAL,
+  carrot_7: CARROT_VISUAL,
+  carrot_8: CARROT_VISUAL,
+  carrot_9: CARROT_VISUAL,
   broom: {
     build(b) {
       b.add("wood", cyl(0.016, 0.018, 1.05, 6), 0xb98a52, xf([0, 0.62, 0]));

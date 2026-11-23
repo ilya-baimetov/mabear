@@ -24,7 +24,7 @@ export const ru: Strings = {
     facepalm: "закрывает морду лапой", hug: "обнимает", laugh: "смеётся", cry: "плачет", sulk: "дуется", surprised: "удивляется", scared: "пугается",
     angry_stomp: "топает", sneeze: "чихает", sigh: "вздыхает", take: "берёт", give: "даёт", eat: "ест", throw: "бросает",
     cook: "готовит", fish: "рыбачит", swing: "качается", carry: "несёт", water_plants: "поливает грядки",
-    drop: "роняет", open: "открывает", close: "закрывает",
+    drop: "роняет", open: "открывает", close: "закрывает", put_down: "кладёт", nudge: "подталкивает",
   } satisfies Record<Verb, string>,
   bts: {
     title: "За кадром",

@@ -1,9 +1,10 @@
 import { FISHING_WATER_TARGET, MARKS, OBSTACLES } from "../../shared/bible/set";
 import { hammockTiming } from "../../shared/physicalInteractions";
-import type { ActorId, Beat, Lang, MarkId, Posture, Vec2 } from "../../shared/schema";
+import { BENCH_BALL_FALLBACK } from "../../shared/propPlacement";
+import { isCarrot, type ActorId, type Beat, type Lang, type MarkId, type Posture, type Vec2 } from "../../shared/schema";
 import { isShouted, makeDialogueCue } from "../dialogue";
 import { clampWalkable, yawTo } from "../path";
-import { isActor, isMark, otherActor } from "../validate";
+import { isActor, isMark } from "../validate";
 import {
   addFx,
   BEAR_SCARY_EMOTES,
@@ -35,9 +36,19 @@ export function applyInPlaceWorldEffects(
   t: number,
   home: MarkId | undefined,
   posture: Posture,
+  putDown?: MarkId,
 ): void {
   const st = ctx.ws.actors[a];
   switch (b.verb) {
+    case "nudge":
+      ctx.ws.props.ball = { at: "clearing", position: [...BENCH_BALL_FALLBACK.position], rotation: [...BENCH_BALL_FALLBACK.rotation] };
+      break;
+    case "put_down":
+      if (b.item && putDown) {
+        ctx.ws.props[b.item] = { at: putDown, planted: false };
+        st.holding = null;
+      }
+      break;
     case "drop":
       if (b.item) {
         ctx.ws.props[b.item] = { at: st.mark ?? nearestMark(st.pos) };
@@ -82,14 +93,14 @@ export function applyInPlaceWorldEffects(
         if (isActor(b.target) && ctx.ws.actors[b.target].posture !== "offstage") {
           land = posAt(ctx, b.target, t);
           if (!ctx.ws.actors[b.target].holding) giveTo(ctx, b.target, item0);
-          else ctx.ws.props[item0] = { at: ctx.ws.actors[b.target].mark ?? nearestMark(land) };
+          else ctx.ws.props[item0] = { at: ctx.ws.actors[b.target].mark ?? nearestMark(land), ...(isCarrot(item0) ? { planted: false } : {}) };
         } else if (isMark(b.target)) {
           land = v2(MARKS[b.target].pos);
-          ctx.ws.props[item0] = { at: b.target };
+          ctx.ws.props[item0] = { at: b.target, ...(isCarrot(item0) ? { planted: false } : {}) };
         } else {
           const f: Vec2 = [Math.sin(st.facing), Math.cos(st.facing)];
           land = clampWalkable([st.pos[0] + f[0] * 3, st.pos[1] + f[1] * 3]);
-          ctx.ws.props[item0] = { at: nearestMark(land) };
+          ctx.ws.props[item0] = { at: nearestMark(land), ...(isCarrot(item0) ? { planted: false } : {}) };
         }
         const wet = b.target === "pond_shore" || b.target === "pier" || b.target === "creek";
         if (wet) {

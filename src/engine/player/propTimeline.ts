@@ -2,6 +2,7 @@
 import type { ActorFrame, PropFrame } from "../api";
 import { MARKS } from "../../shared/bible/set";
 import { clamp01, lerp } from "../../shared/math";
+import { isKitchenContainer } from "../../shared/kitchenContainers";
 import { propPlacementAtMark, propRestPosition as restPos } from "../../shared/propPlacement";
 import { ACTOR_IDS, MARK_IDS, PROP_IDS, type ActorId, type PropId, type PropLocation, type Segment, type Vec3 } from "../../shared/schema";
 import { qaxis, qrot } from "../motion/blend";
@@ -64,6 +65,7 @@ function getPropSchedule(seg: Segment): CachedPropSchedule {
       const end = c.start + c.dur;
       if (item) touched.set(item, Math.max(touched.get(item) ?? 0, end));
       if (c.params.putDown && item) events.push({ t: c.start + c.dur * 0.5, prop: item, at: c.params.putDown });
+      else if (c.verb === "nudge" && item) events.push({ t: c.start + c.dur * 0.5, prop: item, at: "clearing" });
       else if (c.verb === "drop" && item) events.push({ t: c.start + c.dur * 0.5, prop: item, at: c.params.dropAt ?? "clearing" });
       else if (c.verb === "take" && item) events.push({ t: c.start + c.dur * 0.5, prop: item, at: a });
       else if (c.verb === "give" && item && isActor(c.params.target)) events.push({ t: c.start + c.dur * 0.6, prop: item, at: c.params.target });
@@ -147,15 +149,24 @@ export function propsFrame(at: Record<PropId, PropLocation>, flights: Map<PropId
   return out;
 }
 
-export function propActionTargets(r: Resolved | null, inClip: boolean): Pick<ActorFrame, "putDown" | "pickup"> {
+export function propActionTargets(r: Resolved | null, inClip: boolean): Pick<ActorFrame, "putDown" | "pickup" | "nudge"> {
   const release = inClip && r?.clip.params.putDown && r.clip.params.item
     ? { item: r.clip.params.item, ...propPlacementAtMark(r.clip.params.item, r.clip.params.putDown) }
     : null;
+  if (release && r?.clip.params.putDownPosition) {
+    release.pos = [...r.clip.params.putDownPosition];
+    release.rot = [...(r.clip.params.putDownRotation ?? release.rot)];
+  }
   const pickup = inClip && r?.clip.params.pickUpAt && r.clip.params.item
     ? { item: r.clip.params.item, ...propPlacementAtMark(r.clip.params.item, r.clip.params.pickUpAt) }
     : null;
+  if (pickup && r?.clip.params.pickUpPosition) {
+    pickup.pos = [...r.clip.params.pickUpPosition];
+    pickup.rot = [...(r.clip.params.pickUpRotation ?? pickup.rot)];
+  }
   return {
-    ...(release ? { putDown: { item: release.item, position: release.pos, rotation: release.rot, release: 0.5 } } : {}),
-    ...(pickup ? { pickup: { item: pickup.item, position: pickup.pos, rotation: pickup.rot, release: 0.5 } } : {}),
+    ...(release ? { putDown: { item: release.item, position: release.pos, rotation: release.rot, release: 0.5, ...(isKitchenContainer(r?.clip.params.putDown) ? { container: r.clip.params.putDown } : {}) } } : {}),
+    ...(pickup ? { pickup: { item: pickup.item, position: pickup.pos, rotation: pickup.rot, release: 0.5, ...(isKitchenContainer(r?.clip.params.pickUpAt) ? { container: r.clip.params.pickUpAt } : {}) } } : {}),
+    ...(inClip && r?.clip.params.nudgeAt && r.clip.params.nudgePosition ? { nudge: { item: "ball" as const, position: r.clip.params.nudgePosition, rotation: r.clip.params.nudgeRotation ?? ([0, 0, 0] as Vec3), release: 0.5 } } : {}),
   };
 }

@@ -11,23 +11,27 @@ import { isInsideHouse, isInteriorMark, MARKS } from "../shared/bible/set";
 import { COOKING_STATION } from "../shared/cookingStation";
 import { GRAMMAR, isWolf, LOCOMOTION_VERBS, VERB_HOME_MARK, VERB_IMPLIED_PROP } from "../shared/grammar";
 import { HOUSE_CHILD_COOK_POSITION, HOUSE_COOKING_HELPER, HOUSE_STOVE } from "../shared/houseLayout";
+import { isKitchenContainer, kitchenContainerApproach } from "../shared/kitchenContainers";
 import { avoidHammock } from "../shared/physicalInteractions";
-import type {
-  ActorClip,
-  ActorId,
-  Beat,
-  BeatScript,
-  LightingCue,
-  MarkId,
-  Posture,
-  PropId,
-  Vec2,
-  Vec3,
-  Verb,
-  WorldState,
+import { PROP_CONTACTS } from "../shared/propContacts";
+import { propGripWorld, propPlacementAtMark, propPlacementInState } from "../shared/propPlacement";
+import {
+  isCarrot,
+  type ActorClip,
+  type ActorId,
+  type Beat,
+  type BeatScript,
+  type LightingCue,
+  type MarkId,
+  type Posture,
+  type PropId,
+  type Vec2,
+  type Vec3,
+  type Verb,
+  type WorldState,
 } from "../shared/schema";
 import { buildAudioCues } from "./audioCues";
-import { planCamera, type CameraBeatInfo } from "./camera";
+import { planCamera, splitCameraCue, type CameraBeatInfo } from "./camera";
 import { dialogueDuration } from "./dialogue";
 import { clampWalkable, planPath, yawTo } from "./path";
 import type { CompileFn, CompileOptions, CompileResult } from "./types";
@@ -61,11 +65,13 @@ import { applyPreBeatRepairs, repairBeatInQueue } from "./compile/repairs";
 import {
   approachPoint,
   armchairApproach,
+  carrotApproach,
   cupboardAction,
   cupboardShot,
   doorAction,
   facePartner,
   locomote,
+  objectInteractionShot,
   seatExit,
   spread,
 } from "./compile/staging";
@@ -81,12 +87,12 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
   const bs0 = v.beatScript;
   const ctx = createCompileContext(startState, bs0, opts, v.errors);
 
-  const queue: Beat[] = bs0.beats.map((b) => ({ ...b }));
+  const queue: { beat: Beat; orig: number }[] = bs0.beats.map((b, i) => ({ beat: { ...b }, orig: i }));
   let idx = 0;
   let prevTiming: BeatTiming | null = null;
 
   while (idx < queue.length) {
-    const b = queue[idx];
+    const { beat: b } = queue[idx];
     const origIndex = idx;
     idx++;
 
@@ -100,13 +106,19 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
     const a = b.actor;
     const o = otherActor(a);
     const st = ctx.ws.actors[a];
+    const container =
+      b.verb === "put_down" && isKitchenContainer(b.target)
+        ? b.target
+        : b.verb === "take" && b.item && isKitchenContainer(ctx.ws.props[b.item]?.at)
+          ? ctx.ws.props[b.item].at
+          : null;
 
     ctx.compiledBeats.push(b);
     const def = GRAMMAR[b.verb];
     const anchor = prevTiming ? (b.with_previous ? prevTiming.start : prevTiming.end) : 0;
     // The doorway shot has exclusive staging until its traveller clears the
     // steps; do not perform another actor's cooking/hug unseen behind that cut.
-    let t = Math.max(anchor + b.delay_s, ctx.tracks[a].free, ctx.doorFree, ctx.cupboardFree);
+    let t = Math.max(anchor + b.delay_s, ctx.tracks[a].free, ctx.doorFree, ctx.cupboardFree, isKitchenContainer(container) ? ctx.kitchenContainerFree : 0);
     const interacts = (b.verb === "hug" || b.verb === "carry" || b.verb === "give") && isActor(b.target);
     if (interacts && isActor(b.target)) t = Math.max(t, ctx.tracks[b.target].free);
     const beatStart = t;
@@ -125,7 +137,11 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
     const cookingStation = b.verb === "cook" && a === "masha" && (home === "table" || home === "house_kitchen");
     const cookingSupport = home === "house_kitchen" ? HOUSE_COOKING_HELPER : COOKING_STATION;
 
-    if (home) {
+    if ((b.verb === "put_down" || b.verb === "nudge") && b.item && isMark(b.target)) {
+      walkDest = carrotApproach(ctx, a, b.item, b.target);
+      if (b.verb === "nudge") walkDest[0] += 0.075;
+      walkTarget = b.target;
+    } else if (home) {
       walkDest = cookingStation
         ? home === "house_kitchen"
           ? [...HOUSE_CHILD_COOK_POSITION]
@@ -156,7 +172,13 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
     if (
       walkDest &&
       dist(walkDest, st.pos) >
-        (b.verb === "hug" ? 0.004 : cookingStation || (b.verb === "take" && isInsideHouse(...walkDest)) || (b.verb === "sit" && b.target === "house_living") ? 0.04 : 0.8) &&
+        (b.verb === "hug"
+          ? 0.004
+          : b.item && (isCarrot(b.item) || b.item === "ball") && ["take", "put_down", "nudge"].includes(b.verb)
+            ? 0.04
+            : cookingStation || (b.verb === "take" && isInsideHouse(...walkDest)) || (b.verb === "sit" && b.target === "house_living")
+              ? 0.04
+              : 0.8) &&
       st.posture !== "carried"
     ) {
       const d = dist(walkDest, st.pos);
@@ -195,6 +217,12 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
       walkInfo = { start: s0, dur: t - s0, verb, from: wFrom, to: v2(st.pos) };
     }
 
+    if ((b.verb === "take" || b.verb === "put_down") && isKitchenContainer(container) && walkDest && dist(st.pos, walkDest) > 0.06) {
+      ctx.repairs.push("The kitchen container approach is blocked. The prop stays in its previous owner or container.");
+      b.verb = "shrug";
+      b.target = null;
+      b.item = null;
+    }
     if (b.verb === "sleep" && b.target === "hammock" && st.posture === "stand") {
       t = facePartner(ctx, a, t, [st.pos[0] + Math.sin(MARKS.hammock.facing), st.pos[1] + Math.cos(MARKS.hammock.facing)], b.emotion);
     }
@@ -206,6 +234,19 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
       t = Math.max(facePartner(ctx, a, start, ctx.ws.actors[b.target].pos, b.emotion), facePartner(ctx, b.target, start, st.pos, b.emotion));
     }
 
+    if (b.item && (isCarrot(b.item) || b.item === "ball") && ["take", "put_down", "nudge"].includes(b.verb)) {
+      const mark = b.verb === "put_down" || b.verb === "nudge" ? b.target : ctx.ws.props[b.item]?.at;
+      if (isMark(mark)) {
+        const placement = propPlacementInState(b.item, { at: mark, planted: b.verb === "take" && ctx.ws.props[b.item].planted });
+        const grip = propGripWorld(placement.pos, placement.rot, PROP_CONTACTS[b.item].point);
+        const yaw = isKitchenContainer(mark)
+          ? kitchenContainerApproach(mark, a)!.yaw
+          : isCarrot(b.item) || b.item === "ball"
+            ? Math.PI
+            : yawTo(st.pos, [grip[0], grip[2]], st.facing);
+        t = facePartner(ctx, a, t, [st.pos[0] + Math.sin(yaw), st.pos[1] + Math.cos(yaw)], b.emotion);
+      }
+    }
     if (b.verb === "take" && b.item && ctx.ws.props[b.item]?.at === "cupboard") {
       if ((ctx.ws.objects?.kitchen_cupboard ?? 0) < 0.999) {
         ctx.repairs.push("Opened the cupboard before reaching inside.");
@@ -319,12 +360,27 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
         case "throw":
           facing = b.target ? facingTo(b.target) : st.facing;
           break;
+        case "nudge":
+          item = b.item ?? undefined;
+          mainDur = 1.8;
+          facing = st.facing;
+          break;
+        case "put_down":
+          item = b.item ?? undefined;
+          mainDur = 2.0;
+          break;
         case "take":
           item = b.item ?? undefined;
+          if (item && (isCarrot(item) || item === "ball")) {
+            mainDur = 2.2;
+            facing = st.facing;
+          }
           if (b.item && ctx.ws.props[b.item]?.at === "cupboard") {
             facing = -Math.PI / 2;
             mainDur = 3.0;
-          } else if (b.item && isInteriorMark(ctx.ws.props[b.item]?.at)) facing = facingTo(b.item);
+          } else if (b.item && isInteriorMark(ctx.ws.props[b.item]?.at) && !isKitchenContainer(ctx.ws.props[b.item]?.at)) {
+            facing = facingTo(b.item);
+          }
           break;
         case "cook":
         case "fish":
@@ -381,14 +437,30 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
             : null;
       if (exit) facing = exit.facing;
       if (mount) facing = mount.facing;
-      const pickUpAt = b.verb === "take" && item && isInteriorMark(ctx.ws.props[item]?.at) ? (ctx.ws.props[item].at as MarkId) : undefined;
+      const pickUpAt =
+        b.verb === "take" && item && (isInteriorMark(ctx.ws.props[item]?.at) || ((isCarrot(item) || item === "ball") && isMark(ctx.ws.props[item]?.at)))
+          ? (ctx.ws.props[item].at as MarkId)
+          : undefined;
+      const exactPickup = pickUpAt && item && (isCarrot(item) || item === "ball") ? propPlacementInState(item, { ...ctx.ws.props[item], at: pickUpAt }) : null;
+      const putDown = b.verb === "put_down" && item && isMark(b.target) ? b.target : undefined;
+      const exactPlacement = putDown && item ? propPlacementAtMark(item, putDown) : null;
+      // Release into the pot from above its rim; a broad paw must not follow
+      // the carrot to the bottom. The evaluator supplies the short free fall.
+      if (exactPlacement && putDown === "kitchen_pot") exactPlacement.pos[1] += 0.32;
+      const nudgePlacement = b.verb === "nudge" && item ? propPlacementAtMark(item, "bench") : null;
+      const contactPlacement = exactPickup ?? exactPlacement ?? nudgePlacement;
+      const contact = contactPlacement && item ? propGripWorld(contactPlacement.pos, contactPlacement.rot, item === "ball" ? [0, 0.15, 0] : PROP_CONTACTS[item].point) : null;
+      if (contact && item === "ball" && pickUpAt !== "bench" && putDown !== "bench" && !nudgePlacement) contact[1] -= 0.15;
       pushClip(ctx, a, mainStart, mainDur, b.verb, b.emotion, {
         ...baseParams(),
         facing: r3(facing),
         posture,
         item,
-        lookAt: lookAt ?? undefined,
+        lookAt: contact ?? lookAt ?? undefined,
         ...(pickUpAt ? { pickUpAt } : {}),
+        ...(exactPickup ? { pickUpPosition: exactPickup.pos, pickUpRotation: exactPickup.rot } : {}),
+        ...(exactPlacement ? { putDown, putDownPosition: exactPlacement.pos, putDownRotation: exactPlacement.rot } : {}),
+        ...(nudgePlacement ? { nudgeAt: "bench" as const, nudgePosition: nudgePlacement.pos, nudgeRotation: nudgePlacement.rot } : {}),
         ...(b.verb === "drop" ? { dropAt: st.mark ?? nearestMark(st.pos) } : {}),
         ...(b.verb === "fish" ? { catchesFish: ctx.ws.props.fish?.at === "hidden" } : {}),
         ...exit,
@@ -408,8 +480,13 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
         ctx.cupboardFree = t;
         cupboardShot(ctx, mainStart, t);
       }
+      if (isKitchenContainer(pickUpAt) || isKitchenContainer(putDown)) ctx.kitchenContainerFree = t;
+      if (item && isCarrot(item) && (pickUpAt || putDown)) objectInteractionShot(ctx, a, item, mainStart, t, (pickUpAt ?? putDown)!);
+      if (item === "ball" && (pickUpAt || putDown || nudgePlacement || b.verb === "drop")) {
+        objectInteractionShot(ctx, a, item, mainStart, t, pickUpAt ?? putDown ?? (nudgePlacement ? "bench" : st.mark) ?? "clearing", !!pickUpAt);
+      }
 
-      applyInPlaceWorldEffects(ctx, b, a, mainStart, mainDur, t, home, posture);
+      applyInPlaceWorldEffects(ctx, b, a, mainStart, mainDur, t, home, posture, putDown);
     }
 
     prevTiming = finalizeBeatEffects(ctx, {
@@ -438,6 +515,12 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
   // Let the audience see the closed door and retained jar during the final
   // pause; the generic tail camera can otherwise cut behind the refrigerator.
   if (ctx.lastCupboardShot && Math.abs(ctx.cupboardFree - end) < 0.002) ctx.lastCupboardShot.dur = duration - ctx.lastCupboardShot.start;
+  if (
+    ctx.lastCarrotShot &&
+    !ctx.timings.some((tm) => tm.mainStart >= ctx.lastCarrotShot!.end - 0.001 && (tm.actor !== ctx.lastCarrotShot!.actor || LOCOMOTION_VERBS.includes(tm.verb)))
+  ) {
+    ctx.lastCarrotShot.cue.dur = duration - ctx.lastCarrotShot.cue.start;
+  }
 
   // ---------- ambient life ----------
   const actorClips = fillAmbient(ctx, duration);
@@ -491,6 +574,28 @@ function compileImpl(inputBs: BeatScript, startState0: WorldState, opts: Compile
     });
     camera.push(shot);
     camera.sort((a, b) => a.start - b.start);
+  }
+
+  // An inserted close view must not leave a flashing fraction-of-a-second
+  // fragment of the ordinary shot at either edge. Preserve object action views.
+  if (ctx.objectInteractionShots.length && ctx.doorShots.every((c) => ctx.objectInteractionShots.includes(c))) {
+    for (let i = 0; i < camera.length; i++) {
+      const c = camera[i];
+      if (c.dur >= 1.2 - 0.000001 || camera.length === 1) continue;
+      const previous = camera[i - 1];
+      const next = camera[i + 1];
+      if (next && (!previous || ctx.objectInteractionShots.includes(next))) {
+        next.dur += c.dur;
+        next.start = c.start;
+        camera.splice(i, 1);
+        i--;
+      } else if (previous) {
+        previous.dur += c.dur;
+        camera.splice(i, 1);
+        i--;
+      }
+    }
+    camera = camera.flatMap((c) => splitCameraCue(c, 6));
   }
 
   // ---------- lighting ----------

@@ -111,11 +111,11 @@ function makeStaticBuilder(world: RAPIER.World) {
   return { add, box, rotBox, cyl, rotCyl };
 }
 
-/** Central bounded yard colliders (preserved intact for rapierReplay.test.ts). */
-export function createYardColliders(world: RAPIER.World): void {
+/** Central bounded yard colliders (preserved intact for rapierReplay.test.ts). Returns the ground collider. */
+export function createYardColliders(world: RAPIER.World): RAPIER.Collider {
   const { add, box } = makeStaticBuilder(world);
   // groundY is identically zero throughout this bounded yard.
-  box(0, -0.2, 0, 19, 0.2, 19);
+  const ground = box(0, -0.2, 0, 19, 0.2, 19);
   // Round table: top, pedestal and cross feet. The capsule hits the top's rim.
   add(
     RAPIER.ColliderDesc.cylinder(0.035, YARD_TABLE_SPEC.colliderRadius).setTranslation(
@@ -155,6 +155,7 @@ export function createYardColliders(world: RAPIER.World): void {
     s.stepTop / 2,
     (s.topBack - s.stepBack) / 2,
   );
+  return ground;
 }
 
 function addFullYardColliders(world: RAPIER.World): void {
@@ -459,11 +460,12 @@ function addWolvesColliders(world: RAPIER.World): void {
   }
 }
 
-/** Full multi-location static colliders: central + full yard, house interior, pond, wolves. */
-export function createWorldColliders(world: RAPIER.World): void {
-  createYardColliders(world);
+/** Full multi-location static colliders: central + full yard, house interior, pond, wolves. Returns the yard ground collider. */
+export function createWorldColliders(world: RAPIER.World): RAPIER.Collider {
+  const ground = createYardColliders(world);
   addFullYardColliders(world);
   addHouseInteriorColliders(world);
   addPondColliders(world);
   addWolvesColliders(world);
+  return ground;
 }

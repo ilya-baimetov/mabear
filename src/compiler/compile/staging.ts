@@ -1,11 +1,14 @@
 import { isInsideHouse, isInteriorMark, MARKS, sceneLocationAt, SEAT_HEIGHT } from "../../shared/bible/set";
+import { CHARACTER_REACH } from "../../shared/characterReach";
 import { COOKING_STATION, cookingSupportHeightAt } from "../../shared/cookingStation";
 import { LOCOMOTION_VERBS, SPEEDS } from "../../shared/grammar";
-import { HOUSE_COOKING_HELPER, houseLocal, housePickupPosition, houseWorld } from "../../shared/houseLayout";
+import { HOUSE_COOKING_HELPER, HOUSE_PREP_TABLE, houseLocal, housePickupPosition, houseWorkPropZ, houseWorld } from "../../shared/houseLayout";
 import { CUPBOARD_JAR_POSITION, HOUSE_DOOR, INTERIOR_APPROACH, INTERIOR_THRESHOLD, KITCHEN_CUPBOARD } from "../../shared/interactiveObjects";
+import { isKitchenContainer, kitchenContainerApproach } from "../../shared/kitchenContainers";
 import { avoidHammock, hammockExitPoint, interactionRadius } from "../../shared/physicalInteractions";
-import { propPlacementAtMark } from "../../shared/propPlacement";
-import type { ActorId, CamKey, Emotion, MarkId, Vec2, Verb } from "../../shared/schema";
+import { PROP_CONTACTS } from "../../shared/propContacts";
+import { propGripWorld, propPlacementAtMark, propPlacementInState } from "../../shared/propPlacement";
+import { isCarrot, type ActorId, type CameraCue, type CamKey, type Emotion, type MarkId, type PropId, type Vec2, type Verb } from "../../shared/schema";
 import { HEAD_HEIGHT } from "../camera";
 import { clampWalkable, pathEndYaw, pathLength, planPath, pointAlong, yawTo } from "../path";
 import { isActor, isMark, isProp, otherActor } from "../validate";
@@ -92,6 +95,10 @@ export function spread(ctx: CompileContext, a: ActorId, p: Vec2, t: number): Vec
 
 /** Where to stand to reach a target. */
 export function approachPoint(ctx: CompileContext, a: ActorId, id: string, t: number, gap = 0.9): Vec2 | null {
+  if (isKitchenContainer(id)) {
+    const contact = kitchenContainerApproach(id, a);
+    return contact ? [...contact.position] : null;
+  }
   if (id === "cupboard" || (isProp(id) && ctx.ws.props[id]?.at === "cupboard")) return [...KITCHEN_CUPBOARD.approach];
   if (id === "house_living" && (a === "masha" || a === "bear") && ctx.ws.actors[a].posture !== "sit") return armchairApproach(a);
   if (isMark(id)) return spread(ctx, a, standPos(id), t);
@@ -118,13 +125,14 @@ export function approachPoint(ctx: CompileContext, a: ActorId, id: string, t: nu
   if (isProp(id)) {
     const at = ctx.ws.props[id]?.at;
     if (at && isMark(at)) {
+      if (isCarrot(id) || id === "ball") return carrotApproach(ctx, a, id, at, !!ctx.ws.props[id].planted);
       if (isInteriorMark(at)) {
         const surface = propPlacementAtMark(id, at).pos;
         const target: Vec2 = [surface[0], surface[2]];
         const me = posAt(ctx, a, t);
         if (a === "masha" && at === "house_kitchen") return housePickupPosition(id);
         if (at === "house_kitchen") {
-          const candidate = houseWorld([-2.9, 0.75]);
+          const candidate = houseWorld([-2.65, houseWorkPropZ(id) - 0.73]);
           const path = planPath(me, candidate);
           if (dist(path[path.length - 1], candidate) < 0.03) return candidate;
         }
@@ -140,6 +148,26 @@ export function approachPoint(ctx: CompileContext, a: ActorId, id: string, t: nu
     if (at && isActor(at) && at !== a) return approachPoint(ctx, a, at, t, gap);
   }
   return null;
+}
+
+export function carrotApproach(ctx: CompileContext, a: ActorId, item: PropId, mark: MarkId, planted = false): Vec2 {
+  if (isKitchenContainer(mark)) {
+    const contact = kitchenContainerApproach(mark, a);
+    if (contact) return [...contact.position];
+  }
+  const placement = propPlacementInState(item, { ...(ctx.ws.props[item]?.at === mark ? ctx.ws.props[item] : {}), at: mark, planted });
+  const grip = propGripWorld(placement.pos, placement.rot, item === "ball" ? [0, 0.15, 0] : PROP_CONTACTS[item].point);
+  const reach = CHARACTER_REACH[a];
+  if (item === "ball") grip[1] -= 0.15;
+  const me = ctx.ws.actors[a].pos;
+  const yaw = isCarrot(item) || item === "ball" ? Math.PI : yawTo(me, [grip[0], grip[2]], ctx.ws.actors[a].facing);
+  const lead = reach.shoulder[1] < 0.9 ? 0.15 : reach.length * 0.35;
+  const c = Math.cos(yaw);
+  const s = Math.sin(yaw);
+  const dest: Vec2 = [grip[0] - c * reach.shoulder[0] - s * (reach.shoulder[2] + lead), grip[2] + s * reach.shoulder[0] - c * (reach.shoulder[2] + lead)];
+  if (mark === "bench") dest[1] = yaw === 0 ? Math.min(dest[1], 2.73) : Math.max(dest[1], item === "ball" ? 3.46 : 3.24);
+  if (mark === "garden" && planted) dest[1] = Math.max(dest[1], reach.shoulder[1] < 0.45 ? -5.35 : -5.29); // feet stay outside the raised bed's front board
+  return dest;
 }
 
 function speed(a: ActorId, verb: Verb): number {
@@ -163,7 +191,29 @@ export function locomote(
   const st = ctx.ws.actors[a];
   const from = v2(st.pos);
   if (!direct && isInsideHouse(...from) !== isInsideHouse(...dest)) return throughDoor(ctx, a, t, dest, emotion, target, finalFacing);
+  const carrotBenchContext =
+    isCarrot(st.holding) ||
+    isCarrot(target) ||
+    (st.mark === "bench" && Object.entries(ctx.ws.props).some(([id, p]) => isCarrot(id) && p.at === "bench"));
+  // A carried carrot approaches the bench's front, never its occupied seat centre.
+  if (carrotBenchContext && target === "bench" && Math.abs(dest[1] - 3) < 0.12) dest = [dest[0], 3.55];
   let path = path0 ?? planPath(from, dest);
+  if (!direct && a === "bear" && isCarrot(st.holding) && st.mark === "kitchen_bowl" && target === "kitchen_pot") {
+    // The adult carries close to his chest through the middle of the aisle.
+    // Generic corner nodes clear a root point but clip Bear's broad paws.
+    const aisleZ = (HOUSE_PREP_TABLE.position[1] - HOUSE_PREP_TABLE.depth / 2 + houseWorld([0, 0.17])[1]) / 2 - 0.05;
+    path = [from, [-10.65, aisleZ], [-13.25, aisleZ], [-13.25, -13.15], dest];
+  }
+  if (carrotBenchContext && !direct && !isInsideHouse(...from) && !isInsideHouse(...dest)) {
+    const front = (p: Vec2) => p[0] > 0.9 && p[0] < 3.1 && p[1] >= 3.19 && p[1] <= 3.65;
+    const corner: Vec2 = [0.75, 3.55];
+    const fromFront = front(from);
+    const toFront = front(dest);
+    if (fromFront && toFront) path = [from, [from[0], 3.55], [dest[0], 3.55], dest];
+    else if (toFront) path = [...planPath(from, corner), [dest[0], 3.55], dest];
+    else if (fromFront) path = [from, [from[0], 3.55], corner, ...planPath(corner, dest).slice(1)];
+    path = path.filter((p, i) => i === 0 || dist(path[i - 1], p) > 0.0001);
+  }
   if (a === "masha") {
     const supportedFrom = cookingSupportHeightAt(...from) > 0.3;
     const supportedTo = cookingSupportHeightAt(...dest) > 0.3;
@@ -181,11 +231,20 @@ export function locomote(
   // the yard through its cloth and end branches, especially with a rider.
   path = avoidHammock(path, a, a === "bear" && ctx.ws.actors.masha.posture === "carried" ? 1.2 : 0);
   const len = pathLength(path);
+  const kitchenTravel = isInsideHouse(...from) && isInsideHouse(...dest) && (isKitchenContainer(target) || (isProp(target) && isKitchenContainer(ctx.ws.props[target]?.at)));
   const fromScene = sceneLocationAt(...from);
   const toScene = sceneLocationAt(...dest);
   const sceneCut = fromScene !== toScene;
   const dur = sceneCut ? 0.9 : len < 0.3 ? 0.6 : Math.min(MAX_LOCO_S, Math.max(len / speed(a, verb), 0.8));
   const yaw = pathEndYaw(path, st.facing);
+  if (kitchenTravel) {
+    const xs = path.map((p) => p[0]);
+    const zs = path.map((p) => p[1]);
+    const midX = (Math.min(...xs) + Math.max(...xs)) / 2;
+    const midZ = (Math.min(...zs) + Math.max(...zs)) / 2;
+    const key: CamKey = { pos: [-8.7, 3.5, -8.9], look: [midX, a === "masha" ? 1.15 : 1.35, midZ], fov: midX > -10.5 ? 70 : 60, location: "house" };
+    ctx.doorShots.push({ start: t, dur, shot: "wide", from: key, to: key, overridden: true });
+  }
   pushClip(ctx, a, t, dur, verb, emotion, {
     from,
     to: v2(path[path.length - 1]),
@@ -273,6 +332,45 @@ export function doorAction(ctx: CompileContext, a: ActorId, t: number, to: numbe
   return t + dur;
 }
 
+export function objectInteractionShot(ctx: CompileContext, a: ActorId, item: PropId, start: number, end: number, mark: MarkId, pickup = false): void {
+  if (isKitchenContainer(mark)) {
+    // The settled turn belongs to the contact shot. Leaving it to the generic
+    // planner inserted a brief exterior-wall view between two clear shots.
+    const turn = ctx.tracks[a].clips.filter((c) => c.verb === "look_at" && !c.params.ambient && Math.abs(c.start + c.dur - start) < 0.002).at(-1);
+    if (turn) start = turn.start;
+    // Actor clips are millisecond-rounded; authored camera intervals retain
+    // full precision. Join the preceding safe shot instead of leaving a seam.
+    const preceding = ctx.doorShots.map((c) => c.start + c.dur).filter((t) => Math.abs(t - start) < 0.002);
+    if (preceding.length) start = Math.min(start, ...preceding);
+  }
+  const p = ctx.ws.actors[a].pos;
+  const large = CHARACTER_REACH[a].shoulder[1] > 1;
+  const key: CamKey = isKitchenContainer(mark)
+    ? mark === "kitchen_bowl"
+      ? {
+          pos: a === "masha" ? [-13.6, 2.65, -12.2] : [-13.5, 2.8, -9.5],
+          look: a === "masha" ? [-11.35, 1.4, -11.42] : [-11.35, 1.5, -11.2],
+          fov: a === "masha" ? 48 : 46,
+          location: "house",
+        }
+      : { pos: [-13, 2.85, -14.78], look: [-13.6, 1.6, -13.7], fov: 58, location: "house" }
+    : mark === "garden"
+      ? { pos: [p[0] + 3.0, large ? 2.6 : 1.65, p[1] + 0.6], look: [p[0] + 0.12, large ? 1 : 0.48, p[1] - 0.1], fov: 38, location: "yard" }
+      : { pos: [p[0] + 3.0, large ? 2.6 : 1.65, p[1] + 0.65], look: [p[0], large ? 1.05 : 0.65, p[1] - 0.12], fov: 38, location: "yard" };
+  // The first ground ball lies west of the picnic table. View its pickup
+  // from that open side so the samovar cannot hide the hand and ball.
+  if (item === "ball" && pickup && mark === "clearing") key.pos = [p[0] - 2.8, 1.65, p[1] - 0.4];
+  if (item === "ball" && mark === "bench") {
+    key.pos = [p[0] + 2.65, 1.5, p[1] - 1.1];
+    key.look = [p[0], 0.58, 3.13];
+  }
+  if (item === "ball") key.followActor = a;
+  const cue: CameraCue = { start, dur: end - start, shot: "medium", from: key, to: key, overridden: true };
+  ctx.doorShots.push(cue);
+  ctx.objectInteractionShots.push(cue);
+  ctx.lastCarrotShot = { cue, actor: a, end };
+}
+
 export function cupboardShot(ctx: CompileContext, start: number, end: number): void {
   if (end <= start) return;
   const key: CamKey = { pos: [-13.2, 3.7, -14.1], look: [-14.6, 1.9, -11.4], fov: 46, location: "house" };
@@ -328,7 +426,16 @@ export function throughDoor(
   const threshold = entering ? HOUSE_DOOR.exterior.threshold : INTERIOR_THRESHOLD;
   const arrival = entering ? INTERIOR_THRESHOLD : HOUSE_DOOR.exterior.threshold;
   const exit = entering ? INTERIOR_APPROACH : HOUSE_DOOR.exterior.approach;
+  const followCarrot = entering && isCarrot(st.holding);
+  const walkFrom = v2(st.pos);
+  const walkStart = t;
   if (dist(st.pos, approach) > 0.05) t = locomote(ctx, a, t, "walk_to", approach, emotion, null, undefined, undefined, true);
+  let passageStart = start;
+  if (followCarrot && t > walkStart) {
+    const key = (p: Vec2): CamKey => ({ pos: [p[0] + 2.8, 3, p[1] + 3.8], look: [p[0], a === "masha" ? 0.65 : 1.25, p[1]], fov: 60, location: "yard" });
+    ctx.doorShots.push({ start: walkStart, dur: t - walkStart, shot: "tracking", from: key(walkFrom), to: key(v2(st.pos)), overridden: true });
+    passageStart = t;
+  }
   if ((ctx.ws.objects?.house_door ?? 0) < 0.999) t = doorAction(ctx, a, t, 1, emotion);
   t = locomote(ctx, a, t, "walk_to", threshold, emotion, null, undefined, [v2(st.pos), threshold], true);
   const cut = t + 0.05;
@@ -349,7 +456,7 @@ export function throughDoor(
   st.mark = null;
   record(ctx, a, t + 0.1);
   t += 0.1;
-  doorShot(ctx, start, cut, !entering);
+  doorShot(ctx, passageStart, cut, !entering);
   t = locomote(ctx, a, t, "walk_to", exit, emotion, null, yaw, [arrival, exit], true);
   ctx.doorFree = t;
   doorShot(ctx, cut, t, entering);

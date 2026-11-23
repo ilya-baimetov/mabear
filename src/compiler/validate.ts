@@ -1,5 +1,6 @@
 // Deterministic post-validator (spec §9): hard canon/safety rules + structural clamps. Pure and idempotent
 // (validating an already-validated script yields no new hits and no errors).
+import {isCarrot} from "../shared/schema";
 import { CHARACTERS } from "../shared/bible/characters";
 import { MARKS } from "../shared/bible/set";
 import { GRAMMAR, VERB_IMPLIED_PROP, isWolf } from "../shared/grammar";
@@ -62,6 +63,7 @@ const NEW_CAST_ALIASES: Record<string, ActorId> = {
   "гималайский_медведь": "rival_bear"
 };
 const TARGET_SYNONYMS: Record<string, string> = {
+  bowl:"kitchen_bowl",kitchen_bowl:"kitchen_bowl",миска:"kitchen_bowl",миску:"kitchen_bowl",pot:"kitchen_pot",cooking_pot:"kitchen_pot",кастрюля:"kitchen_pot",кастрюлю:"kitchen_pot",
   house_door:'door',front_door:'door',
   kitchen_cupboard:'cupboard',pantry:'cupboard',cabinet:'cupboard',honey_jar:'pantry_honey',
   ...NEW_CAST_ALIASES,
@@ -209,6 +211,9 @@ export function validateBeatScript(bs: BeatScript, startState: WorldState, lang:
     let actor = b.actor;
     if (!inList(VERBS, b.verb)) { errors.push(`${tag}: unknown verb → idle`); b.verb = "idle"; }
 
+    // Carrying a held prop to a place is locomotion, not Bear lifting Masha.
+    if(b.verb==='carry'&&b.item&&isMark(resolveTargetId(b.target))){b.verb='walk_to';b.target=resolveTargetId(b.target);b.item=null;}
+
     // Masha-only / Bear-only verbs
     if (!GRAMMAR[b.verb].actors.includes(actor)) {
       if (b.verb === "carry" && !isWolf(actor)) {
@@ -291,15 +296,15 @@ export function validateBeatScript(bs: BeatScript, startState: WorldState, lang:
     } else if (b.item != null && VERB_IMPLIED_PROP[b.verb] !== b.item) {
       b.item = null;
     }
-    // The bounded drop cue only supports Masha's ball.
-    if (b.verb === "drop" && b.item !== "ball") {
-      errors.push(`${tag}: drop supports only the ball → shrug`);
+    // Ball is simulated; the compiler normalizes carrots to an authored placement.
+    if (b.verb === "drop" && b.item !== "ball" && !isCarrot(b.item)) {
+      errors.push(`${tag}: drop supports only the ball or a garden carrot → shrug`);
       b.verb = "shrug"; b.item = null;
     }
     // simulate holding
     if (b.verb === "take" && b.item) holding[actor] = b.item;
     if (b.verb === "give" && b.item && isActor(b.target)) { holding[actor] = null; holding[b.target] = b.item; }
-    if (b.verb === "throw" || b.verb === "drop") holding[actor] = null;
+    if (b.verb === "throw" || b.verb === "drop" || b.verb === "put_down") holding[actor] = null;
 
     // ---- emote / line (bear_silent) ----
     let emote = allowedEmote(actor, b.emote ?? null);

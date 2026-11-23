@@ -5,7 +5,7 @@
 import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import {openHouseAperture} from './set/houseDoor';
-import { ACTOR_IDS, PROP_IDS, type Vec3, type ActorId } from "../shared/schema";
+import { ACTOR_IDS, PROP_IDS, CARROT_IDS, type Vec3, type ActorId } from "../shared/schema";
 import type { ActorFrame, CharacterRig } from "./api";
 import { SET_ELEMENT_IDS, SET_ELEMENTS, type SetElementId } from "../shared/yardLayout";
 
@@ -77,7 +77,7 @@ function buildManifest(): Record<string, AssetEntry> {
   for (const id of PROP_IDS) put({ id: `prop:${id}`, kind: "prop", source: "procedural", scale: 1, offset: [0, 0, 0], label: `${id} — procedural stand-in` });
   m['set:house'] = {id:'set:house',kind:'set',source:{gltf:'assets/generated/treehouse.glb'},height:10.8,scale:1,offset:[-.85,0,-1.6],label:'Bear’s hollow tree-house'};
   m['set:beehive'] = {id:'set:beehive',kind:'set',source:{gltf:'assets/generated/beehive.glb'},height:1.45,scale:1,offset:[0,0,0],label:'Painted wooden beehive'};
-  m['prop:carrot'] = {id:'prop:carrot',kind:'prop',source:{gltf:'assets/generated/carrot.glb'},height:.36,scale:1,offset:[0,-.14,0],label:'Textured garden carrot'};
+  for(const id of CARROT_IDS)m[`prop:${id}`]={id:`prop:${id}`,kind:'prop',source:{gltf:'assets/generated/carrot.glb'},height:.48,scale:1,offset:[0,0,0],label:`Garden carrot ${CARROT_IDS.indexOf(id)+1}`};
   return m;
 }
 
@@ -336,14 +336,23 @@ export async function loadSetOverrides(anchors: Record<SetElementId, THREE.Group
 
 /** Swap glTF-sourced props into their holders (procedural mesh stays if loading fails). */
 export async function loadPropOverrides(holders: Record<string, THREE.Object3D>, manifest: Record<string, AssetEntry> = ASSET_MANIFEST,isDisposed:()=>boolean=()=>false): Promise<void> {
+  // Each prop keeps its own transform, while repeated static models share the
+  // decoded geometry/materials/textures. Scope this cache to one stage lifetime.
+  const sources=new Map<string,ReturnType<typeof loadGltf>>();
+  const discarded=new Set<THREE.Group>();
   await Promise.all(
     PROP_IDS.map(async (pid) => {
       const e = manifest[`prop:${pid}`];
-      if (!e || !isGltf(e.source)) return;
+      if (!e || !isGltf(e.source) || !holders[pid]) return;
       try {
-        const g = await loadGltf(e.source.gltf);
-        const normalized = normalizeStatic(g.scene,e.height,e.scale,e.offset);
-        if(isDisposed()){disposeGenerated(normalized);return;}
+        let source=sources.get(e.source.gltf);
+        if(!source){source=loadGltf(e.source.gltf);sources.set(e.source.gltf,source);}
+        const g = await source;
+        const normalized = normalizeStatic(g.scene.clone(true),e.height,e.scale,e.offset);
+        if(isDisposed()){
+          if(!discarded.has(g.scene)){disposeGenerated(normalized);discarded.add(g.scene);}
+          return;
+        }
         const h = holders[pid];
         h.traverse(o=>(o as THREE.Mesh).geometry?.dispose());h.clear();
         h.add(normalized);

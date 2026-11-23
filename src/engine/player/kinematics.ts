@@ -277,7 +277,8 @@ export function resolveTrack(seg: Segment, actor: ActorId, extraPosture: { t: nu
   let stamp = ((seg.duration * 1024) | 0) ^ ((st.pos[0] * 1024) | 0) ^ ((st.pos[1] * 1024) | 0);
   for (let i = 0; i < len; i++) {
     const c = rawClips[i];
-    stamp = (Math.imul(stamp, 31) + ((c.start * 1024) | 0) + ((c.dur * 1024) | 0) + c.verb.charCodeAt(0) + ((c.params.to?.[0] ?? c.params.facing ?? 0) * 256 | 0)) | 0;
+    const p = c.params;
+    stamp = (Math.imul(stamp, 31) + ((c.start * 1024) | 0) + ((c.dur * 1024) | 0) + c.verb.charCodeAt(0) + (((p.to?.[0] ?? p.facing ?? 0) * 256) | 0) + (((p.to?.[1] ?? p.arrivalYaw ?? 0) * 256) | 0) + ((p.path?.length ?? 0) << 4) + (((p.from?.[0] ?? 0) * 128) | 0) + (((p.from?.[1] ?? 0) * 128) | 0) + (((p.path?.[1]?.[0] ?? 0) * 64) | 0) + (((p.path?.[1]?.[1] ?? 0) * 64) | 0)) | 0;
   }
   const extraLen = extraPosture.length;
   const extraFirstT = extraLen > 0 ? extraPosture[0].t : 0;
