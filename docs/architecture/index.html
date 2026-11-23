@@ -1,75 +1,134 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Masha &amp; The Bear — System Architecture &amp; Combined C4 Diagram</title>
+  <title>Masha &amp; The Bear — Interactive Architecture &amp; Combined C4 Diagram</title>
   <style>
     :root {
-      --bg: #0b1020;
-      --surface: #121931;
-      --surface-2: #182240;
-      --surface-3: #1f2b4d;
-      --border: #2c3c68;
+      --bg: #090e1c;
+      --surface: #11182c;
+      --surface-2: #17213b;
+      --surface-3: #1e2b4b;
+      --border: #2a3b66;
       --text: #e8eefc;
-      --muted: #9fb0d6;
+      --muted: #9eb0d6;
       --accent: #60a5fa;
       --accent-2: #34d399;
       --accent-3: #f59e0b;
       --accent-4: #a78bfa;
-      --accent-5: #f472b6;
       --c4-l1: #3b82f6;
       --c4-l2: #10b981;
       --c4-l3: #a855f7;
+      --canvas-bg: #070b16;
+      --grid-dot: rgba(148, 163, 184, 0.14);
       --shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
       --radius: 14px;
       --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
     }
+    html[data-theme="light"] {
+      --bg: #f3f6fc;
+      --surface: #ffffff;
+      --surface-2: #f8fafd;
+      --surface-3: #edf2fb;
+      --border: #d0dcf0;
+      --text: #0f172a;
+      --muted: #475569;
+      --canvas-bg: #f8fafd;
+      --grid-dot: rgba(15, 23, 42, 0.1);
+      --shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
+    }
     * { box-sizing: border-box; }
-    html, body {
+    html { scroll-behavior: smooth; }
+    body {
       margin: 0;
-      padding: 0;
       background: var(--bg);
       color: var(--text);
       font-family: var(--sans);
       line-height: 1.55;
+      transition: background 0.2s, color 0.2s;
     }
-    a { color: var(--accent); text-decoration: none; }
-    a:hover { text-decoration: underline; }
     code {
       font-family: var(--mono);
-      font-size: 0.88em;
-      background: rgba(96, 165, 250, 0.12);
-      color: #bfdbfe;
+      font-size: 0.87em;
+      background: rgba(96, 165, 250, 0.14);
+      color: var(--accent);
       padding: 2px 6px;
       border-radius: 6px;
     }
-    .page {
-      max-width: 1440px;
+    /* Sticky Top Nav */
+    nav.topbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(17, 24, 44, 0.88);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    html[data-theme="light"] nav.topbar {
+      background: rgba(255, 255, 255, 0.9);
+    }
+    .topbar-inner {
+      max-width: 1480px;
       margin: 0 auto;
-      padding: 28px 24px 64px;
+      padding: 10px 24px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .brand {
+      font-weight: 700;
+      font-size: 14.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      letter-spacing: -0.01em;
+    }
+    .brand-dot {
+      width: 9px; height: 9px; border-radius: 50%;
+      background: linear-gradient(135deg, #34d399, #60a5fa);
+    }
+    .nav-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 5px 10px;
+      border-radius: 8px;
+      transition: background 0.15s, color 0.15s;
+    }
+    .nav-links a:hover {
+      background: var(--surface-3);
+      color: var(--text);
+    }
+
+    .page {
+      max-width: 1480px;
+      margin: 0 auto;
+      padding: 24px 24px 64px;
     }
     header.hero {
-      background: linear-gradient(135deg, #131c38 0%, #1b274b 55%, #162238 100%);
+      background: linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 60%, var(--surface-3) 100%);
       border: 1px solid var(--border);
       border-radius: 18px;
       padding: 28px 32px;
       box-shadow: var(--shadow);
       margin-bottom: 24px;
     }
-    .hero-top {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 16px;
-    }
     .badge-row {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
     }
     .badge {
       display: inline-flex;
@@ -79,14 +138,13 @@
       border-radius: 999px;
       font-size: 12px;
       font-weight: 600;
-      letter-spacing: 0.02em;
       background: var(--surface-3);
       border: 1px solid var(--border);
       color: var(--text);
     }
-    .badge.green { border-color: rgba(52, 211, 153, 0.45); color: #6ee7b7; background: rgba(16, 185, 129, 0.12); }
-    .badge.blue { border-color: rgba(96, 165, 250, 0.45); color: #93c5fd; background: rgba(59, 130, 246, 0.12); }
-    .badge.purple { border-color: rgba(167, 139, 250, 0.45); color: #c4b5fd; background: rgba(168, 85, 247, 0.12); }
+    .badge.green { border-color: rgba(52, 211, 153, 0.5); color: #10b981; background: rgba(16, 185, 129, 0.12); }
+    .badge.blue { border-color: rgba(96, 165, 250, 0.5); color: #3b82f6; background: rgba(59, 130, 246, 0.12); }
+    .badge.purple { border-color: rgba(167, 139, 250, 0.5); color: #8b5cf6; background: rgba(168, 85, 247, 0.12); }
     h1 {
       margin: 0 0 8px;
       font-size: clamp(24px, 3vw, 34px);
@@ -95,23 +153,23 @@
     .subtitle {
       margin: 0;
       color: var(--muted);
-      max-width: 820px;
+      max-width: 880px;
       font-size: 15px;
     }
     .kpi-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(195px, 1fr));
       gap: 14px;
       margin-top: 22px;
     }
     .kpi {
-      background: rgba(11, 16, 32, 0.55);
+      background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 12px;
       padding: 14px 16px;
     }
-    .kpi .label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
-    .kpi .value { font-size: 24px; font-weight: 700; margin-top: 4px; color: #fff; }
+    .kpi .label { font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .kpi .value { font-size: 23px; font-weight: 700; margin-top: 4px; }
     .kpi .delta { font-size: 12px; color: var(--accent-2); margin-top: 2px; }
 
     section.card {
@@ -121,13 +179,12 @@
       padding: 22px 24px;
       margin-bottom: 24px;
       box-shadow: var(--shadow);
+      scroll-margin-top: 64px;
     }
     section.card h2 {
       margin: 0 0 6px;
       font-size: 20px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
+      letter-spacing: -0.01em;
     }
     section.card .lead {
       margin: 0 0 18px;
@@ -135,43 +192,7 @@
       font-size: 14px;
     }
 
-    /* Combined Zoomable C4 Canvas */
-    .c4-shell {
-      display: grid;
-      grid-template-columns: 1fr 330px;
-      gap: 16px;
-      align-items: stretch;
-    }
-    @media (max-width: 1080px) {
-      .c4-shell { grid-template-columns: 1fr; }
-    }
-    .c4-stage-wrap {
-      position: relative;
-      background: #080d1a;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      overflow: hidden;
-      min-height: 640px;
-      display: flex;
-      flex-direction: column;
-    }
-    .c4-toolbar {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 14px;
-      background: var(--surface-2);
-      border-bottom: 1px solid var(--border);
-      z-index: 2;
-    }
-    .btn-group {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      align-items: center;
-    }
+    /* Buttons */
     .btn {
       appearance: none;
       border: 1px solid var(--border);
@@ -184,16 +205,47 @@
       cursor: pointer;
       transition: background 0.15s, border-color 0.15s, transform 0.08s;
     }
-    .btn:hover { background: #293864; border-color: #4860a0; }
+    .btn:hover { border-color: var(--accent); }
     .btn:active { transform: translateY(1px); }
     .btn.active {
       background: rgba(96, 165, 250, 0.22);
       border-color: var(--accent);
-      color: #fff;
     }
-    .btn.l1.active { border-color: var(--c4-l1); background: rgba(59, 130, 246, 0.24); }
-    .btn.l2.active { border-color: var(--c4-l2); background: rgba(16, 185, 129, 0.24); }
-    .btn.l3.active { border-color: var(--c4-l3); background: rgba(168, 85, 247, 0.24); }
+    .btn.l1.active { border-color: var(--c4-l1); background: rgba(59, 130, 246, 0.22); }
+    .btn.l2.active { border-color: var(--c4-l2); background: rgba(16, 185, 129, 0.22); }
+    .btn.l3.active { border-color: var(--c4-l3); background: rgba(168, 85, 247, 0.22); }
+
+    /* C4 Shell */
+    .c4-shell {
+      display: grid;
+      grid-template-columns: 1fr 350px;
+      gap: 16px;
+      align-items: stretch;
+    }
+    @media (max-width: 1120px) {
+      .c4-shell { grid-template-columns: 1fr; }
+    }
+    .c4-stage-wrap {
+      position: relative;
+      background: var(--canvas-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      min-height: 670px;
+      display: flex;
+      flex-direction: column;
+    }
+    .c4-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: var(--surface-2);
+      border-bottom: 1px solid var(--border);
+    }
+    .btn-group { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
     .zoom-readout {
       font-family: var(--mono);
       font-size: 12px;
@@ -206,23 +258,19 @@
       flex: 1;
       cursor: grab;
       user-select: none;
-      background-image:
-        radial-gradient(rgba(148, 163, 184, 0.14) 1px, transparent 1px);
+      background-image: radial-gradient(var(--grid-dot) 1px, transparent 1px);
       background-size: 24px 24px;
     }
     .c4-viewport.dragging { cursor: grabbing; }
-    svg#c4-svg {
-      width: 100%;
-      height: 600px;
-      display: block;
-    }
+    svg#c4-svg { width: 100%; height: 625px; display: block; }
     .c4-hint {
       position: absolute;
       left: 12px;
       bottom: 10px;
       font-size: 11.5px;
       color: var(--muted);
-      background: rgba(11, 16, 32, 0.84);
+      background: var(--surface);
+      opacity: 0.92;
       border: 1px solid var(--border);
       border-radius: 8px;
       padding: 5px 10px;
@@ -237,8 +285,8 @@
       flex-direction: column;
       gap: 12px;
     }
-    .c4-inspector h3 { margin: 0; font-size: 16px; }
-    .c4-inspector .level-pill {
+    .c4-inspector h3 { margin: 0; font-size: 16.5px; }
+    .level-pill {
       display: inline-block;
       font-size: 11px;
       font-weight: 700;
@@ -248,7 +296,16 @@
       border-radius: 6px;
       width: fit-content;
     }
-    .c4-inspector .desc { font-size: 13.5px; color: #dbeafe; margin: 0; }
+    .c4-inspector .desc { font-size: 13.5px; color: var(--text); margin: 0; }
+    .c4-inspector .meta-label {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 4px;
+      display: block;
+    }
     .c4-inspector ul {
       margin: 0;
       padding-left: 18px;
@@ -259,93 +316,95 @@
     .legend {
       display: flex;
       flex-wrap: wrap;
-      gap: 14px;
+      gap: 16px;
       font-size: 12px;
       color: var(--muted);
-      margin-top: 10px;
+      margin-top: 12px;
     }
     .legend span { display: inline-flex; align-items: center; gap: 6px; }
     .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
 
-    /* SVG Node & Edge Styling */
-    .c4-node { cursor: pointer; transition: opacity 0.2s ease; }
-    .c4-node rect.box { transition: stroke-width 0.15s, filter 0.15s; }
-    .c4-node:hover rect.box { filter: brightness(1.15); stroke-width: 2.4; }
-    .c4-node.selected rect.box { stroke: #fde047 !important; stroke-width: 3 !important; }
-    .c4-edge { transition: opacity 0.2s ease; }
-    .dimmed { opacity: 0.18 !important; }
+    /* SVG Nodes & Edges */
+    .c4-node, .dag-node { cursor: pointer; transition: opacity 0.2s ease; }
+    .c4-node rect.box, .dag-node rect.box { transition: stroke-width 0.15s, filter 0.15s; }
+    .c4-node:hover rect.box, .dag-node:hover rect.box { filter: brightness(1.14); stroke-width: 2.5; }
+    .c4-node.selected rect.box, .dag-node.selected rect.box { stroke: #facc15 !important; stroke-width: 3 !important; }
+    .c4-edge, .c4-edge-label, .dag-edge { transition: opacity 0.2s ease, stroke 0.15s; }
+    .c4-edge.hi { stroke: #facc15 !important; stroke-width: 2.4 !important; opacity: 1 !important; }
+    .dimmed { opacity: 0.16 !important; }
 
-    /* Data Flow Pipeline */
-    .pipeline {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
-      gap: 12px;
-      margin-top: 12px;
-    }
-    .pipe-step {
-      background: var(--surface-2);
+    /* Sequence & DAG SVG Containers */
+    .svg-frame {
+      background: var(--canvas-bg);
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 14px;
-      position: relative;
+      overflow-x: auto;
+      padding: 12px;
     }
-    .pipe-step .num {
-      font-family: var(--mono);
-      font-size: 11px;
-      color: var(--accent);
-      font-weight: 700;
-      margin-bottom: 4px;
-    }
-    .pipe-step h4 { margin: 0 0 6px; font-size: 14px; }
-    .pipe-step p { margin: 0; font-size: 12.5px; color: var(--muted); }
+    .svg-frame svg { display: block; width: 100%; height: auto; min-width: 820px; }
 
-    /* Charts */
+    /* Charts Grid */
     .charts-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(430px, 1fr));
       gap: 18px;
     }
-    .chart-box {
+    @media (max-width: 520px) {
+      .charts-grid { grid-template-columns: 1fr; }
+    }
+    .chart-card {
       background: var(--surface-2);
       border: 1px solid var(--border);
       border-radius: 12px;
       padding: 16px 18px;
-    }
-    .chart-box h3 { margin: 0 0 4px; font-size: 15px; }
-    .chart-box .sub { margin: 0 0 14px; font-size: 12px; color: var(--muted); }
-    .bar-row {
-      margin-bottom: 11px;
-    }
-    .bar-head {
-      display: flex;
-      justify-content: space-between;
-      font-size: 12.5px;
-      margin-bottom: 4px;
-    }
-    .bar-head .name { font-weight: 600; }
-    .bar-head .vals { font-family: var(--mono); color: var(--muted); font-size: 11.5px; }
-    .bar-track {
-      background: #0c1224;
-      border: 1px solid #243258;
-      border-radius: 7px;
-      height: 18px;
       position: relative;
-      overflow: hidden;
     }
-    .bar-before {
-      position: absolute;
-      top: 0; left: 0; bottom: 0;
-      background: rgba(148, 163, 184, 0.28);
-      border-right: 1px dashed rgba(226, 232, 240, 0.55);
+    .chart-card h3 { margin: 0 0 4px; font-size: 15px; }
+    .chart-card .sub { margin: 0 0 12px; font-size: 12.5px; color: var(--muted); }
+    .chart-card svg { width: 100%; height: auto; display: block; }
+    .chart-legend {
+      display: flex;
+      gap: 14px;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 10px;
     }
-    .bar-after {
-      position: absolute;
-      top: 3px; left: 0; bottom: 3px;
-      background: linear-gradient(90deg, #34d399, #3b82f6);
-      border-radius: 5px;
+    .chart-legend span { display: inline-flex; align-items: center; gap: 6px; }
+    .swatch { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
+
+    .gpu-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .gpu-stat {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+    }
+    .gpu-stat .lbl { font-size: 11.5px; color: var(--muted); }
+    .gpu-stat .val { font-size: 19px; font-weight: 700; margin-top: 2px; }
+    .gpu-stat .drop { font-size: 11.5px; color: var(--accent-2); }
+
+    /* Tooltip */
+    #chart-tooltip {
+      position: fixed;
+      pointer-events: none;
+      z-index: 100;
+      background: #0f172a;
+      color: #f8fafc;
+      border: 1px solid #475569;
+      border-radius: 8px;
+      padding: 7px 10px;
+      font-size: 12px;
+      font-family: var(--mono);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      display: none;
     }
 
-    /* Layering Table */
+    /* Table */
     table.arch-table {
       width: 100%;
       border-collapse: collapse;
@@ -372,57 +431,49 @@
   </style>
 </head>
 <body>
-<div class="page">
-  <header class="hero">
-    <div class="hero-top">
-      <div>
-        <div class="badge-row">
-          <span class="badge green">Deployed · Cloudflare Workers</span>
-          <span class="badge blue">Branch: main · d2ba859</span>
-          <span class="badge purple">Goals 1–5 + Rapier Continuity</span>
-        </div>
-        <h1>Masha &amp; The Bear — 3D Storybook Architecture</h1>
-        <p class="subtitle">
-          Deterministic 3D story authoring &amp; playback engine running in-browser via React, Three.js WebGL2, and Rapier3D WASM,
-          backed by an edge Cloudflare Worker &amp; Durable Object speech/story proxy.
-        </p>
-      </div>
+
+<nav class="topbar">
+  <div class="topbar-inner">
+    <div class="brand"><span class="brand-dot"></span> MaBear 3D Storybook Architecture</div>
+    <div class="nav-links">
+      <a href="#overview">Overview</a>
+      <a href="#c4-section">C4 Diagram (L1–L3)</a>
+      <a href="#flow-section">Data &amp; Frame Flow</a>
+      <a href="#dag-section">Dependency Graph</a>
+      <a href="#perf-section">Performance Graphs</a>
+      <a href="#invariants-section">Invariants</a>
+      <button class="btn" id="theme-toggle" title="Toggle Dark / Light Theme">Light Theme</button>
     </div>
+  </div>
+</nav>
+
+<div class="page">
+  <header class="hero" id="overview">
+    <div class="badge-row">
+      <span class="badge green">Production · Cloudflare Workers (dfbbd713)</span>
+      <span class="badge blue">Branch: main · d2ba859</span>
+      <span class="badge purple">C4 Levels 1–3 · Goals 1–5 + Rapier Continuity</span>
+    </div>
+    <h1>Masha &amp; The Bear — 3D Storybook System Architecture</h1>
+    <p class="subtitle">
+      A deterministic, seekable 3D story authoring and playback system running in the browser with React 19, Three.js WebGL2, and headless Rapier3D WASM physics,
+      backed by a Cloudflare Worker gateway with <code>STORY_SERVICE</code> and <code>MashaSpeech</code> Durable Object bindings.
+    </p>
     <div class="kpi-grid">
-      <div class="kpi">
-        <div class="label">Unit Test Suite</div>
-        <div class="value">899 / 899</div>
-        <div class="delta">75 / 75 files passing · 0 TS errors</div>
-      </div>
-      <div class="kpi">
-        <div class="label">Cold Boot (index.html)</div>
-        <div class="value">3.24 s</div>
-        <div class="delta">-26.6% vs Post-Goal-4 (4.42 s)</div>
-      </div>
-      <div class="kpi">
-        <div class="label">Interior Render Time</div>
-        <div class="value">1.70 ms</div>
-        <div class="delta">3.9× faster · draw calls 390 → 238</div>
-      </div>
-      <div class="kpi">
-        <div class="label">Rapier Sim (Pancake)</div>
-        <div class="value">71.8 ms</div>
-        <div class="delta">14.0× faster · 2,636 → 108 steps</div>
-      </div>
-      <div class="kpi">
-        <div class="label">Production Worker</div>
-        <div class="value">dfbbd713</div>
-        <div class="delta">mabear-storybook.ilya-baimetov.workers.dev</div>
-      </div>
+      <div class="kpi"><div class="label">Unit Test Suite</div><div class="value">899 / 899</div><div class="delta">75 / 75 files · 0 TS errors</div></div>
+      <div class="kpi"><div class="label">Cold Boot (index.html)</div><div class="value">3.24 s</div><div class="delta">-26.6% vs Post-Goal-4 (4.42 s)</div></div>
+      <div class="kpi"><div class="label">Interior Render Time</div><div class="value">1.70 ms</div><div class="delta">3.9× faster · 390 → 238 draw calls</div></div>
+      <div class="kpi"><div class="label">Rapier Sim (Pancake)</div><div class="value">71.8 ms</div><div class="delta">14.0× faster · 2,636 → 108 steps</div></div>
+      <div class="kpi"><div class="label">Live Worker URL</div><div class="value" style="font-size:15px; margin-top:8px;">mabear-storybook.ilya-baimetov.workers.dev</div><div class="delta">Auth-gated (/login) + Static Assets</div></div>
     </div>
   </header>
 
-  <!-- SECTION 1: COMBINED ZOOMABLE C4 ARCHITECTURE DIAGRAM -->
+  <!-- 1. COMBINED ZOOMABLE C4 ARCHITECTURE DIAGRAM -->
   <section class="card" id="c4-section">
-    <h2>Combined Zoomable C4 Architecture (Levels 1, 2 &amp; 3)</h2>
+    <h2>1. Combined Zoomable C4 Architecture (Levels 1, 2 &amp; 3)</h2>
     <p class="lead">
-      Interactive unified view combining <strong>C4 Level 1 (System Context)</strong>, <strong>Level 2 (Containers)</strong>,
-      and <strong>Level 3 (Components)</strong>. Drag to pan, scroll to zoom, filter by C4 level, or click any box to inspect its modules and contracts.
+      Unified interactive C4 model combining <strong>Level 1 (System Context)</strong>, <strong>Level 2 (Containers)</strong>, and <strong>Level 3 (Components)</strong>.
+      Drag to pan, scroll to zoom around the cursor, press <code>+</code> / <code>-</code> / <code>0</code>, filter by C4 level, or click any element to inspect its contracts and relationships.
     </p>
     <div class="c4-shell">
       <div class="c4-stage-wrap">
@@ -433,474 +484,675 @@
             <button class="btn l2" data-level="2">L2: Containers</button>
             <button class="btn l3" data-level="3">L3: Components</button>
           </div>
-          <div class="btn-group" aria-label="Zoom controls">
-            <button class="btn" id="zoom-out" title="Zoom out">−</button>
+          <div class="btn-group" aria-label="Zoom and export controls">
+            <button class="btn" id="zoom-out" title="Zoom out (-)">−</button>
             <span class="zoom-readout" id="zoom-pct">100%</span>
-            <button class="btn" id="zoom-in" title="Zoom in">+</button>
+            <button class="btn" id="zoom-in" title="Zoom in (+)">+</button>
             <button class="btn" id="zoom-fit">Fit</button>
-            <button class="btn" id="zoom-reset">Reset</button>
+            <button class="btn" id="zoom-reset" title="Reset view (0)">Reset</button>
+            <button class="btn" id="download-svg" title="Download C4 SVG">Download SVG</button>
           </div>
         </div>
         <div class="c4-viewport" id="c4-viewport">
-          <svg id="c4-svg" viewBox="0 0 1200 760" role="img" aria-label="Combined C4 Architecture Diagram">
+          <svg id="c4-svg" viewBox="0 0 1360 860" role="img" aria-label="Combined C4 Architecture Diagram Levels 1, 2, and 3">
             <defs>
-              <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
                 <path d="M 0 1 L 10 5 L 0 9 z" fill="#7c93c4" />
-              </marker>
-              <marker id="arrow-hi" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-                <path d="M 0 1 L 10 5 L 0 9 z" fill="#60a5fa" />
               </marker>
             </defs>
             <g id="c4-world">
-              <!-- Level 1 Boundary: System Boundary -->
-              <rect x="210" y="20" width="760" height="720" rx="18" fill="rgba(59,130,246,0.04)" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="8 5" />
-              <text x="230" y="46" fill="#93c5fd" font-size="13" font-weight="700">[System] MaBear 3D Storybook Platform (C4 L1 + L2 + L3)</text>
+              <!-- L1 System Boundary -->
+              <rect x="235" y="18" width="875" height="824" rx="18" fill="rgba(59,130,246,0.04)" stroke="#3b82f6" stroke-width="1.8" stroke-dasharray="9 5" />
+              <text x="255" y="44" fill="#60a5fa" font-size="13.5" font-weight="700">[L1 System Boundary] MaBear 3D Storybook Platform</text>
 
-              <!-- Level 2 Container: Browser SPA -->
-              <rect x="232" y="64" width="716" height="540" rx="14" fill="rgba(16,185,129,0.045)" stroke="#10b981" stroke-width="1.5" stroke-dasharray="6 4" />
-              <text x="248" y="88" fill="#6ee7b7" font-size="12.5" font-weight="700">[Container] Browser SPA — React 19 + Three.js WebGL2 + Rapier3D WASM (dist/)</text>
+              <!-- L2 Container: Browser SPA -->
+              <rect x="258" y="62" width="830" height="585" rx="14" fill="rgba(16,185,129,0.045)" stroke="#10b981" stroke-width="1.6" stroke-dasharray="6 4" />
+              <text x="276" y="86" fill="#34d399" font-size="13" font-weight="700">[L2 Container] Browser SPA — React 19 + Three.js WebGL2 + Rapier3D WASM (dist/)</text>
 
-              <!-- Level 2 Container: Edge Worker -->
-              <rect x="232" y="622" width="716" height="104" rx="14" fill="rgba(16,185,129,0.05)" stroke="#10b981" stroke-width="1.5" stroke-dasharray="6 4" />
-              <text x="248" y="644" fill="#6ee7b7" font-size="12.5" font-weight="700">[Container] Cloudflare Worker Edge Gateway (worker/bridge.ts)</text>
+              <!-- L2 Container: Cloudflare Worker -->
+              <rect x="258" y="668" width="830" height="154" rx="14" fill="rgba(16,185,129,0.05)" stroke="#10b981" stroke-width="1.6" stroke-dasharray="6 4" />
+              <text x="276" y="692" fill="#34d399" font-size="13" font-weight="700">[L2 Container] Cloudflare Worker Edge Gateway (worker/bridge.ts + Static Assets)</text>
 
               <!-- EDGES -->
-              <g id="c4-edges" fill="none" stroke="#647aa8" stroke-width="1.6" marker-end="url(#arrow)">
-                <path class="c4-edge" data-levels="1,2,3" d="M 178 165 L 250 165" />
-                <path class="c4-edge" data-levels="2,3" d="M 410 165 L 448 165" />
-                <path class="c4-edge" data-levels="2,3" d="M 628 165 L 666 165" />
-                <path class="c4-edge" data-levels="2,3" d="M 756 218 L 756 266" />
-                <path class="c4-edge" data-levels="2,3" d="M 538 218 L 538 266" />
-                <path class="c4-edge" data-levels="2,3" d="M 330 218 L 330 266" />
-                <path class="c4-edge" data-levels="3" d="M 666 320 L 628 320" />
-                <path class="c4-edge" data-levels="3" d="M 448 320 L 410 320" />
-                <path class="c4-edge" data-levels="3" d="M 330 374 L 330 432" />
-                <path class="c4-edge" data-levels="3" d="M 538 374 L 538 432" />
-                <path class="c4-edge" data-levels="3" d="M 756 374 L 756 432" />
-                <path class="c4-edge" data-levels="2,3" d="M 538 560 L 538 656" />
-                <path class="c4-edge" data-levels="1,2" d="M 948 684 L 1004 684" />
-                <path class="c4-edge" data-levels="1,2" d="M 948 662 L 1004 540" />
+              <g id="c4-edges" fill="none" stroke="#647aa8" stroke-width="1.7" marker-end="url(#arrow)">
+                <!-- User -> UI -->
+                <path class="c4-edge" data-from="person-author" data-to="comp-ui" data-levels="1,2,3" d="M 192 162 L 284 162" />
+                <!-- UI -> Director -->
+                <path class="c4-edge" data-from="comp-ui" data-to="comp-director" data-levels="3" d="M 464 162 L 542 162" />
+                <!-- Director -> Compiler -->
+                <path class="c4-edge" data-from="comp-director" data-to="comp-compiler" data-levels="3" d="M 734 162 L 812 162" />
+                <!-- Compiler -> Physics -->
+                <path class="c4-edge" data-from="comp-compiler" data-to="comp-physics" data-levels="3" d="M 907 216 L 907 282" />
+                <!-- Physics -> Player -->
+                <path class="c4-edge" data-from="comp-physics" data-to="comp-player" data-levels="3" d="M 812 336 L 734 336" />
+                <!-- Compiler -> Player -->
+                <path class="c4-edge" data-from="comp-compiler" data-to="comp-player" data-levels="3" d="M 830 216 L 710 282" />
+                <!-- Shared -> Director / Compiler / Physics / Player -->
+                <path class="c4-edge" data-from="comp-shared" data-to="comp-director" data-levels="3" d="M 464 316 L 542 198" />
+                <path class="c4-edge" data-from="comp-shared" data-to="comp-player" data-levels="3" d="M 464 336 L 542 336" />
+                <path class="c4-edge" data-from="comp-shared" data-to="comp-stage" data-levels="3" d="M 374 392 L 374 468" />
+                <!-- Player -> Stage / Chars / Audio -->
+                <path class="c4-edge" data-from="comp-player" data-to="comp-stage" data-levels="3" d="M 575 392 L 430 468" />
+                <path class="c4-edge" data-from="comp-player" data-to="comp-chars" data-levels="3" d="M 638 392 L 638 468" />
+                <path class="c4-edge" data-from="comp-player" data-to="comp-audio" data-levels="3" d="M 702 392 L 850 468" />
+                <!-- Browser SPA -> Worker Components -->
+                <path class="c4-edge" data-from="comp-director" data-to="comp-worker-api" data-levels="2,3" d="M 638 216 L 638 712" />
+                <path class="c4-edge" data-from="comp-audio" data-to="comp-worker-speech" data-levels="2,3" d="M 907 578 L 907 712" />
+                <path class="c4-edge" data-from="person-author" data-to="comp-worker-auth" data-levels="1,2,3" d="M 110 216 L 110 755 L 284 755" />
+                <!-- Worker -> External L1 -->
+                <path class="c4-edge" data-from="comp-worker-api" data-to="ext-llm" data-levels="1,2,3" d="M 734 736 L 1138 564" />
+                <path class="c4-edge" data-from="comp-worker-speech" data-to="ext-tts" data-levels="1,2,3" d="M 1002 758 L 1138 758" />
               </g>
 
-              <!-- NODES -->
-              <!-- L1 External Actors / Systems -->
+              <!-- EDGE LABELS -->
+              <g id="c4-edge-labels" font-size="10.5" fill="#9eb0d6" font-weight="600" text-anchor="middle">
+                <text class="c4-edge-label" data-levels="1,2,3" x="238" y="152">EN/RU prose</text>
+                <text class="c4-edge-label" data-levels="3" x="503" y="152">prompts</text>
+                <text class="c4-edge-label" data-levels="3" x="773" y="152">BeatScript</text>
+                <text class="c4-edge-label" data-levels="3" x="954" y="254">actions</text>
+                <text class="c4-edge-label" data-levels="3" x="773" y="326">continuity</text>
+                <text class="c4-edge-label" data-levels="3" x="503" y="326">schemas</text>
+                <text class="c4-edge-label" data-levels="3" x="638" y="438">evaluate(t)</text>
+                <text class="c4-edge-label" data-levels="2,3" x="676" y="654">/api/direct</text>
+                <text class="c4-edge-label" data-levels="2,3" x="945" y="654">/api/speech</text>
+                <text class="c4-edge-label" data-levels="1,2,3" x="190" y="744">HTTPS /login</text>
+                <text class="c4-edge-label" data-levels="1,2,3" x="1072" y="622">Service Binding</text>
+                <text class="c4-edge-label" data-levels="1,2,3" x="1072" y="748">DO Stub</text>
+              </g>
+
+              <!-- L1 EXTERNAL NODES -->
               <g class="c4-node" data-id="person-author" data-level="1">
-                <rect class="box" x="24" y="112" width="154" height="106" rx="12" fill="#1e3a8a" stroke="#60a5fa" stroke-width="1.8" />
-                <text x="101" y="138" text-anchor="middle" fill="#93c5fd" font-size="10.5" font-weight="700">[L1 Person]</text>
-                <text x="101" y="160" text-anchor="middle" fill="#fff" font-size="13.5" font-weight="700">Storyteller /</text>
-                <text x="101" y="178" text-anchor="middle" fill="#fff" font-size="13.5" font-weight="700">Viewer</text>
-                <text x="101" y="200" text-anchor="middle" fill="#bfdbfe" font-size="10.5">EN / RU text &amp; remix</text>
+                <rect class="box" x="28" y="108" width="164" height="108" rx="12" fill="#1e3a8a" stroke="#60a5fa" stroke-width="1.8" />
+                <text x="110" y="132" text-anchor="middle" fill="#93c5fd" font-size="10.5" font-weight="700">[L1 Person]</text>
+                <text x="110" y="154" text-anchor="middle" fill="#fff" font-size="13.5" font-weight="700">Storyteller / Viewer</text>
+                <text x="110" y="176" text-anchor="middle" fill="#dbeafe" font-size="11">Writes EN/RU stories</text>
+                <text x="110" y="194" text-anchor="middle" fill="#bfdbfe" font-size="10.5">Scrubs &amp; remixes 3D stage</text>
               </g>
 
               <g class="c4-node" data-id="ext-llm" data-level="1">
-                <rect class="box" x="1004" y="486" width="174" height="96" rx="12" fill="#1e293b" stroke="#64748b" stroke-width="1.8" />
-                <text x="1091" y="510" text-anchor="middle" fill="#cbd5e1" font-size="10.5" font-weight="700">[L1 External System]</text>
-                <text x="1091" y="532" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">STORY_SERVICE</text>
-                <text x="1091" y="552" text-anchor="middle" fill="#94a3b8" font-size="10.5">LLM BeatScript API</text>
-                <text x="1091" y="568" text-anchor="middle" fill="#94a3b8" font-size="10.5">(Gemini / Cloud Worker)</text>
+                <rect class="box" x="1138" y="502" width="194" height="108" rx="12" fill="#1e293b" stroke="#64748b" stroke-width="1.8" />
+                <text x="1235" y="526" text-anchor="middle" fill="#cbd5e1" font-size="10.5" font-weight="700">[L1 External System]</text>
+                <text x="1235" y="548" text-anchor="middle" fill="#fff" font-size="13.5" font-weight="700">STORY_SERVICE</text>
+                <text x="1235" y="569" text-anchor="middle" fill="#94a3b8" font-size="11">LLM BeatScript Generator</text>
+                <text x="1235" y="587" text-anchor="middle" fill="#94a3b8" font-size="10.5">(wrangler service binding)</text>
               </g>
 
               <g class="c4-node" data-id="ext-tts" data-level="1">
-                <rect class="box" x="1004" y="630" width="174" height="96" rx="12" fill="#1e293b" stroke="#64748b" stroke-width="1.8" />
-                <text x="1091" y="654" text-anchor="middle" fill="#cbd5e1" font-size="10.5" font-weight="700">[L1 External / DO]</text>
-                <text x="1091" y="676" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">MashaSpeech DO</text>
-                <text x="1091" y="696" text-anchor="middle" fill="#94a3b8" font-size="10.5">Voice Synthesis &amp;</text>
-                <text x="1091" y="712" text-anchor="middle" fill="#94a3b8" font-size="10.5">Durable Speech Cache</text>
+                <rect class="box" x="1138" y="704" width="194" height="108" rx="12" fill="#1e293b" stroke="#64748b" stroke-width="1.8" />
+                <text x="1235" y="728" text-anchor="middle" fill="#cbd5e1" font-size="10.5" font-weight="700">[L1 Durable Object]</text>
+                <text x="1235" y="750" text-anchor="middle" fill="#fff" font-size="13.5" font-weight="700">MashaSpeech DO</text>
+                <text x="1235" y="771" text-anchor="middle" fill="#94a3b8" font-size="11">Character Voice Synthesis</text>
+                <text x="1235" y="789" text-anchor="middle" fill="#94a3b8" font-size="10.5">&amp; Persistent Audio Cache</text>
               </g>
 
-              <!-- L3 Components inside Browser SPA -->
+              <!-- L3 COMPONENTS: BROWSER SPA -->
               <g class="c4-node" data-id="comp-ui" data-level="3">
-                <rect class="box" x="250" y="112" width="160" height="106" rx="10" fill="#2e1065" stroke="#a855f7" stroke-width="1.6" />
-                <text x="330" y="134" text-anchor="middle" fill="#d8b4fe" font-size="10.5" font-weight="700">[L3 Component]</text>
-                <text x="330" y="155" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">Studio UI &amp; Store</text>
-                <text x="330" y="175" text-anchor="middle" fill="#e9d5ff" font-size="10.5">src/app/*</text>
-                <text x="330" y="193" text-anchor="middle" fill="#c4b5fd" font-size="10">MomentWorkbench, Timeline</text>
+                <rect class="box" x="284" y="108" width="180" height="108" rx="10" fill="#2e1065" stroke="#a855f7" stroke-width="1.6" />
+                <text x="374" y="130" text-anchor="middle" fill="#d8b4fe" font-size="10.5" font-weight="700">[L3 Component]</text>
+                <text x="374" y="151" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">Studio UI &amp; Store</text>
+                <text x="374" y="170" text-anchor="middle" fill="#e9d5ff" font-size="11">src/app/*</text>
+                <text x="374" y="188" text-anchor="middle" fill="#c4b5fd" font-size="10.5">MomentWorkbench, Timeline</text>
               </g>
 
               <g class="c4-node" data-id="comp-director" data-level="3">
-                <rect class="box" x="448" y="112" width="180" height="106" rx="10" fill="#2e1065" stroke="#a855f7" stroke-width="1.6" />
-                <text x="538" y="134" text-anchor="middle" fill="#d8b4fe" font-size="10.5" font-weight="700">[L3 Component]</text>
-                <text x="538" y="155" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">Director &amp; Lexicon</text>
-                <text x="538" y="175" text-anchor="middle" fill="#e9d5ff" font-size="10.5">src/director/*</text>
-                <text x="538" y="193" text-anchor="middle" fill="#c4b5fd" font-size="10">Offline EN/RU Parser + LLM</text>
+                <rect class="box" x="542" y="108" width="192" height="108" rx="10" fill="#2e1065" stroke="#a855f7" stroke-width="1.6" />
+                <text x="638" y="130" text-anchor="middle" fill="#d8b4fe" font-size="10.5" font-weight="700">[L3 Component]</text>
+                <text x="638" y="151" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">Director &amp; Lexicon</text>
+                <text x="638" y="170" text-anchor="middle" fill="#e9d5ff" font-size="11">src/director/*</text>
+                <text x="638" y="188" text-anchor="middle" fill="#c4b5fd" font-size="10.5">Offline EN/RU Parser + LLM</text>
               </g>
 
               <g class="c4-node" data-id="comp-compiler" data-level="3">
-                <rect class="box" x="666" y="112" width="180" height="106" rx="10" fill="#2e1065" stroke="#a855f7" stroke-width="1.6" />
-                <text x="756" y="134" text-anchor="middle" fill="#d8b4fe" font-size="10.5" font-weight="700">[L3 Component]</text>
-                <text x="756" y="155" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">Story Compiler</text>
-                <text x="756" y="175" text-anchor="middle" fill="#e9d5ff" font-size="10.5">src/compiler/*</text>
-                <text x="756" y="193" text-anchor="middle" fill="#c4b5fd" font-size="10">Validate, Stage, Camera, Audio</text>
-              </g>
-
-              <g class="c4-node" data-id="comp-physics" data-level="3">
-                <rect class="box" x="666" y="266" width="180" height="108" rx="10" fill="#2e1065" stroke="#a855f7" stroke-width="1.6" />
-                <text x="756" y="288" text-anchor="middle" fill="#d8b4fe" font-size="10.5" font-weight="700">[L3 Component]</text>
-                <text x="756" y="309" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">Rapier3D Physics</text>
-                <text x="756" y="329" text-anchor="middle" fill="#e9d5ff" font-size="10.5">src/engine/physics/*</text>
-                <text x="756" y="347" text-anchor="middle" fill="#c4b5fd" font-size="10">Active-Window Fast-Forward</text>
-                <text x="756" y="362" text-anchor="middle" fill="#c4b5fd" font-size="10">Zero Three.js dependency</text>
-              </g>
-
-              <g class="c4-node" data-id="comp-player" data-level="3">
-                <rect class="box" x="448" y="266" width="180" height="108" rx="10" fill="#2e1065" stroke="#a855f7" stroke-width="1.6" />
-                <text x="538" y="288" text-anchor="middle" fill="#d8b4fe" font-size="10.5" font-weight="700">[L3 Component]</text>
-                <text x="538" y="309" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">Player &amp; Evaluator</text>
-                <text x="538" y="329" text-anchor="middle" fill="#e9d5ff" font-size="10.5">src/engine/player/*</text>
-                <text x="538" y="347" text-anchor="middle" fill="#c4b5fd" font-size="10">Deterministic evaluate(t)</text>
-                <text x="538" y="362" text-anchor="middle" fill="#c4b5fd" font-size="10">Idle 0-FPS + WeakMap Cache</text>
+                <rect class="box" x="812" y="108" width="190" height="108" rx="10" fill="#2e1065" stroke="#a855f7" stroke-width="1.6" />
+                <text x="907" y="130" text-anchor="middle" fill="#d8b4fe" font-size="10.5" font-weight="700">[L3 Component]</text>
+                <text x="907" y="151" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">Story Compiler</text>
+                <text x="907" y="170" text-anchor="middle" fill="#e9d5ff" font-size="11">src/compiler/*</text>
+                <text x="907" y="188" text-anchor="middle" fill="#c4b5fd" font-size="10.5">Validate, Path, Camera, Audio</text>
               </g>
 
               <g class="c4-node" data-id="comp-shared" data-level="3">
-                <rect class="box" x="250" y="266" width="160" height="108" rx="10" fill="#2e1065" stroke="#a855f7" stroke-width="1.6" />
-                <text x="330" y="288" text-anchor="middle" fill="#d8b4fe" font-size="10.5" font-weight="700">[L3 Component]</text>
-                <text x="330" y="309" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">Shared Bible &amp; Rules</text>
-                <text x="330" y="329" text-anchor="middle" fill="#e9d5ff" font-size="10.5">src/shared/*</text>
-                <text x="330" y="347" text-anchor="middle" fill="#c4b5fd" font-size="10">Schema, Carrots, Kitchen,</text>
-                <text x="330" y="362" text-anchor="middle" fill="#c4b5fd" font-size="10">WorldState, Layouts</text>
+                <rect class="box" x="284" y="282" width="180" height="110" rx="10" fill="#2e1065" stroke="#a855f7" stroke-width="1.6" />
+                <text x="374" y="304" text-anchor="middle" fill="#d8b4fe" font-size="10.5" font-weight="700">[L3 Component]</text>
+                <text x="374" y="325" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">Shared Bible &amp; Rules</text>
+                <text x="374" y="344" text-anchor="middle" fill="#e9d5ff" font-size="11">src/shared/*</text>
+                <text x="374" y="362" text-anchor="middle" fill="#c4b5fd" font-size="10.5">Carrots, Kitchen, Layouts</text>
+              </g>
+
+              <g class="c4-node" data-id="comp-player" data-level="3">
+                <rect class="box" x="542" y="282" width="192" height="110" rx="10" fill="#2e1065" stroke="#a855f7" stroke-width="1.6" />
+                <text x="638" y="304" text-anchor="middle" fill="#d8b4fe" font-size="10.5" font-weight="700">[L3 Component]</text>
+                <text x="638" y="325" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">Player &amp; Evaluator</text>
+                <text x="638" y="344" text-anchor="middle" fill="#e9d5ff" font-size="11">src/engine/player/*</text>
+                <text x="638" y="362" text-anchor="middle" fill="#c4b5fd" font-size="10.5">WeakMap Cache + 0-FPS Idle</text>
+              </g>
+
+              <g class="c4-node" data-id="comp-physics" data-level="3">
+                <rect class="box" x="812" y="282" width="190" height="110" rx="10" fill="#2e1065" stroke="#a855f7" stroke-width="1.6" />
+                <text x="907" y="304" text-anchor="middle" fill="#d8b4fe" font-size="10.5" font-weight="700">[L3 Component]</text>
+                <text x="907" y="325" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">Rapier3D Physics</text>
+                <text x="907" y="344" text-anchor="middle" fill="#e9d5ff" font-size="11">src/engine/physics/*</text>
+                <text x="907" y="362" text-anchor="middle" fill="#c4b5fd" font-size="10.5">Active-Window · Zero Three.js</text>
               </g>
 
               <g class="c4-node" data-id="comp-stage" data-level="3">
-                <rect class="box" x="250" y="432" width="160" height="108" rx="10" fill="#2e1065" stroke="#a855f7" stroke-width="1.6" />
-                <text x="330" y="454" text-anchor="middle" fill="#d8b4fe" font-size="10.5" font-weight="700">[L3 Component]</text>
-                <text x="330" y="475" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">WebGL2 Stage &amp; Set</text>
-                <text x="330" y="495" text-anchor="middle" fill="#e9d5ff" font-size="10.5">src/engine/stage, set/*</text>
-                <text x="330" y="513" text-anchor="middle" fill="#c4b5fd" font-size="10">Static Mesh Batching,</text>
-                <text x="330" y="528" text-anchor="middle" fill="#c4b5fd" font-size="10">Frustum &amp; Distance Culling</text>
+                <rect class="box" x="284" y="468" width="180" height="110" rx="10" fill="#2e1065" stroke="#a855f7" stroke-width="1.6" />
+                <text x="374" y="490" text-anchor="middle" fill="#d8b4fe" font-size="10.5" font-weight="700">[L3 Component]</text>
+                <text x="374" y="511" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">WebGL2 Stage &amp; Set</text>
+                <text x="374" y="530" text-anchor="middle" fill="#e9d5ff" font-size="11">stage.ts, set/*</text>
+                <text x="374" y="548" text-anchor="middle" fill="#c4b5fd" font-size="10.5">Static Batching &amp; Culling</text>
               </g>
 
               <g class="c4-node" data-id="comp-chars" data-level="3">
-                <rect class="box" x="448" y="432" width="180" height="108" rx="10" fill="#2e1065" stroke="#a855f7" stroke-width="1.6" />
-                <text x="538" y="454" text-anchor="middle" fill="#d8b4fe" font-size="10.5" font-weight="700">[L3 Component]</text>
-                <text x="538" y="475" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">Characters &amp; Props</text>
-                <text x="538" y="495" text-anchor="middle" fill="#e9d5ff" font-size="10.5">characters/*, props/*</text>
-                <text x="538" y="513" text-anchor="middle" fill="#c4b5fd" font-size="10">1-Pass Fur/Skin Baking,</text>
-                <text x="538" y="528" text-anchor="middle" fill="#c4b5fd" font-size="10">Pooled Props &amp; IK Contacts</text>
+                <rect class="box" x="542" y="468" width="192" height="110" rx="10" fill="#2e1065" stroke="#a855f7" stroke-width="1.6" />
+                <text x="638" y="490" text-anchor="middle" fill="#d8b4fe" font-size="10.5" font-weight="700">[L3 Component]</text>
+                <text x="638" y="511" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">Characters &amp; Props</text>
+                <text x="638" y="530" text-anchor="middle" fill="#e9d5ff" font-size="11">characters/*, props/*</text>
+                <text x="638" y="548" text-anchor="middle" fill="#c4b5fd" font-size="10.5">1-Pass Baking + IK Contacts</text>
               </g>
 
               <g class="c4-node" data-id="comp-audio" data-level="3">
-                <rect class="box" x="666" y="432" width="180" height="108" rx="10" fill="#2e1065" stroke="#a855f7" stroke-width="1.6" />
-                <text x="756" y="454" text-anchor="middle" fill="#d8b4fe" font-size="10.5" font-weight="700">[L3 Component]</text>
-                <text x="756" y="475" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">WebAudio &amp; Foley</text>
-                <text x="756" y="495" text-anchor="middle" fill="#e9d5ff" font-size="10.5">src/engine/audio/*</text>
-                <text x="756" y="513" text-anchor="middle" fill="#c4b5fd" font-size="10">Bus, Procedural SFX,</text>
-                <text x="756" y="528" text-anchor="middle" fill="#c4b5fd" font-size="10">TTS &amp; Recorded Speech</text>
+                <rect class="box" x="812" y="468" width="190" height="110" rx="10" fill="#2e1065" stroke="#a855f7" stroke-width="1.6" />
+                <text x="907" y="490" text-anchor="middle" fill="#d8b4fe" font-size="10.5" font-weight="700">[L3 Component]</text>
+                <text x="907" y="511" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">WebAudio &amp; Foley</text>
+                <text x="907" y="530" text-anchor="middle" fill="#e9d5ff" font-size="11">src/engine/audio/*</text>
+                <text x="907" y="548" text-anchor="middle" fill="#c4b5fd" font-size="10.5">Audio Bus, SFX, TTS Sync</text>
               </g>
 
-              <!-- L2 Worker Box -->
-              <g class="c4-node" data-id="cont-worker" data-level="2">
-                <rect class="box" x="250" y="656" width="680" height="58" rx="10" fill="#064e3b" stroke="#10b981" stroke-width="1.6" />
-                <text x="590" y="679" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">worker/bridge.ts · Auth Gate (/login) · Static Assets (dist/) · /api/direct · /api/speech</text>
-                <text x="590" y="699" text-anchor="middle" fill="#a7f3d0" font-size="11">Rate-limiting (worker/rateLimit.ts), trial &amp; direct LLM routing, Durable Object audio proxy</text>
+              <!-- L3 COMPONENTS: WORKER -->
+              <g class="c4-node" data-id="comp-worker-auth" data-level="2">
+                <rect class="box" x="284" y="712" width="180" height="92" rx="10" fill="#064e3b" stroke="#10b981" stroke-width="1.6" />
+                <text x="374" y="734" text-anchor="middle" fill="#a7f3d0" font-size="10.5" font-weight="700">[L2/L3 Worker]</text>
+                <text x="374" y="754" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">Auth &amp; Assets</text>
+                <text x="374" y="774" text-anchor="middle" fill="#6ee7b7" font-size="10.5">worker/bridge.ts</text>
+                <text x="374" y="791" text-anchor="middle" fill="#a7f3d0" font-size="10">/login gate + dist/ assets</text>
+              </g>
+
+              <g class="c4-node" data-id="comp-worker-api" data-level="2">
+                <rect class="box" x="542" y="712" width="192" height="92" rx="10" fill="#064e3b" stroke="#10b981" stroke-width="1.6" />
+                <text x="638" y="734" text-anchor="middle" fill="#a7f3d0" font-size="10.5" font-weight="700">[L2/L3 Worker]</text>
+                <text x="638" y="754" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">Direct &amp; RateLimit</text>
+                <text x="638" y="774" text-anchor="middle" fill="#6ee7b7" font-size="10.5">direct.ts, rateLimit.ts</text>
+                <text x="638" y="791" text-anchor="middle" fill="#a7f3d0" font-size="10">/api/direct + trial quota</text>
+              </g>
+
+              <g class="c4-node" data-id="comp-worker-speech" data-level="2">
+                <rect class="box" x="812" y="712" width="190" height="92" rx="10" fill="#064e3b" stroke="#10b981" stroke-width="1.6" />
+                <text x="907" y="734" text-anchor="middle" fill="#a7f3d0" font-size="10.5" font-weight="700">[L2/L3 Worker]</text>
+                <text x="907" y="754" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">Speech Proxy</text>
+                <text x="907" y="774" text-anchor="middle" fill="#6ee7b7" font-size="10.5">worker/speech.ts</text>
+                <text x="907" y="791" text-anchor="middle" fill="#a7f3d0" font-size="10">/api/speech → DO stub</text>
               </g>
             </g>
           </svg>
-          <div class="c4-hint">Drag canvas to pan · Scroll wheel to zoom · Click any node to inspect</div>
+          <div class="c4-hint">Drag to pan · Scroll to zoom · Keys: + / - / 0 · Click any box to inspect</div>
         </div>
       </div>
 
       <aside class="c4-inspector" id="c4-inspector">
-        <span class="level-pill" id="insp-pill" style="background: rgba(168,85,247,0.2); color: #d8b4fe;">L3 Component</span>
-        <h3 id="insp-title">Select a C4 element</h3>
+        <span class="level-pill" id="insp-pill" style="background: rgba(168,85,247,0.2); color: #c4b5fd;">C4 Explorer</span>
+        <h3 id="insp-title">Click any C4 node</h3>
         <p class="desc" id="insp-desc">
-          Click any box in the combined C4 diagram to view its architectural responsibilities, key source files, and runtime contracts.
+          Inspect responsibilities, technology stack, file locations, and connected edges across all 3 C4 levels.
         </p>
         <div>
-          <strong style="font-size:12px; color: var(--muted); text-transform: uppercase;">Key Modules &amp; Invariants</strong>
+          <span class="meta-label">Responsibilities &amp; Modules</span>
           <ul id="insp-list">
-            <li><strong>L1 System Context</strong>: Storyteller, STORY_SERVICE, MashaSpeech DO</li>
-            <li><strong>L2 Containers</strong>: Browser SPA (WebGL2 + Rapier WASM) &amp; Cloudflare Worker</li>
-            <li><strong>L3 Components</strong>: UI Store, Director, Compiler, Physics, Player, Stage, Characters, Audio</li>
+            <li><strong>L1 Context:</strong> Storyteller, STORY_SERVICE, MashaSpeech DO</li>
+            <li><strong>L2 Containers:</strong> Browser SPA &amp; Cloudflare Worker</li>
+            <li><strong>L3 Components:</strong> UI, Director, Compiler, Physics, Player, Stage, Chars, Audio</li>
           </ul>
+        </div>
+        <div>
+          <span class="meta-label">Technology / Runtime</span>
+          <div id="insp-tech" style="font-size:12.5px; color: var(--muted);">TypeScript · React 19 · Three.js · Rapier3D · Cloudflare Workers</div>
         </div>
       </aside>
     </div>
     <div class="legend">
       <span><i class="dot" style="background: var(--c4-l1);"></i> Level 1: System Context (People &amp; External Systems)</span>
-      <span><i class="dot" style="background: var(--c4-l2);"></i> Level 2: Containers (Browser SPA &amp; Edge Worker)</span>
+      <span><i class="dot" style="background: var(--c4-l2);"></i> Level 2: Containers (Browser SPA &amp; Cloudflare Worker)</span>
       <span><i class="dot" style="background: var(--c4-l3);"></i> Level 3: Components (Internal Engine &amp; App Modules)</span>
     </div>
   </section>
 
-  <!-- SECTION 2: RUNTIME DATA FLOW -->
-  <section class="card">
-    <h2>Deterministic End-to-End Story Pipeline</h2>
+  <!-- 2. RUNTIME SEQUENCE & FRAME LIFECYCLE -->
+  <section class="card" id="flow-section">
+    <h2>2. Deterministic Authoring &amp; Frame Lifecycle Diagram</h2>
     <p class="lead">
-      Every paragraph is compiled into a deterministic, seekable <code>Timeline</code>. Physics continuity runs upfront in Rapier3D and reconciles landing coordinates back into subsequent actions.
+      Story authoring compiles prose into a seekable <code>Timeline</code> reconciled with Rapier3D landing coordinates; playback evaluates any timestamp <code>t</code> purely and sleeps at 0 FPS once paused and settled.
     </p>
-    <div class="pipeline">
-      <div class="pipe-step">
-        <div class="num">01 · AUTHOR</div>
-        <h4>Story Text / Remix</h4>
-        <p>User enters English or Russian prose in <code>MomentWorkbench</code> or <code>FullStoryDialog</code>, or picks a preset episode.</p>
-      </div>
-      <div class="pipe-step">
-        <div class="num">02 · DIRECT</div>
-        <h4>Offline / LLM Director</h4>
-        <p><code>offline/parser.ts</code> resolves verbs, carrots, kitchen containers &amp; locations deterministically; <code>/api/direct</code> handles open-ended LLM BeatScripts.</p>
-      </div>
-      <div class="pipe-step">
-        <div class="num">03 · COMPILE</div>
-        <h4>Validate &amp; Stage</h4>
-        <p><code>compile.ts</code> validates props &amp; cast, routes around yard obstacles, schedules interactions, camera framing, lighting, and audio cues.</p>
-      </div>
-      <div class="pipe-step">
-        <div class="num">04 · SIMULATE</div>
-        <h4>Rapier3D Continuity</h4>
-        <p><code>rapierReplay.ts</code> solves ball rolls, drops, and obstacle paths using active-window fast-forward, updating <code>Trajectory.prepareActions</code>.</p>
-      </div>
-      <div class="pipe-step">
-        <div class="num">05 · EVALUATE</div>
-        <h4>Pure <code>evaluate(t)</code></h4>
-        <p><code>evaluate.ts</code> &amp; <code>kinematics.ts</code> compute exact actor transforms, facial rigs, and prop poses with <code>WeakMap</code> track caching.</p>
-      </div>
-      <div class="pipe-step">
-        <div class="num">06 · RENDER</div>
-        <h4>WebGL2 + WebAudio</h4>
-        <p><code>Stage</code> renders batched static sets + 1-pass baked characters; <code>Player</code> drops to 0 FPS when paused and settled.</p>
-      </div>
+    <div class="svg-frame">
+      <svg viewBox="0 0 1120 340" role="img" aria-label="Runtime Sequence Diagram">
+        <defs>
+          <marker id="seq-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+            <path d="M 0 1 L 10 5 L 0 9 z" fill="#60a5fa" />
+          </marker>
+        </defs>
+        <!-- Swimlane Headers -->
+        <g font-size="12.5" font-weight="700" text-anchor="middle">
+          <rect x="20" y="14" width="150" height="36" rx="8" fill="#1e3a8a" stroke="#60a5fa" />
+          <text x="95" y="37" fill="#fff">User / Store</text>
+
+          <rect x="205" y="14" width="160" height="36" rx="8" fill="#2e1065" stroke="#a855f7" />
+          <text x="285" y="37" fill="#fff">Director</text>
+
+          <rect x="400" y="14" width="160" height="36" rx="8" fill="#2e1065" stroke="#a855f7" />
+          <text x="480" y="37" fill="#fff">Compiler</text>
+
+          <rect x="595" y="14" width="160" height="36" rx="8" fill="#2e1065" stroke="#a855f7" />
+          <text x="675" y="37" fill="#fff">Rapier3D</text>
+
+          <rect x="790" y="14" width="150" height="36" rx="8" fill="#2e1065" stroke="#a855f7" />
+          <text x="865" y="37" fill="#fff">evaluate(t)</text>
+
+          <rect x="970" y="14" width="130" height="36" rx="8" fill="#064e3b" stroke="#10b981" />
+          <text x="1035" y="37" fill="#fff">WebGL2 + Audio</text>
+        </g>
+
+        <!-- Lifelines -->
+        <g stroke="#334155" stroke-width="1.5" stroke-dasharray="5 4">
+          <line x1="95" y1="50" x2="95" y2="320" />
+          <line x1="285" y1="50" x2="285" y2="320" />
+          <line x1="480" y1="50" x2="480" y2="320" />
+          <line x1="675" y1="50" x2="675" y2="320" />
+          <line x1="865" y1="50" x2="865" y2="320" />
+          <line x1="1035" y1="50" x2="1035" y2="320" />
+        </g>
+
+        <!-- Phase Bands -->
+        <rect x="12" y="64" width="1096" height="128" rx="10" fill="rgba(59,130,246,0.06)" stroke="rgba(96,165,250,0.25)" />
+        <text x="24" y="84" fill="#60a5fa" font-size="11.5" font-weight="700">PHASE A · AUTHORING &amp; CONTINUITY COMPILE</text>
+
+        <rect x="12" y="204" width="1096" height="112" rx="10" fill="rgba(16,185,129,0.06)" stroke="rgba(52,211,153,0.25)" />
+        <text x="24" y="224" fill="#34d399" font-size="11.5" font-weight="700">PHASE B · PLAYBACK &amp; DETERMINISTIC SCRUBBING</text>
+
+        <!-- Sequence Arrows -->
+        <g stroke="#60a5fa" stroke-width="1.8" marker-end="url(#seq-arrow)">
+          <line x1="95" y1="105" x2="280" y2="105" />
+          <line x1="285" y1="130" x2="475" y2="130" />
+          <line x1="480" y1="155" x2="670" y2="155" />
+          <line x1="675" y1="178" x2="485" y2="178" />
+          <line x1="95" y1="248" x2="860" y2="248" />
+          <line x1="865" y1="275" x2="1030" y2="275" />
+        </g>
+        <g font-size="11.5" fill="var(--text)" font-weight="600">
+          <text x="190" y="99" text-anchor="middle">1. Submit EN/RU paragraph</text>
+          <text x="382" y="124" text-anchor="middle">2. BeatScript + targets</text>
+          <text x="577" y="149" text-anchor="middle">3. Solve drops &amp; paths (active windows)</text>
+          <text x="577" y="172" text-anchor="middle">4. prepareActions() landed coords</text>
+          <text x="480" y="242" text-anchor="middle">5. Play / Seek(t) → WeakMap resolveTrack(clip)</text>
+          <text x="950" y="269" text-anchor="middle">6. Render batched mesh + sync audio</text>
+          <text x="560" y="302" text-anchor="middle" fill="#34d399">7. When paused &amp; settled → RAF loop stops (0 FPS idle)</text>
+        </g>
+      </svg>
     </div>
   </section>
 
-  <!-- SECTION 3: MEASURED PERFORMANCE CHARTS -->
-  <section class="card">
-    <h2>Goal 5 Performance Benchmarks (Chrome Metal · Apple M1 Max)</h2>
+  <!-- 3. ENFORCED MODULE DEPENDENCY GRAPH -->
+  <section class="card" id="dag-section">
+    <h2>3. Enforced Module Dependency Graph (DAG)</h2>
     <p class="lead">
-      Measured end-to-end before and after Goal 5 optimizations (<code>PostQuality: 3</code>). Works across desktop and mobile browsers (graceful WebGL2 + CPU fallbacks).
+      Enforced by <code>tests/unit/architectureHardening.test.ts</code> and dual TypeScript project configs. Click any layer node to highlight its allowed dependencies.
+    </p>
+    <div class="svg-frame">
+      <svg id="dag-svg" viewBox="0 0 1120 290" role="img" aria-label="Module Dependency Graph">
+        <defs>
+          <marker id="dag-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+            <path d="M 0 1 L 10 5 L 0 9 z" fill="#7c93c4" />
+          </marker>
+        </defs>
+        <g id="dag-edges" fill="none" stroke="#647aa8" stroke-width="1.7" marker-end="url(#dag-arrow)">
+          <path class="dag-edge" data-from="shared" data-to="director" d="M 190 120 L 260 72" />
+          <path class="dag-edge" data-from="shared" data-to="compiler" d="M 190 140 L 260 140" />
+          <path class="dag-edge" data-from="shared" data-to="physics" d="M 190 162 L 260 218" />
+          <path class="dag-edge" data-from="director" data-to="compiler" d="M 355 96 L 355 112" />
+          <path class="dag-edge" data-from="compiler" data-to="player" d="M 450 140 L 520 140" />
+          <path class="dag-edge" data-from="physics" data-to="player" d="M 450 218 L 520 162" />
+          <path class="dag-edge" data-from="player" data-to="stage" d="M 700 140 L 765 95" />
+          <path class="dag-edge" data-from="player" data-to="app" d="M 700 155 L 765 205" />
+          <path class="dag-edge" data-from="stage" data-to="app" d="M 865 130 L 865 168" />
+          <path class="dag-edge" data-from="app" data-to="worker" d="M 960 205 L 1005 205" />
+        </g>
+
+        <g class="dag-node" data-dag="shared">
+          <rect class="box" x="20" y="102" width="170" height="76" rx="10" fill="#1e3a8a" stroke="#60a5fa" stroke-width="1.7" />
+          <text x="105" y="132" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">src/shared/*</text>
+          <text x="105" y="152" text-anchor="middle" fill="#bfdbfe" font-size="11">Pure TS Schemas &amp; Bible</text>
+        </g>
+
+        <g class="dag-node" data-dag="director">
+          <rect class="box" x="260" y="34" width="190" height="62" rx="10" fill="#2e1065" stroke="#a855f7" stroke-width="1.6" />
+          <text x="355" y="61" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">src/director/*</text>
+          <text x="355" y="80" text-anchor="middle" fill="#e9d5ff" font-size="11">EN/RU Lexicon + LLM</text>
+        </g>
+
+        <g class="dag-node" data-dag="compiler">
+          <rect class="box" x="260" y="112" width="190" height="62" rx="10" fill="#2e1065" stroke="#a855f7" stroke-width="1.6" />
+          <text x="355" y="139" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">src/compiler/*</text>
+          <text x="355" y="158" text-anchor="middle" fill="#e9d5ff" font-size="11">Validate, Stage, Camera</text>
+        </g>
+
+        <g class="dag-node" data-dag="physics">
+          <rect class="box" x="260" y="190" width="190" height="72" rx="10" fill="#064e3b" stroke="#34d399" stroke-width="1.8" />
+          <text x="355" y="216" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">src/engine/physics/*</text>
+          <text x="355" y="235" text-anchor="middle" fill="#a7f3d0" font-size="11">Rapier3D WASM Solver</text>
+          <text x="355" y="252" text-anchor="middle" fill="#fde047" font-size="10.5" font-weight="700">Invariant: 0 Three.js imports</text>
+        </g>
+
+        <g class="dag-node" data-dag="player">
+          <rect class="box" x="520" y="108" width="180" height="70" rx="10" fill="#2e1065" stroke="#a855f7" stroke-width="1.6" />
+          <text x="610" y="136" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">src/engine/player/*</text>
+          <text x="610" y="156" text-anchor="middle" fill="#e9d5ff" font-size="11">evaluate(t) + Kinematics</text>
+        </g>
+
+        <g class="dag-node" data-dag="stage">
+          <rect class="box" x="765" y="52" width="195" height="78" rx="10" fill="#2e1065" stroke="#a855f7" stroke-width="1.6" />
+          <text x="862" y="79" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">stage, set, chars, audio</text>
+          <text x="862" y="99" text-anchor="middle" fill="#e9d5ff" font-size="11">Three.js WebGL2 + WebAudio</text>
+          <text x="862" y="116" text-anchor="middle" fill="#c4b5fd" font-size="10.5">Static Batching &amp; Baking</text>
+        </g>
+
+        <g class="dag-node" data-dag="app">
+          <rect class="box" x="765" y="168" width="195" height="74" rx="10" fill="#1e3a8a" stroke="#60a5fa" stroke-width="1.7" />
+          <text x="862" y="198" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">src/app/*</text>
+          <text x="862" y="218" text-anchor="middle" fill="#bfdbfe" font-size="11">React 19 UI + Store</text>
+        </g>
+
+        <g class="dag-node" data-dag="worker">
+          <rect class="box" x="1005" y="168" width="98" height="74" rx="10" fill="#064e3b" stroke="#10b981" stroke-width="1.7" />
+          <text x="1054" y="198" text-anchor="middle" fill="#fff" font-size="12.5" font-weight="700">worker/*</text>
+          <text x="1054" y="218" text-anchor="middle" fill="#a7f3d0" font-size="10.5">Edge API</text>
+        </g>
+      </svg>
+    </div>
+  </section>
+
+  <!-- 4. INTERACTIVE SVG PERFORMANCE GRAPHS -->
+  <section class="card" id="perf-section">
+    <h2>4. Measured Performance &amp; GPU Optimization Graphs</h2>
+    <p class="lead">
+      Measured on Chrome <code>ANGLE Metal Renderer (Apple M1 Max)</code> at <code>PostQuality: 3</code> and Node v26.13.1, comparing Post-Goal-4 vs Post-Goal-5. Hover over any bar for exact metrics.
     </p>
     <div class="charts-grid">
-      <div class="chart-box">
-        <h3>Character Load &amp; Texture Baking (ms)</h3>
-        <p class="sub">Single-pass procedural fur/skin baking &amp; chunked pre-warming</p>
-        <div id="chart-chars"></div>
+      <!-- Chart A -->
+      <div class="chart-card">
+        <h3>Character Load &amp; 1-Pass Texture Baking (ms)</h3>
+        <p class="sub">Eliminates multi-pass procedural fur/skin startup stalls (up to -89.8%)</p>
+        <div class="chart-legend">
+          <span><i class="swatch" style="background: rgba(148,163,184,0.45);"></i> Post-Goal-4</span>
+          <span><i class="swatch" style="background: #34d399;"></i> Post-Goal-5</span>
+        </div>
+        <svg id="svg-chart-chars" viewBox="0 0 460 250"></svg>
       </div>
-      <div class="chart-box">
-        <h3>WebGL <code>stage.render()</code> Frame Cost (ms)</h3>
-        <p class="sub">Static mesh batching, interior shadow pruning &amp; rig culling</p>
-        <div id="chart-render"></div>
+
+      <!-- Chart B -->
+      <div class="chart-card">
+        <h3>WebGL <code>stage.render()</code> Frame Cost (ms) &amp; GPU Pruning</h3>
+        <p class="sub">Static mesh batching, interior shadow pruning &amp; rig culling at <code>PostQuality: 3</code></p>
+        <div class="chart-legend">
+          <span><i class="swatch" style="background: rgba(148,163,184,0.45);"></i> Post-Goal-4</span>
+          <span><i class="swatch" style="background: #60a5fa;"></i> Post-Goal-5</span>
+        </div>
+        <svg id="svg-chart-render" viewBox="0 0 460 175"></svg>
+        <div class="gpu-grid">
+          <div class="gpu-stat"><div class="lbl">Interior Visible Meshes</div><div class="val">107 → 34</div><div class="drop">-68.2% meshes</div></div>
+          <div class="gpu-stat"><div class="lbl">Interior Shadow Casters</div><div class="val">84 → 16</div><div class="drop">-81.0% casters</div></div>
+          <div class="gpu-stat"><div class="lbl">Interior Draw Calls</div><div class="val">390 → 238</div><div class="drop">-39.0% draw calls</div></div>
+          <div class="gpu-stat"><div class="lbl">Paused Idle Frame Rate</div><div class="val">60 → 0 FPS</div><div class="drop">Zero idle GPU/CPU drain</div></div>
+        </div>
       </div>
-      <div class="chart-box">
-        <h3>Rapier3D Simulation Time (ms)</h3>
-        <p class="sub">Active-window fast-forward skips idle static intervals</p>
-        <div id="chart-rapier"></div>
+
+      <!-- Chart C -->
+      <div class="chart-card">
+        <h3>Rapier3D Active-Window Fast-Forward &amp; Cold Boot (ms)</h3>
+        <p class="sub">Skips static idle intervals (14.0× faster on pancake_morning) + chunked boot</p>
+        <div class="chart-legend">
+          <span><i class="swatch" style="background: rgba(148,163,184,0.45);"></i> Post-Goal-4</span>
+          <span><i class="swatch" style="background: #a78bfa;"></i> Post-Goal-5</span>
+        </div>
+        <svg id="svg-chart-rapier" viewBox="0 0 460 215"></svg>
       </div>
     </div>
   </section>
 
-  <!-- SECTION 4: ARCHITECTURE INVARIANTS -->
-  <section class="card">
-    <h2>Module Boundaries &amp; Architectural Invariants</h2>
-    <p class="lead">Enforced continuously by <code>tests/unit/architectureHardening.test.ts</code> and dual TypeScript project configs.</p>
+  <!-- 5. INVARIANTS & DEPLOYMENT SUMMARY -->
+  <section class="card" id="invariants-section">
+    <h2>5. Architectural Invariants &amp; Production Deployment</h2>
+    <p class="lead">
+      Verified release commit <code>d2ba8594965113d27ecfb7889fcd7a482a65d684</code> deployed to Cloudflare Workers version <code>dfbbd713-2b83-42b2-9f0e-83caa2637b93</code>.
+    </p>
     <table class="arch-table">
       <thead>
         <tr>
-          <th>Layer</th>
-          <th>Allowed Dependencies</th>
-          <th>Key Responsibilities</th>
+          <th>Subsystem</th>
+          <th>Key Files</th>
+          <th>Architectural Guarantee</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td><code>src/shared/*</code></td>
-          <td>Pure TypeScript only</td>
-          <td>Canonical schemas, <code>gardenCarrots</code>, <code>kitchenContainers</code>, <code>houseLayout</code>, <code>yardLayout</code>, <code>worldState</code></td>
+          <td>Interactive World Objects</td>
+          <td><code>src/shared/gardenCarrots.ts</code>, <code>src/shared/kitchenContainers.ts</code></td>
+          <td>Individually addressable carrots (no duplicates) &amp; kitchen bowl/pot placement with protected <code>kitchenBowl</code> mesh outside static batching</td>
         </tr>
         <tr>
-          <td><code>src/director/*</code> &amp; <code>src/compiler/*</code></td>
-          <td><code>src/shared/*</code></td>
-          <td>EN/RU offline lexicon &amp; parser, BeatScript validation, pathfinding, camera occlusion &amp; framing</td>
+          <td>Rapier3D Continuity</td>
+          <td><code>src/engine/physics/trajectory.ts</code>, <code>rapierReplay.ts</code>, <code>yardNavigation.ts</code></td>
+          <td>Subsequent actions consume landed prop coordinates; headless physics preserves zero <code>three</code> imports</td>
         </tr>
         <tr>
-          <td><code>src/engine/physics/*</code></td>
-          <td><code>src/shared/*</code>, Rapier3D WASM (<strong>zero</strong> <code>three</code> imports)</td>
-          <td>Rigid-body colliders, yard navigation, prop profiles, replay schedule &amp; continuity</td>
+          <td>Evaluator Cache Safety</td>
+          <td><code>src/engine/player/kinematics.ts</code>, <code>evaluate.ts</code></td>
+          <td><code>WeakMap</code> track cache stamps include <code>p.from[1]</code> &amp; <code>p.path[1]</code> so in-place <code>prepareActions</code> mutations invalidate cleanly</td>
         </tr>
         <tr>
-          <td><code>src/engine/player/*</code></td>
-          <td><code>src/shared/*</code>, <code>src/engine/motion/*</code></td>
-          <td>Pure <code>evaluate(t)</code>, <code>kinematics.ts</code> track resolution, spring smoothing, 0-FPS idle loop</td>
-        </tr>
-        <tr>
-          <td><code>src/engine/stage*</code>, <code>set/*</code>, <code>characters/*</code></td>
-          <td>Three.js, <code>src/engine/physics/stageReplay</code></td>
-          <td>Batched set geometry, pooled procedural props, baked character rigs, contact shadows</td>
-        </tr>
-        <tr>
-          <td><code>worker/*</code></td>
-          <td>Cloudflare Workers Runtime</td>
-          <td>Auth gate, static asset serving, rate-limited <code>STORY_SERVICE</code> &amp; <code>MashaSpeech</code> Durable Object proxy</td>
+          <td>Cross-Platform Browser</td>
+          <td><code>src/engine/stage.ts</code>, <code>src/engine/characters/*</code></td>
+          <td>Runs on desktop (Windows/macOS/Linux) and mobile (Android/iOS) WebGL2 browsers with automatic quality &amp; DPR scaling</td>
         </tr>
       </tbody>
     </table>
   </section>
 
   <footer>
-    Generated for commit <code>d2ba8594965113d27ecfb7889fcd7a482a65d684</code> · Deployed Worker Version <code>dfbbd713-2b83-42b2-9f0e-83caa2637b93</code>
+    MaBear 3D Storybook · Architecture Report · <code>docs/architecture/index.html</code>
   </footer>
 </div>
 
+<div id="chart-tooltip"></div>
+
 <script>
 (() => {
-  // ---- Inspector Metadata ----
+  // ---- Theme Toggle ----
+  const themeBtn = document.getElementById('theme-toggle');
+  themeBtn.addEventListener('click', () => {
+    const html = document.documentElement;
+    const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', next);
+    themeBtn.textContent = next === 'dark' ? 'Light Theme' : 'Dark Theme';
+  });
+
+  // ---- C4 Node Metadata ----
   const NODES = {
     'person-author': {
       level: 'L1 Person',
-      color: 'rgba(59,130,246,0.22)',
-      textColor: '#93c5fd',
+      pillBg: 'rgba(59,130,246,0.22)',
+      pillColor: '#60a5fa',
       title: 'Storyteller / Viewer',
-      desc: 'Interacts with the MaBear 3D Storybook UI in English or Russian to author stories, edit paragraphs, scrub the timeline, or remix scenes.',
+      tech: 'Desktop & Mobile Web Browsers (Chrome, Safari, Firefox, Edge)',
+      desc: 'Authors multi-paragraph stories in English or Russian, scrubs the timeline, toggles mute/language, and inspects 3D story playback.',
       items: [
-        'Writes multi-paragraph stories (full story modal or per-moment workbench)',
-        'Interacts with characters, carrots, kitchen bowls/pots, and yard balls',
-        'Controls playback, camera view, mute, and language toggle (EN / RU)'
+        'Submits prose in MomentWorkbench or FullStoryDialog',
+        'Interacts with addressable carrots, kitchen bowls/pots, and yard props',
+        'Scrubs forward/backward deterministically at any timestamp'
       ]
     },
     'ext-llm': {
       level: 'L1 External System',
-      color: 'rgba(100,116,139,0.25)',
-      textColor: '#cbd5e1',
+      pillBg: 'rgba(100,116,139,0.25)',
+      pillColor: '#94a3b8',
       title: 'STORY_SERVICE (LLM BeatScript API)',
-      desc: 'External Cloudflare Worker service binding called via /api/direct when free-form text requires LLM BeatScript generation.',
+      tech: 'Cloudflare Worker Service Binding (mabear)',
+      desc: 'Generates structured BeatScripts from open-ended prose when requests go beyond the deterministic offline EN/RU lexicon.',
       items: [
-        'Configured as [[services]] binding in wrangler.toml',
-        'Protected behind worker/rateLimit.ts and auth session gate',
-        'Offline lexicon parser handles deterministic built-in stories with zero network calls'
+        'Invoked via /api/direct through worker/direct.ts',
+        'Protected by auth session gate & worker/rateLimit.ts',
+        'Offline stories run completely locally without hitting STORY_SERVICE'
       ]
     },
     'ext-tts': {
-      level: 'L1 External / Durable Object',
-      color: 'rgba(100,116,139,0.25)',
-      textColor: '#cbd5e1',
+      level: 'L1 Durable Object',
+      pillBg: 'rgba(100,116,139,0.25)',
+      pillColor: '#94a3b8',
       title: 'MashaSpeech Durable Object',
-      desc: 'Cloudflare Durable Object binding (MASHA_SPEECH) providing cached character voice synthesis.',
+      tech: 'Cloudflare Durable Object (MASHA_SPEECH)',
+      desc: 'Synthesizes and caches character speech audio across sessions for low-latency playback.',
       items: [
-        'Accessed through worker/speech.ts -> /api/speech',
-        'Caches generated speech audio across requests',
-        'Pairs with client WebAudio bus and procedural foley fallback'
-      ]
-    },
-    'cont-worker': {
-      level: 'L2 Container',
-      color: 'rgba(16,185,129,0.22)',
-      textColor: '#6ee7b7',
-      title: 'Cloudflare Worker Edge Gateway',
-      desc: 'Serves the compiled Vite bundle (dist/), enforces login authentication, rate-limits AI/speech endpoints, and proxies bindings.',
-      items: [
-        'Entry: worker/bridge.ts (Worker + Static Assets)',
-        'worker/direct.ts & worker/trial.ts: BeatScript API routing',
-        'worker/speech.ts: MashaSpeech Durable Object gateway'
+        'Accessed via /api/speech through worker/speech.ts',
+        'Paired with client WebAudio bus & procedural SFX fallback'
       ]
     },
     'comp-ui': {
-      level: 'L3 Component',
-      color: 'rgba(168,85,247,0.22)',
-      textColor: '#d8b4fe',
+      level: 'L3 Component (Browser SPA)',
+      pillBg: 'rgba(168,85,247,0.22)',
+      pillColor: '#a855f7',
       title: 'Studio UI & Reactive Store',
-      desc: 'React 19 authoring workbench, timeline scrubber, story library, and state store.',
+      tech: 'React 19 · Custom Store · CSS Brand Tokens',
+      desc: 'Manages story paragraphs, undo/redo history, director queues, persistence, and the 3D Stage viewport.',
       items: [
         'src/app/store.ts + store/{directorQueue,history,persistence,types}.ts',
         'MomentWorkbench, Timeline, Stage, FullStoryDialog, ModalDialog',
-        'window.__mabear debug bridge (src/app/debugBridge.ts)'
+        'src/app/debugBridge.ts exposes window.__mabear inspection API'
       ]
     },
     'comp-director': {
-      level: 'L3 Component',
-      color: 'rgba(168,85,247,0.22)',
-      textColor: '#d8b4fe',
+      level: 'L3 Component (Browser SPA)',
+      pillBg: 'rgba(168,85,247,0.22)',
+      pillColor: '#a855f7',
       title: 'Director & EN/RU Lexicon',
-      desc: 'Translates natural-language paragraphs into structured BeatScripts using deterministic EN/RU lexicons or LLM fallback.',
+      tech: 'TypeScript Deterministic Parser + LLM Prompt Builder',
+      desc: 'Converts natural language into structured BeatScripts with addressable props and character actions.',
       items: [
         'src/director/offline/{parser,lexicon.en,lexicon.ru,lexiconTypes}.ts',
-        'Supports addressable garden carrots & kitchen bowl/pot containers',
-        'src/director/prompt.ts for LLM system prompt construction'
+        'Supports garden carrots, kitchen bowl/pot containers, put_down & nudge',
+        'src/director/prompt.ts for LLM fallback requests'
       ]
     },
     'comp-compiler': {
-      level: 'L3 Component',
-      color: 'rgba(168,85,247,0.22)',
-      textColor: '#d8b4fe',
+      level: 'L3 Component (Browser SPA)',
+      pillBg: 'rgba(168,85,247,0.22)',
+      pillColor: '#a855f7',
       title: 'Story Compiler',
-      desc: 'Compiles validated BeatScripts into deterministic Timeline segments with staged positions, obstacle paths, camera cues, and audio.',
+      tech: 'TypeScript Pipeline · Pathfinding & Camera Framing',
+      desc: 'Validates BeatScripts, tracks WorldState across paragraphs, avoids yard obstacles, and schedules camera, lighting, and audio.',
       items: [
         'src/compiler/compile.ts + compile/{ambient,beatEffects,context,interactions,repairs,staging}.ts',
         'src/compiler/camera/{framing,occlusion}.ts',
-        'Tracks WorldState across multi-paragraph episodes'
-      ]
-    },
-    'comp-physics': {
-      level: 'L3 Component',
-      color: 'rgba(168,85,247,0.22)',
-      textColor: '#d8b4fe',
-      title: 'Rapier3D Physics Solver',
-      desc: 'Headless physics simulation (zero Three.js imports) computing rigid-body trajectories and post-drop action continuity.',
-      items: [
-        'src/engine/physics/{rapierReplay,replaySchedule,trajectory,yardColliders,yardNavigation,propProfiles}.ts',
-        'Active-window fast-forward skips idle intervals (up to 14× faster)',
-        'Trajectory.prepareActions reconciles landed prop coordinates'
-      ]
-    },
-    'comp-player': {
-      level: 'L3 Component',
-      color: 'rgba(168,85,247,0.22)',
-      textColor: '#d8b4fe',
-      title: 'Player & Deterministic Evaluator',
-      desc: 'Evaluates any timestamp t deterministically with WeakMap track caching and pauses the RAF loop at 0 FPS when settled.',
-      items: [
-        'src/engine/player/{player,evaluate,kinematics,propTimeline,faceEmotion,sceneCues,spring}.ts',
-        'Cache stamp invalidation handles in-place prepareActions mutations',
-        'Supports arbitrary scrubbing, reverse seeking, and preview ranges'
+        'Outputs deterministic Timeline segments'
       ]
     },
     'comp-shared': {
-      level: 'L3 Component',
-      color: 'rgba(168,85,247,0.22)',
-      textColor: '#d8b4fe',
+      level: 'L3 Component (Browser SPA)',
+      pillBg: 'rgba(168,85,247,0.22)',
+      pillColor: '#a855f7',
       title: 'Shared Bible, Schemas & Rules',
-      desc: 'Canonical world definitions, interactive object registries, spatial layouts, and validation contracts shared across all layers.',
+      tech: 'Pure TypeScript (Zero DOM / Three.js / React)',
+      desc: 'Single source of truth for schemas, world state, interactive objects, spatial layouts, and contact rules.',
       items: [
         'src/shared/{schema,worldState,grammar,gardenCarrots,kitchenContainers}.ts',
-        'src/shared/{houseLayout,yardLayout,propContacts,propPlacement,carrySupport}.ts',
-        'Zero dependency on DOM, Three.js, or React'
+        'src/shared/{houseLayout,yardLayout,propContacts,propPlacement,carrySupport}.ts'
+      ]
+    },
+    'comp-player': {
+      level: 'L3 Component (Browser SPA)',
+      pillBg: 'rgba(168,85,247,0.22)',
+      pillColor: '#a855f7',
+      title: 'Player & Deterministic Evaluator',
+      tech: 'TypeScript · WeakMap Track Cache · RAF Loop',
+      desc: 'Evaluates any timestamp t purely for actors, props, and faces; halts RAF at 0 FPS when paused and settled.',
+      items: [
+        'src/engine/player/{player,evaluate,kinematics,propTimeline,faceEmotion,sceneCues,spring}.ts',
+        'Cache stamp tracks p.from[1] & p.path[1] for prepareActions mutations'
+      ]
+    },
+    'comp-physics': {
+      level: 'L3 Component (Browser SPA)',
+      pillBg: 'rgba(168,85,247,0.22)',
+      pillColor: '#a855f7',
+      title: 'Rapier3D Physics Solver',
+      tech: 'Rapier3D WASM · Headless (Zero Three.js Imports)',
+      desc: 'Simulates rigid-body drops, rolls, and bench/yard collisions using active-window fast-forward and reconciles landed coordinates.',
+      items: [
+        'src/engine/physics/{rapierReplay,replaySchedule,trajectory,yardColliders,yardNavigation,propProfiles}.ts',
+        '14.0× faster on pancake_morning (1,007.9 ms → 71.8 ms)'
       ]
     },
     'comp-stage': {
-      level: 'L3 Component',
-      color: 'rgba(168,85,247,0.22)',
-      textColor: '#d8b4fe',
-      title: 'WebGL2 Stage & Set Architecture',
-      desc: 'Manages Three.js WebGL2 renderer, interior/yard/pond environments, static mesh batching, and shadow/frustum culling.',
+      level: 'L3 Component (Browser SPA)',
+      pillBg: 'rgba(168,85,247,0.22)',
+      pillColor: '#a855f7',
+      title: 'WebGL2 Stage & Batched Set',
+      tech: 'Three.js WebGL2 · Static Mesh Batching',
+      desc: 'Renders house interior, yard, and pond sets with batched static geometry, pruned shadow casters, and frustum culling.',
       items: [
         'src/engine/stage.ts + stage/{contactShadows,stageContacts}.ts',
         'src/engine/set/{houseInterior,generatedYard,bearsYard,forestLocations}.ts',
-        'Batches static meshes cleanly while keeping dynamic props (e.g. kitchenBowl) separate'
+        'Protects dynamic props (e.g., kitchenBowl) from static batching'
       ]
     },
     'comp-chars': {
-      level: 'L3 Component',
-      color: 'rgba(168,85,247,0.22)',
-      textColor: '#d8b4fe',
+      level: 'L3 Component (Browser SPA)',
+      pillBg: 'rgba(168,85,247,0.22)',
+      pillColor: '#a855f7',
       title: 'Characters, Baking & Props',
-      desc: 'Procedural & GLTF character rigs with 1-pass texture baking, IK hand/paw contacts, and pooled interactive props.',
+      tech: 'Three.js · GLTF Instancing · 1-Pass Canvas Baking',
+      desc: 'Builds procedural & GLTF characters with single-pass fur/skin baking, IK hand/paw contacts, and pooled props.',
       items: [
         'src/engine/characters/{rig,face,generated,generatedFace,mashaContacts,sourceContacts}.ts',
-        'src/engine/props/{props,propRecipes,propPlacement,cookingPancake,fishingLine}.ts',
-        'Carrot GLTF instancing & container placement'
+        'src/engine/props/{props,propRecipes,propPlacement,cookingPancake,fishingLine}.ts'
       ]
     },
     'comp-audio': {
-      level: 'L3 Component',
-      color: 'rgba(168,85,247,0.22)',
-      textColor: '#d8b4fe',
+      level: 'L3 Component (Browser SPA)',
+      pillBg: 'rgba(168,85,247,0.22)',
+      pillColor: '#a855f7',
       title: 'WebAudio Bus & Procedural Foley',
-      desc: 'Synchronized audio bus mixing background music, procedural footsteps/interactions, and MashaSpeech voice playback.',
+      tech: 'WebAudio API · Procedural Synth + TTS Playback',
+      desc: 'Synchronizes background music, footsteps/prop foley, and voice synthesis with timeline scrub and mute controls.',
       items: [
-        'src/engine/audio/{bus,foley,sfx,tts,recordedMusic,recordedSpeech}.ts',
-        'Pauses/resumes cleanly with Player scrub and mute state'
+        'src/engine/audio/{bus,foley,sfx,tts,recordedMusic,recordedSpeech}.ts'
       ]
+    },
+    'comp-worker-auth': {
+      level: 'L2/L3 Cloudflare Worker',
+      pillBg: 'rgba(16,185,129,0.22)',
+      pillColor: '#10b981',
+      title: 'Auth Gate & Static Asset Router',
+      tech: 'Cloudflare Workers + Static Assets (dist/)',
+      desc: 'Enforces /login session authentication and serves the compiled SPA bundle and physics test harness.',
+      items: ['worker/bridge.ts', 'Serves dist/index.html, dist/physics/, dist/voice/']
+    },
+    'comp-worker-api': {
+      level: 'L2/L3 Cloudflare Worker',
+      pillBg: 'rgba(16,185,129,0.22)',
+      pillColor: '#10b981',
+      title: 'Direct API & Rate Limiter',
+      tech: 'Cloudflare Workers + Service Binding',
+      desc: 'Routes /api/direct requests with rate-limiting and trial quota checks to STORY_SERVICE.',
+      items: ['worker/direct.ts', 'worker/rateLimit.ts', 'worker/trial.ts']
+    },
+    'comp-worker-speech': {
+      level: 'L2/L3 Cloudflare Worker',
+      pillBg: 'rgba(16,185,129,0.22)',
+      pillColor: '#10b981',
+      title: 'Speech Proxy',
+      tech: 'Cloudflare Workers + Durable Object Stub',
+      desc: 'Forwards /api/speech synthesis requests to the MashaSpeech Durable Object.',
+      items: ['worker/speech.ts', 'wrangler.toml: MASHA_SPEECH -> MashaSpeech']
     }
   };
 
-  // ---- Pan / Zoom Controller ----
+  // ---- C4 Pan / Zoom / Keyboard / Download ----
   const svg = document.getElementById('c4-svg');
   const world = document.getElementById('c4-world');
   const viewport = document.getElementById('c4-viewport');
@@ -912,8 +1164,8 @@
     world.setAttribute('transform', `translate(${tx} ${ty}) scale(${scale})`);
     zoomPct.textContent = `${Math.round(scale * 100)}%`;
   }
-  function clampScale(s) { return Math.min(2.6, Math.max(0.45, s)); }
-  function zoomAt(factor, cx = 600, cy = 380) {
+  function clampScale(s) { return Math.min(2.8, Math.max(0.42, s)); }
+  function zoomAt(factor, cx = 680, cy = 430) {
     const next = clampScale(scale * factor);
     const ratio = next / scale;
     tx = cx - (cx - tx) * ratio;
@@ -924,13 +1176,20 @@
   document.getElementById('zoom-in').addEventListener('click', () => zoomAt(1.2));
   document.getElementById('zoom-out').addEventListener('click', () => zoomAt(1 / 1.2));
   document.getElementById('zoom-reset').addEventListener('click', () => { scale = 1; tx = 0; ty = 0; applyTransform(); });
-  document.getElementById('zoom-fit').addEventListener('click', () => { scale = 0.94; tx = 36; ty = 18; applyTransform(); });
+  document.getElementById('zoom-fit').addEventListener('click', () => { scale = 0.94; tx = 40; ty = 20; applyTransform(); });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    if (e.key === '+' || e.key === '=') zoomAt(1.15);
+    else if (e.key === '-') zoomAt(1 / 1.15);
+    else if (e.key === '0') { scale = 1; tx = 0; ty = 0; applyTransform(); }
+  });
 
   viewport.addEventListener('wheel', (e) => {
     e.preventDefault();
     const rect = svg.getBoundingClientRect();
-    const cx = ((e.clientX - rect.left) / rect.width) * 1200;
-    const cy = ((e.clientY - rect.top) / rect.height) * 760;
+    const cx = ((e.clientX - rect.left) / rect.width) * 1360;
+    const cy = ((e.clientY - rect.top) / rect.height) * 860;
     zoomAt(e.deltaY < 0 ? 1.1 : 1 / 1.1, cx, cy);
   }, { passive: false });
 
@@ -945,15 +1204,23 @@
   viewport.addEventListener('pointermove', (e) => {
     if (!dragging) return;
     const rect = svg.getBoundingClientRect();
-    const dx = ((e.clientX - startX) / rect.width) * 1200;
-    const dy = ((e.clientY - startY) / rect.height) * 760;
-    tx = startTx + dx;
-    ty = startTy + dy;
+    tx = startTx + ((e.clientX - startX) / rect.width) * 1360;
+    ty = startTy + ((e.clientY - startY) / rect.height) * 860;
     applyTransform();
   });
   viewport.addEventListener('pointerup', () => { dragging = false; viewport.classList.remove('dragging'); });
 
-  // ---- Level Filter ----
+  document.getElementById('download-svg').addEventListener('click', () => {
+    const serializer = new XMLSerializer();
+    const blob = new Blob([serializer.serializeToString(svg)], { type: 'image/svg+xml;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'mabear-c4-architecture.svg';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+
+  // ---- C4 Level Filters ----
   document.querySelectorAll('[data-level]').forEach((btn) => {
     if (btn.tagName !== 'BUTTON') return;
     btn.addEventListener('click', () => {
@@ -963,57 +1230,110 @@
       document.querySelectorAll('.c4-node').forEach((n) => {
         n.classList.toggle('dimmed', lvl !== 'all' && n.dataset.level !== lvl);
       });
-      document.querySelectorAll('.c4-edge').forEach((ed) => {
-        const levels = ed.dataset.levels.split(',');
-        ed.classList.toggle('dimmed', lvl !== 'all' && !levels.includes(lvl));
+      document.querySelectorAll('.c4-edge, .c4-edge-label').forEach((ed) => {
+        const lvls = ed.dataset.levels.split(',');
+        ed.classList.toggle('dimmed', lvl !== 'all' && !lvls.includes(lvl));
       });
     });
   });
 
-  // ---- Node Inspector ----
+  // ---- C4 Node Inspector & Edge Highlighting ----
   const pill = document.getElementById('insp-pill');
   const inspTitle = document.getElementById('insp-title');
   const inspDesc = document.getElementById('insp-desc');
   const inspList = document.getElementById('insp-list');
+  const inspTech = document.getElementById('insp-tech');
+
   document.querySelectorAll('.c4-node').forEach((node) => {
+    const id = node.dataset.id;
+    node.addEventListener('mouseenter', () => {
+      document.querySelectorAll('.c4-edge').forEach((ed) => {
+        ed.classList.toggle('hi', ed.dataset.from === id || ed.dataset.to === id);
+      });
+    });
+    node.addEventListener('mouseleave', () => {
+      document.querySelectorAll('.c4-edge').forEach((ed) => ed.classList.remove('hi'));
+    });
     node.addEventListener('click', () => {
       document.querySelectorAll('.c4-node').forEach(n => n.classList.remove('selected'));
       node.classList.add('selected');
-      const info = NODES[node.dataset.id];
+      const info = NODES[id];
       if (!info) return;
       pill.textContent = info.level;
-      pill.style.background = info.color;
-      pill.style.color = info.textColor;
+      pill.style.background = info.pillBg;
+      pill.style.color = info.pillColor;
       inspTitle.textContent = info.title;
       inspDesc.textContent = info.desc;
+      inspTech.textContent = info.tech;
       inspList.innerHTML = info.items.map(i => `<li>${i}</li>`).join('');
     });
   });
 
-  // ---- Benchmark Bar Charts ----
-  function renderChart(containerId, rows, unit) {
-    const el = document.getElementById(containerId);
-    const max = Math.max(...rows.map(r => r.before));
-    el.innerHTML = rows.map(r => {
-      const bPct = (r.before / max * 100).toFixed(1);
-      const aPct = (r.after / max * 100).toFixed(1);
-      const pctDrop = (((r.before - r.after) / r.before) * 100).toFixed(1);
-      return `
-        <div class="bar-row">
-          <div class="bar-head">
-            <span class="name">${r.label}</span>
-            <span class="vals">${r.before} → ${r.after} ${unit} (-${pctDrop}%)</span>
-          </div>
-          <div class="bar-track">
-            <div class="bar-before" style="width:${bPct}%" title="Before: ${r.before} ${unit}"></div>
-            <div class="bar-after" style="width:${aPct}%" title="After: ${r.after} ${unit}"></div>
-          </div>
-        </div>
-      `;
-    }).join('');
+  // ---- Interactive Dependency DAG Highlight ----
+  const DAG_ALLOWED = {
+    shared: ['shared', 'director', 'compiler', 'physics'],
+    director: ['shared', 'director', 'compiler'],
+    compiler: ['shared', 'director', 'compiler', 'player'],
+    physics: ['shared', 'physics', 'player'],
+    player: ['compiler', 'physics', 'player', 'stage', 'app'],
+    stage: ['player', 'stage', 'app'],
+    app: ['player', 'stage', 'app', 'worker'],
+    worker: ['app', 'worker']
+  };
+  document.querySelectorAll('.dag-node').forEach((node) => {
+    node.addEventListener('click', () => {
+      const id = node.dataset.dag;
+      const keep = new Set(DAG_ALLOWED[id] || [id]);
+      document.querySelectorAll('.dag-node').forEach(n => {
+        n.classList.toggle('selected', n.dataset.dag === id);
+        n.classList.toggle('dimmed', !keep.has(n.dataset.dag));
+      });
+      document.querySelectorAll('.dag-edge').forEach(ed => {
+        const hit = ed.dataset.from === id || ed.dataset.to === id;
+        ed.classList.toggle('dimmed', !hit);
+      });
+    });
+  });
+
+  // ---- SVG Performance Charts with Tooltips ----
+  const tooltip = document.getElementById('chart-tooltip');
+  function attachTips(svgEl) {
+    svgEl.querySelectorAll('[data-tip]').forEach((bar) => {
+      bar.style.cursor = 'pointer';
+      bar.addEventListener('mouseenter', (e) => {
+        tooltip.textContent = bar.dataset.tip;
+        tooltip.style.display = 'block';
+        tooltip.style.left = `${e.clientX + 12}px`;
+        tooltip.style.top = `${e.clientY - 28}px`;
+      });
+      bar.addEventListener('mousemove', (e) => {
+        tooltip.style.left = `${e.clientX + 12}px`;
+        tooltip.style.top = `${e.clientY - 28}px`;
+      });
+      bar.addEventListener('mouseleave', () => { tooltip.style.display = 'none'; });
+    });
   }
 
-  renderChart('chart-chars', [
+  function renderHorizSvgChart(svgId, rows, accentColor, unit) {
+    const el = document.getElementById(svgId);
+    const maxVal = Math.max(...rows.map(r => r.before));
+    const leftPad = 128, chartW = 240, rowH = 31;
+    let out = '';
+    rows.forEach((r, idx) => {
+      const y = 12 + idx * rowH;
+      const bw = Math.max(2, (r.before / maxVal) * chartW);
+      const aw = Math.max(2, (r.after / maxVal) * chartW);
+      const drop = (((r.before - r.after) / r.before) * 100).toFixed(1);
+      out += `<text x="${leftPad - 8}" y="${y + 13}" text-anchor="end" font-size="11.5" font-weight="600" fill="var(--text)">${r.label}</text>`;
+      out += `<rect x="${leftPad}" y="${y}" width="${bw.toFixed(1)}" height="9" rx="3" fill="rgba(148,163,184,0.45)" data-tip="${r.label} before: ${r.before} ${unit}" />`;
+      out += `<rect x="${leftPad}" y="${y + 11}" width="${aw.toFixed(1)}" height="9" rx="3" fill="${accentColor}" data-tip="${r.label} after: ${r.after} ${unit} (-${drop}%)" />`;
+      out += `<text x="${leftPad + bw + 6}" y="${y + 15}" font-size="10.5" font-family="var(--mono)" fill="var(--muted)">${r.after}${unit} (-${drop}%)</text>`;
+    });
+    el.innerHTML = out;
+    attachTips(el);
+  }
+
+  renderHorizSvgChart('svg-chart-chars', [
     { label: 'bear', before: 2875.0, after: 292.8 },
     { label: 'masha', before: 1971.0, after: 699.0 },
     { label: 'lady_bear', before: 1517.0, after: 178.0 },
@@ -1021,18 +1341,20 @@
     { label: 'rival_bear', before: 247.0, after: 204.9 },
     { label: 'hare', before: 179.0, after: 124.0 },
     { label: 'rosie', before: 97.0, after: 63.1 }
-  ], 'ms');
+  ], '#34d399', 'ms');
 
-  renderChart('chart-render', [
-    { label: 'pond-story (PostQuality 3)', before: 7.79, after: 3.43 },
-    { label: 'interior-story (PostQuality 3)', before: 6.71, after: 1.70 },
-    { label: 'yard-story (PostQuality 3)', before: 6.42, after: 2.26 }
-  ], 'ms');
+  renderHorizSvgChart('svg-chart-render', [
+    { label: 'pond-story', before: 7.79, after: 3.43 },
+    { label: 'interior-story', before: 6.71, after: 1.70 },
+    { label: 'yard-story', before: 6.42, after: 2.26 }
+  ], '#60a5fa', 'ms');
 
-  renderChart('chart-rapier', [
-    { label: 'pancake_morning (61.5s)', before: 1007.9, after: 71.8 },
-    { label: 'fishing_trip (43.5s)', before: 642.0, after: 178.0 }
-  ], 'ms');
+  renderHorizSvgChart('svg-chart-rapier', [
+    { label: 'scene-fidelity boot', before: 4645, after: 3403 },
+    { label: 'index.html boot', before: 4421, after: 3243 },
+    { label: 'pancake_morning sim', before: 1007.9, after: 71.8 },
+    { label: 'fishing_trip sim', before: 642.0, after: 178.0 }
+  ], '#a78bfa', 'ms');
 })();
 </script>
 </body>
